@@ -15,8 +15,8 @@ export function activate(context: vscode.ExtensionContext) {
         var port = Number(cfg.get("marklogic.port"));
 
         return ml.createDatabaseClient({
-          host: host, port: port, user: user, password: pwd,
-          authType: 'DIGEST'
+            host: host, port: port, user: user, password: pwd,
+            authType: 'DIGEST'
         })
     };
 
@@ -34,7 +34,24 @@ export function activate(context: vscode.ExtensionContext) {
                 db.release();
             });
     });
+
+    let sendJSQuery = vscode.commands.registerCommand('extension.sendJSQuery', () => {
+        var query = vscode.window.activeTextEditor.document.getText();
+        var db = getDbClient();
+        db.eval(query).result(
+            function(response) {
+                vscode.window.showInformationMessage(JSON.stringify(response));
+                db.release();
+            },
+            function (error) {
+                vscode.window.showErrorMessage(JSON.stringify(error.body.errorResponse.message));
+                console.error(JSON.stringify(error));
+                db.release();
+            });
+    });
+
     context.subscriptions.push(sendXQuery);
+    context.subscriptions.push(sendJSQuery);
 }
 
 // this method is called when your extension is deactivated

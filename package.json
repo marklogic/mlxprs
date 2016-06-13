@@ -11,7 +11,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:extension.sendXQuery"
+    "onCommand:extension.sendXQuery",
+    "onCommand:extension.sendJSQuery"
   ],
   "main": "./out/src/extension",
   "contributes": {
@@ -19,6 +20,10 @@
       {
         "command": "extension.sendXQuery",
         "title": "MarkLogic: Eval XQuery"
+      },
+      {
+        "command": "extension.sendJSQuery",
+        "title": "MarkLogic: Eval JS"
       }
     ],
     "configuration": {
