@@ -49,6 +49,11 @@
           "type": "string",
           "default": "admin",
           "description": "password for MarkLogic connection"
+        },
+        "marklogic.documentsDb": {
+          "type": "string",
+          "default": "Documents",
+          "description": "database against which to evaluate queries"
         }
       }
     }
