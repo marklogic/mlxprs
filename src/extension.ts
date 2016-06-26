@@ -41,24 +41,52 @@ export function activate(context: vscode.ExtensionContext) {
             try {
                 context.globalState.update(mldbClient, newClient);
             } catch(e) {
-                console.log(JSON.stringify(e));
+                console.log("Error: " + JSON.stringify(e));
             }
         };
         return context.globalState.get<marklogicVSClient>("mldbClient");
     };
 
+    function encodeLocation(uri: vscode.Uri) : vscode.Uri {
+        let query = JSON.stringify([uri.toString()]);
+        return vscode.Uri.parse(`${QueryResultsContentProvider.scheme}:results-for?${query}`);
+    }
+
     /**
      * QueryResultsContentProvider implements vscode.TextDocumentContentProvider
      */
     class QueryResultsContentProvider implements vscode.TextDocumentContentProvider {
-        public provideTextDocumentContent(uri: vscode.Uri): string {
-            return "12";
+        private _onDidChange = new vscode.EventEmitter<vscode.Uri>();
+        public _cache = new Map<string, string>();
+
+        static scheme = 'xquery-result';
+        /**
+         * Expose an event to signal changes of _virtual_ documents
+         * to the editor
+         */
+        get onDidChange() {
+            return this._onDidChange.event;
+        }
+        public update(uri: vscode.Uri) {
+            this._onDidChange.fire(uri);
         }
 
+        public updateResultsForUri(uri: vscode.Uri, val: string) {
+            this._cache.set(uri.toString(), val);
+        }
+
+        public provideTextDocumentContent(uri: vscode.Uri): string {
+            let results = this._cache.get(uri.toString());
+            if (results) {
+                return results;
+            }
+            let actualQuery = vscode.window.activeTextEditor.document.getText();
+            _sendXQuery(actualQuery, uri);
+            return "pending..."
+        }
     };
 
-    function _sendXQuery() : Object {
-        let actualQuery = vscode.window.activeTextEditor.document.getText();
+    function _sendXQuery(actualQuery : string, uri : vscode.Uri) {
         let db = getDbClient();
 
         let cfg = vscode.workspace.getConfiguration();
@@ -75,17 +103,16 @@ export function activate(context: vscode.ExtensionContext) {
             'return xdmp:eval($actualQuery, (), $options)';
         let extVars = <ml.Variables>{'actualQuery': actualQuery, 'documentsDb': db.dbName};
 
-        var responsePayload;
         db.mldbClient.xqueryEval(query, extVars).result(
             function(response) {
-                vscode.window.showInformationMessage(JSON.stringify(response));
-                responsePayload = response;
+                console.log("response:" + JSON.stringify(response));
+                provider.updateResultsForUri(uri, JSON.stringify(response));
+                provider.update(uri);
             },
             function (error) {
                 vscode.window.showErrorMessage(JSON.stringify(error.body.errorResponse.message));
-                console.error(JSON.stringify(error));
+                console.error("Error:" + JSON.stringify(error));
             });
-            return responsePayload;
     };
 
     function _sendJSQuery() : Object {
@@ -104,9 +131,18 @@ export function activate(context: vscode.ExtensionContext) {
         return responsePayload;
     };
 
-    let sendXQuery = vscode.commands.registerCommand('extension.sendXQuery', () => {_sendXQuery()});
+    let provider = new QueryResultsContentProvider();
+    let registration = vscode.workspace.registerTextDocumentContentProvider(
+        QueryResultsContentProvider.scheme, provider);
 
+    let sendXQuery = vscode.commands.registerTextEditorCommand('extension.sendXQuery', editor => {
+        let uri = encodeLocation(editor.document.uri);
+        return vscode.workspace.openTextDocument(uri).then(
+            doc => vscode.window.showTextDocument(doc, editor.viewColumn + 1)),
+            error => console.error(error);
+    });
     let sendJSQuery = vscode.commands.registerCommand('extension.sendJSQuery', () => {_sendJSQuery()});
+
 
     context.subscriptions.push(sendXQuery);
     context.subscriptions.push(sendJSQuery);
