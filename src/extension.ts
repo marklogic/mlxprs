@@ -35,7 +35,7 @@ export function activate(context: vscode.ExtensionContext) {
         var pwd = String(cfg.get("marklogic.password"));
         var port = Number(cfg.get("marklogic.port"));
         var dbName = String(cfg.get("marklogic.documentsDb"));
-
+        var commands = vscode.commands.getCommands();
         if (context.globalState.get(mldbClient) === null) {
             var newClient = new marklogicVSClient(host, port, user, pwd, dbName);
             try {
@@ -57,31 +57,34 @@ export function activate(context: vscode.ExtensionContext) {
      */
     class QueryResultsContentProvider implements vscode.TextDocumentContentProvider {
         private _onDidChange = new vscode.EventEmitter<vscode.Uri>();
-        public _cache = new Map<string, string>();
+        public _cache = new Map<string, Object>();
 
         static scheme = 'xquery-result';
         /**
          * Expose an event to signal changes of _virtual_ documents
          * to the editor
          */
-        get onDidChange() {
-            return this._onDidChange.event;
-        }
-        public update(uri: vscode.Uri) {
-            this._onDidChange.fire(uri);
-        }
+        get onDidChange() {return this._onDidChange.event;};
+        public update(uri: vscode.Uri) {this._onDidChange.fire(uri);};
 
-        public updateResultsForUri(uri: vscode.Uri, val: string) {
+        public updateResultsForUri(uri: vscode.Uri, val: Object) {
             this._cache.set(uri.toString(), val);
-        }
+        };
+
+        private unwrap(o: Object) : string {
+            let value = JSON.stringify(o['value'])
+            if (o['format'] === 'xml') {
+                return JSON.parse(value);
+            }
+            return value;
+        };
 
         public provideTextDocumentContent(uri: vscode.Uri): string {
             let results = this._cache.get(uri.toString());
             if (results) {
-                return results;
+                let r = <Array<Object>> results;
+                return r.map(o => this.unwrap(o)).join("\n");
             }
-            let actualQuery = vscode.window.activeTextEditor.document.getText();
-            _sendXQuery(actualQuery, uri);
             return "pending..."
         }
     };
@@ -106,7 +109,7 @@ export function activate(context: vscode.ExtensionContext) {
         db.mldbClient.xqueryEval(query, extVars).result(
             function(response) {
                 console.log("response:" + JSON.stringify(response));
-                provider.updateResultsForUri(uri, JSON.stringify(response));
+                provider.updateResultsForUri(uri, response);
                 provider.update(uri);
             },
             function (error) {
@@ -136,13 +139,14 @@ export function activate(context: vscode.ExtensionContext) {
         QueryResultsContentProvider.scheme, provider);
 
     let sendXQuery = vscode.commands.registerTextEditorCommand('extension.sendXQuery', editor => {
+        let actualQuery = editor.document.getText();
         let uri = encodeLocation(editor.document.uri);
+        _sendXQuery(actualQuery, uri);
         return vscode.workspace.openTextDocument(uri).then(
             doc => vscode.window.showTextDocument(doc, editor.viewColumn + 1)),
             error => console.error(error);
     });
     let sendJSQuery = vscode.commands.registerCommand('extension.sendJSQuery', () => {_sendJSQuery()});
-
 
     context.subscriptions.push(sendXQuery);
     context.subscriptions.push(sendJSQuery);
