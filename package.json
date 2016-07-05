@@ -54,6 +54,11 @@
           "type": "string",
           "default": "Documents",
           "description": "database against which to evaluate queries"
+        },
+        "marklogic.modulesDb": {
+          "type": "string",
+          "default": "Modules",
+          "description": "modules database used in queries"
         }
       }
     }

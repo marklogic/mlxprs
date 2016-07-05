@@ -12,6 +12,7 @@ export function activate(context: vscode.ExtensionContext) {
      */
     class marklogicVSClient {
         contentDb : string;
+        modulesDb : string;
 
         host : string;
         port : number;
@@ -20,8 +21,11 @@ export function activate(context: vscode.ExtensionContext) {
 
         docsDbNumber : string;
         mldbClient : ml.DatabaseClient;
-        constructor(host : string, port : number, user : string, pwd : string, dbName : string) {
-            this.contentDb = dbName;
+        constructor(host : string, port : number,
+                    user : string, pwd : string,
+                    contentDb : string, modulesDb : string) {
+            this.contentDb = contentDb;
+            this.modulesDb = modulesDb;
             this.host = host;
             this.port = port;
             this.user = user;
@@ -31,18 +35,19 @@ export function activate(context: vscode.ExtensionContext) {
             this.mldbClient = ml.createDatabaseClient({
                 host: host, port: port, user: user, password: pwd,
                 authType: 'DIGEST'});
-            this.mldbClient.eval("xdmp.database('"+ dbName +"')")
+            this.mldbClient.eval("xdmp.database('"+ contentDb +"')")
                 .result(null,null).then((response) => {
                     this.docsDbNumber = response[0]['value'];
                 });
         };
 
         toString() : string {
-            return [this.host, this.port, this.user, this.pwd, this.contentDb].join(":");
+            return [this.host, this.port, this.user, this.pwd, this.contentDb, this.modulesDb].join(":");
         }
 
-        compareTo(host : string, port : number, user : string, pwd : string, contentDb : string) : boolean {
-            let newParams = [host, port, user, pwd, contentDb].join(":");
+        compareTo(host : string, port : number, user : string,
+                pwd : string, contentDb : string, modulesDb : string) : boolean {
+            let newParams = [host, port, user, pwd, contentDb, modulesDb].join(":");
             return (this.toString() === newParams);
         }
     }
@@ -54,18 +59,19 @@ export function activate(context: vscode.ExtensionContext) {
         var user = String(cfg.get("marklogic.username"));
         var pwd = String(cfg.get("marklogic.password"));
         var port = Number(cfg.get("marklogic.port"));
-        var dbName = String(cfg.get("marklogic.documentsDb"));
+        var contentDb = String(cfg.get("marklogic.documentsDb"));
+        var modulesDb = String(cfg.get("marklogic.modulesDb"));
         var commands = vscode.commands.getCommands();
 
         // if settings have changed, release and clear the client
         let mlc = <marklogicVSClient>context.globalState.get(mldbClient);
-        if (mlc != null && !mlc.compareTo(host, port, user, pwd, dbName)) {
+        if (mlc != null && !mlc.compareTo(host, port, user, pwd, contentDb, modulesDb)) {
             mlc.mldbClient.release();
             context.globalState.update(mldbClient, null);
         }
 
         if (context.globalState.get(mldbClient) === null) {
-            var newClient = new marklogicVSClient(host, port, user, pwd, dbName);
+            var newClient = new marklogicVSClient(host, port, user, pwd, contentDb, modulesDb);
             try {
                 context.globalState.update(mldbClient, newClient);
             } catch(e) {
@@ -127,12 +133,17 @@ export function activate(context: vscode.ExtensionContext) {
             'xquery version "1.0-ml";' +
             'declare variable $actualQuery as xs:string external;' +
             'declare variable $documentsDb as xs:string external;' +
+            'declare variable $modulesDb as xs:string external;' +
             'let $options := ' +
             '<options xmlns="xdmp:eval">' +
             '   <database>{xdmp:database($documentsDb)}</database>' +
+            '   <modules>{xdmp:database($modulesDb)}</modules>' +
             '</options>' +
             'return xdmp:eval($actualQuery, (), $options)';
-        let extVars = <ml.Variables>{'actualQuery': actualQuery, 'documentsDb': db.contentDb};
+        let extVars = <ml.Variables>{'actualQuery': actualQuery,
+            'documentsDb': db.contentDb,
+            'modulesDb' : db.modulesDb
+        };
 
         db.mldbClient.xqueryEval(query, extVars).result(
             function(response) {
