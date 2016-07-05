@@ -11,11 +11,22 @@ export function activate(context: vscode.ExtensionContext) {
      * marklogicVSClient
      */
     class marklogicVSClient {
-        dbName : string;
+        contentDb : string;
+
+        host : string;
+        port : number;
+        user : string;
+        pwd : string;
+
         docsDbNumber : string;
         mldbClient : ml.DatabaseClient;
         constructor(host : string, port : number, user : string, pwd : string, dbName : string) {
-            this.dbName = dbName;
+            this.contentDb = dbName;
+            this.host = host;
+            this.port = port;
+            this.user = user;
+            this.pwd = pwd;
+
             this.docsDbNumber = "0";
             this.mldbClient = ml.createDatabaseClient({
                 host: host, port: port, user: user, password: pwd,
@@ -25,6 +36,15 @@ export function activate(context: vscode.ExtensionContext) {
                     this.docsDbNumber = response[0]['value'];
                 });
         };
+
+        toString() : string {
+            return [this.host, this.port, this.user, this.pwd, this.contentDb].join(":");
+        }
+
+        compareTo(host : string, port : number, user : string, pwd : string, contentDb : string) : boolean {
+            let newParams = [host, port, user, pwd, contentDb].join(":");
+            return (this.toString() === newParams);
+        }
     }
 
     function getDbClient() : marklogicVSClient {
@@ -36,6 +56,14 @@ export function activate(context: vscode.ExtensionContext) {
         var port = Number(cfg.get("marklogic.port"));
         var dbName = String(cfg.get("marklogic.documentsDb"));
         var commands = vscode.commands.getCommands();
+
+        // if settings have changed, release and clear the client
+        let mlc = <marklogicVSClient>context.globalState.get(mldbClient);
+        if (mlc != null && !mlc.compareTo(host, port, user, pwd, dbName)) {
+            mlc.mldbClient.release();
+            context.globalState.update(mldbClient, null);
+        }
+
         if (context.globalState.get(mldbClient) === null) {
             var newClient = new marklogicVSClient(host, port, user, pwd, dbName);
             try {
@@ -104,7 +132,7 @@ export function activate(context: vscode.ExtensionContext) {
             '   <database>{xdmp:database($documentsDb)}</database>' +
             '</options>' +
             'return xdmp:eval($actualQuery, (), $options)';
-        let extVars = <ml.Variables>{'actualQuery': actualQuery, 'documentsDb': db.dbName};
+        let extVars = <ml.Variables>{'actualQuery': actualQuery, 'documentsDb': db.contentDb};
 
         db.mldbClient.xqueryEval(query, extVars).result(
             function(response) {
