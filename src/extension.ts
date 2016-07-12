@@ -123,11 +123,19 @@ export function activate(context: vscode.ExtensionContext) {
         }
     };
 
+    function _handleResponseToUri(uri : vscode.Uri, response : Object) {
+        console.log("response: " + JSON.stringify(response));
+        provider.updateResultsForUri(uri, response);
+        provider.update(uri);
+    };
+    function _handleError(error) {
+        vscode.window.showErrorMessage(JSON.stringify(error.body.errorResponse.message));
+        console.error(JSON.stringify(error));
+    };
+
     function _sendXQuery(actualQuery : string, uri : vscode.Uri) {
         let db = getDbClient();
-
         let cfg = vscode.workspace.getConfiguration();
-        let docdb = db.docsDbNumber;
 
         let query =
             'xquery version "1.0-ml";' +
@@ -146,31 +154,23 @@ export function activate(context: vscode.ExtensionContext) {
         };
 
         db.mldbClient.xqueryEval(query, extVars).result(
-            function(response) {
-                console.log("response:" + JSON.stringify(response));
-                provider.updateResultsForUri(uri, response);
-                provider.update(uri);
-            },
-            function (error) {
-                vscode.window.showErrorMessage(JSON.stringify(error.body.errorResponse.message));
-                console.error("Error:" + JSON.stringify(error));
-            });
+            response => _handleResponseToUri(uri, response),
+            error => _handleError(error));
     };
 
-    function _sendJSQuery() : Object {
-        var actualQuery = vscode.window.activeTextEditor.document.getText();
-        var db = getDbClient();
-        var responsePayload;
-        db.mldbClient.eval(actualQuery).result(
-            function(response) {
-                vscode.window.showInformationMessage(JSON.stringify(response));
-                responsePayload = response;
-            },
-            function (error) {
-                vscode.window.showErrorMessage(JSON.stringify(error.body.errorResponse.message));
-                console.error(JSON.stringify(error));
-            });
-        return responsePayload;
+    function _sendJSQuery(actualQuery : string, uri : vscode.Uri) : void {
+        let db = getDbClient();
+        let cfg = vscode.workspace.getConfiguration();
+
+        let extVars = <ml.Variables>{
+            'actualQuery': actualQuery,
+            'documentsDb': db.contentDb,
+            'modulesDb': db.modulesDb
+        }
+
+        db.mldbClient.eval(actualQuery, extVars).result(
+            response => _handleResponseToUri(uri, response),
+            error => _handleError(error))
     };
 
     let provider = new QueryResultsContentProvider();
@@ -182,10 +182,17 @@ export function activate(context: vscode.ExtensionContext) {
         let uri = encodeLocation(editor.document.uri);
         _sendXQuery(actualQuery, uri);
         return vscode.workspace.openTextDocument(uri).then(
-            doc => vscode.window.showTextDocument(doc, editor.viewColumn + 1)),
-            error => console.error(error);
+            doc => vscode.window.showTextDocument(doc, editor.viewColumn + 1),
+            error => console.error(error));
     });
-    let sendJSQuery = vscode.commands.registerCommand('extension.sendJSQuery', () => {_sendJSQuery()});
+    let sendJSQuery = vscode.commands.registerCommand('extension.sendJSQuery', editor => {
+        let actualQuery = editor.document.getText();
+        let uri = encodeLocation(editor.document.uri);
+        _sendJSQuery(actualQuery, uri);
+        return vscode.workspace.openTextDocument(uri).then(
+            doc => vscode.window.showTextDocument(doc, editor.viewColumn + 1),
+            error => console.error(error));
+    });
 
     context.subscriptions.push(sendXQuery);
     context.subscriptions.push(sendJSQuery);
