@@ -148,7 +148,8 @@ export function activate(context: vscode.ExtensionContext) {
             '   <modules>{xdmp:database($modulesDb)}</modules>' +
             '</options>' +
             'return xdmp:eval($actualQuery, (), $options)';
-        let extVars = <ml.Variables>{'actualQuery': actualQuery,
+        let extVars = <ml.Variables>{
+            'actualQuery': actualQuery,
             'documentsDb': db.contentDb,
             'modulesDb' : db.modulesDb
         };
@@ -161,6 +162,9 @@ export function activate(context: vscode.ExtensionContext) {
     function _sendJSQuery(actualQuery : string, uri : vscode.Uri) : void {
         let db = getDbClient();
         let cfg = vscode.workspace.getConfiguration();
+
+        let query = "xdmp.eval(actualQuery, ()," +
+            "{actualQuery: actualQuery, database: documentsDb, modules: modulesDb});"
 
         let extVars = <ml.Variables>{
             'actualQuery': actualQuery,
@@ -185,7 +189,7 @@ export function activate(context: vscode.ExtensionContext) {
             doc => vscode.window.showTextDocument(doc, editor.viewColumn + 1),
             error => console.error(error));
     });
-    let sendJSQuery = vscode.commands.registerCommand('extension.sendJSQuery', editor => {
+    let sendJSQuery = vscode.commands.registerTextEditorCommand('extension.sendJSQuery', editor => {
         let actualQuery = editor.document.getText();
         let uri = encodeLocation(editor.document.uri);
         _sendJSQuery(actualQuery, uri);
