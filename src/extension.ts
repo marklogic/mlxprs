@@ -81,9 +81,11 @@ export function activate(context: vscode.ExtensionContext) {
         return context.globalState.get<marklogicVSClient>("mldbClient");
     };
 
-    function encodeLocation(uri: vscode.Uri) : vscode.Uri {
+    function encodeLocation(uri: vscode.Uri, host: string, port: number) : vscode.Uri {
         let query = JSON.stringify([uri.toString()]);
-        return vscode.Uri.parse(`${QueryResultsContentProvider.scheme}:results-for?${query}`);
+        let newUri = vscode.Uri.parse(`${QueryResultsContentProvider.scheme}://${host}:${port}/${uri.path}?${query}`);
+        let newUriString = newUri.toString();
+        return newUri;
     }
 
     /**
@@ -93,7 +95,7 @@ export function activate(context: vscode.ExtensionContext) {
         private _onDidChange = new vscode.EventEmitter<vscode.Uri>();
         public _cache = new Map<string, Object>();
 
-        static scheme = 'xquery-result';
+        static scheme = 'mlquery';
         /**
          * Expose an event to signal changes of _virtual_ documents
          * to the editor
@@ -183,7 +185,8 @@ export function activate(context: vscode.ExtensionContext) {
 
     let sendXQuery = vscode.commands.registerTextEditorCommand('extension.sendXQuery', editor => {
         let actualQuery = editor.document.getText();
-        let uri = encodeLocation(editor.document.uri);
+        let host = getDbClient().host; let port = getDbClient().port;
+        let uri = encodeLocation(editor.document.uri, host, port);
         _sendXQuery(actualQuery, uri);
         return vscode.workspace.openTextDocument(uri).then(
             doc => vscode.window.showTextDocument(doc, editor.viewColumn + 1),
@@ -191,7 +194,8 @@ export function activate(context: vscode.ExtensionContext) {
     });
     let sendJSQuery = vscode.commands.registerTextEditorCommand('extension.sendJSQuery', editor => {
         let actualQuery = editor.document.getText();
-        let uri = encodeLocation(editor.document.uri);
+        let host = getDbClient().host; let port = getDbClient().port;
+        let uri = encodeLocation(editor.document.uri, host, port);
         _sendJSQuery(actualQuery, uri);
         return vscode.workspace.openTextDocument(uri).then(
             doc => vscode.window.showTextDocument(doc, editor.viewColumn + 1),
