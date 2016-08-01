@@ -21,6 +21,7 @@ This will take the contents of the current active editor window and run it again
 
 ## Coming soon (hopefully)
 
+- *very soon*: publish to VSCode Extension Marketplace
 - XQuery `"1.0-ml"` syntax highlighting (currently you'll need to install your own XQuery syntax)
 - pretty-formatting of query results based on their contents
 - Edit MarkLogic XML and JSON documents in the text editor, save them back to the database
@@ -30,6 +31,20 @@ This will take the contents of the current active editor window and run it again
 For now, [vscode-xml](https://github.com/TrueCommerce/vscode-xml) is a good solution for XQuery syntax.
 
 ## Getting started
+
+*TODO: install using the VSCode Extension Marketplace*
+
+### Manual installation
+
+Copy or symlink the root of this project (the `mlxprs` folder) into your VSCode extensions folder:
+
+- at `$HOME/.vscode/extensions/` for *nix,
+- or `%USERPROFILE%\.vscode\extensions` for Windows.
+
+Then restart VSCode just to make sure.
+
+
+### Connect and query
 
 If you're running MarkLogic on localhost:8000 admin/admin, and want to query the "Documents" database,
 simply:
@@ -62,7 +77,7 @@ for example:
 
 I've been building and testing with the following ingredients:
 
-- MarkLogic 8 or later, with admin access
+- MarkLogic 8, with admin access
 - Visual Studio Code, version 1.3
 
 ## Credit
