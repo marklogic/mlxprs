@@ -1,4 +1,6 @@
-# mlxprs, a MarkLogic Visual Studio Code extension
+# mlxprs
+
+*A MarkLogic Visual Studio Code extension*
 
 This extension allows you to run XQuery and JavaScript Queries against a MarkLogic database.
 It's still very much a work in progress.
@@ -24,6 +26,8 @@ This will take the contents of the current active editor window and run it again
 - Edit MarkLogic XML and JSON documents in the text editor, save them back to the database
 - Interactive selection of configuration options
 - Code completion, maybe even with custom modules out of the configured modules database
+
+For now, [vscode-xml](https://github.com/TrueCommerce/vscode-xml) is a good solution for XQuery syntax.
 
 ## Getting started
 
