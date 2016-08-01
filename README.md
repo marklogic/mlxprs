@@ -36,12 +36,14 @@ For now, [vscode-xml](https://github.com/TrueCommerce/vscode-xml) is a good solu
 
 ### Manual installation
 
-Copy or symlink the root of this project (the `mlxprs` folder) into your VSCode extensions folder:
+After cloning the project, the following steps should enable the extension.
 
-- at `$HOME/.vscode/extensions/` for *nix,
-- or `%USERPROFILE%\.vscode\extensions` for Windows.
-
-Then restart VSCode just to make sure.
+1. Copy or symlink the root of this project (the `mlxprs` folder) into your VSCode extensions folder:
+    - at `$HOME/.vscode/extensions/` for *nix,
+    - or `%USERPROFILE%\.vscode\extensions` for Windows.
+2. In the root of this project run: `npm install`
+3. Then run `node ./node_modules/vscode/bin/compile`
+4. Restart VSCode if it was running
 
 
 ### Connect and query
@@ -79,6 +81,8 @@ I've been building and testing with the following ingredients:
 
 - MarkLogic 8, with admin access
 - Visual Studio Code, version 1.3
+- `npm` version 3.10.3
+- node.js v0.10.46
 
 ## Credit
 
