@@ -7,7 +7,7 @@ It's still very much a work in progress.
 
 ## What it does
 
-The extension adds two commands to the VS Code command pallette:
+The extension adds two commands to the VS Code command palette:
 
 1. Eval XQuery
 2. Eval JavaScript
@@ -87,5 +87,5 @@ I've been building and testing with the following ingredients:
 ## Credit
 
 Aside from excellent development and extension support from Visual Studio Code,
-Christy Harragan's [marklogic-node-typescript-definitions](https://github.com/christyharagan/marklogic-node-typescript-definitions)
+Christy Haragan's [marklogic-node-typescript-definitions](https://github.com/christyharagan/marklogic-node-typescript-definitions)
 made this project possible.
