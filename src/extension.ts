@@ -126,13 +126,22 @@ export function activate(context: vscode.ExtensionContext) {
     };
 
     function _handleResponseToUri(uri : vscode.Uri, response : Object) {
-        console.log("response: " + JSON.stringify(response));
         provider.updateResultsForUri(uri, response);
         provider.update(uri);
     };
-    function _handleError(error) {
-        vscode.window.showErrorMessage(JSON.stringify(error.body.errorResponse.message));
-        console.error(JSON.stringify(error));
+    function _handleError(uri: vscode.Uri, error: any) {
+        let errorMessage = "";
+        let errorResultsObject = { datatype: "node()", format: "json", value: error};
+        if (error.body.errorResponse === undefined) {
+            // problem reaching MarkLogic
+            errorMessage = error.message;
+        } else {
+            // MarkLogic error: useful message in body.errorResponse 
+            errorMessage = error.body.errorResponse.message;
+        }
+        vscode.window.showErrorMessage(JSON.stringify(errorMessage));
+        provider.updateResultsForUri(uri, [errorResultsObject]);
+        provider.update(uri);
     };
 
     function _sendXQuery(actualQuery : string, uri : vscode.Uri) {
@@ -158,7 +167,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         db.mldbClient.xqueryEval(query, extVars).result(
             response => _handleResponseToUri(uri, response),
-            error => _handleError(error));
+            error => _handleError(uri, error));
     };
 
     function _sendJSQuery(actualQuery : string, uri : vscode.Uri) : void {
@@ -176,7 +185,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         db.mldbClient.eval(actualQuery, extVars).result(
             response => _handleResponseToUri(uri, response),
-            error => _handleError(error))
+            error => _handleError(uri, error))
     };
 
     let provider = new QueryResultsContentProvider();
