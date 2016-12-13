@@ -61,7 +61,24 @@
           "description": "modules database used in queries"
         }
       }
-    }
+    },
+    "languages": [
+      {
+        "id": "xquery-ml",
+        "aliases": [
+          "XQuery",
+          "xquery-ml"
+        ],
+        "extensions": [
+          ".xq",
+          ".xql",
+          ".xqm",
+          ".xqy",
+          ".xquery"
+        ],
+        "configuration": "./xquery-ml.configuration.json"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "node ./node_modules/vscode/bin/compile",
