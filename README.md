@@ -87,5 +87,8 @@ I've been building and testing with the following ingredients:
 ## Credit
 
 Aside from excellent development and extension support from Visual Studio Code,
-Christy Haragan's [marklogic-node-typescript-definitions](https://github.com/christyharagan/marklogic-node-typescript-definitions)
+
+- Christy Haragan's [marklogic-node-typescript-definitions](https://github.com/christyharagan/marklogic-node-typescript-definitions)
 made this project possible.
+- Paxton Hare's [marklogic-sublime](https://github.com/paxtonhare/MarkLogic-Sublime)
+`xquery-ml.tmLanguage` code is used for XQuery-ML syntax, and the MarkLogic Sublime project inspired this one.
