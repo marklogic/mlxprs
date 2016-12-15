@@ -3,7 +3,7 @@
   "displayName": "mlxprs",
   "description": "",
   "version": "0.0.1",
-  "publisher": "mikrovvelle",
+  "publisher": "mlxprs",
   "engines": {
     "vscode": "^1.3.0"
   },
