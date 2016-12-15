@@ -1,105 +1,105 @@
 {
-  "name": "mlxprs",
-  "displayName": "mlxprs",
-  "description": "MarkLogic XQuery and JS client",
-  "version": "0.0.2",
-  "publisher": "mlxprs",
-  "engines": {
-    "vscode": "^1.3.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [
-    "onCommand:extension.sendXQuery",
-    "onCommand:extension.sendJSQuery"
-  ],
-  "main": "./out/src/extension",
-  "contributes": {
-    "commands": [
-      {
-        "command": "extension.sendXQuery",
-        "title": "MarkLogic: Eval XQuery"
-      },
-      {
-        "command": "extension.sendJSQuery",
-        "title": "MarkLogic: Eval JS"
-      }
-    ],
-    "configuration": {
-      "type": "object",
-      "title": "MarkLogic connection configuration",
-      "properties": {
-        "marklogic.host": {
-          "type": "string",
-          "default": "localhost",
-          "description": "hostname for MarkLogic instance"
-        },
-        "marklogic.port": {
-          "type": "integer",
-          "default": 8000,
-          "description": "port on which to reach the MarkLogic server"
-        },
-        "marklogic.username": {
-          "type": "string",
-          "default": "admin",
-          "description": "username for MarkLogic connection"
-        },
-        "marklogic.password": {
-          "type": "string",
-          "default": "admin",
-          "description": "password for MarkLogic connection"
-        },
-        "marklogic.documentsDb": {
-          "type": "string",
-          "default": "Documents",
-          "description": "database against which to evaluate queries"
-        },
-        "marklogic.modulesDb": {
-          "type": "string",
-          "default": "Modules",
-          "description": "modules database used in queries"
-        }
-      }
+    "name": "mlxprs",
+    "displayName": "mlxprs",
+    "description": "MarkLogic XQuery and JS client",
+    "version": "0.0.3",
+    "publisher": "mlxprs",
+    "engines": {
+        "vscode": "^1.3.0"
     },
-    "languages": [
-      {
-        "id": "xquery-ml",
-        "aliases": [
-          "XQuery (ML)",
-          "xquery-ml"
-        ],
-        "extensions": [
-          ".xq",
-          ".xql",
-          ".xqm",
-          ".xqy",
-          ".xquery"
-        ],
-        "configuration": "./xquery-ml.configuration.json"
-      }
+    "categories": [
+        "Other"
     ],
-    "grammars": [
-      {
-        "language": "xquery-ml",
-        "scopeName": "source.xquery-ml",
-        "path": "./syntaxes/xquery-ml.tmLanguage"
-      }
-    ]
-  },
-  "scripts": {
-    "vscode:prepublish": "node ./node_modules/vscode/bin/compile",
-    "compile": "node ./node_modules/vscode/bin/compile -watch -p ./",
-    "postinstall": "node ./node_modules/vscode/bin/install"
-  },
-  "devDependencies": {
-    "typescript": "^1.8.5",
-    "vscode": "^0.11.0",
-    "marklogic-node-typescript-definitions": "^0.1.3"
-  },
-  "dependencies": {
-    "marklogic": "^1.0.5",
-    "marklogic-node-typescript-definitions": "^0.1.3",
-    "winston": "^2.2.0"
-  }
+    "activationEvents": [
+        "onCommand:extension.sendXQuery",
+        "onCommand:extension.sendJSQuery"
+    ],
+    "main": "./out/src/extension",
+    "contributes": {
+        "commands": [
+            {
+                "command": "extension.sendXQuery",
+                "title": "MarkLogic: Eval XQuery"
+            },
+            {
+                "command": "extension.sendJSQuery",
+                "title": "MarkLogic: Eval JS"
+            }
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "MarkLogic connection configuration",
+            "properties": {
+                "marklogic.host": {
+                    "type": "string",
+                    "default": "localhost",
+                    "description": "hostname for MarkLogic instance"
+                },
+                "marklogic.port": {
+                    "type": "integer",
+                    "default": 8000,
+                    "description": "port on which to reach the MarkLogic server"
+                },
+                "marklogic.username": {
+                    "type": "string",
+                    "default": "admin",
+                    "description": "username for MarkLogic connection"
+                },
+                "marklogic.password": {
+                    "type": "string",
+                    "default": "admin",
+                    "description": "password for MarkLogic connection"
+                },
+                "marklogic.documentsDb": {
+                    "type": "string",
+                    "default": "Documents",
+                    "description": "database against which to evaluate queries"
+                },
+                "marklogic.modulesDb": {
+                    "type": "string",
+                    "default": "Modules",
+                    "description": "modules database used in queries"
+                }
+            }
+        },
+        "languages": [
+            {
+                "id": "xquery-ml",
+                "aliases": [
+                    "XQuery (ML)",
+                    "xquery-ml"
+                ],
+                "extensions": [
+                    ".xq",
+                    ".xql",
+                    ".xqm",
+                    ".xqy",
+                    ".xquery"
+                ],
+                "configuration": "./xquery-ml.configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "xquery-ml",
+                "scopeName": "source.xquery-ml",
+                "path": "./syntaxes/xquery-ml.tmLanguage"
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "node ./node_modules/vscode/bin/compile",
+        "compile": "node ./node_modules/vscode/bin/compile -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install"
+    },
+    "devDependencies": {
+        "typescript": "^1.8.5",
+        "vscode": "^0.11.0",
+        "marklogic-node-typescript-definitions": "^0.1.3"
+    },
+    "dependencies": {
+        "marklogic": "^1.0.5",
+        "marklogic-node-typescript-definitions": "^0.1.3",
+        "winston": "^2.2.0"
+    }
 }
