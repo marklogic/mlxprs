@@ -3,6 +3,7 @@
 *A MarkLogic Visual Studio Code extension*
 
 This extension allows you to run XQuery and JavaScript Queries against a MarkLogic database.
+It also adds syntax highlighting for the MarkLogic XQuery (`version "1.0-ml"`) dialect.
 It's still very much a work in progress.
 
 ## What it does
@@ -21,18 +22,14 @@ This will take the contents of the current active editor window and run it again
 
 ## Coming soon (hopefully)
 
-- *very soon*: publish to VSCode Extension Marketplace
-- XQuery `"1.0-ml"` syntax highlighting (currently you'll need to install your own XQuery syntax)
 - pretty-formatting of query results based on their contents
 - Edit MarkLogic XML and JSON documents in the text editor, save them back to the database
 - Interactive selection of configuration options
 - Code completion, maybe even with custom modules out of the configured modules database
 
-For now, [vscode-xml](https://github.com/TrueCommerce/vscode-xml) is a good solution for XQuery syntax.
-
 ## Getting started
 
-*TODO: install using the VSCode Extension Marketplace*
+Use the Visual Studio Code extension manager to install the extension from the VS Code Marketplace. Search for "mlxprs".
 
 ### Manual installation
 
@@ -80,9 +77,9 @@ for example:
 I've been building and testing with the following ingredients:
 
 - MarkLogic 8, with admin access
-- Visual Studio Code, version 1.3
-- `npm` version 3.10.3
-- node.js v0.10.46
+- Visual Studio Code, version 1.8
+- `npm` version 3.10.9
+- node.js v7.2.1
 
 ## Credit
 
