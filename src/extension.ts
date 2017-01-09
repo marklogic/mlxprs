@@ -126,8 +126,11 @@ export function activate(context: vscode.ExtensionContext) {
     };
 
     function _handleResponseToUri(uri : vscode.Uri, response : Object) {
-        provider.updateResultsForUri(uri, response);
-        provider.update(uri);
+        let fmt = response[0]['format'];
+        let responseUri = vscode.Uri.parse(`${QueryResultsContentProvider.scheme}://${uri.authority}${uri.path}.${fmt}?${uri.query}`);
+        provider.updateResultsForUri(responseUri, response);
+        provider.update(responseUri);
+        return responseUri;
     };
     function _handleError(uri: vscode.Uri, error: any) {
         let errorMessage = "";
@@ -144,7 +147,7 @@ export function activate(context: vscode.ExtensionContext) {
         provider.update(uri);
     };
 
-    function _sendXQuery(actualQuery : string, uri : vscode.Uri) {
+    function _sendXQuery(actualQuery: string, uri: vscode.Uri, editor: vscode.TextEditor) {
         let db = getDbClient();
         let cfg = vscode.workspace.getConfiguration();
 
@@ -165,8 +168,15 @@ export function activate(context: vscode.ExtensionContext) {
             'modulesDb' : db.modulesDb
         };
 
-        db.mldbClient.xqueryEval(query, extVars).result(
-            response => _handleResponseToUri(uri, response),
+        let response = db.mldbClient.xqueryEval(query, extVars).result(
+            response => {
+                let responseUri = _handleResponseToUri(uri, response);
+                vscode.workspace.openTextDocument(responseUri)
+                .then(
+                    doc => vscode.window.showTextDocument(doc, editor.viewColumn + 1),
+                    error => console.error(error)
+                )
+            },
             error => _handleError(uri, error));
     };
 
@@ -195,11 +205,8 @@ export function activate(context: vscode.ExtensionContext) {
     let sendXQuery = vscode.commands.registerTextEditorCommand('extension.sendXQuery', editor => {
         let actualQuery = editor.document.getText();
         let host = getDbClient().host; let port = getDbClient().port;
-        let uri = encodeLocation(editor.document.uri, host, port);
-        _sendXQuery(actualQuery, uri);
-        return vscode.workspace.openTextDocument(uri).then(
-            doc => vscode.window.showTextDocument(doc, editor.viewColumn + 1),
-            error => console.error(error));
+        let qUri = encodeLocation(editor.document.uri, host, port);
+        _sendXQuery(actualQuery, qUri, editor)
     });
     let sendJSQuery = vscode.commands.registerTextEditorCommand('extension.sendJSQuery', editor => {
         let actualQuery = editor.document.getText();
