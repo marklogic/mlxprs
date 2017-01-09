@@ -147,7 +147,7 @@ export function activate(context: vscode.ExtensionContext) {
         provider.update(uri);
     };
 
-    function _sendXQuery(actualQuery: string, uri: vscode.Uri, editor: vscode.TextEditor) {
+    function _sendXQuery(actualQuery: string, uri: vscode.Uri, editor: vscode.TextEditor): void {
         let db = getDbClient();
         let cfg = vscode.workspace.getConfiguration();
 
@@ -180,7 +180,7 @@ export function activate(context: vscode.ExtensionContext) {
             error => _handleError(uri, error));
     };
 
-    function _sendJSQuery(actualQuery : string, uri : vscode.Uri) : void {
+    function _sendJSQuery(actualQuery: string, uri: vscode.Uri, editor: vscode.TextEditor): void {
         let db = getDbClient();
         let cfg = vscode.workspace.getConfiguration();
 
@@ -194,7 +194,14 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         db.mldbClient.eval(actualQuery, extVars).result(
-            response => _handleResponseToUri(uri, response),
+            response => {
+                let responseUri = _handleResponseToUri(uri, response);
+                vscode.workspace.openTextDocument(responseUri)
+                .then(
+                    doc => vscode.window.showTextDocument(doc, editor.viewColumn + 1),
+                    error => console.error(error)
+                )
+            },
             error => _handleError(uri, error))
     };
 
@@ -212,10 +219,7 @@ export function activate(context: vscode.ExtensionContext) {
         let actualQuery = editor.document.getText();
         let host = getDbClient().host; let port = getDbClient().port;
         let uri = encodeLocation(editor.document.uri, host, port);
-        _sendJSQuery(actualQuery, uri);
-        return vscode.workspace.openTextDocument(uri).then(
-            doc => vscode.window.showTextDocument(doc, editor.viewColumn + 1),
-            error => console.error(error));
+        _sendJSQuery(actualQuery, uri, editor);
     });
 
     context.subscriptions.push(sendXQuery);
