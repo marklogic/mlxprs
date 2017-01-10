@@ -193,10 +193,7 @@ export function activate(context: vscode.ExtensionContext) {
             response => {
                 let responseUri = _handleResponseToUri(uri, response);
                 vscode.workspace.openTextDocument(responseUri)
-                .then(
-                    doc => vscode.window.showTextDocument(doc, editor.viewColumn + 1),
-                    error => console.error(error)
-                )
+                    .then(doc => receiveDocument(doc, editor))
             },
             error => _handleError(uri, error));
     };
