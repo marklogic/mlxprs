@@ -14,15 +14,16 @@ The extension adds two commands to the VS Code command palette:
 2. Eval JavaScript
 
 This will take the contents of the current active editor window and run it against a configured MarkLogic database instance.
+The results of the query will be shown in the next tab over.
 
 ## Features
 
 - It's asynchronous: long-running queries won't freeze the editor
 - Changes to the config file take immediate effect, switch databases and credentials on-the-fly
+- Readability—pretty-formatting of query results based on their contents
 
 ## Coming soon (hopefully)
 
-- pretty-formatting of query results based on their contents
 - Edit MarkLogic XML and JSON documents in the text editor, save them back to the database
 - Interactive selection of configuration options
 - Code completion, maybe even with custom modules out of the configured modules database
