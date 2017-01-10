@@ -88,6 +88,10 @@ export function activate(context: vscode.ExtensionContext) {
         return newUri;
     }
 
+    function myFormattingOptions(): vscode.FormattingOptions {
+        return {tabSize: 2, insertSpaces: true}
+    }
+
     /**
      * QueryResultsContentProvider implements vscode.TextDocumentContentProvider
      */
@@ -197,10 +201,20 @@ export function activate(context: vscode.ExtensionContext) {
             response => {
                 let responseUri = _handleResponseToUri(uri, response);
                 vscode.workspace.openTextDocument(responseUri)
-                .then(
-                    doc => vscode.window.showTextDocument(doc, editor.viewColumn + 1),
+                    .then(doc => {
+                        vscode.window.showTextDocument(doc, editor.viewColumn + 1)
+                            .then(() =>
+                                vscode.commands.executeCommand('vscode.executeFormatDocumentProvider', doc.uri, myFormattingOptions())
+                                    .then(
+                                    (edits: vscode.TextEdit[]) => {
+                                        let formatEdit = new vscode.WorkspaceEdit();
+                                        formatEdit.set(doc.uri, edits);
+                                        vscode.workspace.applyEdit(formatEdit);
+                                    },
+                                    error => console.error(error)));
+                    },
                     error => console.error(error)
-                )
+                    )
             },
             error => _handleError(uri, error))
     };
