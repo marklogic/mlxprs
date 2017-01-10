@@ -161,9 +161,11 @@ export function activate(context: vscode.ExtensionContext) {
                 vscode.commands.executeCommand('vscode.executeFormatDocumentProvider', doc.uri, myFormattingOptions())
                     .then(
                     (edits: vscode.TextEdit[]) => {
-                        let formatEdit = new vscode.WorkspaceEdit();
-                        formatEdit.set(doc.uri, edits);
-                        vscode.workspace.applyEdit(formatEdit);
+                        if (edits !== undefined) {
+                            let formatEdit = new vscode.WorkspaceEdit();
+                            formatEdit.set(doc.uri, edits);
+                            vscode.workspace.applyEdit(formatEdit);
+                        }
                     },
                     error => console.error(error)));
     };
