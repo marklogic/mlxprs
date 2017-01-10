@@ -151,6 +151,23 @@ export function activate(context: vscode.ExtensionContext) {
         provider.update(uri);
     };
 
+    /**
+     * Show the results of incoming query results (doc) in the (editor).
+     * Try to format the results for readability.
+     */
+    function receiveDocument(doc: vscode.TextDocument, editor: vscode.TextEditor): void {
+        vscode.window.showTextDocument(doc, editor.viewColumn + 1)
+            .then(() =>
+                vscode.commands.executeCommand('vscode.executeFormatDocumentProvider', doc.uri, myFormattingOptions())
+                    .then(
+                    (edits: vscode.TextEdit[]) => {
+                        let formatEdit = new vscode.WorkspaceEdit();
+                        formatEdit.set(doc.uri, edits);
+                        vscode.workspace.applyEdit(formatEdit);
+                    },
+                    error => console.error(error)));
+    };
+
     function _sendXQuery(actualQuery: string, uri: vscode.Uri, editor: vscode.TextEditor): void {
         let db = getDbClient();
         let cfg = vscode.workspace.getConfiguration();
@@ -201,20 +218,7 @@ export function activate(context: vscode.ExtensionContext) {
             response => {
                 let responseUri = _handleResponseToUri(uri, response);
                 vscode.workspace.openTextDocument(responseUri)
-                    .then(doc => {
-                        vscode.window.showTextDocument(doc, editor.viewColumn + 1)
-                            .then(() =>
-                                vscode.commands.executeCommand('vscode.executeFormatDocumentProvider', doc.uri, myFormattingOptions())
-                                    .then(
-                                    (edits: vscode.TextEdit[]) => {
-                                        let formatEdit = new vscode.WorkspaceEdit();
-                                        formatEdit.set(doc.uri, edits);
-                                        vscode.workspace.applyEdit(formatEdit);
-                                    },
-                                    error => console.error(error)));
-                    },
-                    error => console.error(error)
-                    )
+                    .then(doc => receiveDocument(doc, editor))
             },
             error => _handleError(uri, error))
     };
