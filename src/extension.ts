@@ -202,16 +202,16 @@ export function activate(context: vscode.ExtensionContext) {
         let db = getDbClient();
         let cfg = vscode.workspace.getConfiguration();
 
-        let query = "xdmp.eval(actualQuery, ()," +
-            "{actualQuery: actualQuery, database: documentsDb, modules: modulesDb});"
+        let query = "xdmp.eval(actualQuery, {actualQuery: actualQuery}," +
+            `{database: xdmp.database(contentDb), modules: xdmp.database(modulesDb)});`;
 
         let extVars = <ml.Variables>{
             'actualQuery': actualQuery,
-            'documentsDb': db.contentDb,
+            'contentDb': db.contentDb,
             'modulesDb': db.modulesDb
         }
 
-        db.mldbClient.eval(actualQuery, extVars).result(
+        db.mldbClient.eval(query, extVars).result(
             response => {
                 let responseUri = _handleResponseToUri(uri, response);
                 vscode.workspace.openTextDocument(responseUri)
