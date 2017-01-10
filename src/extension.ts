@@ -11,19 +11,19 @@ export function activate(context: vscode.ExtensionContext) {
      * marklogicVSClient
      */
     class marklogicVSClient {
-        contentDb : string;
-        modulesDb : string;
+        contentDb: string;
+        modulesDb: string;
 
-        host : string;
-        port : number;
-        user : string;
-        pwd : string;
+        host: string;
+        port: number;
+        user: string;
+        pwd: string;
 
-        docsDbNumber : string;
-        mldbClient : ml.DatabaseClient;
-        constructor(host : string, port : number,
-                    user : string, pwd : string,
-                    contentDb : string, modulesDb : string) {
+        docsDbNumber: string;
+        mldbClient: ml.DatabaseClient;
+        constructor(host: string, port: number,
+            user: string, pwd: string,
+            contentDb: string, modulesDb: string) {
             this.contentDb = contentDb;
             this.modulesDb = modulesDb;
             this.host = host;
@@ -34,25 +34,26 @@ export function activate(context: vscode.ExtensionContext) {
             this.docsDbNumber = "0";
             this.mldbClient = ml.createDatabaseClient({
                 host: host, port: port, user: user, password: pwd,
-                authType: 'DIGEST'});
-            this.mldbClient.eval("xdmp.database('"+ contentDb +"')")
-                .result(null,null).then((response) => {
+                authType: 'DIGEST'
+            });
+            this.mldbClient.eval("xdmp.database('" + contentDb + "')")
+                .result(null, null).then((response) => {
                     this.docsDbNumber = response[0]['value'];
                 });
         };
 
-        toString() : string {
+        toString(): string {
             return [this.host, this.port, this.user, this.pwd, this.contentDb, this.modulesDb].join(":");
         }
 
-        compareTo(host : string, port : number, user : string,
-                pwd : string, contentDb : string, modulesDb : string) : boolean {
+        compareTo(host: string, port: number, user: string,
+            pwd: string, contentDb: string, modulesDb: string): boolean {
             let newParams = [host, port, user, pwd, contentDb, modulesDb].join(":");
             return (this.toString() === newParams);
         }
     }
 
-    function getDbClient() : marklogicVSClient {
+    function getDbClient(): marklogicVSClient {
         var cfg = vscode.workspace.getConfiguration();
 
         var host = String(cfg.get("marklogic.host"));
@@ -74,14 +75,14 @@ export function activate(context: vscode.ExtensionContext) {
             var newClient = new marklogicVSClient(host, port, user, pwd, contentDb, modulesDb);
             try {
                 context.globalState.update(mldbClient, newClient);
-            } catch(e) {
+            } catch (e) {
                 console.log("Error: " + JSON.stringify(e));
             }
         };
         return context.globalState.get<marklogicVSClient>("mldbClient");
     };
 
-    function encodeLocation(uri: vscode.Uri, host: string, port: number) : vscode.Uri {
+    function encodeLocation(uri: vscode.Uri, host: string, port: number): vscode.Uri {
         let query = JSON.stringify([uri.toString()]);
         let newUri = vscode.Uri.parse(`${QueryResultsContentProvider.scheme}://${host}:${port}/${uri.path}?${query}`);
         let newUriString = newUri.toString();
@@ -89,7 +90,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     function myFormattingOptions(): vscode.FormattingOptions {
-        return {tabSize: 2, insertSpaces: true}
+        return { tabSize: 2, insertSpaces: true }
     }
 
     /**
@@ -104,14 +105,14 @@ export function activate(context: vscode.ExtensionContext) {
          * Expose an event to signal changes of _virtual_ documents
          * to the editor
          */
-        get onDidChange() {return this._onDidChange.event;};
-        public update(uri: vscode.Uri) {this._onDidChange.fire(uri);};
+        get onDidChange() { return this._onDidChange.event; };
+        public update(uri: vscode.Uri) { this._onDidChange.fire(uri); };
 
         public updateResultsForUri(uri: vscode.Uri, val: Object) {
             this._cache.set(uri.toString(), val);
         };
 
-        private unwrap(o: Object) : string {
+        private unwrap(o: Object): string {
             let value = JSON.stringify(o['value'])
             if (o['format'] === 'xml') {
                 return JSON.parse(value);
@@ -122,14 +123,14 @@ export function activate(context: vscode.ExtensionContext) {
         public provideTextDocumentContent(uri: vscode.Uri): string {
             let results = this._cache.get(uri.toString());
             if (results) {
-                let r = <Array<Object>> results;
+                let r = <Array<Object>>results;
                 return r.map(o => this.unwrap(o)).join("\n");
             }
             return "pending..."
         }
     };
 
-    function _handleResponseToUri(uri : vscode.Uri, response : Object) {
+    function _handleResponseToUri(uri: vscode.Uri, response: Object): vscode.Uri {
         let fmt = response[0]['format'];
         let responseUri = vscode.Uri.parse(`${QueryResultsContentProvider.scheme}://${uri.authority}${uri.path}.${fmt}?${uri.query}`);
         provider.updateResultsForUri(responseUri, response);
@@ -138,7 +139,7 @@ export function activate(context: vscode.ExtensionContext) {
     };
     function _handleError(uri: vscode.Uri, error: any) {
         let errorMessage = "";
-        let errorResultsObject = { datatype: "node()", format: "json", value: error};
+        let errorResultsObject = { datatype: "node()", format: "json", value: error };
         if (error.body.errorResponse === undefined) {
             // problem reaching MarkLogic
             errorMessage = error.message;
@@ -188,7 +189,7 @@ export function activate(context: vscode.ExtensionContext) {
         let extVars = <ml.Variables>{
             'actualQuery': actualQuery,
             'documentsDb': db.contentDb,
-            'modulesDb' : db.modulesDb
+            'modulesDb': db.modulesDb
         };
 
         let response = db.mldbClient.xqueryEval(query, extVars).result(
