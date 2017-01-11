@@ -86,6 +86,8 @@ I've been building and testing with the following ingredients:
 
 Aside from excellent development and extension support from Visual Studio Code,
 
+- Portions of Josh Johnson's [vscode-xml](https://github.com/DotJoshJohnson/vscode-xml) project are re-used
+for XML formatting. The MIT license and source code are kept in the `src/xmlFormatting` folder of this project.
 - Christy Haragan's [marklogic-node-typescript-definitions](https://github.com/christyharagan/marklogic-node-typescript-definitions)
 made this project possible.
 - Paxton Hare's [marklogic-sublime](https://github.com/paxtonhare/MarkLogic-Sublime)

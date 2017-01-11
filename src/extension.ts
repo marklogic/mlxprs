@@ -1,6 +1,7 @@
 'use strict';
 import * as vscode from 'vscode';
 import * as ml from 'marklogic';
+import { XmlFormattingEditProvider } from './xmlFormatting/Formatting';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -242,6 +243,9 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(sendXQuery);
     context.subscriptions.push(sendJSQuery);
+    context.subscriptions.push(
+        vscode.languages.registerDocumentFormattingEditProvider(['xml', 'xsl'], new XmlFormattingEditProvider())
+    );
 }
 
 // this method is called when your extension is deactivated
