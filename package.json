@@ -5,11 +5,13 @@
     "version": "0.1.0",
     "publisher": "mlxprs",
     "engines": {
-        "vscode": "^1.3.0"
+        "vscode": "^1.1.0"
     },
     "categories": [
         "Other"
     ],
+    "repository": "https://github.com/mikrovvelle/mlxprs",
+    "license": "(Apache-2.0 AND MIT)",
     "activationEvents": [
         "onCommand:extension.sendXQuery",
         "onCommand:extension.sendJSQuery"
@@ -94,7 +96,7 @@
     },
     "devDependencies": {
         "typescript": "^1.8.5",
-        "vscode": "^0.11.0",
+        "vscode": "^1.1.0",
         "marklogic-node-typescript-definitions": "^0.1.3"
     },
     "dependencies": {
