@@ -131,8 +131,13 @@ export function activate(context: vscode.ExtensionContext) {
         }
     };
 
-    function _handleResponseToUri(uri: vscode.Uri, response: Object): vscode.Uri {
-        let fmt = response[0]['format'];
+    function _handleResponseToUri(uri: vscode.Uri, response: Array<Object>): vscode.Uri {
+        let fmt = 'nothing'
+        if (response.length > 0) {
+            fmt = response[0]['format'];
+        } else {
+            vscode.window.showInformationMessage(`Query in ${uri.query} got an empty response from ${uri.authority}`)
+        }
         let responseUri = vscode.Uri.parse(`${QueryResultsContentProvider.scheme}://${uri.authority}${uri.path}.${fmt}?${uri.query}`);
         provider.updateResultsForUri(responseUri, response);
         provider.update(responseUri);
