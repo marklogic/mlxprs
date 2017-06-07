@@ -143,19 +143,22 @@ export function activate(context: vscode.ExtensionContext) {
         provider.update(responseUri);
         return responseUri;
     };
-    function _handleError(uri: vscode.Uri, error: any) {
+    function _handleError(uri: vscode.Uri, error: any): vscode.Uri {
         let errorMessage = "";
         let errorResultsObject = { datatype: "node()", format: "json", value: error };
-        if (error.body.errorResponse === undefined) {
+        if (error.body === undefined) {
             // problem reaching MarkLogic
             errorMessage = error.message;
         } else {
-            // MarkLogic error: useful message in body.errorResponse 
+            // MarkLogic error: useful message in body.errorResponse
             errorMessage = error.body.errorResponse.message;
+            errorResultsObject.value = error.body;
         }
+        let responseUri = vscode.Uri.parse(`${QueryResultsContentProvider.scheme}://${uri.authority}${uri.path}-error.json?${uri.query}`);
         vscode.window.showErrorMessage(JSON.stringify(errorMessage));
-        provider.updateResultsForUri(uri, [errorResultsObject]);
-        provider.update(uri);
+        provider.updateResultsForUri(responseUri, [errorResultsObject]);
+        provider.update(responseUri);
+        return responseUri;
     };
 
     /**
@@ -204,7 +207,11 @@ export function activate(context: vscode.ExtensionContext) {
                 vscode.workspace.openTextDocument(responseUri)
                     .then(doc => receiveDocument(doc, editor))
             },
-            error => _handleError(uri, error));
+            error => {
+                let responseUri = _handleError(uri, error);
+                vscode.workspace.openTextDocument(responseUri)
+                    .then(doc => receiveDocument(doc, editor))
+            });
     };
 
     function _sendJSQuery(actualQuery: string, uri: vscode.Uri, editor: vscode.TextEditor): void {
@@ -226,7 +233,11 @@ export function activate(context: vscode.ExtensionContext) {
                 vscode.workspace.openTextDocument(responseUri)
                     .then(doc => receiveDocument(doc, editor))
             },
-            error => _handleError(uri, error))
+            error => {
+                let responseUri = _handleError(uri, error);
+                vscode.workspace.openTextDocument(responseUri)
+                    .then(doc => receiveDocument(doc, editor))
+            })
     };
 
     let provider = new QueryResultsContentProvider();
