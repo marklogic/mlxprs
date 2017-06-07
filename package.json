@@ -2,7 +2,7 @@
     "name": "mlxprs",
     "displayName": "mlxprs",
     "description": "MarkLogic XQuery and JS client",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "publisher": "mlxprs",
     "engines": {
         "vscode": "^1.1.0"
