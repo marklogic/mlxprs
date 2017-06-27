@@ -101,6 +101,6 @@
         "vscode": "^1.1.0"
     },
     "dependencies": {
-        "marklogic": "^1.0.5"
+        "marklogic": "^1.0.6"
     }
 }
