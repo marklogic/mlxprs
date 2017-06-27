@@ -121,6 +121,9 @@ export function activate(context: vscode.ExtensionContext) {
             if (o['format'] === 'text' && o['datatype'] === 'node()') {
                 return this.decodeBinaryText(o['value']);
             }
+            if (o['format'] === 'text' && o['datatype'] === 'other') {
+                return o['value'];
+            }
             return value;
         };
 
