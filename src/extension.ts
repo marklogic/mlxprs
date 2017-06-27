@@ -114,9 +114,8 @@ export function activate(context: vscode.ExtensionContext) {
         };
 
         private unwrap(o: Object): string {
-            let value = JSON.stringify(o['value'])
             if (o['format'] === 'xml') {
-                return JSON.parse(value);
+                return JSON.parse(JSON.stringify(o['value']));
             }
             if (o['format'] === 'text' && o['datatype'] === 'node()') {
                 return this.decodeBinaryText(o['value']);
@@ -124,10 +123,13 @@ export function activate(context: vscode.ExtensionContext) {
             if (o['format'] === 'text' && o['datatype'] === 'other') {
                 return o['value'];
             }
-            return value;
+            return JSON.stringify(o['value']);
         };
 
         private decodeBinaryText(arr: Uint8Array): string {
+            if ((typeof arr[0]) === "string") {
+                return arr.toString();
+            }
             let str = '';
             for (let i = 0; i < arr.length; i++) {
                 str += '%' + ('0' + arr[i].toString(16)).slice(-2);
