@@ -118,8 +118,20 @@ export function activate(context: vscode.ExtensionContext) {
             if (o['format'] === 'xml') {
                 return JSON.parse(value);
             }
+            if (o['format'] === 'text' && o['datatype'] === 'node()') {
+                return this.decodeBinaryText(o['value']);
+            }
             return value;
         };
+
+        private decodeBinaryText(arr: Uint8Array): string {
+            let str = '';
+            for (let i = 0; i < arr.length; i++) {
+                str += '%' + ('0' + arr[i].toString(16)).slice(-2);
+            }
+            str = decodeURIComponent(str);
+            return str;
+        }
 
         public provideTextDocumentContent(uri: vscode.Uri): string {
             let results = this._cache.get(uri.toString());
