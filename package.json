@@ -14,7 +14,8 @@
     "license": "(Apache-2.0 AND MIT)",
     "activationEvents": [
         "onCommand:extension.sendXQuery",
-        "onCommand:extension.sendJSQuery"
+        "onCommand:extension.sendJSQuery",
+        "onLanguage:xquery-ml"
     ],
     "main": "./out/src/extension",
     "contributes": {
@@ -101,6 +102,7 @@
         "vscode": "^1.1.0"
     },
     "dependencies": {
-        "marklogic": "^1.0.6"
+        "marklogic": "^1.0.6",
+        "vscode-languageclient": "^3.3.0"
     }
 }

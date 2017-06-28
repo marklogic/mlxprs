@@ -1,7 +1,9 @@
 'use strict';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import * as ml from 'marklogic';
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting';
+import { LanguageClient, LanguageClientOptions, SettingMonitor, ServerOptions, TransportKind } from 'vscode-languageclient';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -279,6 +281,22 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.languages.registerDocumentFormattingEditProvider(['xml', 'xsl'], new XmlFormattingEditProvider())
     );
+
+	let serverModule = context.asAbsolutePath(path.join('server', 'server.js'));
+    let debugOptions = { execArgv: ["--nolazy", "--debug=6004"] };
+    let serverOptions: ServerOptions = {
+		run : { module: serverModule, transport: TransportKind.ipc },
+		debug: { module: serverModule, transport: TransportKind.ipc, options: debugOptions }
+	}
+    let clientOptions: LanguageClientOptions = {
+		documentSelector: ['xquery-ml'],
+		synchronize: {
+			// Notify the server about file changes to '.clientrc files contain in the workspace
+			fileEvents: vscode.workspace.createFileSystemWatcher('**/.clientrc')
+		}
+	}
+	let disposable = new LanguageClient('xQueryLanguageServer', 'XQuery Language Server', serverOptions, clientOptions).start();
+    context.subscriptions.push(disposable);
 }
 
 // this method is called when your extension is deactivated

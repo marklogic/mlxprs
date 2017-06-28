@@ -1,2 +1,4 @@
 out
 node_modules
+server/*.js
+server/node_modules
