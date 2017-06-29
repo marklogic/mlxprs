@@ -30,22 +30,19 @@ let allMlFunctions: CompletionItem[] = [].concat.apply(
     [],
     Object.keys(hints).map((ns) => {
         return Object.keys(hints[ns]).map((fn) => {
-            // deprecated functions have null return values
             let hint: DocObject = hints[ns][fn];
-            if (hint.return !== null && hint.params !== null) {
-                let ci:CompletionItem = {
+            if (hint.params === null) hint.params = [];
+            if (hint.return !== null) {
+                let ci: CompletionItem = {
                     label: `${hint.prefix}:${hint.name}()`,
                     kind: CompletionItemKind.Function,
-                    documentation: hint.summary,
-                    detail: buildFullSignature(hint),
-                    insertText: buildCompletion(hint),
                     data: hint
                 }
                 return ci;
-            } else return [];
+            } else return {label: 'dep'};
         })
     })
-);
+).filter(h => {return h.label !== 'dep'});
 
 let documents: TextDocuments = new TextDocuments();
 documents.listen(connection);
@@ -72,6 +69,10 @@ connection.onCompletion((textDocumentPositionParams: TextDocumentPositionParams)
 });
 
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
+    let hint: DocObject = item.data;
+    item.documentation = hint.summary;
+    item.detail = buildFullSignature(hint);
+    item.insertText = buildCompletion(hint);
     return item;
 });
 
@@ -87,8 +88,9 @@ function buildCompletion(docObject: DocObject): string {
 function buildFullSignature(docObject: DocObject): string {
     let neededParams: ParamsObject[] = docObject.params.filter(p => {return p.optional !== true});
     let optionParams: ParamsObject[] = docObject.params.filter(p => {return p.optional === true});
-    let neededParamsString = neededParams.map(p => {return  '$'+p.name+' as '+p.type    }).join(', ');
-    let optionParamsString = optionParams.map(p => {return '[$'+p.name+' as '+p.type+']'}).join(', ');
-    let middleComma = ''; if (neededParams.length > 0 && optionParams.length > 0) middleComma = ', ';
-    return `${docObject.prefix}:${docObject.name}(${neededParamsString}${middleComma}${optionParamsString})`
+    let neededParamsString = neededParams.map(p => {return  '$'+p.name+' as '+p.type    }).join(",\n\t");
+    let optionParamsString = optionParams.map(p => {return '[$'+p.name+' as '+p.type+']'}).join(",\n\t");
+    let middleComma = ''; if (neededParams.length > 0 && optionParams.length > 0) middleComma = ",\n\t";
+    return `${docObject.prefix}:${docObject.name}(\n\t${neededParamsString}${middleComma}${optionParamsString})
+    as ${docObject.return}`
 }

@@ -282,6 +282,7 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.languages.registerDocumentFormattingEditProvider(['xml', 'xsl'], new XmlFormattingEditProvider())
     );
 
+    // XQuery hinting client below
 	let serverModule = context.asAbsolutePath(path.join('out', 'src', 'server.js'));
     let debugOptions = { execArgv: ["--nolazy", "--debug=6004"] };
     let serverOptions: ServerOptions = {
