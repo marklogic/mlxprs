@@ -45,7 +45,7 @@ connection.listen();
 
 connection.onCompletion((textDocumentPositionParams: TextDocumentPositionParams): CompletionItem[] => {
     return allMlFunctions;
-})
+});
 
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
     let docObject = hints[item.data.namespace][item.data];

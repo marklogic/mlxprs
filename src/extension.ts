@@ -282,7 +282,7 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.languages.registerDocumentFormattingEditProvider(['xml', 'xsl'], new XmlFormattingEditProvider())
     );
 
-	let serverModule = context.asAbsolutePath(path.join('server', 'server.js'));
+	let serverModule = context.asAbsolutePath(path.join('out', 'src', 'server.js'));
     let debugOptions = { execArgv: ["--nolazy", "--debug=6004"] };
     let serverOptions: ServerOptions = {
 		run : { module: serverModule, transport: TransportKind.ipc },
