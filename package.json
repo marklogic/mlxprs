@@ -88,6 +88,12 @@
                 "scopeName": "source.xquery-ml",
                 "path": "./syntaxes/xquery-ml.tmLanguage"
             }
+        ],
+        "snippets": [
+            {
+                "language": "xquery-ml",
+                "path": "./snippets/snippets.json"
+            }
         ]
     },
     "scripts": {

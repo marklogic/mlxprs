@@ -21,12 +21,13 @@ The results of the query will be shown in the next tab over.
 - It's asynchronous: long-running queries won't freeze the editor
 - Changes to the config file take immediate effect, switch databases and credentials on-the-fly
 - Readability—pretty-formatting of query results based on their contents
+- XQuery code completion with functions from the MarkLogic API
 
 ## Coming soon (hopefully)
 
+- Code completion with user-defined functions (locally or in the configured modules database)
 - Edit MarkLogic XML and JSON documents in the text editor, save them back to the database
 - Interactive selection of configuration options
-- Code completion, maybe even with custom modules out of the configured modules database
 
 ## Getting started
 
@@ -77,10 +78,10 @@ for example:
 
 I've been building and testing with the following ingredients:
 
-- MarkLogic 8, with admin access
-- Visual Studio Code, version 1.8
-- `npm` version 3.10.9
-- node.js v7.2.1
+- MarkLogic 8 or 9, with admin access
+- Visual Studio Code, version 1.13.1
+- `npm` version 5.0.0
+- node.js v7.10.0
 
 ## Credit
 
@@ -91,4 +92,4 @@ for XML formatting. The MIT license and source code are kept in the `src/xmlForm
 - Christy Haragan's [marklogic-node-typescript-definitions](https://github.com/christyharagan/marklogic-node-typescript-definitions)
 made this project possible.
 - Paxton Hare's [marklogic-sublime](https://github.com/paxtonhare/MarkLogic-Sublime)
-`xquery-ml.tmLanguage` code is used for XQuery-ML syntax, and the MarkLogic Sublime project inspired this one.
+`xquery-ml.tmLanguage` code is used for XQuery-ML syntax and snippets, and the MarkLogic Sublime project inspired this one.

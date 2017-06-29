@@ -1,0 +1,74 @@
+{
+	"attribute": {
+		"prefix": "attribute",
+		"body": "attribute ${1:name} \\{ ${2:()} \\}",
+		"description": "constructed attribute (inline)",
+		"scope": "source.xquery-ml"
+	},
+	"element": {
+		"prefix": "element",
+		"body": "element ${1:name} \\{ ${2:()} \\}",
+		"description": "constructed element (inline)",
+		"scope": "source.xquery-ml"
+	},
+	"element1": {
+		"prefix": "element",
+		"body": "element ${1:name} \\{\n\t${2:()}\n\\}",
+		"description": "constructed element",
+		"scope": "source.xquery-ml"
+	},
+	"if": {
+		"prefix": "if",
+		"body": "if (${1:expression}) then\n\t${2:()}\nelse\n\t${3:()}",
+		"description": "if then else",
+		"scope": "source.xquery-ml"
+	},
+	"module": {
+		"prefix": "module",
+		"body": "xquery version \"1.0-ml\";\n\nmodule namespace ${1:ns} = \"${2:http://namespace-uri}\";\n\ndeclare option xdmp:mapping \"false\";\n\n${3:(: Tab to me to start your module! :)}\n",
+		"description": "Barebones XQuery Module Template",
+		"scope": "source.xquery-ml"
+	},
+	"ns": {
+		"prefix": "ns",
+		"body": "declare namespace ${1:ns} = \"${2:http://namespace-uri}\";",
+		"description": "namespace declaration",
+		"scope": "source.xquery-ml"
+	},
+	"switch": {
+		"prefix": "switch",
+		"body": "switch (${1:expression})\n\tcase ${2:expression} return\n\t\t${3:expression}\n\tdefault return\n\t\t${4:expression}",
+		"description": "switch statement",
+		"scope": "source.xquery-ml"
+	},
+	"type": {
+		"prefix": "type",
+		"body": "typeswitch(${1:expression})\n\tcase ${2:expression} return\n\t\t${3:expression}\n\tdefault return\n\t\t${4:expression}",
+		"description": "typeswitch",
+		"scope": "source.xquery-ml"
+	},
+	"var": {
+		"prefix": "var",
+		"body": "declare variable \\$${1:x} := ${2:()};",
+		"description": "variable declaration",
+		"scope": "source.xquery-ml"
+	},
+	"debug": {
+		"prefix": "debug",
+		"body": "xdmp:log(${0}, \"debug\")",
+		"description": "Debug xdmp:log …",
+		"scope": "source.xquery-ml"
+	},
+	"log": {
+		"prefix": "log",
+		"body": "xdmp:log(${0})",
+		"description": "xdmp:log …",
+		"scope": "source.xquery-ml"
+	},
+	"xquery": {
+		"prefix": "xquery",
+		"body": "xquery version \"1.0-ml\";",
+		"description": "version declaration",
+		"scope": "source.xquery-ml"
+	}
+}
