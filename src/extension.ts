@@ -2,6 +2,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as ml from 'marklogic';
+import * as fs from 'fs';
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting';
 import { LanguageClient, LanguageClientOptions, SettingMonitor, ServerOptions, TransportKind } from 'vscode-languageclient';
 
@@ -21,23 +22,36 @@ export function activate(context: vscode.ExtensionContext) {
         port: number;
         user: string;
         pwd: string;
+        ssl: boolean;
+        pathToCa: string;
+        ca: string;
 
         docsDbNumber: string;
         mldbClient: ml.DatabaseClient;
         constructor(host: string, port: number,
             user: string, pwd: string,
-            contentDb: string, modulesDb: string) {
+            contentDb: string, modulesDb: string,
+            ssl: boolean, pathToCa: string) {
             this.contentDb = contentDb;
             this.modulesDb = modulesDb;
             this.host = host;
             this.port = port;
             this.user = user;
             this.pwd = pwd;
+            this.ssl = ssl;
+            this.pathToCa = pathToCa;
 
             this.docsDbNumber = "0";
+            if (pathToCa !== '') {
+                try {
+                    this.ca = fs.readFileSync(this.pathToCa, 'utf8')
+                } catch (e) {
+                    vscode.window.showErrorMessage(e.message);
+                }
+            }
             this.mldbClient = ml.createDatabaseClient({
                 host: host, port: port, user: user, password: pwd,
-                authType: 'DIGEST'
+                authType: 'DIGEST', ssl: ssl, ca: this.ca
             });
             this.mldbClient.eval("xdmp.database('" + contentDb + "')")
                 .result(null, null).then((response) => {
@@ -46,12 +60,13 @@ export function activate(context: vscode.ExtensionContext) {
         };
 
         toString(): string {
-            return [this.host, this.port, this.user, this.pwd, this.contentDb, this.modulesDb].join(":");
+            return [this.host, this.port, this.user, this.pwd, this.contentDb, this.modulesDb, this.ssl, this.pathToCa].join(":");
         }
 
         compareTo(host: string, port: number, user: string,
-            pwd: string, contentDb: string, modulesDb: string): boolean {
-            let newParams = [host, port, user, pwd, contentDb, modulesDb].join(":");
+            pwd: string, contentDb: string, modulesDb: string,
+            ssl: boolean, pathToCa: string): boolean {
+            let newParams = [host, port, user, pwd, contentDb, modulesDb, ssl, pathToCa].join(":");
             return (this.toString() === newParams);
         }
     }
@@ -65,17 +80,19 @@ export function activate(context: vscode.ExtensionContext) {
         var port = Number(cfg.get("marklogic.port"));
         var contentDb = String(cfg.get("marklogic.documentsDb"));
         var modulesDb = String(cfg.get("marklogic.modulesDb"));
+        var ssl = Boolean(cfg.get("marklogic.ssl"));
+        var pathToCa = String(cfg.get("marklogic.pathToCa"));
         var commands = vscode.commands.getCommands();
 
         // if settings have changed, release and clear the client
         let mlc = <marklogicVSClient>context.globalState.get(mldbClient);
-        if (mlc != null && !mlc.compareTo(host, port, user, pwd, contentDb, modulesDb)) {
+        if (mlc != null && !mlc.compareTo(host, port, user, pwd, contentDb, modulesDb, ssl, pathToCa)) {
             mlc.mldbClient.release();
             context.globalState.update(mldbClient, null);
         }
 
         if (context.globalState.get(mldbClient) === null) {
-            var newClient = new marklogicVSClient(host, port, user, pwd, contentDb, modulesDb);
+            var newClient = new marklogicVSClient(host, port, user, pwd, contentDb, modulesDb, ssl, pathToCa);
             try {
                 context.globalState.update(mldbClient, newClient);
             } catch (e) {

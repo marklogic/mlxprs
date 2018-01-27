@@ -62,6 +62,16 @@
                     "type": "string",
                     "default": "Modules",
                     "description": "modules database used in queries"
+                },
+                "marklogic.ssl": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "whether to use ssl for the http connection"
+                },
+                "marklogic.pathToCa": {
+                    "type": "string",
+                    "default": "",
+                    "description": "path to certificate authority (e.g. for self-signed certificates)"
                 }
             }
         },
