@@ -22,6 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
         port: number;
         user: string;
         pwd: string;
+        authType: string;
         ssl: boolean;
         pathToCa: string;
         ca: string;
@@ -29,7 +30,7 @@ export function activate(context: vscode.ExtensionContext) {
         docsDbNumber: string;
         mldbClient: ml.DatabaseClient;
         constructor(host: string, port: number,
-            user: string, pwd: string,
+            user: string, pwd: string, authType: string,
             contentDb: string, modulesDb: string,
             ssl: boolean, pathToCa: string) {
             this.contentDb = contentDb;
@@ -38,6 +39,7 @@ export function activate(context: vscode.ExtensionContext) {
             this.port = port;
             this.user = user;
             this.pwd = pwd;
+            this.authType = authType.toUpperCase();
             this.ssl = ssl;
             this.pathToCa = pathToCa;
 
@@ -46,12 +48,16 @@ export function activate(context: vscode.ExtensionContext) {
                 try {
                     this.ca = fs.readFileSync(this.pathToCa, 'utf8')
                 } catch (e) {
-                    vscode.window.showErrorMessage(e.message);
+                    vscode.window.showErrorMessage("Error reading CA file: " + e.message);
                 }
+            }
+            if (authType !== 'DIGEST' && authType !== 'BASIC') {
+                vscode.window.showWarningMessage('authType not set to BASIC or DIGEST, using DIGEST')
+                this.authType = 'DIGEST'
             }
             this.mldbClient = ml.createDatabaseClient({
                 host: host, port: port, user: user, password: pwd,
-                authType: 'DIGEST', ssl: ssl, ca: this.ca
+                authType: authType, ssl: ssl, ca: this.ca
             });
             this.mldbClient.eval("xdmp.database('" + contentDb + "')")
                 .result(null, null).then((response) => {
@@ -60,13 +66,18 @@ export function activate(context: vscode.ExtensionContext) {
         };
 
         toString(): string {
-            return [this.host, this.port, this.user, this.pwd, this.contentDb, this.modulesDb, this.ssl, this.pathToCa].join(":");
+            return [this.host, this.port, this.user,
+                    this.pwd, this.authType,
+                    this.contentDb, this.modulesDb,
+                    this.ssl, this.pathToCa].join(":");
         }
 
         compareTo(host: string, port: number, user: string,
-            pwd: string, contentDb: string, modulesDb: string,
+            pwd: string, authType: string,
+            contentDb: string, modulesDb: string,
             ssl: boolean, pathToCa: string): boolean {
-            let newParams = [host, port, user, pwd, contentDb, modulesDb, ssl, pathToCa].join(":");
+            let newParams =
+                [host, port, user, pwd, authType, contentDb, modulesDb, ssl, pathToCa].join(":");
             return (this.toString() === newParams);
         }
     }
@@ -80,19 +91,20 @@ export function activate(context: vscode.ExtensionContext) {
         var port = Number(cfg.get("marklogic.port"));
         var contentDb = String(cfg.get("marklogic.documentsDb"));
         var modulesDb = String(cfg.get("marklogic.modulesDb"));
+        var authType = String(cfg.get("marklogic.authType")).toUpperCase();
         var ssl = Boolean(cfg.get("marklogic.ssl"));
         var pathToCa = String(cfg.get("marklogic.pathToCa"));
         var commands = vscode.commands.getCommands();
 
         // if settings have changed, release and clear the client
         let mlc = <marklogicVSClient>context.globalState.get(mldbClient);
-        if (mlc != null && !mlc.compareTo(host, port, user, pwd, contentDb, modulesDb, ssl, pathToCa)) {
+        if (mlc != null && !mlc.compareTo(host, port, user, pwd, authType, contentDb, modulesDb, ssl, pathToCa)) {
             mlc.mldbClient.release();
             context.globalState.update(mldbClient, null);
         }
 
         if (context.globalState.get(mldbClient) === null) {
-            var newClient = new marklogicVSClient(host, port, user, pwd, contentDb, modulesDb, ssl, pathToCa);
+            var newClient = new marklogicVSClient(host, port, user, pwd, authType, contentDb, modulesDb, ssl, pathToCa);
             try {
                 context.globalState.update(mldbClient, newClient);
             } catch (e) {
