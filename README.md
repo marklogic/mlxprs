@@ -74,14 +74,37 @@ for example:
 }
 ```
 
+You can also set `marklogic.authType` to `DIGEST` or `BASIC`. DIGEST is default,
+and appears to work even if the server is running BASIC authentication.
+
+#### SSL Configuration
+
+You can turn on SSL with the `marklogic.ssl` configuration property.
+If the CA is not in your chain of trust (e.g. if the certificate is self-signed),
+you need to point to it in your configuration as well, using `marklogic.pathToCa`.
+It will look something like this:
+
+```json
+{
+    "marklogic.ssl": true,
+    "marklogic.pathToCa": "/Users/myself/certs/my.own.ca.crt"
+}
+```
+
+You can acquire the CA file from MarkLogic's admin panel (usually port 8001), by
+going to 'Security' -> 'Certificate Templates' -> (cert host name), and then
+selecting the "Status" tab. There is an "download" button in the "certificate template status"
+section. Click that button to download a copy of your root CA.
+
+
 ## Requirements
 
 I've been building and testing with the following ingredients:
 
 - MarkLogic 8 or 9, with admin access
-- Visual Studio Code, version 1.13.1
-- `npm` version 5.0.0
-- node.js v7.10.0
+- Visual Studio Code, version 1.19.2
+- `npm` version 5.4.2
+- node.js v8.6.0
 
 ## Credit
 
