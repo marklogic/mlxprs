@@ -123,7 +123,8 @@
         "typescript": "^2.6.2"
     },
     "dependencies": {
-        "marklogic": "^1.0.6",
+        "marklogic": "^2.1.1",
+        "tslint": "^5.9.1",
         "vscode": "^1.1.10",
         "vscode-languageclient": "^3.5.0",
         "vscode-languageserver": "^3.5.0"
