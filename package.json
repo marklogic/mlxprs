@@ -118,12 +118,14 @@
         "postinstall": "node ./node_modules/vscode/bin/install"
     },
     "devDependencies": {
-        "@types/node": "^6.0.96",
+        "@types/node": "^6.0.100",
+        "@types/mocha": "^2.2.48",
         "marklogic-node-typescript-definitions": "^0.1.3",
-        "typescript": "^2.6.2"
+        "typescript": "^2.7.1"
     },
     "dependencies": {
         "marklogic": "^2.1.1",
+        "mocha": "^5.0.0",
         "tslint": "^5.9.1",
         "vscode": "^1.1.10",
         "vscode-languageclient": "^3.5.0",
