@@ -5,6 +5,7 @@ import * as ml from 'marklogic';
 import * as fs from 'fs';
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting';
 import { LanguageClient, LanguageClientOptions, SettingMonitor, ServerOptions, TransportKind } from 'vscode-languageclient';
+import { ForkOptions } from 'vscode-languageclient/lib/client';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -313,7 +314,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // XQuery hinting client below
 	let serverModule = context.asAbsolutePath(path.join('out', 'src', 'server.js'));
-    let debugOptions = { execArgv: ["--nolazy", "--debug=6004"] };
+    let debugOptions: ForkOptions = { execArgv: ["--nolazy", "--inspect=6004"] };
     let serverOptions: ServerOptions = {
 		run : { module: serverModule, transport: TransportKind.ipc },
 		debug: { module: serverModule, transport: TransportKind.ipc, options: debugOptions }
