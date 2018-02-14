@@ -8,7 +8,7 @@ import { completion } from 'xqlint';
 let XQLint = require('xqlint').XQLint
 // import { completion } from 'xqlint';
 
-interface MarkLogicFnDocsObject {
+class MarkLogicFnDocsObject {
     name: string;
     prefix: string;
     summary: string;
@@ -34,18 +34,26 @@ let allMlNamespaces: CompletionItem[] = Object.keys(hints).map((ns) => {
     return ci
 });
 
+function mlFnDoc2CompletionItem(docObject: MarkLogicFnDocsObject): CompletionItem {
+    let completionItem: CompletionItem = {
+        label: `${docObject.prefix}:${docObject.name}()`,
+        kind: CompletionItemKind.Function,
+        documentation: docObject.summary,
+        detail: buildFullFunctionSignature(docObject),
+        insertText: buildFunctionCompletion(docObject),
+        data: docObject
+    }
+    return completionItem
+}
+
 function allMlFunctions(namespace: string): CompletionItem[] {
     return [].concat.apply(
         [],
         Object.keys(hints[namespace]).map((fn) => {
             let hint: MarkLogicFnDocsObject = hints[namespace][fn];
-            if (hint.params === null) hint.params = [];
+            hint.params = hint.params ? hint.params : [];
             if (hint.return !== null) {
-                let ci: CompletionItem = {
-                    label: `${hint.prefix}:${hint.name}()`,
-                    kind: CompletionItemKind.Function,
-                    data: hint
-                }
+                let ci: CompletionItem = mlFnDoc2CompletionItem(hint)
                 return ci;
             } else return {label: 'dep'};
         })

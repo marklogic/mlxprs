@@ -69,12 +69,6 @@ connection.onCompletion((textDocumentPositionParams: TextDocumentPositionParams)
 });
 
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
-    let hint: MarkLogicFnDocsObject = item.data;
-    item.documentation = hint.summary;
-    if (item.kind && item.kind === CompletionItemKind.Function) {
-        item.detail = buildFullFunctionSignature(hint);
-        item.insertText = buildFunctionCompletion(hint);
-    }
     return item;
 });
 
