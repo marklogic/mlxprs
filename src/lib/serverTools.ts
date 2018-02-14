@@ -3,17 +3,21 @@
 import {
     CompletionItem, CompletionItemKind
 } from 'vscode-languageserver';
+import { completion } from 'xqlint';
+// import { XQLint, completion } from 'xqlint';
+let XQLint = require('xqlint').XQLint
+// import { completion } from 'xqlint';
 
-interface DocObject {
+interface MarkLogicFnDocsObject {
     name: string;
     prefix: string;
     summary: string;
     return: string;
     example: string[];
-    params: ParamsObject[];
+    params: MarkLogicParamsObject[];
 }
 
-interface ParamsObject {
+interface MarkLogicParamsObject {
     name: string;
     type: string;
     description: string;
@@ -30,11 +34,11 @@ let allMlNamespaces: CompletionItem[] = Object.keys(hints).map((ns) => {
     return ci
 });
 
-let allMlFunctions: CompletionItem[] = [].concat.apply(
-    [],
-    Object.keys(hints).map((ns) => {
-        return Object.keys(hints[ns]).map((fn) => {
-            let hint: DocObject = hints[ns][fn];
+function allMlFunctions(namespace: string): CompletionItem[] {
+    return [].concat.apply(
+        [],
+        Object.keys(hints[namespace]).map((fn) => {
+            let hint: MarkLogicFnDocsObject = hints[namespace][fn];
             if (hint.params === null) hint.params = [];
             if (hint.return !== null) {
                 let ci: CompletionItem = {
@@ -45,21 +49,40 @@ let allMlFunctions: CompletionItem[] = [].concat.apply(
                 return ci;
             } else return {label: 'dep'};
         })
-    })
-).filter(h => {return h.label !== 'dep'});
+    ).filter((h: CompletionItem) => {return h.label !== 'dep'});
+}
 
-function buildCompletion(docObject: DocObject): string {
-    let neededParams: ParamsObject[] = docObject.params.filter(p => {return p.optional !== true});
-    let optionParams: ParamsObject[] = docObject.params.filter(p => {return p.optional === true});
+function buildContextCompletions(txt: string, line: number, col: number): CompletionItem[] {
+    let contextCompletions: CompletionItem[] = [];
+    let xql = new XQLint(txt);
+    let completions = xql.getCompletions({line, col});
+    completions.forEach((qco: completion) => {
+        let kind: CompletionItemKind =
+            xqToVscCompletions[qco.meta] ? xqToVscCompletions[qco.meta] : CompletionItemKind.Text;
+        let hint: MarkLogicFnDocsObject = {
+            name: qco.name, prefix: "", summary: qco.value,
+            return: "", example: [], params: []
+        }
+        let ci: CompletionItem = {
+            label: qco.name, kind: kind, data: hint
+        }
+        contextCompletions.push(ci);
+    });
+    return contextCompletions
+}
+
+function buildFunctionCompletion(docObject: MarkLogicFnDocsObject): string {
+    let neededParams: MarkLogicParamsObject[] = docObject.params.filter(p => {return p.optional !== true});
+    let optionParams: MarkLogicParamsObject[] = docObject.params.filter(p => {return p.optional === true});
     let neededParamsString = neededParams.map(p => {return  '$'+p.name    }).join(', ');
     let optionParamsString = optionParams.map(p => {return '[$'+p.name+']'}).join(', ');
     let middleComma = ''; if (neededParams.length > 0 && optionParams.length > 0) middleComma = ', ';
     return `${docObject.name}(${neededParamsString}${middleComma}${optionParamsString})`
 }
 
-function buildFullSignature(docObject: DocObject): string {
-    let neededParams: ParamsObject[] = docObject.params.filter(p => {return p.optional !== true});
-    let optionParams: ParamsObject[] = docObject.params.filter(p => {return p.optional === true});
+function buildFullFunctionSignature(docObject: MarkLogicFnDocsObject): string {
+    let neededParams: MarkLogicParamsObject[] = docObject.params.filter(p => {return p.optional !== true});
+    let optionParams: MarkLogicParamsObject[] = docObject.params.filter(p => {return p.optional === true});
     let neededParamsString = neededParams.map(p => {return  '$'+p.name+' as '+p.type    }).join(",\n\t");
     let optionParamsString = optionParams.map(p => {return '[$'+p.name+' as '+p.type+']'}).join(",\n\t");
     let middleComma = ''; if (neededParams.length > 0 && optionParams.length > 0) middleComma = ",\n\t";
@@ -67,8 +90,17 @@ function buildFullSignature(docObject: DocObject): string {
     as ${docObject.return}`
 }
 
+let xqToVscCompletions: {[key:string]: CompletionItemKind} = {
+    "function": CompletionItemKind.Function,
+    "Let binding": CompletionItemKind.Variable,
+    "Window variable": CompletionItemKind.Variable,
+    "Function parameter": CompletionItemKind.Variable,
+    "prefix": CompletionItemKind.Class
+}
+
 export {
-    DocObject,
+    MarkLogicFnDocsObject,
     allMlFunctions, allMlNamespaces,
-    buildCompletion, buildFullSignature
+    buildContextCompletions,
+    buildFunctionCompletion, buildFullFunctionSignature
 }

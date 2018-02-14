@@ -2,17 +2,18 @@
 
 import {
 	IPCMessageReader, IPCMessageWriter,
-	createConnection, IConnection, TextDocumentSyncKind,
-	TextDocuments, TextDocument, Diagnostic, DiagnosticSeverity,
-	InitializeParams, InitializeResult, TextDocumentPositionParams,
-	CompletionItem, CompletionItemKind, TextEdit, Range
+	createConnection, IConnection,
+	TextDocuments,
+	InitializeResult, TextDocumentPositionParams,
+	CompletionItem, CompletionItemKind
 } from 'vscode-languageserver';
 
 import {
-    DocObject,
+    MarkLogicFnDocsObject,
     allMlFunctions, allMlNamespaces,
-    buildCompletion, buildFullSignature
+    buildFunctionCompletion, buildFullFunctionSignature, buildContextCompletions
 } from './lib/serverTools';
+import { pos, completion } from 'xqlint';
 
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
 
@@ -28,7 +29,8 @@ connection.onInitialize((params): InitializeResult => {
 			textDocumentSync: documents.syncKind,
 			// Tell the client that the server supports code complete
 			completionProvider: {
-                resolveProvider: true
+                resolveProvider: true,
+                triggerCharacters: [":", "$"]
             },
             definitionProvider: true
 		}
@@ -36,19 +38,43 @@ connection.onInitialize((params): InitializeResult => {
 });
 
 connection.listen();
+let b: RegExp = /\b/g;
+let w: RegExp = /[\w\d-]+/g;
+let v: RegExp = /[$\w\d-]/g;
 
 connection.onCompletion((textDocumentPositionParams: TextDocumentPositionParams): CompletionItem[] => {
     let document = documents.get(textDocumentPositionParams.textDocument.uri)
     let offset = document.offsetAt(textDocumentPositionParams.position)
-    // TODO: figure out if there's a preceding namespace
-    return allMlFunctions.concat(allMlNamespaces)
+    let line: number = textDocumentPositionParams.position.line
+    let col: number = textDocumentPositionParams.position.character
+    let pos: pos = {line: line, col: col}
+
+    let allCompletions: CompletionItem[] = buildContextCompletions(document.getText(), line, col)
+
+
+    let preceding = document.getText().slice(0, offset)
+    let thisLine = preceding.slice(preceding.lastIndexOf('\n'))
+    let theseTokens: string[] = thisLine.split(b)
+    if (theseTokens.slice(-1)[0] === ":" && theseTokens.slice(-2)[0].match(w)) {
+        let namespace: string = theseTokens.slice(-2)[0]
+        allCompletions = allCompletions.concat(allMlFunctions(namespace))
+    } else if (theseTokens.slice(-2)[0].match(w) && theseTokens.slice(-1)[0] === ":") {
+        let namespace: string = theseTokens.slice(-3)[0]
+        allCompletions = allCompletions.concat(allMlFunctions(namespace))
+    } else if (allCompletions.length === 0 || allCompletions[0].kind === CompletionItemKind.Class) {
+        allCompletions = allCompletions.concat(allMlNamespaces)
+    }
+
+    return allCompletions
 });
 
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
-    let hint: DocObject = item.data;
+    let hint: MarkLogicFnDocsObject = item.data;
     item.documentation = hint.summary;
-    item.detail = buildFullSignature(hint);
-    item.insertText = buildCompletion(hint);
+    if (item.kind && item.kind === CompletionItemKind.Function) {
+        item.detail = buildFullFunctionSignature(hint);
+        item.insertText = buildFunctionCompletion(hint);
+    }
     return item;
 });
 
