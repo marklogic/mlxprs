@@ -129,6 +129,7 @@
         "tslint": "^5.9.1",
         "vscode": "^1.1.10",
         "vscode-languageclient": "^3.5.0",
-        "vscode-languageserver": "^3.5.0"
+        "vscode-languageserver": "^3.5.0",
+        "xqlint": "^0.4.0"
     }
 }

@@ -12,6 +12,7 @@
 				"${workspaceRoot}/out/src/server.js",
 				"${workspaceRoot}/out/src/lib/*.js"
             ],
+            "preLaunchTask": "npm",
 		},
         {
             "name": "Launch Extension",
