@@ -13,7 +13,7 @@ import {
     allMlFunctions, allMlNamespaces,
     buildFunctionCompletion, buildFullFunctionSignature, buildContextCompletions
 } from './lib/serverTools';
-import { pos, completion } from 'xqlint';
+import { docpos, completion } from 'xqlint';
 
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
 
@@ -47,7 +47,7 @@ connection.onCompletion((textDocumentPositionParams: TextDocumentPositionParams)
     let offset = document.offsetAt(textDocumentPositionParams.position)
     let line: number = textDocumentPositionParams.position.line
     let col: number = textDocumentPositionParams.position.character
-    let pos: pos = {line: line, col: col}
+    let pos: docpos = {line: line, col: col}
 
     let allCompletions: CompletionItem[] = buildContextCompletions(document.getText(), line, col)
 

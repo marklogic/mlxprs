@@ -3,10 +3,7 @@
 import {
     CompletionItem, CompletionItemKind
 } from 'vscode-languageserver';
-import { completion } from 'xqlint';
-// import { XQLint, completion } from 'xqlint';
-let XQLint = require('xqlint').XQLint
-// import { completion } from 'xqlint';
+import { XQLint, completion, node } from 'xqlint';
 
 class MarkLogicFnDocsObject {
     name: string;
@@ -62,8 +59,8 @@ function allMlFunctions(namespace: string): CompletionItem[] {
 
 function buildContextCompletions(txt: string, line: number, col: number): CompletionItem[] {
     let contextCompletions: CompletionItem[] = [];
-    let xql = new XQLint(txt);
-    let completions = xql.getCompletions({line, col});
+    let xql: XQLint = new XQLint(txt);
+    let completions: completion[] = xql.getCompletions({line, col});
     completions.forEach((qco: completion) => {
         let kind: CompletionItemKind =
             xqToVscCompletions[qco.meta] ? xqToVscCompletions[qco.meta] : CompletionItemKind.Text;
