@@ -9,11 +9,8 @@ import {
 } from 'vscode-languageserver';
 
 import {
-    MarkLogicFnDocsObject,
-    allMlFunctions, allMlNamespaces,
-    buildFunctionCompletion, buildFullFunctionSignature, buildContextCompletions
+    allMlFunctions, allMlNamespaces, buildContextCompletions
 } from './lib/serverTools';
-import { docpos, completion } from 'xqlint';
 
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
 
@@ -47,10 +44,8 @@ connection.onCompletion((textDocumentPositionParams: TextDocumentPositionParams)
     let offset = document.offsetAt(textDocumentPositionParams.position)
     let line: number = textDocumentPositionParams.position.line
     let col: number = textDocumentPositionParams.position.character
-    let pos: docpos = {line: line, col: col}
 
     let allCompletions: CompletionItem[] = buildContextCompletions(document.getText(), line, col)
-
 
     let preceding = document.getText().slice(0, offset)
     let thisLine = preceding.slice(preceding.lastIndexOf('\n'))

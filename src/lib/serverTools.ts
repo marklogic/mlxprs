@@ -3,7 +3,7 @@
 import {
     CompletionItem, CompletionItemKind
 } from 'vscode-languageserver';
-import { XQLint, completion, node } from 'xqlint';
+import { XQLint, completion } from 'xqlint';
 
 class MarkLogicFnDocsObject {
     name: string;
@@ -104,8 +104,6 @@ let xqToVscCompletions: {[key:string]: CompletionItemKind} = {
 }
 
 export {
-    MarkLogicFnDocsObject,
     allMlFunctions, allMlNamespaces,
-    buildContextCompletions,
-    buildFunctionCompletion, buildFullFunctionSignature
+    buildContextCompletions
 }
