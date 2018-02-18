@@ -99,7 +99,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         // if settings have changed, release and clear the client
         let mlc = <marklogicVSClient>context.globalState.get(mldbClient);
-        if (mlc != null && !mlc.compareTo(host, port, user, pwd, authType, contentDb, modulesDb, ssl, pathToCa)) {
+        if (mlc !== null && !mlc.compareTo(host, port, user, pwd, authType, contentDb, modulesDb, ssl, pathToCa)) {
             mlc.mldbClient.release();
             context.globalState.update(mldbClient, null);
         }
@@ -109,7 +109,8 @@ export function activate(context: vscode.ExtensionContext) {
             try {
                 context.globalState.update(mldbClient, newClient);
             } catch (e) {
-                console.log("Error: " + JSON.stringify(e));
+                console.error("Error: " + JSON.stringify(e));
+                e.message ? console.error(e.message) : null;
             }
         };
         return context.globalState.get<marklogicVSClient>("mldbClient");
@@ -215,7 +216,7 @@ export function activate(context: vscode.ExtensionContext) {
      * Try to format the results for readability.
      */
     function receiveDocument(doc: vscode.TextDocument, editor: vscode.TextEditor): void {
-        vscode.window.showTextDocument(doc, editor.viewColumn + 1)
+        vscode.window.showTextDocument(doc, editor.viewColumn + 1, true)
             .then(() =>
                 vscode.commands.executeCommand('vscode.executeFormatDocumentProvider', doc.uri, myFormattingOptions())
                     .then(
