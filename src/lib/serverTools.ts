@@ -64,14 +64,27 @@ function buildContextCompletions(txt: string, line: number, col: number): Comple
     completions.forEach((qco: completion) => {
         let kind: CompletionItemKind =
             xqToVscCompletions[qco.meta] ? xqToVscCompletions[qco.meta] : CompletionItemKind.Text;
-        let hint: MarkLogicFnDocsObject = {
-            name: qco.name, prefix: "", summary: qco.value,
-            return: "", example: [], params: []
-        }
+        let insertText: string;
+        // typing dollar ($) triggers completions for variables, need to remove it from the completion
+        insertText = kind === CompletionItemKind.Variable ? qco.value.substring(1) : qco.value;
+        // xqlint function completions are based on preceding namespaces, keep them out
+        insertText = kind === CompletionItemKind.Function ? insertText.replace(/^\w+:/, "") : insertText;
         let ci: CompletionItem = {
-            label: qco.name, kind: kind, data: hint
+            label: qco.name, kind: kind, data: qco.value, insertText: insertText
         }
+
         contextCompletions.push(ci);
+        if (qco.value.substring(0,3) === 'xs:') {
+            let typeDef: string = qco.name.replace(/\(.+/, "")
+            ci = {
+                label: typeDef,
+                kind: CompletionItemKind.Unit,
+                data: typeDef,
+                insertText: typeDef.replace("xs:", ""),
+                documentation: "atomic type declaration"
+            }
+            contextCompletions.push(ci)
+        }
     });
     return contextCompletions
 }
@@ -99,6 +112,7 @@ let xqToVscCompletions: {[key:string]: CompletionItemKind} = {
     "function": CompletionItemKind.Function,
     "Let binding": CompletionItemKind.Variable,
     "Window variable": CompletionItemKind.Variable,
+    "Local variable": CompletionItemKind.Variable,
     "Function parameter": CompletionItemKind.Variable,
     "prefix": CompletionItemKind.Class
 }

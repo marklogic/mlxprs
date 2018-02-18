@@ -19,7 +19,9 @@ declare module 'xqlint' {
     export interface completion {
         meta: string,
         name: string,
-        value: string
+        value: string,
+        priority: number,
+        snippet: string
     }
 
     export interface token {
