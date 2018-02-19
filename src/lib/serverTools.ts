@@ -11,7 +11,16 @@ class MarkLogicFnDocsObject {
     summary: string;
     return: string;
     example: string[];
-    params: MarkLogicParamsObject[];
+    params: MarkLogicParamsObject[] = [];
+
+    constructor(o: any) {
+        this.name = o.name;
+        this.prefix = o.prefix;
+        this.summary = o.summary;
+        this.return = o.return;
+        this.example = o.example || [];
+        this.params = o.params || [];
+    }
 }
 
 interface MarkLogicParamsObject {
@@ -44,11 +53,11 @@ function mlFnDoc2CompletionItem(docObject: MarkLogicFnDocsObject): CompletionIte
 }
 
 function allMlFunctions(namespace: string): CompletionItem[] {
+    let theseHints: MarkLogicFnDocsObject[] = hints[namespace] || [];
     return [].concat.apply(
         [],
-        Object.keys(hints[namespace]).map((fn) => {
-            let hint: MarkLogicFnDocsObject = hints[namespace][fn];
-            hint.params = hint.params ? hint.params : [];
+        Object.keys(theseHints).map((fn) => {
+            let hint: MarkLogicFnDocsObject = new MarkLogicFnDocsObject(theseHints[fn]);
             if (hint.return !== null) {
                 let ci: CompletionItem = mlFnDoc2CompletionItem(hint)
                 return ci;
@@ -104,7 +113,8 @@ function buildFullFunctionSignature(docObject: MarkLogicFnDocsObject): string {
     let neededParamsString = neededParams.map(p => {return  '$'+p.name+' as '+p.type    }).join(",\n\t");
     let optionParamsString = optionParams.map(p => {return '[$'+p.name+' as '+p.type+']'}).join(",\n\t");
     let middleComma = ''; if (neededParams.length > 0 && optionParams.length > 0) middleComma = ",\n\t";
-    return `${docObject.prefix}:${docObject.name}(\n\t${neededParamsString}${middleComma}${optionParamsString})
+    let nothing: string = docObject.params.length ? "\n\t" : "";
+    return `${docObject.prefix}:${docObject.name}(${nothing}${neededParamsString}${middleComma}${optionParamsString})
     as ${docObject.return}`
 }
 
