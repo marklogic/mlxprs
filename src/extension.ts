@@ -5,7 +5,7 @@ import * as ml from 'marklogic';
 import * as fs from 'fs';
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting';
 import { LanguageClient, LanguageClientOptions, SettingMonitor, ServerOptions, TransportKind } from 'vscode-languageclient';
-import { ForkOptions } from 'vscode-languageclient/lib/client';
+// import { ForkOptions } from 'vscode-languageclient/lib/client';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -217,8 +217,9 @@ export function activate(context: vscode.ExtensionContext) {
      */
     function receiveDocument(doc: vscode.TextDocument, editor: vscode.TextEditor): void {
         vscode.window.showTextDocument(doc, editor.viewColumn + 1, true)
-            .then(() =>
-                vscode.commands.executeCommand('vscode.executeFormatDocumentProvider', doc.uri, myFormattingOptions())
+            .then(
+                (e: vscode.TextEditor) => {
+                    vscode.commands.executeCommand('vscode.executeFormatDocumentProvider', doc.uri, myFormattingOptions())
                     .then(
                     (edits: vscode.TextEdit[]) => {
                         if (edits !== undefined) {
@@ -227,7 +228,8 @@ export function activate(context: vscode.ExtensionContext) {
                             vscode.workspace.applyEdit(formatEdit);
                         }
                     },
-                    error => console.error(error)));
+                    error => console.error(error))
+                })
     };
 
     function _sendXQuery(actualQuery: string, uri: vscode.Uri, editor: vscode.TextEditor): void {
@@ -315,7 +317,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // XQuery hinting client below
 	let serverModule = context.asAbsolutePath(path.join('out', 'src', 'server.js'));
-    let debugOptions: ForkOptions = { execArgv: ["--nolazy", "--inspect=6004"] };
+    let debugOptions = { execArgv: ["--nolazy", "--inspect=6004"] };
     let serverOptions: ServerOptions = {
 		run : { module: serverModule, transport: TransportKind.ipc },
 		debug: { module: serverModule, transport: TransportKind.ipc, options: debugOptions }
