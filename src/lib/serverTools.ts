@@ -30,7 +30,7 @@ interface MarkLogicParamsObject {
     optional?: boolean;
 }
 
-let hints = require('../marklogic-hint-docs.json').xquery;
+let hints = require('../etc/marklogic-hint-docs.json').xquery;
 let allMlNamespaces: CompletionItem[] = Object.keys(hints).map((ns) => {
     let ci: CompletionItem = {
         label: ns,

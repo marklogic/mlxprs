@@ -115,18 +115,20 @@
         "vscode:prepublish": "tsc -p ./",
         "precompile": "mkdir -p out/src && cp -av src/etc out/src/",
         "compile": "tsc -watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install"
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "hints": "copyfiles ./**/*.json etc/"
     },
     "devDependencies": {
-        "@types/node": "^6.0.100",
-        "@types/mocha": "^2.2.48",
+        "@types/mocha": "^5.2.6",
+        "@types/node": "^11.11.3",
+        "copyfiles": "^2.1.0",
         "marklogic-node-typescript-definitions": "^0.1.3",
         "typescript": "^3.3.3333"
     },
     "dependencies": {
         "marklogic": "^2.1.1",
-        "mocha": "^5.0.0",
-        "tslint": "^5.9.1",
+        "mocha": "^6.0.2",
+        "tslint": "^5.14.0",
         "vscode": "1.1.30",
         "vscode-languageclient": "^5.3.0-next.1",
         "vscode-languageserver": "^5.3.0-next.1",
