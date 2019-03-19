@@ -312,7 +312,16 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(sendXQuery);
     context.subscriptions.push(sendJSQuery);
     context.subscriptions.push(
-        vscode.languages.registerDocumentFormattingEditProvider(['xml', 'xsl'], new XmlFormattingEditProvider())
+        vscode.languages.registerDocumentFormattingEditProvider(
+            {scheme: "mlquery", language: "xml"},
+            new XmlFormattingEditProvider()
+        )
+    );
+    context.subscriptions.push(
+        vscode.languages.registerDocumentFormattingEditProvider(
+            {scheme: "mlquery", language: "xsl"},
+            new XmlFormattingEditProvider()
+        )
     );
 
     // XQuery hinting client below
@@ -323,7 +332,10 @@ export function activate(context: vscode.ExtensionContext) {
 		debug: { module: serverModule, transport: TransportKind.ipc, options: debugOptions }
 	}
     let clientOptions: LanguageClientOptions = {
-		documentSelector: ['xquery-ml'],
+		documentSelector: [
+            {language: "xquery-ml", scheme: "file"},
+            {language: "xquery-ml", scheme: "untitled"}
+        ],
 		synchronize: {
 			// Notify the server about file changes to '.clientrc files contain in the workspace
 			fileEvents: vscode.workspace.createFileSystemWatcher('**/.clientrc')
