@@ -1,19 +1,19 @@
 {
 	"attribute": {
 		"prefix": "attribute",
-		"body": "attribute ${1:name} \\{ ${2:()} \\}",
+		"body": "attribute ${1:name} { ${2:()} \\}",
 		"description": "constructed attribute (inline)",
 		"scope": "source.xquery-ml"
 	},
 	"element": {
 		"prefix": "element",
-		"body": "element ${1:name} \\{ ${2:()} \\}",
+		"body": "element ${1:name} { ${2:()} \\}",
 		"description": "constructed element (inline)",
 		"scope": "source.xquery-ml"
 	},
 	"element1": {
 		"prefix": "element",
-		"body": "element ${1:name} \\{\n\t${2:()}\n\\}",
+		"body": "element ${1:name} {\n\t${2:()}\n\\}",
 		"description": "constructed element",
 		"scope": "source.xquery-ml"
 	},
