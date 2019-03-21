@@ -9,8 +9,9 @@
 			"port": 6004,
 			"sourceMaps": true,
 			"outFiles": [
-				"${workspaceRoot}/out/src/server.js",
-				"${workspaceRoot}/out/src/lib/*.js"
+				// "${workspaceRoot}/out/src/server.js",
+                // "${workspaceRoot}/out/src/lib/*.js"
+                "${workspaceRoot}/dist/*.js"
             ],
             "preLaunchTask": "npm",
 		},
@@ -25,7 +26,7 @@
             ],
             "stopOnEntry": false,
             "sourceMaps": true,
-            "outFiles": ["${workspaceRoot}/out/src"],
+            "outFiles": ["${workspaceRoot}/dist"],
             "preLaunchTask": "npm"
         },
         {
@@ -36,7 +37,7 @@
             "args": ["--extensionDevelopmentPath=${workspaceRoot}", "--extensionTestsPath=${workspaceRoot}/out/test" ],
             "stopOnEntry": false,
             "sourceMaps": true,
-            "outFiles": ["${workspaceRoot}/out/test"],
+            "outFiles": ["${workspaceRoot}/dist"],
             "preLaunchTask": "npm"
         }
     ]
