@@ -10,7 +10,7 @@ import * as assert from 'assert';
 // as well as import your extension to test it
 import * as vscode from 'vscode';
 import * as myExtension from '../src/extension';
-import * as serverTools from '../src/lib/serverTools';
+import * as serverTools from '../server/serverTools';
 
 // Defines a Mocha test suite to group tests of similar kind together
 suite("Extension Tests", () => {

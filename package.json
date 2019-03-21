@@ -113,12 +113,11 @@
     },
     "scripts": {
         "vscode:prepublish:nowp": "tsc -p ./",
-        "precompile": "mkdir -p out/src && cp -av src/etc out/src/",
         "compile:nowp": "tsc -watch -p ./",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "hints": "copyfiles ./**/*.json etc/",
         "vscode:prepublish": "webpack --mode production",
-        "compile": "webpack --mode none",
+        "compile": "webpack --mode none && webpack --mode none --config ./server/webpack.config.js",
         "watch": "webpack --mode none --watch",
         "test-compile": "tsc -p ./"
     },
@@ -131,14 +130,13 @@
         "typescript": "^3.3.3333",
         "vscode": "1.1.30",
         "webpack": "^4.29.6",
-        "webpack-cli": "^3.3.0"
+        "webpack-cli": "^3.3.0",
+        "merge-options": "^1.0.1"
     },
     "dependencies": {
         "marklogic": "^2.1.1",
         "mocha": "^6.0.2",
         "tslint": "^5.14.0",
-        "vscode-languageclient": "^5.3.0-next.1",
-        "vscode-languageserver": "^5.3.0-next.1",
-        "xqlint": "^0.5.0"
+        "vscode-languageclient": "^5.3.0-next.1"
     }
 }

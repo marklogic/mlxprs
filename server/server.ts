@@ -10,7 +10,7 @@ import {
 
 import {
     allMlFunctions, allMlNamespaces, buildContextCompletions
-} from './lib/serverTools';
+} from './serverTools';
 
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
 

@@ -30,7 +30,7 @@ interface MarkLogicParamsObject {
     optional?: boolean;
 }
 
-let hints = require('../etc/marklogic-hint-docs.json').xquery;
+let hints = require('./etc/marklogic-hint-docs.json').xquery;
 let allMlNamespaces: CompletionItem[] = Object.keys(hints).map((ns) => {
     let ci: CompletionItem = {
         label: ns,
@@ -69,7 +69,7 @@ function allMlFunctions(namespace: string): CompletionItem[] {
 function buildContextCompletions(txt: string, line: number, col: number): CompletionItem[] {
     let contextCompletions: CompletionItem[] = [];
     let xql: XQLint = new XQLint(txt);
-    let completions: completion[] = xql.getCompletions({line, col});
+    let completions: completion[] = []; // xql.getCompletions({line, col});
     completions.forEach((qco: completion) => {
         let kind: CompletionItemKind =
             xqToVscCompletions[qco.meta] ? xqToVscCompletions[qco.meta] : CompletionItemKind.Text;
