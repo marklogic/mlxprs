@@ -1,3 +1,11 @@
+## 0.6.2(https://github.com/mikrovvelle/mlxprs/releases/tag/v0.6.2)
+
+- Successfully built against webpack
+
+## 0.6.0 to 0.6.1 (broken)
+
+- Built against webpack
+
 ## [0.5.0](https://github.com/mikrovvelle/mlxprs/tree/0.5.0)
 
 - Added SSL capabilities to MarkLogic client: `ssl` and `pathToCa` settings
