@@ -116,7 +116,7 @@
         "compile:nowp": "tsc -watch -p ./",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "hints": "copyfiles ./**/*.json etc/",
-        "vscode:prepublish": "webpack --mode production",
+        "vscode:prepublish": "webpack --mode production && webpack --mode production --config ./server/webpack.config.js",
         "compile": "webpack --mode none && webpack --mode none --config ./server/webpack.config.js",
         "watch": "webpack --mode none --watch",
         "test-compile": "tsc -p ./"
