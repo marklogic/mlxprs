@@ -1,10 +1,10 @@
-## [0.6.2](https://github.com/mikrovvelle/mlxprs/releases/tag/v0.6.2)
+## [0.6.2](https://github.com/mikrovvelle/mlxprs/tree/v0.6.2)
 
-- Successfully built against webpack
+- Successfully built with webpack
 
 ## 0.6.0 to 0.6.1 (broken)
 
-- Built against webpack
+- Built with webpack
 
 ## [0.5.0](https://github.com/mikrovvelle/mlxprs/tree/0.5.0)
 
