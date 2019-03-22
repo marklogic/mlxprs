@@ -22,7 +22,13 @@
 		"body": "if (${1:expression}) then\n\t${2:()}\nelse\n\t${3:()}",
 		"description": "if then else",
 		"scope": "source.xquery-ml"
-	},
+    },
+    "try": {
+        "prefix": "try",
+        "body": "try {\n\t${1:expression}\n} catch (${2:exception}) {\n\t${3:handler}\n\\}",
+        "description": "try-catch expression",
+        "scope": "source.xquery-ml"
+    },
 	"module": {
 		"prefix": "module",
 		"body": "xquery version \"1.0-ml\";\n\nmodule namespace ${1:ns} = \"${2:http://namespace-uri}\";\n\ndeclare option xdmp:mapping \"false\";\n\n${3:(: Tab to me to start your module! :)}\n",
