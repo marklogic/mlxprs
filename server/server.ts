@@ -9,7 +9,7 @@ import {
 } from 'vscode-languageserver';
 
 import {
-    allMlFunctions, allMlNamespaces, buildContextCompletions
+    allMlFunctions, allMlNamespaces
 } from './serverTools';
 
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
@@ -29,7 +29,7 @@ connection.onInitialize((params): InitializeResult => {
                 resolveProvider: true,
                 triggerCharacters: [":", "$"]
             },
-            definitionProvider: true
+            definitionProvider: false
 		}
 	}
 });
@@ -45,7 +45,7 @@ connection.onCompletion((textDocumentPositionParams: TextDocumentPositionParams)
     let line: number = textDocumentPositionParams.position.line
     let col: number = textDocumentPositionParams.position.character
 
-    let allCompletions: CompletionItem[] = buildContextCompletions(document.getText(), line, col)
+    let allCompletions: CompletionItem[] = [];
 
     let preceding = document.getText().slice(0, offset)
     let thisLine = preceding.slice(preceding.lastIndexOf('\n'))
