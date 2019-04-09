@@ -309,6 +309,8 @@ export function activate(context: vscode.ExtensionContext) {
         _sendJSQuery(actualQuery, uri, editor);
     });
 
+
+
     context.subscriptions.push(sendXQuery);
     context.subscriptions.push(sendJSQuery);
     context.subscriptions.push(
@@ -334,7 +336,9 @@ export function activate(context: vscode.ExtensionContext) {
     let clientOptions: LanguageClientOptions = {
 		documentSelector: [
             {language: "xquery-ml", scheme: "file"},
-            {language: "xquery-ml", scheme: "untitled"}
+            {language: "xquery-ml", scheme: "untitled"},
+            {language: "javascript", scheme: "file"},
+            {language: "javascript", scheme: "untitled"}
         ],
 		synchronize: {
 			// Notify the server about file changes to '.clientrc files contain in the workspace

@@ -3,34 +3,15 @@
 import {
     CompletionItem, CompletionItemKind
 } from 'vscode-languageserver';
+import {
+    allMlSjsNamespaces, allMlSjsFunctions
+} from './completionsSjs'
+import {
+    MarkLogicFnDocsObject, MarkLogicParamsObject
+} from './serverTypes';
 
-class MarkLogicFnDocsObject {
-    name: string;
-    prefix: string;
-    summary: string;
-    return: string;
-    example: string[];
-    params: MarkLogicParamsObject[] = [];
-
-    constructor(o: any) {
-        this.name = o.name;
-        this.prefix = o.prefix;
-        this.summary = o.summary;
-        this.return = o.return;
-        this.example = o.example || [];
-        this.params = o.params || [];
-    }
-}
-
-interface MarkLogicParamsObject {
-    name: string;
-    type: string;
-    description: string;
-    optional?: boolean;
-}
-
-let hints = require('./etc/marklogic-hint-docs.json').xquery;
-let allMlNamespaces: CompletionItem[] = Object.keys(hints).map((ns) => {
+let xqyHints = require('./etc/marklogic-hint-docs.json').xquery;
+let allMlXqyNamespaces: CompletionItem[] = Object.keys(xqyHints).map((ns) => {
     let ci: CompletionItem = {
         label: ns,
         kind: CompletionItemKind.Class,
@@ -38,10 +19,27 @@ let allMlNamespaces: CompletionItem[] = Object.keys(hints).map((ns) => {
     }
     return ci
 });
+let allMlNamespaces: object = {
+    'javascript': allMlSjsNamespaces,
+    'xquery-ml': allMlXqyNamespaces
+};
+let allMlFunctions: object = {
+    'javascript': allMlSjsFunctions,
+    'xquery-ml': allMlXqyFunctions
+};
 
-function mlFnDoc2CompletionItem(docObject: MarkLogicFnDocsObject): CompletionItem {
+/**
+ * @deprecated
+ * @param docObject An item from the MarkLogic docs JSON file
+ * @param lang 'javascript' or 'xquery-ml'
+ */
+function mlFnDoc2CompletionItem(docObject: MarkLogicFnDocsObject, lang: string): CompletionItem {
+    let nssep: string = {
+        "javascript": ".",
+        "xquery-ml": ":"
+    }[lang] || ".";
     let completionItem: CompletionItem = {
-        label: `${docObject.prefix}:${docObject.name}()`,
+        label: `${docObject.prefix}${nssep}${docObject.name}()`,
         kind: CompletionItemKind.Function,
         documentation: docObject.summary,
         detail: buildFullFunctionSignature(docObject),
@@ -51,14 +49,14 @@ function mlFnDoc2CompletionItem(docObject: MarkLogicFnDocsObject): CompletionIte
     return completionItem
 }
 
-function allMlFunctions(namespace: string): CompletionItem[] {
-    let theseHints: MarkLogicFnDocsObject[] = hints[namespace] || [];
+function allMlXqyFunctions(namespace: string): CompletionItem[] {
+    let theseHints: MarkLogicFnDocsObject[] = xqyHints[namespace] || [];
     return [].concat.apply(
         [],
         Object.keys(theseHints).map((fn) => {
             let hint: MarkLogicFnDocsObject = new MarkLogicFnDocsObject(theseHints[fn]);
             if (hint.return !== null) {
-                let ci: CompletionItem = mlFnDoc2CompletionItem(hint)
+                let ci: CompletionItem = mlFnDoc2CompletionItem(hint, 'xquery-ml')
                 return ci;
             } else return {label: 'dep'};
         })

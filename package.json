@@ -15,7 +15,8 @@
     "activationEvents": [
         "onCommand:extension.sendXQuery",
         "onCommand:extension.sendJSQuery",
-        "onLanguage:xquery-ml"
+        "onLanguage:xquery-ml",
+        "onLanguage:sjs-ml"
     ],
     "main": "./dist/extension",
     "contributes": {

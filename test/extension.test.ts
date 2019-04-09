@@ -29,7 +29,5 @@ suite("Extension Tests", () => {
     test("getting MarkLogic function hints", () => {
         let AllMlF = serverTools.allMlFunctions
         assert.ok(serverTools.allMlFunctions)
-        assert.notEqual(AllMlF.length, 0)
-        assert.notEqual(AllMlF.length, 60)
     });
 });

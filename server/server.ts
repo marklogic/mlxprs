@@ -5,12 +5,15 @@ import {
 	createConnection, IConnection,
 	TextDocuments,
 	InitializeResult, TextDocumentPositionParams,
-	CompletionItem, CompletionItemKind
+	CompletionItem, CompletionItemKind, TextDocument
 } from 'vscode-languageserver';
 
 import {
-    allMlFunctions, allMlNamespaces
-} from './serverTools';
+    allMlSjsFunctions, allMlSjsNamespaces
+} from './completionsSjs';
+import {
+    allMlXqyFunctions, allMlXqyNamespaces
+} from './completionsXqy'
 
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
 
@@ -27,7 +30,7 @@ connection.onInitialize((params): InitializeResult => {
 			// Tell the client that the server supports code complete
 			completionProvider: {
                 resolveProvider: true,
-                triggerCharacters: [":", "$"]
+                triggerCharacters: [":", "$", "."]
             },
             definitionProvider: false
 		}
@@ -35,33 +38,69 @@ connection.onInitialize((params): InitializeResult => {
 });
 
 connection.listen();
-let b: RegExp = /\b/g;
-let w: RegExp = /[\w\d-]+/g;
-let v: RegExp = /[$\w\d-]/g;
+let  b: RegExp = /\b/g;       // barrier
+let xw: RegExp = /[\w\d-]+/g; // xquery word
+let xv: RegExp = /[$\w\d-]/g; // variable
+
+let jwv: RegExp = /[\w\d]+/g;  // JS word or variable
+
+function getTheseTokens(document: TextDocument, offset: number): string[] {
+    let preceding = document.getText().slice(0, offset)
+    let thisLine = preceding.slice(preceding.lastIndexOf('\n'))
+    let theseTokens: string[] = thisLine.split(b)
+    return theseTokens
+};
 
 connection.onCompletion((textDocumentPositionParams: TextDocumentPositionParams): CompletionItem[] => {
     let document = documents.get(textDocumentPositionParams.textDocument.uri)
+    let lang = document.languageId || 'javascript'
     let offset = document.offsetAt(textDocumentPositionParams.position)
     let line: number = textDocumentPositionParams.position.line
     let col: number = textDocumentPositionParams.position.character
 
-    let allCompletions: CompletionItem[] = [];
+    return {
+        'xquery-ml': completeXQuery,
+        'javascript': completeSJS
+    }[lang](document, offset)
+})
 
-    let preceding = document.getText().slice(0, offset)
-    let thisLine = preceding.slice(preceding.lastIndexOf('\n'))
-    let theseTokens: string[] = thisLine.split(b)
-    if (theseTokens.slice(-1)[0] === ":" && theseTokens.slice(-2)[0].match(w)) {
+function completeXQuery(document: TextDocument, offset: number): CompletionItem[] {
+    let allCompletions: CompletionItem[] = [];
+    let lang = 'xquery-ml';
+    let theseTokens = getTheseTokens(document, offset)
+
+    // shortcircuit: don't complete on dot in XQuery
+    if (theseTokens.slice(-1)[0] === ".") {return allCompletions}
+    else if (theseTokens.slice(-1)[0] === ":" && theseTokens.slice(-2)[0].match(jwv)) {
         let namespace: string = theseTokens.slice(-2)[0]
-        allCompletions = allCompletions.concat(allMlFunctions(namespace))
-    } else if (theseTokens.slice(-2)[0].match(w) && theseTokens.slice(-1)[0] === ":") {
+        allCompletions = allCompletions.concat(allMlXqyFunctions(namespace))
+    } else if (theseTokens.slice(-2)[0].match(xw) && theseTokens.slice(-1)[0] === ":") {
         let namespace: string = theseTokens.slice(-3)[0]
-        allCompletions = allCompletions.concat(allMlFunctions(namespace))
+        allCompletions = allCompletions.concat(allMlXqyFunctions(namespace))
     } else if (allCompletions.length === 0 || allCompletions[0].kind === CompletionItemKind.Class) {
-        allCompletions = allCompletions.concat(allMlNamespaces)
+        allCompletions = allCompletions.concat(allMlXqyNamespaces[lang])
     }
 
     return allCompletions
-});
+};
+
+function completeSJS(document: TextDocument, offset: number): CompletionItem[] {
+    let allCompletions: CompletionItem[] = [];
+    let lang = 'javascript';
+    let theseTokens = getTheseTokens(document, offset)
+
+    if (theseTokens.slice(-1)[0] === "." && theseTokens.slice(-2)[0].match(jwv)) {
+        let namespace: string = theseTokens.slice(-2)[0]
+        allCompletions = allCompletions.concat(allMlSjsFunctions(namespace))
+    } else if (theseTokens.slice(-2)[0].match(jwv) && theseTokens.slice(-1)[0] === ".") {
+        let namespace: string = theseTokens.slice(-3)[0]
+        allCompletions = allCompletions.concat(allMlSjsFunctions(namespace))
+    } else if (allCompletions.length === 0 || allCompletions[0].kind === CompletionItemKind.Class) {
+        allCompletions = allCompletions.concat(allMlSjsNamespaces[lang])
+    }
+
+    return allCompletions
+}
 
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
     return item;
