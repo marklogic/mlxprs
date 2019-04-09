@@ -1,6 +1,5 @@
 'use strict';
 
-
 class MarkLogicFnDocsObject {
     name: string;
     prefix: string;

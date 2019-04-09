@@ -5,7 +5,7 @@ import {
 } from 'vscode-languageserver';
 import {
   MarkLogicFnDocsObject, MarkLogicParamsObject
-} from './serverTypes';
+} from './completionTypes';
 
 let xqyHints = require('./etc/marklogic-hint-docs.json').xquery;
 let allMlXqyNamespaces: CompletionItem[] = Object.keys(xqyHints).map((ns) => {

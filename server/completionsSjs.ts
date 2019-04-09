@@ -5,7 +5,7 @@ import {
 } from 'vscode-languageserver';
 import {
   MarkLogicFnDocsObject, MarkLogicParamsObject
-} from './serverTypes';
+} from './completionTypes';
 
 let sjsHints = require('./etc/marklogic-hint-docs.json').javascript;
 
