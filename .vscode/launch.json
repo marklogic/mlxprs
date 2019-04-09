@@ -5,15 +5,14 @@
         {
 			"name": "Attach to Server",
 			"type": "node",
-			"request": "attach",
+			"request": "launch",
 			"port": 6004,
-			"sourceMaps": true,
+            "protocol": "inspector",
+            "sourceMaps": true,
 			"outFiles": [
-				// "${workspaceRoot}/out/src/server.js",
-                // "${workspaceRoot}/out/src/lib/*.js"
-                "${workspaceRoot}/dist/*.js"
+                "${workspaceRoot}/server/dist"
             ],
-            "preLaunchTask": "npm",
+            "preLaunchTask": "npm"
 		},
         {
             "name": "Launch Extension",
