@@ -5,7 +5,6 @@ import * as ml from 'marklogic';
 import * as fs from 'fs';
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting';
 import { LanguageClient, LanguageClientOptions, SettingMonitor, ServerOptions, TransportKind } from 'vscode-languageclient';
-// import { ForkOptions } from 'vscode-languageclient/lib/client';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -221,16 +220,18 @@ export function activate(context: vscode.ExtensionContext) {
                 (e: vscode.TextEditor) => {
                     vscode.commands.executeCommand('vscode.executeFormatDocumentProvider', doc.uri, myFormattingOptions())
                     .then(
-                    (edits: vscode.TextEdit[]) => {
-                        if (edits !== undefined) {
-                            let formatEdit = new vscode.WorkspaceEdit();
-                            formatEdit.set(doc.uri, edits);
-                            vscode.workspace.applyEdit(formatEdit);
-                        }
-                    },
+                    (edits: vscode.TextEdit[]) => applyEdits(edits, doc),
                     error => console.error(error))
                 })
     };
+
+    function applyEdits(edits: vscode.TextEdit[], doc: vscode.TextDocument): void {
+        if (edits !== undefined) {
+            let formatEdit = new vscode.WorkspaceEdit();
+            formatEdit.set(doc.uri, edits);
+            vscode.workspace.applyEdit(formatEdit);
+        }
+    }
 
     function _sendXQuery(actualQuery: string, uri: vscode.Uri, editor: vscode.TextEditor): void {
         let db = getDbClient();
@@ -254,12 +255,12 @@ export function activate(context: vscode.ExtensionContext) {
         };
 
         let response = db.mldbClient.xqueryEval(query, extVars).result(
-            response => {
-                let responseUri = _handleResponseToUri(uri, response);
+            (fulfill: Object[]) => {
+                let responseUri = _handleResponseToUri(uri, fulfill);
                 vscode.workspace.openTextDocument(responseUri)
                     .then(doc => receiveDocument(doc, editor))
             },
-            error => {
+            (error: Object) => {
                 let responseUri = _handleError(uri, error);
                 vscode.workspace.openTextDocument(responseUri)
                     .then(doc => receiveDocument(doc, editor))
@@ -280,12 +281,12 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         db.mldbClient.eval(query, extVars).result(
-            response => {
+            (response: Object[]) => {
                 let responseUri = _handleResponseToUri(uri, response);
                 vscode.workspace.openTextDocument(responseUri)
                     .then(doc => receiveDocument(doc, editor))
             },
-            error => {
+            (error: Object[]) => {
                 let responseUri = _handleError(uri, error);
                 vscode.workspace.openTextDocument(responseUri)
                     .then(doc => receiveDocument(doc, editor))
