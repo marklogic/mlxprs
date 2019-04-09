@@ -48,8 +48,8 @@ function mlFnDoc2CompletionItem(docObject: MarkLogicFnDocsObject): CompletionIte
 function buildFullFunctionSignature(docObject: MarkLogicFnDocsObject): string {
   let neededParams: MarkLogicParamsObject[] = docObject.params.filter(p => {return p.optional !== true});
   let optionParams: MarkLogicParamsObject[] = docObject.params.filter(p => {return p.optional === true});
-  let neededParamsString = neededParams.map(p => {return  '$'+p.name+' as '+p.type    }).join(",\n\t");
-  let optionParamsString = optionParams.map(p => {return '[$'+p.name+' as '+p.type+']'}).join(",\n\t");
+  let neededParamsString = neededParams.map(p => {return  `${p.name} <${p.type}>` }).join(",\n\t");
+  let optionParamsString = optionParams.map(p => {return `[${p.name} <${p.type}>]`}).join(",\n\t");
   let middleComma = ''; if (neededParams.length > 0 && optionParams.length > 0) middleComma = ",\n\t";
   let nothing: string = docObject.params.length ? "\n\t" : "";
   return `${docObject.prefix}:${docObject.name}(${nothing}${neededParamsString}${middleComma}${optionParamsString})
@@ -59,8 +59,8 @@ function buildFullFunctionSignature(docObject: MarkLogicFnDocsObject): string {
 function buildFunctionCompletion(docObject: MarkLogicFnDocsObject): string {
   let neededParams: MarkLogicParamsObject[] = docObject.params.filter(p => {return p.optional !== true});
   let optionParams: MarkLogicParamsObject[] = docObject.params.filter(p => {return p.optional === true});
-  let neededParamsString = neededParams.map(p => {return  '$'+p.name    }).join(', ');
-  let optionParamsString = optionParams.map(p => {return '[$'+p.name+']'}).join(', ');
+  let neededParamsString = neededParams.map(p => {return  `${p.name}` }).join(', ');
+  let optionParamsString = optionParams.map(p => {return `[${p.name}]`}).join(', ');
   let middleComma = ''; if (neededParams.length > 0 && optionParams.length > 0) middleComma = ', ';
   return `${docObject.name}(${neededParamsString}${middleComma}${optionParamsString})`
 }

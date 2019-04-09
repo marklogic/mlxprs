@@ -55,8 +55,6 @@ connection.onCompletion((textDocumentPositionParams: TextDocumentPositionParams)
     let document = documents.get(textDocumentPositionParams.textDocument.uri)
     let lang = document.languageId || 'javascript'
     let offset = document.offsetAt(textDocumentPositionParams.position)
-    let line: number = textDocumentPositionParams.position.line
-    let col: number = textDocumentPositionParams.position.character
 
     return {
         'xquery-ml': completeXQuery,
@@ -66,11 +64,11 @@ connection.onCompletion((textDocumentPositionParams: TextDocumentPositionParams)
 
 function completeXQuery(document: TextDocument, offset: number): CompletionItem[] {
     let allCompletions: CompletionItem[] = [];
-    let lang = 'xquery-ml';
     let theseTokens = getTheseTokens(document, offset)
 
     // shortcircuit: don't complete on dot in XQuery
     if (theseTokens.slice(-1)[0] === ".") {return allCompletions}
+
     else if (theseTokens.slice(-1)[0] === ":" && theseTokens.slice(-2)[0].match(jwv)) {
         let namespace: string = theseTokens.slice(-2)[0]
         allCompletions = allCompletions.concat(allMlXqyFunctions(namespace))
@@ -78,7 +76,7 @@ function completeXQuery(document: TextDocument, offset: number): CompletionItem[
         let namespace: string = theseTokens.slice(-3)[0]
         allCompletions = allCompletions.concat(allMlXqyFunctions(namespace))
     } else if (allCompletions.length === 0 || allCompletions[0].kind === CompletionItemKind.Class) {
-        allCompletions = allCompletions.concat(allMlXqyNamespaces[lang])
+        allCompletions = allCompletions.concat(allMlXqyNamespaces)
     }
 
     return allCompletions
@@ -86,8 +84,10 @@ function completeXQuery(document: TextDocument, offset: number): CompletionItem[
 
 function completeSJS(document: TextDocument, offset: number): CompletionItem[] {
     let allCompletions: CompletionItem[] = [];
-    let lang = 'javascript';
     let theseTokens = getTheseTokens(document, offset)
+
+    // shortcircuit: don't complete on colon in Javascript
+    if (theseTokens.slice(-1)[0] === ":") {return allCompletions}
 
     if (theseTokens.slice(-1)[0] === "." && theseTokens.slice(-2)[0].match(jwv)) {
         let namespace: string = theseTokens.slice(-2)[0]
@@ -96,7 +96,7 @@ function completeSJS(document: TextDocument, offset: number): CompletionItem[] {
         let namespace: string = theseTokens.slice(-3)[0]
         allCompletions = allCompletions.concat(allMlSjsFunctions(namespace))
     } else if (allCompletions.length === 0 || allCompletions[0].kind === CompletionItemKind.Class) {
-        allCompletions = allCompletions.concat(allMlSjsNamespaces[lang])
+        allCompletions = allCompletions.concat(allMlSjsNamespaces)
     }
 
     return allCompletions
