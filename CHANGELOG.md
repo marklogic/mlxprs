@@ -1,3 +1,7 @@
+## [0.7.0](https://github.com/mikrovvelle/mlxprs/tree/v0.7.0)
+
+- Added SJS autocompletion based on MarkLogic SJS API
+
 ## [0.6.2](https://github.com/mikrovvelle/mlxprs/tree/v0.6.2)
 
 - Successfully built with webpack
