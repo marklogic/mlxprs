@@ -4,7 +4,6 @@
 
 This extension allows you to run XQuery and JavaScript Queries against a MarkLogic database.
 It also adds syntax highlighting for the MarkLogic XQuery (`version "1.0-ml"`) dialect.
-It's still very much a work in progress.
 
 ## What it does
 
@@ -21,7 +20,7 @@ The results of the query will be shown in the next tab over.
 - It's asynchronous: long-running queries won't freeze the editor
 - Changes to the config file take immediate effect, switch databases and credentials on-the-fly
 - Readability—pretty-formatting of query results based on their contents
-- XQuery code completion with functions from the MarkLogic API
+- XQuery and SJS code completion with functions from the MarkLogic API
 
 ## Coming soon (hopefully)
 
@@ -55,7 +54,7 @@ simply:
 3. type "MarkLogic: Eval XQuery", or better yet, let the command palette autocomplete it.
 
 If your query can be completed, it will open a new tab and output the results there.
-If not, you'll get an error message up top.
+If not, the error message will be shown.
 
 ### Configuration
 
@@ -101,10 +100,10 @@ section. Click that button to download a copy of your root CA.
 
 I've been building and testing with the following ingredients:
 
-- MarkLogic 8 or 9, with admin access
-- Visual Studio Code, version 1.19.2
-- `npm` version 5.4.2
-- node.js v8.6.0
+- MarkLogic 9, with admin access
+- Visual Studio Code, version 1.33.0
+- `npm` version 6.9.0
+- node.js v11.13.0
 
 ## Credit
 
@@ -112,7 +111,7 @@ Aside from excellent development and extension support from Visual Studio Code,
 
 - Portions of Josh Johnson's [vscode-xml](https://github.com/DotJoshJohnson/vscode-xml) project are re-used
 for XML formatting. The MIT license and source code are kept in the `src/xmlFormatting` folder of this project.
-- Christy Haragan's [marklogic-node-typescript-definitions](https://github.com/christyharagan/marklogic-node-typescript-definitions)
+- Christy Haragan's [marklogic-node-typescript-definitions](https://github.com/christyharagan/ml-typescript-definitions)
 made this project possible.
 - Paxton Hare's [marklogic-sublime](https://github.com/paxtonhare/MarkLogic-Sublime)
 `xquery-ml.tmLanguage` code is used for XQuery-ML syntax and snippets, and the MarkLogic Sublime project inspired this one.
