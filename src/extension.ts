@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import * as ml from 'marklogic';
 import * as fs from 'fs';
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting';
-import { LanguageClient, LanguageClientOptions, SettingMonitor, ServerOptions, TransportKind } from 'vscode-languageclient';
+import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
 
 export function activate(context: vscode.ExtensionContext) {
 
