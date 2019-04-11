@@ -1,3 +1,7 @@
+## [0.7.1](https://github.com/mikrovvelle/mlxprs/tree/v0.7.1)
+
+- Bugfix: Javascript language mode wasn't activating the extension.
+
 ## [0.7.0](https://github.com/mikrovvelle/mlxprs/tree/v0.7.0)
 
 - Added SJS autocompletion based on MarkLogic SJS API
