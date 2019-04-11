@@ -16,7 +16,7 @@
         "onCommand:extension.sendXQuery",
         "onCommand:extension.sendJSQuery",
         "onLanguage:xquery-ml",
-        "onLanguage:sjs-ml"
+        "onLanguage:javascript"
     ],
     "main": "./dist/extension",
     "contributes": {
