@@ -2,87 +2,19 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as ml from 'marklogic';
-import * as fs from 'fs';
+import MarklogicVSClient from './marklogicClient';
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
 
 export function activate(context: vscode.ExtensionContext) {
 
-    const mldbClient = 'mldbClient';
-    context.globalState.update(mldbClient, <ml.DatabaseClient>null);
+    const MLDBCLIENT = 'mldbClient';
+    context.globalState.update(MLDBCLIENT, <ml.DatabaseClient>null);
 
     /**
-     * marklogicVSClient
+     * Caching mechanism for the ML Client in the VSCode global state.
      */
-    class marklogicVSClient {
-        contentDb: string;
-        modulesDb: string;
-
-        host: string;
-        port: number;
-        user: string;
-        pwd: string;
-        authType: string;
-        ssl: boolean;
-        pathToCa: string;
-        ca: string;
-
-        docsDbNumber: string;
-        mldbClient: ml.DatabaseClient;
-        constructor(host: string, port: number,
-            user: string, pwd: string, authType: string,
-            contentDb: string, modulesDb: string,
-            ssl: boolean, pathToCa: string) {
-            this.contentDb = contentDb;
-            this.modulesDb = modulesDb;
-            this.host = host;
-            this.port = port;
-            this.user = user;
-            this.pwd = pwd;
-            this.authType = authType.toUpperCase();
-            this.ssl = ssl;
-            this.pathToCa = pathToCa;
-
-            this.docsDbNumber = "0";
-            if (pathToCa !== '') {
-                try {
-                    this.ca = fs.readFileSync(this.pathToCa, 'utf8')
-                } catch (e) {
-                    vscode.window.showErrorMessage("Error reading CA file: " + e.message);
-                }
-            }
-            if (authType !== 'DIGEST' && authType !== 'BASIC') {
-                vscode.window.showWarningMessage('authType not set to BASIC or DIGEST, using DIGEST')
-                this.authType = 'DIGEST'
-            }
-            this.mldbClient = ml.createDatabaseClient({
-                host: host, port: port, user: user, password: pwd,
-                authType: authType, ssl: ssl, ca: this.ca
-            });
-            this.mldbClient.eval("xdmp.database('" + contentDb + "')")
-                .result(null, null).then((response) => {
-                    this.docsDbNumber = response[0]['value'];
-                });
-        };
-
-        toString(): string {
-            return [this.host, this.port, this.user,
-                    this.pwd, this.authType,
-                    this.contentDb, this.modulesDb,
-                    this.ssl, this.pathToCa].join(":");
-        }
-
-        compareTo(host: string, port: number, user: string,
-            pwd: string, authType: string,
-            contentDb: string, modulesDb: string,
-            ssl: boolean, pathToCa: string): boolean {
-            let newParams =
-                [host, port, user, pwd, authType, contentDb, modulesDb, ssl, pathToCa].join(":");
-            return (this.toString() === newParams);
-        }
-    }
-
-    function getDbClient(): marklogicVSClient {
+    function getDbClient(): MarklogicVSClient {
         var cfg = vscode.workspace.getConfiguration();
 
         var host = String(cfg.get("marklogic.host"));
@@ -94,25 +26,40 @@ export function activate(context: vscode.ExtensionContext) {
         var authType = String(cfg.get("marklogic.authType")).toUpperCase();
         var ssl = Boolean(cfg.get("marklogic.ssl"));
         var pathToCa = String(cfg.get("marklogic.pathToCa"));
-        var commands = vscode.commands.getCommands();
 
         // if settings have changed, release and clear the client
-        let mlc = <marklogicVSClient>context.globalState.get(mldbClient);
+        let mlc = <MarklogicVSClient>context.globalState.get(MLDBCLIENT);
         if (mlc !== null && !mlc.compareTo(host, port, user, pwd, authType, contentDb, modulesDb, ssl, pathToCa)) {
             mlc.mldbClient.release();
-            context.globalState.update(mldbClient, null);
+            context.globalState.update(MLDBCLIENT, null);
+            console.info("Cleared MarkLogicVSClient for new settings.");
         }
 
-        if (context.globalState.get(mldbClient) === null) {
-            var newClient = new marklogicVSClient(host, port, user, pwd, authType, contentDb, modulesDb, ssl, pathToCa);
+        // if there's no existing client in the globalState, instantiate a new one
+        if (context.globalState.get(MLDBCLIENT) === null) {
+            let newClient: MarklogicVSClient =
+                buildNewClient(host, port, user, pwd, authType, contentDb, modulesDb, ssl, pathToCa);
             try {
-                context.globalState.update(mldbClient, newClient);
+                context.globalState.update(MLDBCLIENT, newClient);
+                console.info("New MarkLogicVSClient: " + context.globalState.get(MLDBCLIENT));
             } catch (e) {
                 console.error("Error: " + JSON.stringify(e));
                 e.message ? console.error(e.message) : null;
             }
         };
-        return context.globalState.get<marklogicVSClient>("mldbClient");
+        return context.globalState.get<MarklogicVSClient>(MLDBCLIENT);
+    };
+
+    function buildNewClient(host: string, port: number, user: string,
+                            pwd: string, authType: string, contentDb: string,
+                            modulesDb: string, ssl: boolean, pathToCa: string): MarklogicVSClient {
+        let newClient: MarklogicVSClient;
+        try {
+            newClient = new MarklogicVSClient(host, port, user, pwd, authType, contentDb, modulesDb, ssl, pathToCa)
+        } catch (e) {
+            vscode.window.showErrorMessage(e.toString())
+        }
+        return newClient;
     };
 
     function encodeLocation(uri: vscode.Uri, host: string, port: number): vscode.Uri {
@@ -219,9 +166,9 @@ export function activate(context: vscode.ExtensionContext) {
             .then(
                 (e: vscode.TextEditor) => {
                     vscode.commands.executeCommand('vscode.executeFormatDocumentProvider', doc.uri, myFormattingOptions())
-                    .then(
-                    (edits: vscode.TextEdit[]) => applyEdits(edits, doc),
-                    error => console.error(error))
+                        .then(
+                            (edits: vscode.TextEdit[]) => applyEdits(edits, doc),
+                            error => console.error(error))
                 })
     };
 
@@ -316,37 +263,37 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(sendJSQuery);
     context.subscriptions.push(
         vscode.languages.registerDocumentFormattingEditProvider(
-            {scheme: "mlquery", language: "xml"},
+            { scheme: "mlquery", language: "xml" },
             new XmlFormattingEditProvider()
         )
     );
     context.subscriptions.push(
         vscode.languages.registerDocumentFormattingEditProvider(
-            {scheme: "mlquery", language: "xsl"},
+            { scheme: "mlquery", language: "xsl" },
             new XmlFormattingEditProvider()
         )
     );
 
     // XQuery hinting client below
-	let serverModule = context.asAbsolutePath(path.join('server', 'dist', 'server.js'));
+    let serverModule = context.asAbsolutePath(path.join('server', 'dist', 'server.js'));
     let debugOptions = { execArgv: ["--nolazy", "--inspect=6004"] };
     let serverOptions: ServerOptions = {
-		run : { module: serverModule, transport: TransportKind.ipc },
-		debug: { module: serverModule, transport: TransportKind.ipc, options: debugOptions }
-	}
+        run: { module: serverModule, transport: TransportKind.ipc },
+        debug: { module: serverModule, transport: TransportKind.ipc, options: debugOptions }
+    }
     let clientOptions: LanguageClientOptions = {
-		documentSelector: [
-            {language: "xquery-ml", scheme: "file"},
-            {language: "xquery-ml", scheme: "untitled"},
-            {language: "javascript", scheme: "file"},
-            {language: "javascript", scheme: "untitled"}
+        documentSelector: [
+            { language: "xquery-ml", scheme: "file" },
+            { language: "xquery-ml", scheme: "untitled" },
+            { language: "javascript", scheme: "file" },
+            { language: "javascript", scheme: "untitled" }
         ],
-		synchronize: {
-			// Notify the server about file changes to '.clientrc files contain in the workspace
-			fileEvents: vscode.workspace.createFileSystemWatcher('**/.clientrc')
-		}
-	}
-	let disposable = new LanguageClient('xQueryLanguageServer', 'XQuery Language Server', serverOptions, clientOptions).start();
+        synchronize: {
+            // Notify the server about file changes to '.clientrc files contain in the workspace
+            fileEvents: vscode.workspace.createFileSystemWatcher('**/.clientrc')
+        }
+    }
+    let disposable = new LanguageClient('xQueryLanguageServer', 'XQuery Language Server', serverOptions, clientOptions).start();
     context.subscriptions.push(disposable);
 }
 
