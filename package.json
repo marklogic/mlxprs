@@ -20,7 +20,7 @@
         "onLanguage:xquery-ml",
         "onLanguage:javascript"
     ],
-    "main": "./out/src/extension",
+    "main": "./dist/extension",
     "contributes": {
         "commands": [
             {
@@ -115,13 +115,13 @@
         ]
     },
     "scripts": {
-        "compile": "tsc -b ./tsconfig.json",
-        "watch": "tsc -b ./tsconfig.json -w",
+        "compile-tsc": "tsc -b ./tsconfig.json",
+        "watch-tsc": "tsc -b ./tsconfig.json -w",
         "postinstall": "node ./node_modules/vscode/bin/install",
-        "hints": "copyfiles ./**/*.json etc/",
+        "hints": "copyfiles -f ./server/**/*.json server/dist/etc/",
         "vscode:prepublish": "webpack --mode production && webpack --mode production --config ./server/webpack.config.js",
-        "compile-webpack": "webpack --mode none && webpack --mode none --config ./server/webpack.config.js",
-        "watch-webpack": "webpack --mode none --watch"
+        "compile": "webpack --mode none && webpack --mode none --config ./server/webpack.config.js",
+        "watch": "webpack --mode none --watch"
     },
     "devDependencies": {
         "@types/mocha": "^5.2.6",

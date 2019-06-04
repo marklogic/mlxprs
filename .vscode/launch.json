@@ -10,7 +10,7 @@
       "protocol": "inspector",
       "sourceMaps": true,
       "outFiles": [
-        "${workspaceRoot}/out/server/**/*.js"
+        "${workspaceRoot}/server/dist/**/*.js"
       ]
     },
     {

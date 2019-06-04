@@ -11,9 +11,8 @@
     "vscode-languageserver": "^5.2.1"
   },
   "scripts": {
-    "compile": "tsc -b ./tsconfig.json",
-    "watch": "tsc -b ./tsconfig.json -w",
-    "watch-webpack": "webpack --mode none --watch",
-    "hints": "copyfiles ./**/*.json out/"
+    "compile-tsc": "tsc -b ./tsconfig.json",
+    "watch-tsc": "tsc -b ./tsconfig.json -w",
+    "watch": "webpack --mode none --watch"
   }
 }
