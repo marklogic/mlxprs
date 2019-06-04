@@ -6,7 +6,9 @@
         "lib": [ "es6" ],
         "sourceMap": true,
         "rootDir": ".",
-		"moduleResolution": "node",
+        "moduleResolution": "node",
+        "composite": true,
+        
         // "noUnusedLocals": true,
 		// "noUnusedParameters": true,
 		// "noImplicitAny": true,
