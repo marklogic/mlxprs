@@ -10,7 +10,7 @@
       "protocol": "inspector",
       "sourceMaps": true,
       "outFiles": [
-        "${workspaceRoot}/server/dist"
+        "${workspaceRoot}/out/server/**/*.js"
       ],
       "preLaunchTask": "npm"
     },
@@ -20,13 +20,11 @@
       "request": "launch",
       "runtimeExecutable": "${execPath}",
       "args": [
-        "--extensionDevelopmentPath=${workspaceRoot}",
-        "--inspect",
+        "--extensionDevelopmentPath=${workspaceFolder}"
       ],
-      "stopOnEntry": false,
       "sourceMaps": true,
       "outFiles": [
-        "${workspaceRoot}/dist"
+        "${workspaceFolder}/**/*.js"
       ],
       "preLaunchTask": "npm: watch"
     },

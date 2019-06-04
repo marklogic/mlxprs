@@ -19,6 +19,22 @@
             "args": [ "run", "compile", "watch", "--loglevel", "silent" ],
             "isBackground": true,
             "problemMatcher": "$tsc-watch"
+        },
+        {
+            "type": "npm",
+            "script": "watch",
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [
+                "$tsc-watch"
+            ],
+            "isBackground": true
         }
     ]
 }

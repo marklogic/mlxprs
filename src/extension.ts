@@ -275,7 +275,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     // XQuery hinting client below
-    let serverModule = context.asAbsolutePath(path.join('server', 'dist', 'server.js'));
+    let serverModule = context.asAbsolutePath(path.join('out', 'server', 'server.js'));
     let debugOptions = { execArgv: ["--nolazy", "--inspect=6004"] };
     let serverOptions: ServerOptions = {
         run: { module: serverModule, transport: TransportKind.ipc },
