@@ -32,7 +32,6 @@
                 "clear": false
             },
             "problemMatcher": [
-                "$tsc-watch",
                 "$ts-webpack-watch"
             ],
             "isBackground": true
