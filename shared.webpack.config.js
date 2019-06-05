@@ -26,11 +26,6 @@ module.exports = function withDefaults(/**@type WebpackConfig*/extConfig) {
                 exclude: /node_modules/,
                 use: [{
                     loader: 'ts-loader',
-                    options: {
-                        compilerOptions: {
-                            'sourceMap': true,
-                        }
-                    }
                 }]
             }]
         },
@@ -43,7 +38,7 @@ module.exports = function withDefaults(/**@type WebpackConfig*/extConfig) {
             // the bundle is stored in the 'dist' folder (check package.json)
             // 📖 -> https://webpack.js.org/configuration/output/
             filename: '[name].js',
-            path: path.join(extConfig.context, 'out'),
+            path: path.join(extConfig.context, 'dist'),
             libraryTarget: 'commonjs',
         },
     }

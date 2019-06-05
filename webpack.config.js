@@ -12,6 +12,7 @@ module.exports = withDefaults({
     },
     output: {
         filename: 'extension.js',
-        path: path.join(__dirname, 'dist')
+        path: path.join(__dirname, 'dist'),
+        libraryTarget: 'commonjs'
     }
 })

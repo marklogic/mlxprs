@@ -10,8 +10,9 @@
       "protocol": "inspector",
       "sourceMaps": true,
       "outFiles": [
-        "${workspaceRoot}/server/dist/**/*.js"
-      ]
+        "${workspaceRoot}/server/**/*.js"
+      ],
+      "cwd": "${workspaceFolder}/server/"
     },
     {
       "name": "Launch Extension",
@@ -25,7 +26,8 @@
       "outFiles": [
         "${workspaceFolder}/**/*.js"
       ],
-      "preLaunchTask": "npm: watch"
+      "preLaunchTask": "npm: watch",
+      "cwd": "${workspaceFolder}"
     },
     {
       "name": "Launch Tests",
