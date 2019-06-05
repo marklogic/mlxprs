@@ -15,7 +15,10 @@
     "overrides": [
         {
             "files": "**/*.ts",
-            "excludedFiles": "dist/**/*.js"
+            "excludedFiles": [
+                "dist/**/*.js",
+                "out/**/*.js"
+            ]
         }
     ],
     "rules": {
