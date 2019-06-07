@@ -1,3 +1,7 @@
+## [0.7.2](https://github.com/mikrovvelle/mlxprs/tree/v0.7.2)
+
+- Security: update `js-yaml` dependency to fix vulnerability
+
 ## [0.7.1](https://github.com/mikrovvelle/mlxprs/tree/v0.7.1)
 
 - Bugfix: Javascript language mode wasn't activating the extension.
