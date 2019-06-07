@@ -127,6 +127,7 @@
         "@types/mocha": "^5.2.6",
         "@types/node": "^11.11.3",
         "copyfiles": "^2.1.0",
+        "js-yaml": "^3.13.1",
         "marklogic": "^2.2.0",
         "merge-options": "^1.0.1",
         "ts-loader": "^6.0.2",
