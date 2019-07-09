@@ -7,6 +7,7 @@
     "engines": {
         "vscode": "^1.34.0"
     },
+    "icon": "https://quinland.gitlab.io/mkdocs/mlxprs-vscode.png",
     "categories": [
         "Programming Languages",
         "Snippets",
