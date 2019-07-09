@@ -1,3 +1,7 @@
+## [0.7.5](https://github.com/mikrovvelle/mlxprs/tree/v0.7.5)
+
+- Cosmetic: branding in preparation for 1.0 release
+
 ## [0.7.2](https://github.com/mikrovvelle/mlxprs/tree/v0.7.2)
 
 - Security: update `js-yaml` dependency to fix vulnerability
