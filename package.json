@@ -2,7 +2,7 @@
     "name": "mlxprs",
     "displayName": "mlxprs MarkLogic developer tools",
     "description": "MarkLogic SJS and XQuery development tools",
-    "version": "0.7.4",
+    "version": "0.7.5",
     "publisher": "mlxprs",
     "engines": {
         "vscode": "^1.34.0"
