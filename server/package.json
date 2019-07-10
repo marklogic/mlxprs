@@ -8,6 +8,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "copyfiles": "^2.1.0",
+    "mem": "^5.1.1",
     "vscode-languageserver": "^5.2.1"
   },
   "scripts": {
