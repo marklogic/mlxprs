@@ -1,3 +1,7 @@
+## [1.0.0](https://github.com/mikrovvelle/mlxprs/tree/v1.0.0)
+
+- Working release
+
 ## [0.7.7](https://github.com/mikrovvelle/mlxprs/tree/v0.7.5)
 
 - Security fixes for npm dependencies
