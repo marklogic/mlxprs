@@ -2,15 +2,15 @@
 
 *A MarkLogic Visual Studio Code extension*
 
-This extension allows you to run XQuery and JavaScript Queries against a MarkLogic database.
+This extension allows you to run Server-side JavaScript (SJS) and XQuery Queries against a MarkLogic database.
 It also adds syntax highlighting for the MarkLogic XQuery (`version "1.0-ml"`) dialect.
 
 ## What it does
 
 The extension adds two commands to the VS Code command palette:
 
-1. Eval XQuery
-2. Eval JavaScript
+1. Eval JavaScript
+2. Eval XQuery
 
 This will take the contents of the current active editor window and run it against a configured MarkLogic database instance.
 The results of the query will be shown in the next tab over.
@@ -20,7 +20,7 @@ The results of the query will be shown in the next tab over.
 - It's asynchronous: long-running queries won't freeze the editor
 - Changes to the config file take immediate effect, switch databases and credentials on-the-fly
 - Readability—pretty-formatting of query results based on their contents
-- XQuery and SJS code completion with functions from the MarkLogic API
+- SJS and XQuery code completion with functions from the MarkLogic API
 
 ## Coming soon (hopefully)
 
@@ -30,31 +30,7 @@ The results of the query will be shown in the next tab over.
 
 ## Getting started
 
-Use the Visual Studio Code extension manager to install the extension from the VS Code Marketplace. Search for "mlxprs".
-
-### Manual installation
-
-After cloning the project, the following steps should enable the extension.
-
-1. Copy or symlink the root of this project (the `mlxprs` folder) into your VSCode extensions folder:
-    - at `$HOME/.vscode/extensions/` for *nix,
-    - or `%USERPROFILE%\.vscode\extensions` for Windows.
-2. In the root of this project run: `npm install`
-3. Then run `node ./node_modules/vscode/bin/compile`
-4. Restart VSCode if it was running
-
-
-### Connect and query
-
-If you're running MarkLogic on localhost:8000 admin/admin, and want to query the "Documents" database,
-simply:
-
-1. type some valid XQuery in the editor,
-2. open the command palette (`[Shift]`+`[Cmd]`+`[P]`),
-3. type "MarkLogic: Eval XQuery", or better yet, let the command palette autocomplete it.
-
-If your query can be completed, it will open a new tab and output the results there.
-If not, the error message will be shown.
+The easiest way to install this is to use VS Code's built-in marketplace. Search for "mlxprs" or "MarkLogic", and then simply click "install" when you find this extension.
 
 ### Configuration
 
@@ -76,7 +52,19 @@ for example:
 You can also set `marklogic.authType` to `DIGEST` or `BASIC`. DIGEST is default,
 and appears to work even if the server is running BASIC authentication.
 
-#### SSL Configuration
+### Connect and query
+
+If you're running MarkLogic on localhost:8000 admin/admin, and want to query the "Documents" database,
+simply:
+
+1. type a valid SJS query in the editor,
+2. open the command palette (`[Shift]`+`[Cmd]`+`[P]`),
+3. type "MarkLogic: Eval JS", or better yet, let the command palette autocomplete it.
+
+If your query can be completed, it will open a new tab and output the results there.
+If not, the error message will be shown.
+
+### SSL Configuration
 
 You can turn on SSL with the `marklogic.ssl` configuration property.
 If the CA is not in your chain of trust (e.g. if the certificate is self-signed),
@@ -95,13 +83,12 @@ going to 'Security' -> 'Certificate Templates' -> (cert host name), and then
 selecting the "Status" tab. There is an "download" button in the "certificate template status"
 section. Click that button to download a copy of your root CA.
 
-
 ## Requirements
 
 I've been building and testing with the following ingredients:
 
-- MarkLogic 9, with admin access
-- Visual Studio Code, version 1.33.0
+- MarkLogic 10, with admin access
+- Visual Studio Code, version 1.36.1
 - `npm` version 6.9.0
 - node.js v11.13.0
 

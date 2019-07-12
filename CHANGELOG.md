@@ -1,3 +1,7 @@
+## [0.7.7](https://github.com/mikrovvelle/mlxprs/tree/v0.7.5)
+
+- Security fixes for npm dependencies
+
 ## [0.7.5](https://github.com/mikrovvelle/mlxprs/tree/v0.7.5)
 
 - Cosmetic: branding in preparation for 1.0 release

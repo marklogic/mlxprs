@@ -1,11 +1,10 @@
 # Contributing to mlxprs
 
-mlxprs is still pretty new, so bugs are likely and features might be thin for your taste.
 You can help by identifying bugs, requesting features you'd like to see, or even submitting code.
  
 ## Got a Question or Problem?
 
-For now, just email me at dpquinlan@gmail.com or on twitter @blockedport. I'll do my best to respond quickly.
+For now, just email me at dquinlan@marklogic.com or on twitter @blockedport. I'll do my best to respond quickly.
 
 ## Found a bug or issue?
 
