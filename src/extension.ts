@@ -88,6 +88,11 @@ export function activate(context: vscode.ExtensionContext) {
         get onDidChange() { return this._onDidChange.event; };
         public update(uri: vscode.Uri) { this._onDidChange.fire(uri); };
 
+        /**
+         * Set the TextDocumentContentProvider local cache to the query results
+         * @param uri the 'mlquery' uri representing the query (cache: key)
+         * @param val the results of that query (cache: value)
+         */
         public updateResultsForUri(uri: vscode.Uri, val: Object) {
             this._cache.set(uri.toString(), val);
         };
@@ -163,14 +168,16 @@ export function activate(context: vscode.ExtensionContext) {
      */
     function receiveDocument(doc: vscode.TextDocument, editor: vscode.TextEditor): void {
         vscode.window.showTextDocument(doc, editor.viewColumn + 1, true)
-            .then(
-                (e: vscode.TextEditor) => {
-                    vscode.commands.executeCommand('vscode.executeFormatDocumentProvider', doc.uri, myFormattingOptions())
-                        .then(
-                            (edits: vscode.TextEdit[]) => applyEdits(edits, doc),
-                            error => console.error(error))
-                })
-    };
+        .then((e: vscode.TextEditor) => {
+            formatResults(doc)
+        })
+    }
+
+    async function formatResults(doc: vscode.TextDocument) {
+        const fOptions: vscode.FormattingOptions = myFormattingOptions()
+        const edits: vscode.TextEdit[] = await vscode.commands.executeCommand('vscode.executeFormatDocumentProvider', doc.uri, fOptions);
+        applyEdits(edits, doc);
+    }
 
     function applyEdits(edits: vscode.TextEdit[], doc: vscode.TextDocument): void {
         if (edits !== undefined) {
