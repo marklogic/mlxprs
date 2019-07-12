@@ -9,6 +9,7 @@
   "dependencies": {
     "copyfiles": "^2.1.0",
     "mem": "^5.1.1",
+    "os-locale": "^4.0.0",
     "vscode-languageserver": "^5.2.1"
   },
   "scripts": {
