@@ -2,7 +2,7 @@
     "compilerOptions": {
         "module": "commonjs",
         "target": "es6",
-        "outDir": "out",
+        "outDir": "dist",
         "lib": [ "es6" ],
         "sourceMap": true,
         "rootDir": ".",
@@ -16,8 +16,5 @@
         "node_modules",
         ".vscode-test",
         "server"
-    ],
-    "references": [
-        {"path": "./server"}
     ]
 }
