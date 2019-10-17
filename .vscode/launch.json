@@ -24,7 +24,7 @@
       ],
       "sourceMaps": true,
       "outFiles": [
-        "${workspaceFolder}/**/*.js"
+        "${workspaceFolder}/dist/**/*.js"
       ],
       "preLaunchTask": "npm: watch",
       "cwd": "${workspaceFolder}"
