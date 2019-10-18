@@ -16,7 +16,7 @@
             "presentation": {
                 "reveal": "silent"
             },
-            "args": [ "run", "compile", "watch", "--loglevel", "silent" ],
+            "args": [ "run", "compile", "--loglevel", "silent" ],
             "isBackground": true,
             "problemMatcher": "$tsc-watch"
         },

@@ -120,19 +120,19 @@
         ]
     },
     "scripts": {
-        "compile-tsc": "tsc -b ./tsconfig.json",
-        "watch-tsc": "tsc -b ./tsconfig.json -w",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "hints": "copyfiles -f ./server/**/*.json server/dist/etc/",
         "vscode:prepublish": "webpack --mode production && webpack --mode production --config ./server/webpack.config.js",
         "compile": "webpack --mode none && webpack --mode none --config ./server/webpack.config.js",
-        "watch": "webpack --mode none --watch & webpack --mode none --config ./server/webpack.config.js"
+        "watch": "webpack --mode none --watch & webpack --mode none --watch --config ./server/webpack.config.js"
     },
     "devDependencies": {
         "@types/mocha": "^5.2.7",
         "@types/node": "^11.13.22",
         "@types/vscode": "^1.39.0",
+        "@types/webpack": "^4.1.4",
         "copyfiles": "^2.1.1",
+        "https-proxy-agent": "^3.0.0",
         "js-yaml": "^3.13.1",
         "marklogic": "^2.3.1",
         "merge-options": "^1.0.1",

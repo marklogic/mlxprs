@@ -12,7 +12,5 @@ module.exports = withDefaults({
     },
     output: {
         filename: 'server.js',
-        path: path.join(__dirname, 'dist'),
-        libraryTarget: 'commonjs'
     }
 })
