@@ -21,7 +21,7 @@
     "vscode-test": "^1.2.0"
   },
   "scripts": {
-    "copy-files":  "copyfiles -ufV etc/*.json out/etc/",
+    "copy-files": "copyfiles -ufV etc/*.json out/etc/",
     "compile": "tsc -b test/tsconfig.json",
     "watch": "tsc -w -b test/tsconfig.json",
     "pretest": "npm run compile",
