@@ -30,6 +30,22 @@
       "cwd": "${workspaceFolder}"
     },
     {
+      "name": "Launch Client Tests",
+      "type": "extensionHost",
+      "request": "launch",
+      "runtimeExecutable": "${execPath}",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceRoot}/client",
+        "--extensionTestsPath=${workspaceRoot}/client/out/test/suite/index"
+      ],
+      "stopOnEntry": false,
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceRoot}/client/out/test/**/*.js"
+      ],
+      "cwd": "${workspaceFolder}/client"
+    },
+    {
       "name": "Launch Server Tests",
       "type": "extensionHost",
       "request": "launch",
