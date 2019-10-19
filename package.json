@@ -120,6 +120,7 @@
         ]
     },
     "scripts": {
+        "copy-files": "npm run copy-files --prefix server",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "hints": "copyfiles -f ./server/**/*.json server/dist/etc/",
         "vscode:prepublish": "webpack --mode production && webpack --mode production --config ./server/webpack.config.js",
@@ -131,7 +132,6 @@
         "@types/node": "^11.13.22",
         "@types/vscode": "^1.39.0",
         "@types/webpack": "^4.1.4",
-        "copyfiles": "^2.1.1",
         "https-proxy-agent": "^3.0.0",
         "js-yaml": "^3.13.1",
         "marklogic": "^2.3.1",

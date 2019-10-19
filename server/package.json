@@ -6,15 +6,25 @@
   "publisher": "mlxprs",
   "repository": "https://github.com/mikrovvelle/mlxprs",
   "license": "Apache-2.0",
+  "engines": {
+    "vscode": "^1.39.0"
+  },
   "dependencies": {
-    "copyfiles": "^2.1.0",
+    "@types/glob": "^7.1.1",
+    "@types/mocha": "^5.2.7",
+    "@types/vscode": "^1.39.0",
+    "copyfiles": "^2.1.1",
     "mem": "^5.1.1",
+    "mocha": "^6.2.2",
     "os-locale": "^4.0.0",
-    "vscode-languageserver": "^5.2.1"
+    "vscode-languageserver": "^5.2.1",
+    "vscode-test": "^1.2.0"
   },
   "scripts": {
-    "compile-tsc": "tsc -b ./tsconfig.json",
-    "watch-tsc": "tsc -b ./tsconfig.json -w",
-    "watch": "webpack --mode none --watch"
+    "copy-files":  "copyfiles -ufV etc/*.json out/etc/",
+    "compile": "tsc -b test/tsconfig.json",
+    "watch": "tsc -w -b test/tsconfig.json",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTest.js"
   }
 }
