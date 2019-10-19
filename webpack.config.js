@@ -8,6 +8,6 @@ const path = require('path')
 module.exports = withDefaults({
     context: path.join(__dirname),
     entry: {
-        extension: './src/extension.ts',
+        extension: './client/extension.ts',
     }
 })
