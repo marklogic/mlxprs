@@ -59,6 +59,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     async function formatResults(doc: vscode.TextDocument): Promise<void> {
         const fOptions: vscode.FormattingOptions = myFormattingOptions()
+        await new Promise(resolve => setTimeout(resolve, 10))
         const edits: vscode.TextEdit[] = await vscode.commands.executeCommand('vscode.executeFormatDocumentProvider', doc.uri, fOptions)
         applyEdits(edits, doc)
     }
