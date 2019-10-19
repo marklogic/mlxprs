@@ -2,65 +2,14 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as ml from 'marklogic';
-import MarklogicVSClient from './marklogicClient';
+import { getDbClient } from './marklogicClient';
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
 
+const MLDBCLIENT = 'mldbClient';
+
 export function activate(context: vscode.ExtensionContext) {
-
-    const MLDBCLIENT = 'mldbClient';
     context.globalState.update(MLDBCLIENT, <ml.DatabaseClient>null);
-
-    /**
-     * Caching mechanism for the ML Client in the VSCode global state.
-     */
-    function getDbClient(): MarklogicVSClient {
-        var cfg = vscode.workspace.getConfiguration();
-
-        var host = String(cfg.get("marklogic.host"));
-        var user = String(cfg.get("marklogic.username"));
-        var pwd = String(cfg.get("marklogic.password"));
-        var port = Number(cfg.get("marklogic.port"));
-        var contentDb = String(cfg.get("marklogic.documentsDb"));
-        var modulesDb = String(cfg.get("marklogic.modulesDb"));
-        var authType = String(cfg.get("marklogic.authType")).toUpperCase();
-        var ssl = Boolean(cfg.get("marklogic.ssl"));
-        var pathToCa = String(cfg.get("marklogic.pathToCa"));
-
-        // if settings have changed, release and clear the client
-        let mlc = <MarklogicVSClient>context.globalState.get(MLDBCLIENT);
-        if (mlc !== null && !mlc.compareTo(host, port, user, pwd, authType, contentDb, modulesDb, ssl, pathToCa)) {
-            mlc.mldbClient.release();
-            context.globalState.update(MLDBCLIENT, null);
-            console.info("Cleared MarkLogicVSClient for new settings.");
-        }
-
-        // if there's no existing client in the globalState, instantiate a new one
-        if (context.globalState.get(MLDBCLIENT) === null) {
-            let newClient: MarklogicVSClient =
-                buildNewClient(host, port, user, pwd, authType, contentDb, modulesDb, ssl, pathToCa);
-            try {
-                context.globalState.update(MLDBCLIENT, newClient);
-                console.info("New MarkLogicVSClient: " + context.globalState.get(MLDBCLIENT));
-            } catch (e) {
-                console.error("Error: " + JSON.stringify(e));
-                e.message ? console.error(e.message) : null;
-            }
-        };
-        return context.globalState.get<MarklogicVSClient>(MLDBCLIENT);
-    };
-
-    function buildNewClient(host: string, port: number, user: string,
-                            pwd: string, authType: string, contentDb: string,
-                            modulesDb: string, ssl: boolean, pathToCa: string): MarklogicVSClient {
-        let newClient: MarklogicVSClient;
-        try {
-            newClient = new MarklogicVSClient(host, port, user, pwd, authType, contentDb, modulesDb, ssl, pathToCa)
-        } catch (e) {
-            vscode.window.showErrorMessage(e.toString())
-        }
-        return newClient;
-    };
 
     function encodeLocation(uri: vscode.Uri, host: string, port: number): vscode.Uri {
         let query = JSON.stringify([uri.toString()]);
@@ -188,8 +137,8 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     function _sendXQuery(actualQuery: string, uri: vscode.Uri, editor: vscode.TextEditor): void {
-        let db = getDbClient();
         let cfg = vscode.workspace.getConfiguration();
+        let db = getDbClient(cfg, context);
 
         let query =
             'xquery version "1.0-ml";' +
@@ -222,8 +171,8 @@ export function activate(context: vscode.ExtensionContext) {
     };
 
     function _sendJSQuery(actualQuery: string, uri: vscode.Uri, editor: vscode.TextEditor): void {
-        let db = getDbClient();
         let cfg = vscode.workspace.getConfiguration();
+        let db = getDbClient(cfg, context);
 
         let query = "xdmp.eval(actualQuery, {actualQuery: actualQuery}," +
             `{database: xdmp.database(contentDb), modules: xdmp.database(modulesDb)});`;
@@ -253,13 +202,17 @@ export function activate(context: vscode.ExtensionContext) {
 
     let sendXQuery = vscode.commands.registerTextEditorCommand('extension.sendXQuery', editor => {
         let actualQuery = editor.document.getText();
-        let host = getDbClient().host; let port = getDbClient().port;
+        let cfg = vscode.workspace.getConfiguration();
+        let client = getDbClient(cfg, context);
+        let host = client.host; let port = client.port;
         let qUri = encodeLocation(editor.document.uri, host, port);
         _sendXQuery(actualQuery, qUri, editor)
     });
     let sendJSQuery = vscode.commands.registerTextEditorCommand('extension.sendJSQuery', editor => {
         let actualQuery = editor.document.getText();
-        let host = getDbClient().host; let port = getDbClient().port;
+        let cfg = vscode.workspace.getConfiguration();
+        let client = getDbClient(cfg, context);
+        let host = client.host; let port = client.port;
         let uri = encodeLocation(editor.document.uri, host, port);
         _sendJSQuery(actualQuery, uri, editor);
     });
