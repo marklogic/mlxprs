@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import * as ml from 'marklogic';
 import { getDbClient } from './marklogicClient';
+import { QueryResultsContentProvider } from './queryResultsContentProvider'
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
 
@@ -21,65 +22,6 @@ export function activate(context: vscode.ExtensionContext) {
     function myFormattingOptions(): vscode.FormattingOptions {
         return { tabSize: 2, insertSpaces: true }
     }
-
-    /**
-     * QueryResultsContentProvider implements vscode.TextDocumentContentProvider
-     */
-    class QueryResultsContentProvider implements vscode.TextDocumentContentProvider {
-        private _onDidChange = new vscode.EventEmitter<vscode.Uri>();
-        public _cache = new Map<string, Object>();
-
-        static scheme = 'mlquery';
-        /**
-         * Expose an event to signal changes of _virtual_ documents
-         * to the editor
-         */
-        get onDidChange() { return this._onDidChange.event; };
-        public update(uri: vscode.Uri) { this._onDidChange.fire(uri); };
-
-        /**
-         * Set the TextDocumentContentProvider local cache to the query results
-         * @param uri the 'mlquery' uri representing the query (cache: key)
-         * @param val the results of that query (cache: value)
-         */
-        public updateResultsForUri(uri: vscode.Uri, val: Object) {
-            this._cache.set(uri.toString(), val);
-        };
-
-        private unwrap(o: Object): string {
-            if (o['format'] === 'xml') {
-                return JSON.parse(JSON.stringify(o['value']));
-            }
-            if (o['format'] === 'text' && o['datatype'] === 'node()') {
-                return this.decodeBinaryText(o['value']);
-            }
-            if (o['format'] === 'text' && o['datatype'] === 'other') {
-                return o['value'];
-            }
-            return JSON.stringify(o['value']);
-        };
-
-        private decodeBinaryText(arr: Uint8Array): string {
-            if ((typeof arr[0]) === "string") {
-                return arr.toString();
-            }
-            let str = '';
-            for (let i = 0; i < arr.length; i++) {
-                str += '%' + ('0' + arr[i].toString(16)).slice(-2);
-            }
-            str = decodeURIComponent(str);
-            return str;
-        }
-
-        public provideTextDocumentContent(uri: vscode.Uri): string {
-            let results = this._cache.get(uri.toString());
-            if (results) {
-                let r = <Array<Object>>results;
-                return r.map(o => this.unwrap(o)).join("\n");
-            }
-            return "pending..."
-        }
-    };
 
     function _handleResponseToUri(uri: vscode.Uri, response: Array<Object>): vscode.Uri {
         let fmt = 'nothing'
