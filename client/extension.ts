@@ -59,9 +59,9 @@ export function activate(context: vscode.ExtensionContext) {
      */
     function receiveDocument(doc: vscode.TextDocument, editor: vscode.TextEditor): void {
         vscode.window.showTextDocument(doc, editor.viewColumn + 1, true)
-        .then((e: vscode.TextEditor) => {
-            formatResults(doc)
-        })
+            .then((e: vscode.TextEditor) => {
+                formatResults(doc)
+            })
     }
 
     async function formatResults(doc: vscode.TextDocument) {
