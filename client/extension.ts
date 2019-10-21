@@ -6,7 +6,6 @@ import { getDbClient } from './marklogicClient'
 import { QueryResultsContentProvider } from './queryResultsContentProvider'
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting'
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient'
-import { resolve } from 'dns'
 
 const MLDBCLIENT = 'mldbClient'
 
