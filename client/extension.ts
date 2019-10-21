@@ -196,6 +196,6 @@ export function activate(context: vscode.ExtensionContext): void {
 
 // this method is called when your extension is deactivated
 export function deactivate(context: vscode.ExtensionContext): void {
-    context.globalState.get<ml.DatabaseClient>('mldbClient').release()
-    context.globalState.update('mldbClient', null)
+    context.globalState.get<ml.DatabaseClient>(MLDBCLIENT).release()
+    context.globalState.update(MLDBCLIENT, null)
 }
