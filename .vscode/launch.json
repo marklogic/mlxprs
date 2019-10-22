@@ -43,6 +43,7 @@
       "outFiles": [
         "${workspaceRoot}/client/out/test/**/*.js"
       ],
+      "preLaunchTask": "npm: pretest",
       "cwd": "${workspaceFolder}/client"
     },
     {

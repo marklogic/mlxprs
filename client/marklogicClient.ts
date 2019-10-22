@@ -2,11 +2,11 @@
 
 import * as ml from 'marklogic'
 import * as fs from 'fs'
-import { ExtensionContext, WorkspaceConfiguration } from 'vscode'
+import { Memento, WorkspaceConfiguration } from 'vscode'
 
 const MLDBCLIENT = 'mldbClient'
 
-class MarklogicVSClient {
+export class MarklogicVSClient {
     contentDb: string;
     modulesDb: string;
 
@@ -87,9 +87,18 @@ function buildNewClient(host: string, port: number, user: string,
 };
 
 /**
- * Caching mechanism for the ML Client in the VSCode global state.
+ * Caching mechanism for the ML Client in the extension's state. Checks the configuration for
+ * changes against the client in the state (i.e. extension's global state)
+ *
+ * If the configuration wants a different client than the one in the state, replace the state's
+ * client with a new one based on the config details.
+ *
+ * @param cfg ('config') most likely from `vscode.workspace.getConfiguration()`
+ * @param state most likely the extension's injected `context.globalState`
+ *
+ * @returns a MarkLogicVSClient based on the contents of `cfg`
  */
-export function getDbClient(cfg: WorkspaceConfiguration, cntxt: ExtensionContext): MarklogicVSClient {
+export function getDbClient(cfg: WorkspaceConfiguration, state: Memento): MarklogicVSClient {
     const host = String(cfg.get('marklogic.host'))
     const user = String(cfg.get('marklogic.username'))
     const pwd = String(cfg.get('marklogic.password'))
@@ -101,24 +110,24 @@ export function getDbClient(cfg: WorkspaceConfiguration, cntxt: ExtensionContext
     const pathToCa = String(cfg.get('marklogic.pathToCa'))
 
     // if settings have changed, release and clear the client
-    const mlc = cntxt.globalState.get(MLDBCLIENT) as MarklogicVSClient
+    const mlc = state.get(MLDBCLIENT) as MarklogicVSClient
     if (mlc !== null && !mlc.compareTo(host, port, user, pwd, authType, contentDb, modulesDb, ssl, pathToCa)) {
         mlc.mldbClient.release()
-        cntxt.globalState.update(MLDBCLIENT, null)
+        state.update(MLDBCLIENT, null)
         console.info('Cleared MarkLogicVSClient for new settings.')
     }
 
     // if there's no existing client in the globalState, instantiate a new one
-    if (cntxt.globalState.get(MLDBCLIENT) === null) {
+    if (state.get(MLDBCLIENT) === null) {
         const newClient: MarklogicVSClient =
             buildNewClient(host, port, user, pwd, authType, contentDb, modulesDb, ssl, pathToCa)
         try {
-            cntxt.globalState.update(MLDBCLIENT, newClient)
-            console.info('New MarkLogicVSClient: ' + cntxt.globalState.get(MLDBCLIENT))
+            state.update(MLDBCLIENT, newClient)
+            console.info('New MarkLogicVSClient: ' + state.get(MLDBCLIENT))
         } catch (e) {
             console.error('Error: ' + JSON.stringify(e))
             e.message ? console.error(e.message) : null
         }
     }
-    return cntxt.globalState.get<MarklogicVSClient>(MLDBCLIENT)
+    return state.get(MLDBCLIENT) as MarklogicVSClient
 }

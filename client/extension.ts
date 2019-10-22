@@ -74,9 +74,8 @@ export function activate(context: vscode.ExtensionContext): void {
             })
     }
 
-    function _sendXQuery(actualQuery: string, uri: vscode.Uri, editor: vscode.TextEditor): void {
-        const cfg = vscode.workspace.getConfiguration()
-        const db = getDbClient(cfg, context)
+    function _sendXQuery(cfg: vscode.WorkspaceConfiguration, actualQuery: string, uri: vscode.Uri, editor: vscode.TextEditor): void {
+        const db = getDbClient(cfg, context.globalState)
 
         const query =
             'xquery version "1.0-ml";' +
@@ -108,9 +107,8 @@ export function activate(context: vscode.ExtensionContext): void {
             })
     };
 
-    function _sendJSQuery(actualQuery: string, uri: vscode.Uri, editor: vscode.TextEditor): void {
-        const cfg = vscode.workspace.getConfiguration()
-        const db = getDbClient(cfg, context)
+    function _sendJSQuery(cfg: vscode.WorkspaceConfiguration, actualQuery: string, uri: vscode.Uri, editor: vscode.TextEditor): void {
+        const db = getDbClient(cfg, context.globalState)
 
         const query = 'xdmp.eval(actualQuery, {actualQuery: actualQuery},' +
             '{database: xdmp.database(contentDb), modules: xdmp.database(modulesDb)});'
@@ -140,18 +138,18 @@ export function activate(context: vscode.ExtensionContext): void {
     const sendXQuery = vscode.commands.registerTextEditorCommand('extension.sendXQuery', editor => {
         const actualQuery = editor.document.getText()
         const cfg = vscode.workspace.getConfiguration()
-        const client = getDbClient(cfg, context)
+        const client = getDbClient(cfg, context.globalState)
         const host = client.host; const port = client.port
         const qUri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port)
-        _sendXQuery(actualQuery, qUri, editor)
+        _sendXQuery(cfg, actualQuery, qUri, editor)
     })
     const sendJSQuery = vscode.commands.registerTextEditorCommand('extension.sendJSQuery', editor => {
         const actualQuery = editor.document.getText()
         const cfg = vscode.workspace.getConfiguration()
-        const client = getDbClient(cfg, context)
+        const client = getDbClient(cfg, context.globalState)
         const host = client.host; const port = client.port
         const uri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port)
-        _sendJSQuery(actualQuery, uri, editor)
+        _sendJSQuery(cfg, actualQuery, uri, editor)
     })
 
 
