@@ -2,6 +2,7 @@
 
 import * as ml from 'marklogic'
 import * as fs from 'fs'
+import * as esprima from 'esprima'
 import { Memento, WorkspaceConfiguration } from 'vscode'
 
 const MLDBCLIENT = 'mldbClient'
@@ -130,4 +131,23 @@ export function getDbClient(cfg: WorkspaceConfiguration, state: Memento): Marklo
         }
     }
     return state.get(MLDBCLIENT) as MarklogicVSClient
+}
+
+export function parseQueryForOverrides(queryText: string): Record<string, any> {
+    const tokens: esprima.Token[] = esprima.tokenize(queryText, {comment: true})
+    let overrides: Record<string, any> = {}
+    if (tokens.length > 0 && tokens[0].type === 'BlockComment') {
+        const firstBlockComment: string = tokens[0].value
+        const firstBlockCommentLine: string =
+            firstBlockComment.split(/\n+/)[0]
+                .replace(/\t+/g, '')
+                .trim()
+        if (firstBlockCommentLine.match('settings:mlxprs')) {
+            const overridePayload: string = firstBlockComment
+                .replace('settings:mlxprs', '')
+                .trim()
+            overrides = JSON.parse(overridePayload)
+        }
+    }
+    return overrides
 }

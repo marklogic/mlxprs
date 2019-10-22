@@ -3,7 +3,8 @@ import { after } from 'mocha'
 
 import { window, workspace } from 'vscode'
 import { defaultDummyGlobalState } from './dummyGlobalState'
-import { getDbClient, MarklogicVSClient } from '../../marklogicClient'
+import { testOverrideQueryWithGoodJSON, testOverrideQueryWithBadJSON } from './testOverrideQuery'
+import { getDbClient, MarklogicVSClient, parseQueryForOverrides } from '../../marklogicClient'
 
 suite('Extension Test Suite', () => {
     after(() => {
@@ -29,6 +30,20 @@ suite('Extension Test Suite', () => {
         mlClient1 = getDbClient(config, gstate)
         assert.equal(mlClient1, mlClient2)
         assert.notEqual(mlClient1.host, newHost)
+    })
+
+    test('override parser should recognize config overrides', () => {
+        const queryText: string = testOverrideQueryWithGoodJSON()
+        const overrides = parseQueryForOverrides(queryText)
+        assert.equal(overrides.host, 'overrideHost')
+        assert.equal(overrides.port, 12345)
+    })
+
+    test('override parser should throw if settings are invalid JSON', () => {
+        const badQueryText: string = testOverrideQueryWithBadJSON()
+        assert.throws(() => {
+            parseQueryForOverrides(badQueryText)
+        })
     })
 
     test('Sample test', () => {

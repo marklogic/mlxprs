@@ -144,6 +144,8 @@
         "webpack-cli": "^3.3.9"
     },
     "dependencies": {
+        "@types/esprima": "^4.0.2",
+        "esprima": "^4.0.1",
         "vscode-languageclient": "^5.2.1"
     }
 }
