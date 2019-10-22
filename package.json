@@ -128,10 +128,12 @@
         "watch": "webpack --mode none --watch & webpack --mode none --watch --config ./server/webpack.config.js"
     },
     "devDependencies": {
+        "@types/esprima": "^4.0.2",
         "@types/mocha": "^5.2.7",
         "@types/node": "^11.13.22",
         "@types/vscode": "^1.39.0",
         "@types/webpack": "^4.1.4",
+        "esprima": "^4.0.1",
         "https-proxy-agent": "^3.0.0",
         "js-yaml": "^3.13.1",
         "marklogic": "^2.3.1",
@@ -144,8 +146,6 @@
         "webpack-cli": "^3.3.9"
     },
     "dependencies": {
-        "@types/esprima": "^4.0.2",
-        "esprima": "^4.0.1",
         "vscode-languageclient": "^5.2.1"
     }
 }
