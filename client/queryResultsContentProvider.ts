@@ -1,6 +1,6 @@
 'use strict'
 
-import { Event, EventEmitter, TextDocumentContentProvider, Uri } from 'vscode'
+import { Event, EventEmitter, TextDocumentContentProvider, Uri, window } from 'vscode'
 
 export class QueryResultsContentProvider implements TextDocumentContentProvider {
     private _onDidChange = new EventEmitter<Uri>();
@@ -61,5 +61,36 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
         const query = JSON.stringify([uri.toString()])
         const newUri = Uri.parse(`${QueryResultsContentProvider.scheme}://${host}:${port}/${uri.path}?${query}`)
         return newUri
+    }
+
+    public handleResponseToUri(uri: Uri, response: Array<Record<string, any>>): Uri {
+        let fmt = 'nothing'
+        if (response.length > 0) {
+            fmt = response[0]['format']
+        } else {
+            window.showInformationMessage(`Query in ${uri.query} got an empty response from ${uri.authority}`)
+        }
+        const responseUri = Uri.parse(`${QueryResultsContentProvider.scheme}://${uri.authority}${uri.path}.${fmt}?${uri.query}`)
+        this.updateResultsForUri(responseUri, response)
+        this.update(responseUri)
+        return responseUri
+    }
+
+    public handleError(uri: Uri, error: any): Uri {
+        let errorMessage = ''
+        const errorResultsObject = { datatype: 'node()', format: 'json', value: error }
+        if (error.body === undefined) {
+            // problem reaching MarkLogic
+            errorMessage = error.message
+        } else {
+            // MarkLogic error: useful message in body.errorResponse
+            errorMessage = error.body.errorResponse.message
+            errorResultsObject.value = error.body
+        }
+        const responseUri = Uri.parse(`${QueryResultsContentProvider.scheme}://${uri.authority}${uri.path}-error.json?${uri.query}`)
+        window.showErrorMessage(JSON.stringify(errorMessage))
+        this.updateResultsForUri(responseUri, [errorResultsObject])
+        this.update(responseUri)
+        return responseUri
     }
 }

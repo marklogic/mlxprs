@@ -17,37 +17,6 @@ export function activate(context: vscode.ExtensionContext): void {
         return { tabSize: 2, insertSpaces: true }
     }
 
-    function _handleResponseToUri(uri: vscode.Uri, response: Array<Record<string, any>>): vscode.Uri {
-        let fmt = 'nothing'
-        if (response.length > 0) {
-            fmt = response[0]['format']
-        } else {
-            vscode.window.showInformationMessage(`Query in ${uri.query} got an empty response from ${uri.authority}`)
-        }
-        const responseUri = vscode.Uri.parse(`${QueryResultsContentProvider.scheme}://${uri.authority}${uri.path}.${fmt}?${uri.query}`)
-        provider.updateResultsForUri(responseUri, response)
-        provider.update(responseUri)
-        return responseUri
-    };
-    function _handleError(uri: vscode.Uri, error: any): vscode.Uri {
-        let errorMessage = ''
-        const errorResultsObject = { datatype: 'node()', format: 'json', value: error }
-        if (error.body === undefined) {
-            // problem reaching MarkLogic
-            errorMessage = error.message
-        } else {
-            // MarkLogic error: useful message in body.errorResponse
-            errorMessage = error.body.errorResponse.message
-            errorResultsObject.value = error.body
-        }
-        const responseUri = vscode.Uri.parse(`${QueryResultsContentProvider.scheme}://${uri.authority}${uri.path}-error.json?${uri.query}`)
-        vscode.window.showErrorMessage(JSON.stringify(errorMessage))
-        provider.updateResultsForUri(responseUri, [errorResultsObject])
-        provider.update(responseUri)
-        return responseUri
-    };
-
-
     function applyEdits(edits: vscode.TextEdit[], doc: vscode.TextDocument): void {
         if (edits !== undefined) {
             const formatEdit = new vscode.WorkspaceEdit()
@@ -94,12 +63,12 @@ export function activate(context: vscode.ExtensionContext): void {
 
         db.mldbClient.xqueryEval(query, extVars).result(
             (fulfill: Record<string, any>[]) => {
-                const responseUri = _handleResponseToUri(uri, fulfill)
+                const responseUri = provider.handleResponseToUri(uri, fulfill)
                 vscode.workspace.openTextDocument(responseUri)
                     .then(doc => receiveDocument(doc, editor))
             },
             (error: Record<string, any>) => {
-                const responseUri = _handleError(uri, error)
+                const responseUri = provider.handleError(uri, error)
                 vscode.workspace.openTextDocument(responseUri)
                     .then(doc => receiveDocument(doc, editor))
             })
@@ -117,12 +86,12 @@ export function activate(context: vscode.ExtensionContext): void {
 
         db.mldbClient.eval(query, extVars).result(
             (response: Record<string, any>[]) => {
-                const responseUri = _handleResponseToUri(uri, response)
+                const responseUri = provider.handleResponseToUri(uri, response)
                 vscode.workspace.openTextDocument(responseUri)
                     .then(doc => receiveDocument(doc, editor))
             },
             (error: Record<string, any>[]) => {
-                const responseUri = _handleError(uri, error)
+                const responseUri = provider.handleError(uri, error)
                 vscode.workspace.openTextDocument(responseUri)
                     .then(doc => receiveDocument(doc, editor))
             })
