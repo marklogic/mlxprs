@@ -85,7 +85,26 @@ function buildNewClient(host: string, port: number, user: string,
         throw (e)
     }
     return newClient
-};
+}
+
+export function parseQueryForOverrides(queryText: string): Record<string, any> {
+    const tokens: esprima.Token[] = esprima.tokenize(queryText, {comment: true})
+    let overrides: Record<string, any> = {}
+    if (tokens.length > 0 && tokens[0].type === 'BlockComment') {
+        const firstBlockComment: string = tokens[0].value
+        const firstBlockCommentLine: string =
+            firstBlockComment.split(/\n+/)[0]
+                .replace(/\t+/g, '')
+                .trim()
+        if (firstBlockCommentLine.match('settings:mlxprs')) {
+            const overridePayload: string = firstBlockComment
+                .replace('settings:mlxprs', '')
+                .trim()
+            overrides = JSON.parse(overridePayload)
+        }
+    }
+    return overrides
+}
 
 /**
  * Caching mechanism for the ML Client in the extension's state. Checks the configuration for
@@ -99,7 +118,9 @@ function buildNewClient(host: string, port: number, user: string,
  *
  * @returns a MarkLogicVSClient based on the contents of `cfg`
  */
-export function getDbClient(cfg: WorkspaceConfiguration, state: Memento): MarklogicVSClient {
+export function getDbClient(queryText: string, cfg: WorkspaceConfiguration, state: Memento): MarklogicVSClient {
+    const overrides: Record<string, any> = parseQueryForOverrides(queryText)
+
     const host = String(cfg.get('marklogic.host'))
     const user = String(cfg.get('marklogic.username'))
     const pwd = String(cfg.get('marklogic.password'))
@@ -131,23 +152,4 @@ export function getDbClient(cfg: WorkspaceConfiguration, state: Memento): Marklo
         }
     }
     return state.get(MLDBCLIENT) as MarklogicVSClient
-}
-
-export function parseQueryForOverrides(queryText: string): Record<string, any> {
-    const tokens: esprima.Token[] = esprima.tokenize(queryText, {comment: true})
-    let overrides: Record<string, any> = {}
-    if (tokens.length > 0 && tokens[0].type === 'BlockComment') {
-        const firstBlockComment: string = tokens[0].value
-        const firstBlockCommentLine: string =
-            firstBlockComment.split(/\n+/)[0]
-                .replace(/\t+/g, '')
-                .trim()
-        if (firstBlockCommentLine.match('settings:mlxprs')) {
-            const overridePayload: string = firstBlockComment
-                .replace('settings:mlxprs', '')
-                .trim()
-            overrides = JSON.parse(overridePayload)
-        }
-    }
-    return overrides
 }

@@ -17,17 +17,17 @@ suite('Extension Test Suite', () => {
         const newHost: string = Math.random().toString(36)
 
         // get the client and differentiate it from the one in gstate by host
-        let mlClient1: MarklogicVSClient = getDbClient(config, gstate)
+        let mlClient1: MarklogicVSClient = getDbClient('', config, gstate)
         mlClient1.host = newHost
 
         // get a second client, should not be the same or deepequal to first
-        const mlClient2: MarklogicVSClient = getDbClient(config, gstate)
+        const mlClient2: MarklogicVSClient = getDbClient('', config, gstate)
         assert.notEqual(mlClient1, mlClient2)
         assert.notDeepStrictEqual(mlClient1, mlClient2)
 
         // getting mlClient1 from getDbClient should overwrite with the exact
         // same instance as mlClient2
-        mlClient1 = getDbClient(config, gstate)
+        mlClient1 = getDbClient('', config, gstate)
         assert.equal(mlClient1, mlClient2)
         assert.notEqual(mlClient1.host, newHost)
     })
