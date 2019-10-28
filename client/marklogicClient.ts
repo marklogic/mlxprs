@@ -113,6 +113,19 @@ function buildNewClient(params: MlClientParameters): MarklogicVSClient {
     return newClient
 }
 
+/**
+ * In SJS queries, you can override the VS Code mxprs settings in a comment.
+ * The comment must have the following requirements:
+ *
+ * - Block comment as the very first language element in the query
+ * - the first line of the block comment must include the string 'mlxprs:settings'
+ * - the rest of the comment must be a valid JSON object
+ * - the keys of the JSON object are the client parameters you wish to override
+ *
+ * @param queryText the text that will be checked for overrides
+ * @returns a parsed overrides object. Value defined here will be used to override
+ * what is configured in VS Code
+ */
 export function parseQueryForOverrides(queryText: string): Record<string, any> {
     const tokens: esprima.Token[] = esprima.tokenize(queryText, {comment: true})
     let overrides: Record<string, any> = {}
@@ -167,7 +180,7 @@ export function getDbClient(queryText: string, cfg: WorkspaceConfiguration, stat
     if (mlc !== null && !mlc.hasSameParamsAs(newParams)) {
         mlc.mldbClient.release()
         state.update(MLDBCLIENT, null)
-        console.info('Cleared MarkLogicVSClient for new settings.')
+        console.debug('Cleared MarkLogicVSClient for new settings.')
     }
 
     // if there's no existing client in the globalState, instantiate a new one
@@ -176,7 +189,7 @@ export function getDbClient(queryText: string, cfg: WorkspaceConfiguration, stat
             buildNewClient(newParams)
         try {
             state.update(MLDBCLIENT, newClient)
-            console.info('New MarkLogicVSClient: ' + state.get(MLDBCLIENT))
+            console.debug('New MarkLogicVSClient: ' + state.get(MLDBCLIENT))
         } catch (e) {
             console.error('Error: ' + JSON.stringify(e))
             e.message ? console.error(e.message) : null

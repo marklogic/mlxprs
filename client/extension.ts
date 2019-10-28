@@ -97,21 +97,41 @@ export function activate(context: vscode.ExtensionContext): void {
             })
     };
 
+    /**
+     * Try to call `getDbClient()` with overrides. If we can't parse the
+     * overrides, call `getDbClient()` with no overrides, and show the
+     * user an error.
+     */
+    function cascadeOverrideClient(
+        actualQuery: string,
+        cfg: vscode.WorkspaceConfiguration,
+        state: vscode.Memento): MarklogicVSClient
+    {
+        let client: MarklogicVSClient = {} as MarklogicVSClient
+        try {
+            client = getDbClient(actualQuery, cfg, state)
+        } catch(error) {
+            vscode.window.showErrorMessage('could not parse JSON for overrides: ' + error.message)
+            client = getDbClient('', cfg, context.globalState)
+        }
+        return client
+    }
+
     vscode.workspace.registerTextDocumentContentProvider(
         QueryResultsContentProvider.scheme, provider)
 
     const sendXQuery = vscode.commands.registerTextEditorCommand('extension.sendXQuery', editor => {
-        const actualQuery = editor.document.getText()
-        const cfg = vscode.workspace.getConfiguration()
-        const client = getDbClient(actualQuery, cfg, context.globalState)
+        const actualQuery: string = editor.document.getText()
+        const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration()
+        const client: MarklogicVSClient = cascadeOverrideClient(actualQuery, cfg, context.globalState)
         const host = client.params.host; const port = client.params.port
         const qUri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port)
         _sendXQuery(client, actualQuery, qUri, editor)
     })
     const sendJSQuery = vscode.commands.registerTextEditorCommand('extension.sendJSQuery', editor => {
-        const actualQuery = editor.document.getText()
-        const cfg = vscode.workspace.getConfiguration()
-        const client = getDbClient(actualQuery, cfg, context.globalState)
+        const actualQuery: string = editor.document.getText()
+        const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration()
+        const client: MarklogicVSClient = cascadeOverrideClient(actualQuery, cfg, context.globalState)
         const host = client.params.host; const port = client.params.port
         const uri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port)
         _sendJSQuery(client, actualQuery, uri, editor)
