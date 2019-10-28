@@ -6,8 +6,9 @@ import * as esprima from 'esprima'
 import { Memento, WorkspaceConfiguration } from 'vscode'
 
 const MLDBCLIENT = 'mldbClient'
+const MLSETTINGSFLAG = 'mlxprs:settings'
 
-export class MarklogicVSClient {
+export class MlClientParameters {
     contentDb: string;
     modulesDb: string;
 
@@ -18,43 +19,17 @@ export class MarklogicVSClient {
     authType: string;
     ssl: boolean;
     pathToCa: string;
-    ca: string;
 
-    docsDbNumber: string;
-    mldbClient: ml.DatabaseClient;
-    constructor(host: string, port: number,
-        user: string, pwd: string, authType: string,
-        contentDb: string, modulesDb: string,
-        ssl: boolean, pathToCa: string) {
-        this.contentDb = contentDb
-        this.modulesDb = modulesDb
-        this.host = host
-        this.port = port
-        this.user = user
-        this.pwd = pwd
-        this.authType = authType.toUpperCase()
-        this.ssl = ssl
-        this.pathToCa = pathToCa
-
-        this.docsDbNumber = '0'
-        if (pathToCa !== '') {
-            try {
-                this.ca = fs.readFileSync(this.pathToCa, 'utf8')
-            } catch (e) {
-                throw new Error('Error reading CA file: ' + e.message)
-            }
-        }
-        if (authType !== 'DIGEST' && authType !== 'BASIC') {
-            this.authType = 'DIGEST'
-        }
-        this.mldbClient = ml.createDatabaseClient({
-            host: host, port: port, user: user, password: pwd,
-            authType: authType, ssl: ssl, ca: this.ca
-        })
-        this.mldbClient.eval('xdmp.database("' + contentDb + '")')
-            .result(null, null).then((response) => {
-                this.docsDbNumber = response[0]['value']
-            })
+    constructor(rawParams: Record<string, any>) {
+        this.host = rawParams.host
+        this.port = rawParams.port
+        this.user = rawParams.user
+        this.pwd = rawParams.pwd
+        this.contentDb = rawParams.contentDb || rawParams.documentsDb
+        this.modulesDb = rawParams.modulesDb
+        this.authType = rawParams.authType
+        this.ssl = rawParams.ssl
+        this.pathToCa = rawParams.pathToCa
     }
 
     toString(): string {
@@ -64,22 +39,68 @@ export class MarklogicVSClient {
             this.ssl, this.pathToCa].join(':')
     }
 
-    compareTo(host: string, port: number, user: string,
-        pwd: string, authType: string,
-        contentDb: string, modulesDb: string,
-        ssl: boolean, pathToCa: string): boolean {
-        const newParams =
-            [host, port, user, pwd, authType, contentDb, modulesDb, ssl, pathToCa].join(':')
-        return (this.toString() === newParams)
+    sameAs(other: MlClientParameters): boolean {
+        return (
+            this.host === other.host &&
+            this.port === other.port &&
+            this.contentDb === other.contentDb &&
+            this.modulesDb === other.modulesDb &&
+            this.user === other.user &&
+            this.pwd === other.pwd &&
+            this.authType === other.authType &&
+            this.ssl === other.ssl &&
+            this.pathToCa == other.pathToCa
+        )
     }
 }
 
-function buildNewClient(host: string, port: number, user: string,
-    pwd: string, authType: string, contentDb: string,
-    modulesDb: string, ssl: boolean, pathToCa: string): MarklogicVSClient {
+export class MarklogicVSClient {
+    params: MlClientParameters;
+    docsDbNumber: string;
+    ca: string;
+
+    mldbClient: ml.DatabaseClient;
+    constructor(params: MlClientParameters) {
+        this.params = params
+        this.params.authType = params.authType.toUpperCase()
+
+        this.docsDbNumber = '0'
+        if (params.pathToCa !== '') {
+            try {
+                this.ca = fs.readFileSync(this.params.pathToCa, 'utf8')
+            } catch (e) {
+                throw new Error('Error reading CA file: ' + e.message)
+            }
+        }
+        if (this.params.authType !== 'DIGEST' && this.params.authType !== 'BASIC') {
+            this.params.authType = 'DIGEST'
+        }
+        this.mldbClient = ml.createDatabaseClient({
+            host: this.params.host, port: this.params.port,
+            user: this.params.user, password: this.params.pwd,
+            authType: this.params.authType, ssl: this.params.ssl,
+            ca: this.ca
+        })
+        this.mldbClient.eval('xdmp.database("' + this.params.contentDb + '")')
+            .result(null, null).then((response) => {
+                this.docsDbNumber = response[0]['value']
+            })
+    }
+
+    toString(): string {
+        return this.params.toString()
+    }
+
+    hasSameParamsAs(newParams: MlClientParameters): boolean {
+        const thing: boolean = this.params.sameAs(newParams)
+        return thing
+    }
+}
+
+function buildNewClient(params: MlClientParameters): MarklogicVSClient {
     let newClient: MarklogicVSClient
     try {
-        newClient = new MarklogicVSClient(host, port, user, pwd, authType, contentDb, modulesDb, ssl, pathToCa)
+        newClient = new MarklogicVSClient(params)
     } catch (e) {
         console.error('Error: ' + JSON.stringify(e))
         throw (e)
@@ -96,9 +117,9 @@ export function parseQueryForOverrides(queryText: string): Record<string, any> {
             firstBlockComment.split(/\n+/)[0]
                 .replace(/\t+/g, '')
                 .trim()
-        if (firstBlockCommentLine.match('settings:mlxprs')) {
+        if (firstBlockCommentLine.match(MLSETTINGSFLAG)) {
             const overridePayload: string = firstBlockComment
-                .replace('settings:mlxprs', '')
+                .replace(MLSETTINGSFLAG, '')
                 .trim()
             overrides = JSON.parse(overridePayload)
         }
@@ -119,21 +140,26 @@ export function parseQueryForOverrides(queryText: string): Record<string, any> {
  * @returns a MarkLogicVSClient based on the contents of `cfg`
  */
 export function getDbClient(queryText: string, cfg: WorkspaceConfiguration, state: Memento): MarklogicVSClient {
-    const overrides: Record<string, any> = parseQueryForOverrides(queryText)
+    const overrides: MlClientParameters = parseQueryForOverrides(queryText) as MlClientParameters
 
-    const host = String(cfg.get('marklogic.host'))
-    const user = String(cfg.get('marklogic.username'))
-    const pwd = String(cfg.get('marklogic.password'))
-    const port = Number(cfg.get('marklogic.port'))
-    const contentDb = String(cfg.get('marklogic.documentsDb'))
-    const modulesDb = String(cfg.get('marklogic.modulesDb'))
-    const authType = String(cfg.get('marklogic.authType')).toUpperCase()
-    const ssl = Boolean(cfg.get('marklogic.ssl'))
-    const pathToCa = String(cfg.get('marklogic.pathToCa'))
+    const configParams: Record<string, any> = {
+        host: String(cfg.get('marklogic.host')),
+        user: String(cfg.get('marklogic.username')),
+        pwd: String(cfg.get('marklogic.password')),
+        port: Number(cfg.get('marklogic.port')),
+        contentDb: String(cfg.get('marklogic.documentsDb')),
+        modulesDb: String(cfg.get('marklogic.modulesDb')),
+        authType: String(cfg.get('marklogic.authType')).toUpperCase(),
+        ssl: Boolean(cfg.get('marklogic.ssl')),
+        pathToCa: String(cfg.get('marklogic.pathToCa'))
+    }
+
+    // merge VS Code configuration and overrides
+    const newParams = new MlClientParameters({...configParams, ...overrides})
 
     // if settings have changed, release and clear the client
     const mlc = state.get(MLDBCLIENT) as MarklogicVSClient
-    if (mlc !== null && !mlc.compareTo(host, port, user, pwd, authType, contentDb, modulesDb, ssl, pathToCa)) {
+    if (mlc !== null && !mlc.hasSameParamsAs(newParams)) {
         mlc.mldbClient.release()
         state.update(MLDBCLIENT, null)
         console.info('Cleared MarkLogicVSClient for new settings.')
@@ -142,7 +168,7 @@ export function getDbClient(queryText: string, cfg: WorkspaceConfiguration, stat
     // if there's no existing client in the globalState, instantiate a new one
     if (state.get(MLDBCLIENT) === null) {
         const newClient: MarklogicVSClient =
-            buildNewClient(host, port, user, pwd, authType, contentDb, modulesDb, ssl, pathToCa)
+            buildNewClient(newParams)
         try {
             state.update(MLDBCLIENT, newClient)
             console.info('New MarkLogicVSClient: ' + state.get(MLDBCLIENT))

@@ -1,6 +1,6 @@
 export function testOverrideQueryWithGoodJSON(): string {
     return `
-/* settings:mlxprs
+/* mlxprs:settings
 
   {
     "host": "overrideHost",
@@ -17,7 +17,7 @@ cts.doc(cts.uris().toArray()[12 + 19])
 
 export function testOverrideQueryWithBadJSON(): string {
     return `
-/* settings:mlxprs
+/* mlxprs:settings
 
   {
     "host": 'overrideHost',
@@ -48,4 +48,3 @@ export function testQueryWithoutOverrides(): string {
 cts.doc(cts.uris().toArray()[12 + 19])
 `
 }
-

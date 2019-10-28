@@ -1,7 +1,7 @@
 'use strict'
 
 import { Memento } from 'vscode'
-import { MarklogicVSClient } from '../../marklogicClient'
+import { MarklogicVSClient, MlClientParameters } from '../../marklogicClient'
 
 /**
  *
@@ -20,15 +20,17 @@ export class DummyGlobalState implements Memento {
         })
     }
 
-    constructor(host: string, port: number, user: string, pwd: string, authType: string,
-        contentDb: string, modulesDb: string, ssl: boolean, pathToCa: string) {
-
-        this.dummyClient = new MarklogicVSClient(
-            host, port, user, pwd, authType, contentDb, modulesDb, ssl, pathToCa)
+    constructor(params: MlClientParameters) {
+        this.dummyClient = new MarklogicVSClient(params)
     }
 }
 
 export function defaultDummyGlobalState(): DummyGlobalState {
     return new DummyGlobalState(
-        'nohost', 0, 'user', 'pwd', 'BASIC', 'DOCS', 'MODS', true, '')
+        new MlClientParameters({
+            host: 'nohost', port: 0, user: 'user', pwd: 'pwd',
+            authType: 'BASIC', contentDb: 'DOCS', modulesDb: 'MODS',
+            ssl: true, pathToCa: ''
+        })
+    )
 }

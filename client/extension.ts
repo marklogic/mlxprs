@@ -57,8 +57,8 @@ export function activate(context: vscode.ExtensionContext): void {
             'return xdmp:eval($actualQuery, (), $options)'
         const extVars = {
             'actualQuery': actualQuery,
-            'documentsDb': db.contentDb,
-            'modulesDb': db.modulesDb
+            'documentsDb': db.params.contentDb,
+            'modulesDb': db.params.modulesDb
         } as ml.Variables
 
         db.mldbClient.xqueryEval(query, extVars).result(
@@ -80,8 +80,8 @@ export function activate(context: vscode.ExtensionContext): void {
 
         const extVars = {
             'actualQuery': actualQuery,
-            'contentDb': db.contentDb,
-            'modulesDb': db.modulesDb
+            'contentDb': db.params.contentDb,
+            'modulesDb': db.params.modulesDb
         } as ml.Variables
 
         db.mldbClient.eval(query, extVars).result(
@@ -104,7 +104,7 @@ export function activate(context: vscode.ExtensionContext): void {
         const actualQuery = editor.document.getText()
         const cfg = vscode.workspace.getConfiguration()
         const client = getDbClient(actualQuery, cfg, context.globalState)
-        const host = client.host; const port = client.port
+        const host = client.params.host; const port = client.params.port
         const qUri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port)
         _sendXQuery(client, actualQuery, qUri, editor)
     })
@@ -112,7 +112,7 @@ export function activate(context: vscode.ExtensionContext): void {
         const actualQuery = editor.document.getText()
         const cfg = vscode.workspace.getConfiguration()
         const client = getDbClient(actualQuery, cfg, context.globalState)
-        const host = client.host; const port = client.port
+        const host = client.params.host; const port = client.params.port
         const uri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port)
         _sendJSQuery(client, actualQuery, uri, editor)
     })

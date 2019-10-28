@@ -18,7 +18,7 @@ suite('Extension Test Suite', () => {
 
         // get the client and differentiate it from the one in gstate by host
         let mlClient1: MarklogicVSClient = getDbClient('', config, gstate)
-        mlClient1.host = newHost
+        mlClient1.params.host = newHost
 
         // get a second client, should not be the same or deepequal to first
         const mlClient2: MarklogicVSClient = getDbClient('', config, gstate)
@@ -29,7 +29,7 @@ suite('Extension Test Suite', () => {
         // same instance as mlClient2
         mlClient1 = getDbClient('', config, gstate)
         assert.equal(mlClient1, mlClient2)
-        assert.notEqual(mlClient1.host, newHost)
+        assert.notEqual(mlClient1.params.host, newHost)
     })
 
     test('override parser should recognize config overrides', () => {
