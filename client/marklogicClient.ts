@@ -20,6 +20,11 @@ export class MlClientParameters {
     ssl: boolean;
     pathToCa: string;
 
+    /**
+     * note: defaults not applied here. Properties can remain undefined so that
+     *       per-query overrides don't clobber the existing config with default values.
+     *       (using the spread operator in `getDbClient`)
+     **/
     constructor(rawParams: Record<string, any>) {
         this.host = rawParams.host
         this.port = rawParams.port
@@ -34,7 +39,8 @@ export class MlClientParameters {
 
     toString(): string {
         return [this.host, this.port, this.user,
-            this.pwd, this.authType,
+            this.pwd.replace(/./g, '*'),
+            this.authType,
             this.contentDb, this.modulesDb,
             this.ssl, this.pathToCa].join(':')
     }
@@ -49,7 +55,7 @@ export class MlClientParameters {
             this.pwd === other.pwd &&
             this.authType === other.authType &&
             this.ssl === other.ssl &&
-            this.pathToCa == other.pathToCa
+            this.pathToCa === other.pathToCa
         )
     }
 }
@@ -92,8 +98,7 @@ export class MarklogicVSClient {
     }
 
     hasSameParamsAs(newParams: MlClientParameters): boolean {
-        const thing: boolean = this.params.sameAs(newParams)
-        return thing
+        return this.params.sameAs(newParams)
     }
 }
 

@@ -39,6 +39,20 @@ suite('Extension Test Suite', () => {
         assert.equal(overrides.port, 12345)
     })
 
+    test('overrides should not touch parameters they do not specify', () => {
+        const config = workspace.getConfiguration()
+        const cfgPwd = config.get('marklogic.password')
+        const cfgPca = config.get('marklogic.pathToCa')
+        const queryText: string = testOverrideQueryWithGoodJSON()
+        const overrides = parseQueryForOverrides(queryText)
+        const gstate = defaultDummyGlobalState()
+        const mlClient1: MarklogicVSClient = getDbClient(queryText, config, gstate)
+
+        assert.equal(overrides.host, mlClient1.params.host)
+        assert.equal(mlClient1.params.pwd, cfgPwd)
+        assert.equal(mlClient1.params.pathToCa, cfgPca)
+    })
+
     test('override parser should throw if settings are invalid JSON', () => {
         const badQueryText: string = testOverrideQueryWithBadJSON()
         assert.throws(() => {
