@@ -27,13 +27,13 @@ export class MlClientParameters {
      **/
     constructor(rawParams: Record<string, any>) {
         this.host = rawParams.host
-        this.port = rawParams.port
+        this.port = Number(rawParams.port)
         this.user = rawParams.user
         this.pwd = rawParams.pwd
         this.contentDb = rawParams.contentDb || rawParams.documentsDb
         this.modulesDb = rawParams.modulesDb
         this.authType = rawParams.authType
-        this.ssl = rawParams.ssl
+        this.ssl = Boolean(rawParams.ssl)
         this.pathToCa = rawParams.pathToCa
     }
 
