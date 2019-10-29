@@ -26,7 +26,6 @@ The results of the query will be shown in the next tab over.
 
 - Code completion with user-defined functions (locally or in the configured modules database)
 - Edit MarkLogic XML and JSON documents in the text editor, save them back to the database
-- Interactive selection of configuration options
 
 ## Getting started
 
@@ -82,6 +81,38 @@ You can acquire the CA file from MarkLogic's admin panel (usually port 8001), by
 going to 'Security' -> 'Certificate Templates' -> (cert host name), and then
 selecting the "Status" tab. There is an "download" button in the "certificate template status"
 section. Click that button to download a copy of your root CA.
+
+### Per-query configuration override (currently SJS only)
+
+You can override your VS Code configured settings by using a block comment as the first language token
+in the query. The comment should conform to the following:
+
+- first line includes the string `mlxprs:settings`
+- the rest of the comment is valid JSON
+- at least one of the following keys: `host`, `port`, `user`, `pwd`, `contentDb`, `modulesDb`, `authType`, `ssl`, `pathToCa`.
+- the corresponding value should be the right type for the configuration (number for `port`, boolean for `ssl`, string otherwise)
+
+The values defined in the JSON will override VS Code's MarkLogic client configuration.
+
+e.g.:
+
+```js
+/* mlxprs:settings
+{
+  "host": "my-test-host",
+  "port": 8079,
+  "contentDb": "unit-test-database",
+  "note": "These settings are for testing only"
+}
+*/
+'use strict';
+cts.doc('/my-testing-doc.json');
+```
+
+When this query runs, it will use the host, port and contentDb specified in the comment, along with the VS Code
+configuration parameters for the rest of the MarkLogic client definition. (The "note" will be ignored.). Other queries in other editor tabs will not be affected.
+
+
 
 ## Requirements
 
