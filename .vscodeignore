@@ -10,3 +10,9 @@ vsc-extension-quickstart.md
 webpack.config.js
 **/node_modules
 node_modules
+server/test/**
+server/out/**
+client/test/**
+client/out/**
+**/*.ts
+**/*webpack.config.js
