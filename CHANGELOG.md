@@ -1,3 +1,7 @@
+## [1.1.0](https://github.com/mikrovvelle/mlxprs/tree/v1.1.0)
+
+- Added per-query client parameter override capability SJS (see README)
+
 ## [1.0.0](https://github.com/mikrovvelle/mlxprs/tree/v1.0.0)
 
 - Working release
