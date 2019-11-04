@@ -8,6 +8,8 @@ import { XmlFormattingEditProvider } from './xmlFormatting/Formatting'
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient'
 
 const MLDBCLIENT = 'mldbClient'
+const FOPTIONS = { tabSize: 2, insertSpaces: true }
+const FCOMMAND = 'vscode.executeFormatDocumentProvider'
 
 export function activate(context: vscode.ExtensionContext): void {
     context.globalState.update(MLDBCLIENT, null as ml.DatabaseClient)
@@ -27,7 +29,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     async function formatResults(doc: vscode.TextDocument): Promise<void> {
         const fOptions: vscode.FormattingOptions = myFormattingOptions()
-        await new Promise(resolve => setTimeout(resolve, 10))
+        // await new Promise(resolve => setTimeout(resolve, 60))
         const edits: vscode.TextEdit[] = await vscode.commands.executeCommand('vscode.executeFormatDocumentProvider', doc.uri, fOptions)
         applyEdits(edits, doc)
     }

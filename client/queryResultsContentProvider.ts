@@ -4,7 +4,7 @@ import { Event, EventEmitter, TextDocumentContentProvider, Uri, window } from 'v
 
 export class QueryResultsContentProvider implements TextDocumentContentProvider {
     private _onDidChange = new EventEmitter<Uri>();
-    public _cache = new Map<string, Record<string, any>>();
+    public _cache = new Map<string, string>();
 
     static scheme = 'mlquery';
     /**
@@ -19,8 +19,10 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
      * @param uri the 'mlquery' uri representing the query (cache: key)
      * @param val the results of that query (cache: value)
      */
-    public updateResultsForUri(uri: Uri, val: Record<string, any>): void {
-        this._cache.set(uri.toString(), val)
+    public updateResultsForUri(uri: Uri, val: Array<Record<string, any>>): Map<string, string> {
+        const stringResults: string = val.map(o => this.unwrap(o)).join('\n')
+        console.debug(`writing string results: "\n${stringResults}\n"`)
+        return this._cache.set(uri.toString(), stringResults)
     }
 
     private unwrap(o: Record<string, any>): string {
@@ -49,10 +51,11 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
     }
 
     public provideTextDocumentContent(uri: Uri): string {
-        const results = this._cache.get(uri.toString())
+        console.debug(`***** Accessing cache for URI: ${uri.toString()}`)
+        const results: string = this._cache.get(uri.toString())
         if (results) {
-            const r = results as Array<Record<string, any>>
-            return r.map(o => this.unwrap(o)).join('\n')
+            console.log(`getting string results: \n${results}\n`)
+            return results
         }
         return 'pending...'
     }
@@ -63,7 +66,13 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
         return newUri
     }
 
-    public handleResponseToUri(uri: Uri, response: Array<Record<string, any>>): Uri {
+    /**
+     * Cache a query response so VS Code will show the results in a new editor window
+     * @param uri the URI of the VS Code document that sent the query
+     * @param response the content of what was returned from the MarkLogic query
+     * @returns responseUri where VS Code will retrieve the content to show
+     */
+    public writeResponseToUri(uri: Uri, response: Array<Record<string, any>>): Uri {
         let fmt = 'nothing'
         if (response.length > 0) {
             fmt = response[0]['format']
@@ -76,6 +85,15 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
         return responseUri
     }
 
+    /**
+     * Cache a query *error* response so VS Code will show the results in a new editor window,
+     * This should be caught in the promise reject. It may be
+     * - a MarkLogic error (query was received, but couldn't run successfully), or
+     * - a network-level error (couldn't reach host, 401 unautorized, etc.)
+     * @param uri the URI of the VS Code document that sent the query
+     * @param error the content of the reject promise from the MarkLogic query
+     * @returns responseUri where VS Code will retrieve the content to show
+     */
     public handleError(uri: Uri, error: any): Uri {
         let errorMessage = ''
         const errorResultsObject = { datatype: 'node()', format: 'json', value: error }
