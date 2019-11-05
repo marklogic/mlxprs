@@ -8,28 +8,28 @@ const FOPTIONS = { tabSize: 2, insertSpaces: true }
 const FCOMMAND = 'vscode.executeFormatDocumentProvider'
 
 /**
- * Show the results of incoming query results (doc) in the (editor).
- * Try to format the results for readability.
+ * Show the query results at a given URI
+ * @param uri the response URI (where VS Code will call/show the query results)
+ * @param editor results will be shown one column to the right
+ * @returns Promise resolves to editor passed in, unchanged @async
  */
-async function receiveDocument(doc: TextDocument, editor: TextEditor): Promise<TextEditor> {
-    return new Promise(resolve => setTimeout(resolve, 60))
-        .then(() => {
+async function showFormattedResults(uri: Uri, editor: TextEditor): Promise<TextEditor> {
+    return workspace.openTextDocument(uri)
+        .then((doc: TextDocument) => {
             const text: string = doc.getText()
-            console.debug(`${doc.uri.toString()}: ${doc.isDirty} — ${text} \n Attempting formatting...`)
-            return commands.executeCommand(FCOMMAND, doc.uri, FOPTIONS)
+            console.debug(`${uri.toString()}: ${doc.isDirty} — ${text} \n Attempting formatting...`)
+            return commands.executeCommand(FCOMMAND, uri, FOPTIONS)
                 .then((edits: TextEdit[]) => {
                     if (edits !== undefined) {
                         const formatEdit = new WorkspaceEdit()
-                        formatEdit.set(doc.uri, edits)
+                        formatEdit.set(uri, edits)
                         return workspace.applyEdit(formatEdit)
                     } else {
                         console.warn('no edits!')
                         return false
                     }
                 })
-        })
-        .then(() => {
-            return window.showTextDocument(doc, editor.viewColumn + 1, true)
+                .then(() => window.showTextDocument(doc, editor.viewColumn + 1, true))
         })
 }
 
@@ -53,15 +53,12 @@ export function _sendJSQuery(
 
     db.mldbClient.eval(query, extVars).result(
         (response: Record<string, any>[]) => {
-            const responseUri = provider.writeResponseToUri(uri, response)
-            workspace.openTextDocument(responseUri)
-                .then(doc => receiveDocument(doc, editor))
+            return provider.writeResponseToUri(uri, response)
         },
         (error: Record<string, any>[]) => {
-            const responseUri = provider.handleError(uri, error)
-            workspace.openTextDocument(responseUri)
-                .then(doc => receiveDocument(doc, editor))
+            return provider.handleError(uri, error)
         })
+        .then(responseUri => showFormattedResults(responseUri, editor))
 };
 
 
@@ -91,13 +88,10 @@ export function _sendXQuery(
 
     db.mldbClient.xqueryEval(query, extVars).result(
         (fulfill: Record<string, any>[]) => {
-            const responseUri = provider.writeResponseToUri(uri, fulfill)
-            workspace.openTextDocument(responseUri)
-                .then(doc => receiveDocument(doc, editor))
+            return provider.writeResponseToUri(uri, fulfill)
         },
         (error: Record<string, any>[]) => {
-            const responseUri = provider.handleError(uri, error)
-            workspace.openTextDocument(responseUri)
-                .then(doc => receiveDocument(doc, editor))
+            return provider.handleError(uri, error)
         })
+        .then(responseUri => showFormattedResults(responseUri, editor))
 };

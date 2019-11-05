@@ -70,9 +70,9 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
      * Cache a query response so VS Code will show the results in a new editor window
      * @param uri the URI of the VS Code document that sent the query
      * @param response the content of what was returned from the MarkLogic query
-     * @returns responseUri where VS Code will retrieve the content to show
+     * @returns Promise responseUri where VS Code will retrieve the content to show @async
      */
-    public writeResponseToUri(uri: Uri, response: Array<Record<string, any>>): Uri {
+    public async writeResponseToUri(uri: Uri, response: Array<Record<string, any>>): Promise<Uri> {
         let fmt = 'nothing'
         if (response.length > 0) {
             fmt = response[0]['format']
@@ -82,6 +82,7 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
         const responseUri = Uri.parse(`${QueryResultsContentProvider.scheme}://${uri.authority}${uri.path}.${fmt}?${uri.query}`)
         this.updateResultsForUri(responseUri, response)
         this.update(responseUri)
+        await new Promise(resolve => setTimeout(resolve, 60))
         return responseUri
     }
 
@@ -92,9 +93,9 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
      * - a network-level error (couldn't reach host, 401 unautorized, etc.)
      * @param uri the URI of the VS Code document that sent the query
      * @param error the content of the reject promise from the MarkLogic query
-     * @returns responseUri where VS Code will retrieve the content to show
+     * @returns Promise responseUri where VS Code will retrieve the content to show @async
      */
-    public handleError(uri: Uri, error: any): Uri {
+    public async handleError(uri: Uri, error: any): Promise<Uri> {
         let errorMessage = ''
         const errorResultsObject = { datatype: 'node()', format: 'json', value: error }
         if (error.body === undefined) {
@@ -109,6 +110,7 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
         window.showErrorMessage(JSON.stringify(errorMessage))
         this.updateResultsForUri(responseUri, [errorResultsObject])
         this.update(responseUri)
+        await new Promise(resolve => setTimeout(resolve, 60))
         return responseUri
     }
 }
