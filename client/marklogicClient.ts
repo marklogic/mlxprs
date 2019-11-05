@@ -3,7 +3,7 @@
 import * as ml from 'marklogic'
 import * as fs from 'fs'
 import * as esprima from 'esprima'
-import { Memento, WorkspaceConfiguration } from 'vscode'
+import { Memento, WorkspaceConfiguration, window } from 'vscode'
 
 const MLDBCLIENT = 'mldbClient'
 const MLSETTINGSFLAG = 'mlxprs:settings'
@@ -196,4 +196,24 @@ export function getDbClient(queryText: string, cfg: WorkspaceConfiguration, stat
         }
     }
     return state.get(MLDBCLIENT) as MarklogicVSClient
+}
+
+/**
+ * Try to call `getDbClient()` with overrides. If we can't parse the
+ * overrides, call `getDbClient()` with no overrides, and show the
+ * user an error.
+ */
+export function cascadeOverrideClient(
+    actualQuery: string,
+    cfg: WorkspaceConfiguration,
+    state: Memento): MarklogicVSClient
+{
+    let client: MarklogicVSClient = {} as MarklogicVSClient
+    try {
+        client = getDbClient(actualQuery, cfg, state)
+    } catch(error) {
+        window.showErrorMessage('could not parse JSON for overrides: ' + error.message)
+        client = getDbClient('', cfg, state)
+    }
+    return client
 }
