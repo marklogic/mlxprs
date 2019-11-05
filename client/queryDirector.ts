@@ -1,6 +1,6 @@
 'use strict'
 import { MarklogicVSClient } from './marklogicClient'
-import * as vscode from 'vscode'
+import { TextDocument, TextEdit, TextEditor, Uri, WorkspaceEdit, commands, window, workspace } from 'vscode'
 import * as ml from 'marklogic'
 import { QueryResultsContentProvider } from './queryResultsContentProvider'
 
@@ -11,17 +11,17 @@ const FCOMMAND = 'vscode.executeFormatDocumentProvider'
  * Show the results of incoming query results (doc) in the (editor).
  * Try to format the results for readability.
  */
-async function receiveDocument(doc: vscode.TextDocument, editor: vscode.TextEditor): Promise<vscode.TextEditor> {
+async function receiveDocument(doc: TextDocument, editor: TextEditor): Promise<TextEditor> {
     return new Promise(resolve => setTimeout(resolve, 60))
         .then(() => {
             const text: string = doc.getText()
             console.debug(`${doc.uri.toString()}: ${doc.isDirty} — ${text} \n Attempting formatting...`)
-            return vscode.commands.executeCommand(FCOMMAND, doc.uri, FOPTIONS)
-                .then((edits: vscode.TextEdit[]) => {
+            return commands.executeCommand(FCOMMAND, doc.uri, FOPTIONS)
+                .then((edits: TextEdit[]) => {
                     if (edits !== undefined) {
-                        const formatEdit = new vscode.WorkspaceEdit()
+                        const formatEdit = new WorkspaceEdit()
                         formatEdit.set(doc.uri, edits)
-                        return vscode.workspace.applyEdit(formatEdit)
+                        return workspace.applyEdit(formatEdit)
                     } else {
                         console.warn('no edits!')
                         return false
@@ -29,7 +29,7 @@ async function receiveDocument(doc: vscode.TextDocument, editor: vscode.TextEdit
                 })
         })
         .then(() => {
-            return vscode.window.showTextDocument(doc, editor.viewColumn + 1, true)
+            return window.showTextDocument(doc, editor.viewColumn + 1, true)
         })
 }
 
@@ -38,8 +38,8 @@ async function receiveDocument(doc: vscode.TextDocument, editor: vscode.TextEdit
 export function _sendJSQuery(
     db: MarklogicVSClient,
     actualQuery: string,
-    uri: vscode.Uri,
-    editor: vscode.TextEditor,
+    uri: Uri,
+    editor: TextEditor,
     provider: QueryResultsContentProvider): void
 {
     const query = 'xdmp.eval(actualQuery, {actualQuery: actualQuery},' +
@@ -54,12 +54,12 @@ export function _sendJSQuery(
     db.mldbClient.eval(query, extVars).result(
         (response: Record<string, any>[]) => {
             const responseUri = provider.writeResponseToUri(uri, response)
-            vscode.workspace.openTextDocument(responseUri)
+            workspace.openTextDocument(responseUri)
                 .then(doc => receiveDocument(doc, editor))
         },
         (error: Record<string, any>[]) => {
             const responseUri = provider.handleError(uri, error)
-            vscode.workspace.openTextDocument(responseUri)
+            workspace.openTextDocument(responseUri)
                 .then(doc => receiveDocument(doc, editor))
         })
 };
@@ -68,8 +68,8 @@ export function _sendJSQuery(
 export function _sendXQuery(
     db: MarklogicVSClient,
     actualQuery: string,
-    uri: vscode.Uri,
-    editor: vscode.TextEditor,
+    uri: Uri,
+    editor: TextEditor,
     provider: QueryResultsContentProvider): void
 {
     const query =
@@ -92,12 +92,12 @@ export function _sendXQuery(
     db.mldbClient.xqueryEval(query, extVars).result(
         (fulfill: Record<string, any>[]) => {
             const responseUri = provider.writeResponseToUri(uri, fulfill)
-            vscode.workspace.openTextDocument(responseUri)
+            workspace.openTextDocument(responseUri)
                 .then(doc => receiveDocument(doc, editor))
         },
         (error: Record<string, any>[]) => {
             const responseUri = provider.handleError(uri, error)
-            vscode.workspace.openTextDocument(responseUri)
+            workspace.openTextDocument(responseUri)
                 .then(doc => receiveDocument(doc, editor))
         })
 };
