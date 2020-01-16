@@ -82,7 +82,7 @@ going to 'Security' -> 'Certificate Templates' -> (cert host name), and then
 selecting the "Status" tab. There is an "download" button in the "certificate template status"
 section. Click that button to download a copy of your root CA.
 
-### Per-query configuration override (currently SJS only)
+### Per-query configuration override 
 
 You can override your VS Code configured settings by using a block comment as the first language token
 in the query. The comment should conform to the following:
@@ -107,6 +107,23 @@ e.g.:
 */
 'use strict';
 cts.doc('/my-testing-doc.json');
+```
+
+```xquery
+(:
+/* mlxprs:settings
+{
+  "host": "my-test-host",
+  "contentDb": "unit-test-database",
+  "modulesDb": "unit-test-MODULES",
+  "user": "admin",
+  "pwd": "admin",
+  "note": "Thhese settings are for testing only"
+}
+*/
+:)
+xquery version "1.0-ml";
+fn:doc('/my-testing-doc.json')
 ```
 
 When this query runs, it will use the host, port and contentDb specified in the comment, along with the VS Code
