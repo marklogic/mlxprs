@@ -9,6 +9,8 @@ import { XmlFormattingEditProvider } from './xmlFormatting/Formatting'
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient'
 
 const MLDBCLIENT = 'mldbClient'
+const SJS = 'sjs'
+const XQY = 'xqy'
 
 export function activate(context: vscode.ExtensionContext): void {
     context.globalState.update(MLDBCLIENT, null as ml.DatabaseClient)
@@ -20,7 +22,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const sendXQuery = vscode.commands.registerTextEditorCommand('extension.sendXQuery', editor => {
         const actualQuery: string = editor.document.getText()
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration()
-        const client: MarklogicVSClient = cascadeOverrideClient(actualQuery, cfg, context.globalState)
+        const client: MarklogicVSClient = cascadeOverrideClient(actualQuery, XQY, cfg, context.globalState)
         const host = client.params.host; const port = client.params.port
         const qUri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port)
         _sendXQuery(client, actualQuery, qUri, editor, provider)
@@ -28,7 +30,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const sendJSQuery = vscode.commands.registerTextEditorCommand('extension.sendJSQuery', editor => {
         const actualQuery: string = editor.document.getText()
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration()
-        const client: MarklogicVSClient = cascadeOverrideClient(actualQuery, cfg, context.globalState)
+        const client: MarklogicVSClient = cascadeOverrideClient(actualQuery, SJS, cfg, context.globalState)
         const host = client.params.host; const port = client.params.port
         const uri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port)
         _sendJSQuery(client, actualQuery, uri, editor, provider)

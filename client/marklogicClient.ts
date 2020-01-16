@@ -4,10 +4,13 @@ import * as ml from 'marklogic'
 import * as fs from 'fs'
 import * as esprima from 'esprima'
 import * as _ from 'lodash'
+import { XQLint } from 'xqlint'
 import { Memento, WorkspaceConfiguration, window } from 'vscode'
 
 const MLDBCLIENT = 'mldbClient'
-const MLSETTINGSFLAG = 'mlxprs:settings'
+const MLSETTINGSFLAG = /mlxprs:settings/
+const SJS = 'sjs'
+const XQY = 'xqy'
 
 export class MlClientParameters {
     contentDb: string;
@@ -114,6 +117,24 @@ function buildNewClient(params: MlClientParameters): MarklogicVSClient {
     return newClient
 }
 
+function parseXQueryForOverrides(queryText: string): Record<string, any> {
+    let overrides: Record<string, any> = {}
+    const firstContentLine: string = queryText.trim().split(/[\r\n]+/)[0]
+    const startsWithComment: RegExpMatchArray = firstContentLine.match(/^\(:[\s\t]*/)
+    const overridesFlagPresent: RegExpMatchArray = firstContentLine.match(MLSETTINGSFLAG)
+
+    if (startsWithComment && overridesFlagPresent) {
+        const overridePayload: string = queryText.trim()
+            .match(/\(:.+:\)/sg)[0]       // take the first comment (greedy, multiline)
+            .split(/:\)/)[0]              // end at the comment close (un-greedy the match)
+            .replace(MLSETTINGSFLAG, '')  // get rid of the flag
+            .replace(/^\(:/, '')          // get rid of the comment opener
+            .trim()
+        overrides = JSON.parse(overridePayload)
+    }
+    return overrides
+}
+
 /**
  * In SJS/XQuery queries, you can override the VS Code mxprs settings in a comment.
  * The comment must have the following requirements:
@@ -127,23 +148,23 @@ function buildNewClient(params: MlClientParameters): MarklogicVSClient {
  * @returns a parsed overrides object. Value defined here will be used to override
  * what is configured in VS Code
  */
-export function parseQueryForOverrides(queryText: string): Record<string, any> {
-    const tokens: esprima.Token[] = esprima.tokenize(queryText, {comment: true, tolerant:true})
+export function parseQueryForOverrides(queryText: string, language: string): Record<string, any> {
+    if (language === XQY) {
+        return parseXQueryForOverrides(queryText)
+    }
     let overrides: Record<string, any> = {}
-    if (tokens.length > 0){
-        const tok: esprima.Token = _.find(tokens, ['type', 'BlockComment'])
-        if(tok !== undefined){
-            const firstBlockComment: string = tok.value
-            const firstBlockCommentLine: string =
-                firstBlockComment.split(/\n+/)[0]
-                    .replace(/\t+/g, '')
-                    .trim()
-            if (firstBlockCommentLine.match(MLSETTINGSFLAG)) {
-                const overridePayload: string = firstBlockComment
-                    .replace(MLSETTINGSFLAG, '')
-                    .trim()
-                overrides = JSON.parse(overridePayload)
-            }
+    const tokens: esprima.Token[] = esprima.tokenize(queryText, {comment: true, tolerant:true})
+    if (tokens.length > 0 && tokens[0].type === 'BlockComment') {
+        const firstBlockComment: string = tokens[0].value
+        const firstBlockCommentLine: string =
+            firstBlockComment.split(/\n+/)[0]
+                .replace(/\t+/g, '')
+                .trim()
+        if (firstBlockCommentLine.match(MLSETTINGSFLAG)) {
+            const overridePayload: string = firstBlockComment
+                .replace(MLSETTINGSFLAG, '')
+                .trim()
+            overrides = JSON.parse(overridePayload)
         }
     }
     return overrides
@@ -157,12 +178,13 @@ export function parseQueryForOverrides(queryText: string): Record<string, any> {
  * client with a new one based on the config details.
  *
  * @param cfg ('config') most likely from `vscode.workspace.getConfiguration()`
+ * @param language: string SJS or XQY
  * @param state most likely the extension's injected `context.globalState`
  *
  * @returns a MarkLogicVSClient based on the contents of `cfg`
  */
-export function getDbClient(queryText: string, cfg: WorkspaceConfiguration, state: Memento): MarklogicVSClient {
-    const overrides: MlClientParameters = parseQueryForOverrides(queryText) as MlClientParameters
+export function getDbClient(queryText: string, language: string, cfg: WorkspaceConfiguration, state: Memento): MarklogicVSClient {
+    const overrides: MlClientParameters = parseQueryForOverrides(queryText, language) as MlClientParameters
 
     const configParams: Record<string, any> = {
         host: String(cfg.get('marklogic.host')),
@@ -209,15 +231,16 @@ export function getDbClient(queryText: string, cfg: WorkspaceConfiguration, stat
  */
 export function cascadeOverrideClient(
     actualQuery: string,
+    language: string,
     cfg: WorkspaceConfiguration,
     state: Memento): MarklogicVSClient
 {
     let client: MarklogicVSClient = {} as MarklogicVSClient
     try {
-        client = getDbClient(actualQuery, cfg, state)
+        client = getDbClient(actualQuery, language, cfg, state)
     } catch(error) {
         window.showErrorMessage('could not parse JSON for overrides: ' + error.message)
-        client = getDbClient('', cfg, state)
+        client = getDbClient('', language, cfg, state)
     }
     return client
 }
