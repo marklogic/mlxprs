@@ -3,6 +3,7 @@
 import * as ml from 'marklogic'
 import * as fs from 'fs'
 import * as esprima from 'esprima'
+import * as _ from 'lodash'
 import { Memento, WorkspaceConfiguration, window } from 'vscode'
 
 const MLDBCLIENT = 'mldbClient'
@@ -114,7 +115,7 @@ function buildNewClient(params: MlClientParameters): MarklogicVSClient {
 }
 
 /**
- * In SJS queries, you can override the VS Code mxprs settings in a comment.
+ * In SJS/XQuery queries, you can override the VS Code mxprs settings in a comment.
  * The comment must have the following requirements:
  *
  * - Block comment as the very first language element in the query
@@ -127,19 +128,22 @@ function buildNewClient(params: MlClientParameters): MarklogicVSClient {
  * what is configured in VS Code
  */
 export function parseQueryForOverrides(queryText: string): Record<string, any> {
-    const tokens: esprima.Token[] = esprima.tokenize(queryText, {comment: true})
+    const tokens: esprima.Token[] = esprima.tokenize(queryText, {comment: true, tolerant:true})
     let overrides: Record<string, any> = {}
-    if (tokens.length > 0 && tokens[0].type === 'BlockComment') {
-        const firstBlockComment: string = tokens[0].value
-        const firstBlockCommentLine: string =
-            firstBlockComment.split(/\n+/)[0]
-                .replace(/\t+/g, '')
-                .trim()
-        if (firstBlockCommentLine.match(MLSETTINGSFLAG)) {
-            const overridePayload: string = firstBlockComment
-                .replace(MLSETTINGSFLAG, '')
-                .trim()
-            overrides = JSON.parse(overridePayload)
+    if (tokens.length > 0){
+        const tok : esprima.Token = _.find(tokens, ['type', 'BlockComment'])
+        if(tok !== undefined){
+            const firstBlockComment: string = tok.value
+            const firstBlockCommentLine: string =
+                firstBlockComment.split(/\n+/)[0]
+                    .replace(/\t+/g, '')
+                    .trim()
+            if (firstBlockCommentLine.match(MLSETTINGSFLAG)) {
+                const overridePayload: string = firstBlockComment
+                    .replace(MLSETTINGSFLAG, '')
+                    .trim()
+                overrides = JSON.parse(overridePayload)
+            }
         }
     }
     return overrides
