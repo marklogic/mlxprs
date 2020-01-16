@@ -131,7 +131,7 @@ export function parseQueryForOverrides(queryText: string): Record<string, any> {
     const tokens: esprima.Token[] = esprima.tokenize(queryText, {comment: true, tolerant:true})
     let overrides: Record<string, any> = {}
     if (tokens.length > 0){
-        const tok : esprima.Token = _.find(tokens, ['type', 'BlockComment'])
+        const tok: esprima.Token = _.find(tokens, ['type', 'BlockComment'])
         if(tok !== undefined){
             const firstBlockComment: string = tok.value
             const firstBlockCommentLine: string =

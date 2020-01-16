@@ -3,7 +3,7 @@ import { after } from 'mocha'
 
 import { window, workspace } from 'vscode'
 import { defaultDummyGlobalState } from './dummyGlobalState'
-import { testOverrideQueryWithGoodJSON, testOverrideQueryWithBadJSON } from './testOverrideQuery'
+import { testOverrideQueryWithGoodJSON, testOverrideQueryWithBadJSON, testOverrideXQueryWithGoodJSON } from './testOverrideQuery'
 import { getDbClient, MarklogicVSClient, parseQueryForOverrides } from '../../marklogicClient'
 
 suite('Extension Test Suite', () => {
@@ -34,6 +34,13 @@ suite('Extension Test Suite', () => {
 
     test('override parser should recognize config overrides', () => {
         const queryText: string = testOverrideQueryWithGoodJSON()
+        const overrides = parseQueryForOverrides(queryText)
+        assert.equal(overrides.host, 'overrideHost')
+        assert.equal(overrides.port, 12345)
+    })
+
+    test('override parser should recognize XQuery config overrides', () => {
+        const queryText: string = testOverrideXQueryWithGoodJSON()
         const overrides = parseQueryForOverrides(queryText)
         assert.equal(overrides.host, 'overrideHost')
         assert.equal(overrides.port, 12345)

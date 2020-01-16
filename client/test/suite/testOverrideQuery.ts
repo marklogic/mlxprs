@@ -48,3 +48,19 @@ export function testQueryWithoutOverrides(): string {
 cts.doc(cts.uris().toArray()[12 + 19])
 `
 }
+
+export function testOverrideXQueryWithGoodJSON(): string {
+    return `
+(: mlxprs:settings
+
+  {
+    "host": "overrideHost",
+    "port": 12345,
+    "username": "blahpblorpbleepybloop"
+  }
+
+:)
+(: Another comment :)
+cts:doc(cts:uris()[12 + 19])
+`
+}
