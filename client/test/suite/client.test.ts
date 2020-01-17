@@ -3,9 +3,10 @@ import { after } from 'mocha'
 
 import { window, workspace } from 'vscode'
 import { defaultDummyGlobalState } from './dummyGlobalState'
-import { testOverrideQueryWithGoodJSON,  testOverrideQueryWithBadJSON,
-    testOverrideXQueryWithGoodJSON, testOverrideXQueryWithBadJSON } from './testOverrideQuery'
-import { getDbClient, MarklogicVSClient, parseQueryForOverrides } from '../../marklogicClient'
+import { testOverrideQueryWithGoodJSON,  testOverrideQueryWithBadJSON, testQueryWithoutOverrides,
+    testOverrideXQueryWithGoodJSON, testOverrideXQueryWithBadJSON, testXQueryWithoutOverrides
+} from './testOverrideQuery'
+import { getDbClient, MarklogicVSClient, parseQueryForOverrides, MlClientParameters } from '../../marklogicClient'
 
 const SJS = 'sjs'
 const XQY = 'xqy'
@@ -64,9 +65,15 @@ suite('Extension Test Suite', () => {
         })
     })
 
+    test('having no override flag should cause overrides to be ignored', () => {
+        const noOQuery: string = testQueryWithoutOverrides()
+        const overrides: Record<string, any> = parseQueryForOverrides(noOQuery, SJS)
+        assert.equal(Object.keys(overrides).length, 0)
+    })
+
     test('override XQuery parser should recognize config overrides', () => {
         const queryText: string = testOverrideXQueryWithGoodJSON()
-        const overrides = parseQueryForOverrides(queryText, XQY)
+        const overrides: Record<string, any> = parseQueryForOverrides(queryText, XQY)
         assert.equal(overrides.host, 'overrideHost')
         assert.equal(overrides.port, 12345)
     })
@@ -76,6 +83,12 @@ suite('Extension Test Suite', () => {
         assert.throws(() => {
             parseQueryForOverrides(badQueryText, XQY)
         })
+    })
+
+    test('having no override XQuery flag should cause overrides to be ignored', () => {
+        const noOQuery: string = testXQueryWithoutOverrides()
+        const overrides: Record<string, any> = parseQueryForOverrides(noOQuery, XQY)
+        assert.equal(Object.keys(overrides).length, 0)
     })
 
     test('Sample test', () => {
