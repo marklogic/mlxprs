@@ -3,7 +3,8 @@ import { after } from 'mocha'
 
 import { window, workspace } from 'vscode'
 import { defaultDummyGlobalState } from './dummyGlobalState'
-import { testOverrideQueryWithGoodJSON, testOverrideQueryWithBadJSON, testOverrideXQueryWithGoodJSON } from './testOverrideQuery'
+import { testOverrideQueryWithGoodJSON,  testOverrideQueryWithBadJSON,
+    testOverrideXQueryWithGoodJSON, testOverrideXQueryWithBadJSON } from './testOverrideQuery'
 import { getDbClient, MarklogicVSClient, parseQueryForOverrides } from '../../marklogicClient'
 
 const SJS = 'sjs'
@@ -42,13 +43,6 @@ suite('Extension Test Suite', () => {
         assert.equal(overrides.port, 12345)
     })
 
-    test('override parser should recognize XQuery config overrides', () => {
-        const queryText: string = testOverrideXQueryWithGoodJSON()
-        const overrides = parseQueryForOverrides(queryText, XQY)
-        assert.equal(overrides.host, 'overrideHost')
-        assert.equal(overrides.port, 12345)
-    })
-
     test('overrides should not touch parameters they do not specify', () => {
         const config = workspace.getConfiguration()
         const cfgPwd = config.get('marklogic.password')
@@ -67,6 +61,20 @@ suite('Extension Test Suite', () => {
         const badQueryText: string = testOverrideQueryWithBadJSON()
         assert.throws(() => {
             parseQueryForOverrides(badQueryText, SJS)
+        })
+    })
+
+    test('override XQuery parser should recognize config overrides', () => {
+        const queryText: string = testOverrideXQueryWithGoodJSON()
+        const overrides = parseQueryForOverrides(queryText, XQY)
+        assert.equal(overrides.host, 'overrideHost')
+        assert.equal(overrides.port, 12345)
+    })
+
+    test('override XQuery parser should throw if settings are invalid JSON', () => {
+        const badQueryText: string = testOverrideXQueryWithBadJSON()
+        assert.throws(() => {
+            parseQueryForOverrides(badQueryText, XQY)
         })
     })
 

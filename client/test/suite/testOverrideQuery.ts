@@ -64,3 +64,38 @@ export function testOverrideXQueryWithGoodJSON(): string {
 cts:doc(cts:uris()[12 + 19])
 `
 }
+
+export function testOverrideXQueryWithBadJSON(): string {
+    return `
+
+(: mlxprs:settings
+
+  {
+    "host": 'overrideHost',
+    "port": 12345,
+    "username": "blahpblorpbleepybloop"
+  }
+
+:)
+(: Another comment :)
+(: another comment :)
+cts:doc(cts:uris()[12 + 19])
+`
+}
+
+export function testXQueryWithoutOverrides(): string {
+    return `
+(: ignore these settings!
+
+  {
+    "host": "overrideHost",
+    "port": 12345,
+    "username": "blahpblorpbleepybloop"
+  }
+
+:)
+(: Another comment
+ another block comment :)
+cts.doc(cts.uris().toArray()[12 + 19])
+`
+}
