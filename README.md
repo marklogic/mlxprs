@@ -109,18 +109,18 @@ e.g.:
 cts.doc('/my-testing-doc.json');
 ```
 
+or:
+
 ```xquery
-(:
-/* mlxprs:settings
+(: mlxprs:settings
 {
   "host": "my-test-host",
   "contentDb": "unit-test-database",
   "modulesDb": "unit-test-MODULES",
-  "user": "admin",
-  "pwd": "admin",
-  "note": "Thhese settings are for testing only"
+  "user": "unit-tester",
+  "pwd": "red,green,refactor",
+  "note": "These settings are for testing only"
 }
-*/
 :)
 xquery version "1.0-ml";
 fn:doc('/my-testing-doc.json')
