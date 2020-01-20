@@ -3,8 +3,6 @@
 import * as ml from 'marklogic'
 import * as fs from 'fs'
 import * as esprima from 'esprima'
-import * as _ from 'lodash'
-import { XQLint } from 'xqlint'
 import { Memento, WorkspaceConfiguration, window } from 'vscode'
 
 const MLDBCLIENT = 'mldbClient'
