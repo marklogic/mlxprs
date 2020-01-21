@@ -1,3 +1,11 @@
+## [1.2.0](https://github.com/mikrovvelle/mlxprs/tree/v1.2.0)
+
+- Added per-query client parameter override capability to XQuery (see README)
+
+## [1.1.1](https://github.com/mikrovvelle/mlxprs/tree/v1.1.1)
+
+- Security fixes for npm dependencies
+
 ## [1.1.0](https://github.com/mikrovvelle/mlxprs/tree/v1.1.0)
 
 - Added per-query client parameter override capability SJS (see README)
