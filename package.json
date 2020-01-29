@@ -37,6 +37,57 @@
                 "title": "MarkLogic: Eval JS"
             }
         ],
+        "debuggers": [
+            {
+                "type": "xquery",
+                "label": "debug marklogic xquery",
+                "program": "./out/xqueryDebugAdapter.js",
+                "runtime": "node",
+                "configurationAttributes": {
+                    "launch": {
+                        "required": [
+                            "query"
+                        ],
+                        "properties": {
+                            "query": {
+                                "type": "string",
+                                "description": "XQuery to be debugged",
+                                "default": ""
+                            },
+                            "stopOnEntry": {
+                                "type": "boolean",
+                                "description": "Automatically stop after launch.",
+                                "default": true
+                            }
+                        }
+                    },
+                    "initialConfigurations": [
+                        {
+                            "type": "xquery",
+                            "request": "launch",
+                            "name": "Debug current buffer",
+                            "query": "${file}"
+                        }
+                    ],
+                    "configurationSnippets": [
+                        {
+                            "label": "XQuery Debug: launch",
+                            "description": "configuration for debugging xquery",
+                            "body": {
+                                "type": "xquery",
+                                "request": "launch",
+                                "name": "Ask for a file name?",
+                                "program": "\\${command:GetQuery}",
+                                "stopOnEntry": true
+                            }
+                        }
+                    ],
+                    "variables": {
+                        "GetQuery": "extension.getQuery"
+                    }
+                }
+            }
+        ],
         "configuration": {
             "type": "object",
             "title": "MarkLogic connection configuration",
@@ -141,6 +192,8 @@
         "mocha": "^6.2.2",
         "ts-loader": "^6.2.0",
         "typescript": "^3.6.4",
+        "vscode-debugadapter": "^1.37.1",
+        "vscode-debugprotocol": "^1.37.0",
         "vscode-test": "^1.2.0",
         "webpack": "^4.41.1",
         "webpack-cli": "^3.3.9"

@@ -2,6 +2,7 @@
 {
   "version": "0.2.0",
   "configurations": [
+
     {
       "name": "Attach to Server",
       "type": "node",
@@ -28,6 +29,26 @@
       ],
       "preLaunchTask": "npm",
       "cwd": "${workspaceFolder}"
+    },
+    {
+        "name": "XQuery debug adapter",
+        "type": "node",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "program": "${workspaceFolder}/serverXqyDbg/xqueryDebugAdapter.ts",
+        "args": [
+            "--server=4712",
+        ],
+        "outFiles": [
+            "${workspaceFolder}/serverXqyDbg/out/**/*.js"
+        ]
+    },
+    {
+        "name": "XQY Debugger",
+        "type": "xquery",
+        "request": "launch",
+        "program": "${workspaceFolder}/${command:GetQuery}",
+        "stopOnEntry": true
     },
     {
       "name": "Launch Client Tests",
