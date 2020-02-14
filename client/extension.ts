@@ -7,6 +7,7 @@ import { MarklogicVSClient, cascadeOverrideClient } from './marklogicClient'
 import { QueryResultsContentProvider } from './queryResultsContentProvider'
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting'
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient'
+import { XqyDebugConfigurationProvider, XqyInlineDebugAdatperFactory } from '../serverXqyDbg/xqyDebugConfigProvider'
 
 const MLDBCLIENT = 'mldbClient'
 const SJS = 'sjs'
@@ -74,6 +75,24 @@ export function activate(context: vscode.ExtensionContext): void {
     }
     const disposable = new LanguageClient('xQueryLanguageServer', 'XQuery Language Server', serverOptions, clientOptions).start()
     context.subscriptions.push(disposable)
+
+    // Xquery Debugger
+    context.subscriptions.push(vscode.commands.registerCommand('extension.getQuery', () => {
+        return vscode.window.showInputBox({
+            placeHolder: 'Please enter the name of the XQuery file',
+            value: 'query.xqy'
+        })
+    }))
+
+    const xqyDbgProvider: XqyDebugConfigurationProvider = new XqyDebugConfigurationProvider()
+    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('xquery-ml', xqyDbgProvider))
+
+    const factory: XqyInlineDebugAdatperFactory = new XqyInlineDebugAdatperFactory()
+    context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('xquery-ml', factory))
+    if ('dispose' in factory) {
+        context.subscriptions.push(factory)
+    }
+
 }
 
 // this method is called when your extension is deactivated

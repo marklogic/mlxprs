@@ -5,7 +5,7 @@
     "version": "1.2.0",
     "publisher": "mlxprs",
     "engines": {
-        "vscode": "^1.39.1"
+        "vscode": "^1.41.1"
     },
     "icon": "images/mlxprs-vscode.png",
     "galleryBanner": {
@@ -13,6 +13,7 @@
         "theme": "dark"
     },
     "categories": [
+        "Debuggers",
         "Programming Languages",
         "Snippets",
         "Other"
@@ -20,8 +21,10 @@
     "repository": "https://github.com/mikrovvelle/mlxprs",
     "license": "(Apache-2.0 AND MIT)",
     "activationEvents": [
+        "onCommand:extension.getQuery",
         "onCommand:extension.sendXQuery",
         "onCommand:extension.sendJSQuery",
+        "onDebug",
         "onLanguage:xquery-ml",
         "onLanguage:javascript"
     ],
@@ -37,54 +40,118 @@
                 "title": "MarkLogic: Eval JS"
             }
         ],
+        "breakpoints": [
+            {
+                "language": "xquery-ml"
+            }
+        ],
         "debuggers": [
             {
-                "type": "xquery",
-                "label": "debug marklogic xquery",
-                "program": "./out/xqueryDebugAdapter.js",
+                "type": "xquery-ml",
+                "label": "MarkLogic XQY Debugger",
+                "program": "./dist/xqyDebugAdapter.js",
                 "runtime": "node",
                 "configurationAttributes": {
                     "launch": {
                         "required": [
-                            "query"
+                            "program"
                         ],
                         "properties": {
-                            "query": {
+                            "program": {
                                 "type": "string",
-                                "description": "XQuery to be debugged",
+                                "description": "Absolute path to a text file.",
                                 "default": ""
                             },
-                            "stopOnEntry": {
-                                "type": "boolean",
-                                "description": "Automatically stop after launch.",
-                                "default": true
+                            "hostname": {
+                                "type": "string",
+                                "description": "hostname of MarkLogic server",
+                                "default": ""
+                            },
+                            "serverName": {
+                                "type": "string",
+                                "description": "Port number of debug server",
+                                "default": ""
+                            },
+                            "username": {
+                                "type": "string",
+                                "description": "Username.",
+                                "default": "${command:AskForUsername}"
+                            },
+                            "password": {
+                                "type": "string",
+                                "description": "Password.",
+                                "default": "${command:AskForPassword}"
+                            },
+                            "rid": {
+                                "type": "string",
+                                "description": "Request Id",
+                                "default": ""
                             }
                         }
                     },
-                    "initialConfigurations": [
-                        {
-                            "type": "xquery",
-                            "request": "launch",
-                            "name": "Debug current buffer",
-                            "query": "${file}"
-                        }
-                    ],
-                    "configurationSnippets": [
-                        {
-                            "label": "XQuery Debug: launch",
-                            "description": "configuration for debugging xquery",
-                            "body": {
-                                "type": "xquery",
-                                "request": "launch",
-                                "name": "Ask for a file name?",
-                                "program": "\\${command:GetQuery}",
-                                "stopOnEntry": true
+                    "attach": {
+                        "required": [
+                            "program"
+                        ],
+                        "properties": {
+                            "program": {
+                                "type": "string",
+                                "description": "Absolute path to a text file.",
+                                "default": ""
+                            },
+                            "hostname": {
+                                "type": "string",
+                                "description": "hostname of MarkLogic server",
+                                "default": ""
+                            },
+                            "serverName": {
+                                "type": "string",
+                                "description": "Port number of debug server",
+                                "default": ""
+                            },
+                            "username": {
+                                "type": "string",
+                                "description": "Username.",
+                                "default": "${marklogic:username}"
+                            },
+                            "password": {
+                                "type": "string",
+                                "description": "Password.",
+                                "default": "${marklogic:password}"
+                            },
+                            "rid": {
+                                "type": "string",
+                                "description": "Request Id",
+                                "default": ""
                             }
                         }
-                    ],
-                    "variables": {
-                        "GetQuery": "extension.getQuery"
                     }
+                },
+                "initialConfigurations": [
+                    {
+                        "type": "xquery-ml",
+                        "request": "launch",
+                        "name": "Ask for file name: ",
+                        "program": "",
+                        "stopOnEntry": true
+                    }
+                ],
+                "configurationSnippets": [
+                    {
+                        "label": "ML Mock Debug: Launch!",
+                        "description": "A new configuration for 'debugging' a user selected markdown file.",
+                        "body": {
+                            "type": "ml-debug",
+                            "request": "launch",
+                            "name": "Ask for file name",
+                            "program": "",
+                            "stopOnEntry": true
+                        }
+                    }
+                ],
+                "variables": {
+                    "AskForUsername": "extension.mock-debug.getUsername",
+                    "AskForPassword": "extension.mock-debug.getPassword"
                 }
             }
         ],
@@ -175,6 +242,7 @@
         "vscode:prepublish": "./node_modules/.bin/webpack --mode production && ./node_modules/.bin/webpack --mode production --config ./server/webpack.config.js",
         "compile": "./node_modules/webpack/bin/webpack.js --mode none && ./node_modules/webpack/bin/webpack.js --mode none --config ./server/webpack.config.js",
         "pretest": "tsc -b client/test/tsconfig.json",
+        "predebug": "tsc -b serverXqyDbg/tsconfig.json",
         "test": "node client/out/test/runTest.js",
         "watch": "./node_modules/webpack/bin/webpack.js --mode none --watch & ./node_modules/webpack/bin/webpack.js --mode none --watch --config ./server/webpack.config.js"
     },
@@ -182,8 +250,9 @@
         "@types/esprima": "^4.0.2",
         "@types/mocha": "^5.2.7",
         "@types/node": "^11.13.22",
-        "@types/vscode": "^1.39.0",
+        "@types/vscode": "^1.42.0",
         "@types/webpack": "^4.1.4",
+        "await-notify": "^1.0.1",
         "esprima": "^4.0.1",
         "https-proxy-agent": "^3.0.1",
         "js-yaml": "^3.13.1",
@@ -192,8 +261,8 @@
         "mocha": "^6.2.2",
         "ts-loader": "^6.2.0",
         "typescript": "^3.6.4",
-        "vscode-debugadapter": "^1.37.1",
-        "vscode-debugprotocol": "^1.37.0",
+        "vscode-debugadapter": "^1.38.0",
+        "vscode-debugprotocol": "^1.38.0",
         "vscode-test": "^1.2.0",
         "webpack": "^4.41.1",
         "webpack-cli": "^3.3.9"

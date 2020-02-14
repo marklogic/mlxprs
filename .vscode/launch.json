@@ -35,18 +35,19 @@
         "type": "node",
         "request": "launch",
         "cwd": "${workspaceFolder}",
-        "program": "${workspaceFolder}/serverXqyDbg/xqueryDebugAdapter.ts",
+        "program": "${workspaceFolder}/serverXqyDbg/xqyDebugAdapter.ts",
         "args": [
             "--server=4712",
         ],
+        "preLaunchTask": "npm: predebug",
         "outFiles": [
             "${workspaceFolder}/serverXqyDbg/out/**/*.js"
         ]
     },
     {
-        "name": "XQY Debugger",
-        "type": "xquery",
+        "type": "xquery-ml",
         "request": "launch",
+        "name": "XQY Debugger",
         "program": "${workspaceFolder}/${command:GetQuery}",
         "stopOnEntry": true
     },
