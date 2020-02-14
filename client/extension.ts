@@ -88,6 +88,7 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('xquery-ml', xqyDbgProvider))
 
     const factory: XqyInlineDebugAdatperFactory = new XqyInlineDebugAdatperFactory()
+    factory.setUpMlClientContext(context.globalState, vscode.workspace.getConfiguration())
     context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('xquery-ml', factory))
     if ('dispose' in factory) {
         context.subscriptions.push(factory)

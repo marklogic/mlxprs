@@ -6,6 +6,8 @@ import { Handles, InitializedEvent,
 import * as CNST from './debugConstants'
 import { XqyRuntime, Stack } from './xqyRuntime'
 import { basename } from 'path'
+import { Memento, WorkspaceConfiguration } from 'vscode'
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { Subject } = require('await-notify')
 
@@ -36,6 +38,10 @@ export class XqyDebugSession extends LoggingDebugSession {
             undefined, undefined, 'data-placeholder')
     }
 
+    public setMlClientContext(state: Memento, cfg: WorkspaceConfiguration): void {
+        this._runtime.setMlClient(state, cfg)
+    }
+
     public constructor() {
         super()
 
@@ -43,7 +49,6 @@ export class XqyDebugSession extends LoggingDebugSession {
         this.setDebuggerColumnsStartAt1(false)
 
         this._runtime = new XqyRuntime()
-
         this._runtime.on(CNST.STOPONENTRY, () => {
             this.sendEvent(new StoppedEvent(CNST.ENTRY, XqyDebugSession.THREAD_ID))
         })

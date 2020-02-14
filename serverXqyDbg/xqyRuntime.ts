@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events'
 import * as CNST from './debugConstants'
-import { StackFrame } from 'vscode-debugadapter'
+import { Memento, WorkspaceConfiguration } from 'vscode'
+import { MarklogicVSClient, getDbClient } from '../client/marklogicClient'
 export interface XqyBreakpoint {
     id: number;
     line: number;
@@ -31,6 +32,12 @@ export class XqyRuntime extends EventEmitter {
     private _breakPoints = new Map<string, XqyBreakpoint[]>()
     private _breakPointId = 1
     private _breakAddresses = new Set<string>()
+
+    private mlClient: MarklogicVSClient
+
+    public setMlClient(state: Memento, cfg: WorkspaceConfiguration): void {
+        this.mlClient = getDbClient('', CNST.XQY, cfg, state)
+    }
 
     constructor() {
         super()

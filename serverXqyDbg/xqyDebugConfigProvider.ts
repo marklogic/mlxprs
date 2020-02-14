@@ -83,7 +83,17 @@ export class XqyDebugAdapterDescriptorFactory implements DebugAdapterDescriptorF
 }
 
 export class XqyInlineDebugAdatperFactory implements DebugAdapterDescriptorFactory {
+    private state: Memento
+    private cfg: WorkspaceConfiguration
+
+    public setUpMlClientContext(state: Memento, cfg: WorkspaceConfiguration): void {
+        this.state = state
+        this.cfg = cfg
+    }
+
     createDebugAdapterDescriptor(_session: DebugSession): ProviderResult<DebugAdapterDescriptor> {
-        return new DebugAdapterInlineImplementation(new XqyDebugSession())
+        const xqyDebugSession = new XqyDebugSession()
+        xqyDebugSession.setMlClientContext(this.state, this.cfg)
+        return new DebugAdapterInlineImplementation(xqyDebugSession)
     }
 }

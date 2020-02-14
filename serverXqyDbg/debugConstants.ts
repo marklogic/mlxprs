@@ -1,5 +1,3 @@
-import { resolve } from "dns"
-
 export const STOPONSTEP = 'stopOnStep'
 export const STOPONENTRY = 'stopOnEntry'
 export const STOPONDATABREAKPOINT = 'stopOnDataBreakpoint'
@@ -21,3 +19,4 @@ export const lOCAL = 'local'
 export const GLOBAL = 'Global'
 export const gLOBAL = 'global'
 
+export const XQY = 'xqy'
