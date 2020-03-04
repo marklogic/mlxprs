@@ -118,6 +118,123 @@
                 "language": "xquery-ml",
                 "path": "./snippets/snippets.json"
             }
+        ],
+        "breakpoints": [
+            {
+                "language": "javascript"
+            }
+        ],
+        "debuggers": [
+            {
+                "type": "ml-jsdebugger",
+                "label": "MarkLogic JS Debugger",
+                "program": "./dist/jsDebug.js",
+                "runtime": "node",
+                "configurationAttributes": {
+                    "launch": {
+                        "required": [
+                            "hostname"
+                        ],
+                        "properties": {
+                            "hostname": {
+                                "type": "string",
+                                "description": "hostname of MarkLogic server",
+                                "default": ""
+                            },
+                            "username": {
+                                "type": "string",
+                                "description": "Username.",
+                                "default": ""
+                            },
+                            "password": {
+                                "type": "string",
+                                "description": "Password.",
+                                "default": ""
+                            }
+                        }
+                    },
+                    "attach": {
+                        "required": [
+                            "path",
+                            "hostname",
+                            "servername"
+                        ],
+                        "properties": {
+                            "path": {
+                                "type": "string",
+                                "description": "Absolute path to a text file.",
+                                "default": ""
+                            },
+                            "hostname": {
+                                "type": "string",
+                                "description": "hostname of MarkLogic server",
+                                "default": ""
+                            },
+                            "servername": {
+                                "type": "string",
+                                "description": "Port number of debug server",
+                                "default": ""
+                            },
+                            "username": {
+                                "type": "string",
+                                "description": "Username.",
+                                "default": ""
+                            },
+                            "password": {
+                                "type": "string",
+                                "description": "Password.",
+                                "default": ""
+                            },
+                            "rid": {
+                                "type": "string",
+                                "description": "Request Id",
+                                "default": ""
+                            }
+                        }
+                    }
+                },
+                "initialConfigurations": [
+                    {
+                        "type": "ml-jsdebugger",
+                        "request": "launch",
+                        "name": "Launch Debug Request",
+                        "path": "",
+                        "hostname": "Enter host name",
+                        "servername": "Enter debug server name"
+                    },
+                    {
+                        "type": "ml-jsdebugger",
+                        "request": "attach",
+                        "name": "Attach to Debug Request",
+                        "hostname": "Enter host name"
+                    }
+                ],
+                "configurationSnippets": [
+                    {
+                        "label": "MarkLogic JS Debugger: Launch",
+                        "description": "A new configuration for 'debugging' a user selected javascript file.",
+                        "body": {
+                            "type": "ml-jsdebugger",
+                            "request": "launch",
+                            "name": "Launch Debug Request",
+                            "hostname": "Enter host name"
+                        }
+                    },
+                    {
+                        "label": "MarkLogic JS Debugger: Attach",
+                        "description": "A new configuration for 'debugging' a user selected javascript file.",
+                        "body": {
+                            "type": "ml-jsdebugger",
+                            "request": "attach",
+                            "name": "Attach to Debug Request",
+                            "path": "",
+                            "hostname": "Enter host name",
+                            "servername": "Enter debug server name"
+                        }
+                    }
+                ],
+                "variables": {}
+            }
         ]
     },
     "scripts": {
@@ -147,6 +264,10 @@
         "webpack-cli": "^3.3.11"
     },
     "dependencies": {
-        "vscode-languageclient": "^6.1.1"
+        "vscode-languageclient": "^6.1.1",
+        "await-notify": "^1.0.1",
+        "request": "^2.88.2",
+        "request-promise": "^4.2.5",
+        "vscode-debugadapter": "^1.38.0"
     }
 }

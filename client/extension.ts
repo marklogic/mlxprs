@@ -7,6 +7,7 @@ import { MarklogicVSClient, cascadeOverrideClient } from './marklogicClient'
 import { QueryResultsContentProvider } from './queryResultsContentProvider'
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting'
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient'
+import {MLConfigurationProvider, DebugAdapterExecutableFactory} from "./JSDebugger/configurationProvider";
 
 const MLDBCLIENT = 'mldbClient'
 const SJS = 'sjs'
@@ -74,6 +75,13 @@ export function activate(context: vscode.ExtensionContext): void {
     }
     const disposable = new LanguageClient('xQueryLanguageServer', 'XQuery Language Server', serverOptions, clientOptions).start()
     context.subscriptions.push(disposable)
+
+    const debugConfigProvider = new MLConfigurationProvider();
+	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('ml-jsdebugger', debugConfigProvider));
+
+	let factory :any =  new DebugAdapterExecutableFactory();
+	context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('ml-jsdebugger', factory));
+	context.subscriptions.push(factory);
 }
 
 // this method is called when your extension is deactivated

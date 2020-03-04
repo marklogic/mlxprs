@@ -15,6 +15,19 @@
       "cwd": "${workspaceFolder}/server/"
     },
     {
+			"name": "Launch Debug Adapter Server",
+			"type": "node",
+			"request": "launch",
+			"cwd": "${workspaceFolder}",
+			"program": "${workspaceFolder}/client/JSDebugger/mlDebug.ts",
+			"args": [
+				"--server=4711"
+			],
+			"outFiles": [
+				"${workspaceFolder}/dist/**/*.js"
+			]
+		},
+    {
       "name": "Launch Extension",
       "type": "extensionHost",
       "request": "launch",
@@ -63,5 +76,11 @@
       "preLaunchTask": "npm: copy-files",
       "cwd": "${workspaceFolder}/server"
     }
-  ]
+  ],
+  "compounds": [
+		{
+			"name": "Extension + Server",
+			"configurations": [ "Launch Extension", "Launch Debug Adapter Server" ]
+		}
+	]
 }
