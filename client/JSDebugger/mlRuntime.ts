@@ -35,12 +35,11 @@ export class MLRuntime extends EventEmitter {
 		this._runTimeState = state;
 	}
 
-	public launchWithDebugEval(scriptLocation:string): Promise<string> {
+	public launchWithDebugEval(scriptLocation:string, database:string, txnId:string): Promise<string> {
 		const script = fs.readFileSync(scriptLocation).toString();
-		// const script = lines.join('\\n\\\n');
 		this.setRunTimeState("launched");
 
-		return this._sendMLdebugEvalRequest(script);
+		return this._sendMLdebugEvalRequest(script,database,txnId);
 	}
 
 	public initialize(args: any) {
@@ -48,8 +47,6 @@ export class MLRuntime extends EventEmitter {
 		this._hostName = args.hostname;
 		this._username = args.username;
 		this._password = args.password;
-		// this._timeout = args.timeout;
-		// this._rid = args.rid;
 	}
 
 	public setRid(rid:string) {
@@ -102,15 +99,6 @@ export class MLRuntime extends EventEmitter {
 	}
 
 	public evaluateOnCallFrame(expr: string,cid?: string): Promise<string> {
-		// let flag = false;
-		// if(expr.startsWith('"')) flag = true;
-		// expr = expr.replace(/"/g, '');
-		// const content = flag?
-		// 	`jsdbg.evaluateOnCallFrame("${this._rid}", jsdbg.currentCallFrameId("${this._rid}"),"\\\\\\"${expr}\\\\\\"")`:
-		// 	`jsdbg.evaluateOnCallFrame("${this._rid}", jsdbg.currentCallFrameId("${this._rid}"),"${expr}")`;
-		// fs.writeFileSync(`/Users/zwan/Desktop/trunk/xdmp/src/Modules/MarkLogic/debugger/evaluate/evaluate_${++this.incCounter}.sjs`,
-		// 	content);
-		// // console.log(content)
 		const qs:any = {expr:expr};
 		if (cid !== "") {qs["call-frame"] = cid;}
 		return this._sendMLdebugRequestGET("eval-on-call-frame",qs);
@@ -197,7 +185,7 @@ export class MLRuntime extends EventEmitter {
 		return request.get(url,options);
 	}
 
-	private _sendMLdebugEvalRequest(script: string): Promise<string> {
+	private _sendMLdebugEvalRequest(script: string, database:string, txnId:string): Promise<string> {
 		const url = `http://${this._hostName}:8002/jsdbg/v1/eval`;
 		const options = {
 			headers : {
@@ -210,6 +198,8 @@ export class MLRuntime extends EventEmitter {
 				},
 			body: `javascript=${querystring.escape(script)}`
 		};
+		if(database) options.body += `&database=${database}`;
+		if(txnId) options.body += `&txnId=${txnId}`;
 		return request.post(url, options);
 	}
 

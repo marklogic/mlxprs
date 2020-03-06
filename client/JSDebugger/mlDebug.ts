@@ -9,8 +9,6 @@ const { Subject } = require('await-notify');
 interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 	path: string;
 
-	trace?: boolean;
-
 	hostname:string;
 
 	username:string;
@@ -19,12 +17,13 @@ interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 
 	rid:string;
 
+	database?:string;
+
+	txnId?:string;
 }
 
 interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
 	path: string;
-
-	trace?: boolean;
 
 	hostname:string;
 
@@ -122,7 +121,7 @@ export class MLDebugSession extends LoggingDebugSession {
 		await this._configurationDone.wait(1000);
 		this._runtime.initialize(args);
 		try{
-			const result = await this._runtime.launchWithDebugEval(args.path);
+			const result = await this._runtime.launchWithDebugEval(args.path, args.database, args.txnId);
 			const rid = JSON.parse(result).requestId;
 			this._runtime.setRid(rid);
 			// runtime set up
@@ -199,18 +198,6 @@ export class MLDebugSession extends LoggingDebugSession {
 				response.body ={
 					breakpoints: actualBreakpoints
 				};
-
-				/** Sequential requests -- back up for synchronization bug */
-				// mlrequests.reduce((promiseChain, request) => {
-				// 	return promiseChain.then(chainResults =>
-				// 		request.then(resp =>
-				// 			[ ...chainResults, resp ]
-				// 		)
-				// 	);
-				// }, Promise.resolve([])).then(results => {
-				// 	// this._trace("Breakpoints changed...","all")
-				// 	this.sendResponse(response);
-				// });
 
 				Promise.all(mlrequests).then(()=>{
 					this.sendResponse(response);
@@ -466,14 +453,7 @@ export class MLDebugSession extends LoggingDebugSession {
 				condition:breakpoint.condition
 			}));
 		});
-		/** Sequential requests -- back up for synchronization bug */
-		// mlrequests.reduce((promiseChain, request) => {
-		// 	return promiseChain.then(chainResults =>
-		// 		request.then(resp =>
-		// 			[ ...chainResults, resp ]
-		// 		)
-		// 	);
-		// }, Promise.resolve([])).then();
+
 		Promise.all(mlrequests).then().catch(err=>{
 			this._handleError(err);
 		});

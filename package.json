@@ -150,6 +150,16 @@
                                 "type": "string",
                                 "description": "Password.",
                                 "default": ""
+                            },
+                            "database": {
+                                "type": "string",
+                                "description": "Database to use with launch",
+                                "default": ""
+                            },
+                            "txnId": {
+                                "type": "string",
+                                "description": "Transaction ID to use with launch.",
+                                "default": ""
                             }
                         }
                     },
