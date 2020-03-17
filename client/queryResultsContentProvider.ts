@@ -53,8 +53,8 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
     public provideTextDocumentContent(uri: Uri): string {
         console.debug(`***** Accessing cache for URI: ${uri.toString()}`)
         const results: string = this._cache.get(uri.toString())
-        if (results) {
-            console.log(`getting string results: \n${results}\n`)
+        if (results || results === '') {
+            console.debug(`getting string results: \n${results}\n`)
             return results
         }
         return 'pending...'
