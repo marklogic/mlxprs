@@ -5,7 +5,7 @@
     "version": "1.2.1",
     "publisher": "mlxprs",
     "engines": {
-        "vscode": "^1.39.1"
+        "vscode": "^1.43.0"
     },
     "icon": "images/mlxprs-vscode.png",
     "galleryBanner": {
@@ -124,28 +124,28 @@
         "vscode:prepublish": "./node_modules/.bin/webpack --mode production && ./node_modules/.bin/webpack --mode production --config ./server/webpack.config.js",
         "compile": "./node_modules/webpack/bin/webpack.js --mode none && ./node_modules/webpack/bin/webpack.js --mode none --config ./server/webpack.config.js",
         "pretest": "tsc -b client/test/tsconfig.json",
-        "test": "node client/out/test/runTest.js",
+        "test": "node client/out/test/runTest.js --full-trace",
         "watch": "./node_modules/webpack/bin/webpack.js --mode none --watch & ./node_modules/webpack/bin/webpack.js --mode none --watch --config ./server/webpack.config.js"
     },
     "devDependencies": {
         "@types/esprima": "^4.0.2",
-        "@types/mocha": "^5.2.7",
-        "@types/node": "^11.13.22",
-        "@types/vscode": "^1.39.0",
-        "@types/webpack": "^4.1.4",
+        "@types/mocha": "^7.0.2",
+        "@types/node": "^13.9.1",
+        "@types/vscode": "^1.43.0",
+        "@types/webpack": "^4.41.7",
         "esprima": "^4.0.1",
-        "https-proxy-agent": "^3.0.1",
+        "https-proxy-agent": "^5.0.0",
         "js-yaml": "^3.13.1",
-        "marklogic": "^2.3.1",
-        "merge-options": "^1.0.1",
-        "mocha": "^6.2.2",
-        "ts-loader": "^6.2.0",
-        "typescript": "^3.6.4",
-        "vscode-test": "^1.2.0",
-        "webpack": "^4.41.1",
-        "webpack-cli": "^3.3.9"
+        "marklogic": "^2.4.0",
+        "merge-options": "^2.0.0",
+        "mocha": "^7.1.0",
+        "ts-loader": "^6.2.1",
+        "typescript": "^3.8.3",
+        "vscode-test": "^1.3.0",
+        "webpack": "^4.42.0",
+        "webpack-cli": "^3.3.11"
     },
     "dependencies": {
-        "vscode-languageclient": "^5.2.1"
+        "vscode-languageclient": "^6.1.1"
     }
 }
