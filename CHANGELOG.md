@@ -1,3 +1,8 @@
+## [1.2.1](https://github.com/mikrovvelle/mlxprs/tree/v1.2.1)
+
+- fix: #17
+- bugfix: empty results aren't 'pending'
+
 ## [1.2.0](https://github.com/mikrovvelle/mlxprs/tree/v1.2.0)
 
 - Added per-query client parameter override capability to XQuery (see README)
