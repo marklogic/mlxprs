@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2020 MarkLogic Corporation
+ */
+
 import * as vscode from 'vscode';
 import {DebugConfiguration,WorkspaceFolder, CancellationToken, ProviderResult} from 'vscode';
 // @ts-ignore

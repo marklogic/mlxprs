@@ -1,8 +1,11 @@
+/*
+ * Copyright (c) 2020 MarkLogic Corporation
+ */
+
 import {LoggingDebugSession, Breakpoint, OutputEvent, InitializedEvent, TerminatedEvent, StoppedEvent, Thread, StackFrame, Scope,Source, Handles, Logger,logger} from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { basename } from 'path';
-import { MLRuntime, MLbreakPoint } from './mlRuntime';
-import {V8Frame, ScopeObject,V8PropertyObject,V8PropertyValue} from './interfaces';
+import { MLRuntime, MLbreakPoint, V8Frame, ScopeObject,V8PropertyObject,V8PropertyValue } from './mlRuntime';
 
 const { Subject } = require('await-notify');
 
