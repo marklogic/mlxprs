@@ -64,7 +64,6 @@ export class MlClientParameters {
 
 export class MarklogicVSClient {
     params: MlClientParameters;
-    docsDbNumber: string;
     ca: string;
 
     mldbClient: ml.DatabaseClient;
@@ -72,7 +71,6 @@ export class MarklogicVSClient {
         this.params = params
         this.params.authType = params.authType.toUpperCase()
 
-        this.docsDbNumber = '0'
         if (params.pathToCa !== '') {
             try {
                 this.ca = fs.readFileSync(this.params.pathToCa, 'utf8')
@@ -89,10 +87,6 @@ export class MarklogicVSClient {
             authType: this.params.authType, ssl: this.params.ssl,
             ca: this.ca
         })
-        this.mldbClient.eval('xdmp.database("' + this.params.contentDb + '")')
-            .result(null, null).then((response) => {
-                this.docsDbNumber = response[0]['value']
-            })
     }
 
     toString(): string {
