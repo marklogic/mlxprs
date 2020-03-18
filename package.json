@@ -252,6 +252,7 @@
         "@types/node": "^13.9.1",
         "@types/vscode": "^1.43.0",
         "@types/webpack": "^4.41.7",
+        "await-notify": "^1.0.1",
         "esprima": "^4.0.1",
         "https-proxy-agent": "^5.0.0",
         "js-yaml": "^3.13.1",
