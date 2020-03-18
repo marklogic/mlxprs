@@ -1,3 +1,7 @@
+## [1.2.2](https://github.com/mikrovvelle/mlxprs/tree/v1.2.2)
+
+- dependency upgrades under the hood
+
 ## [1.2.1](https://github.com/mikrovvelle/mlxprs/tree/v1.2.1)
 
 - fix: #17
