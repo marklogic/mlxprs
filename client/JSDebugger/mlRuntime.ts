@@ -77,11 +77,11 @@ export class MLRuntime extends EventEmitter {
 		this._runTimeState = state;
 	}
 
-	public launchWithDebugEval(scriptLocation:string, database:string, txnId:string): Promise<string> {
+	public launchWithDebugEval(scriptLocation:string, database:string, txnId:string, modules:string, root:string): Promise<string> {
 		const script = fs.readFileSync(scriptLocation).toString();
 		this.setRunTimeState("launched");
 
-		return this._sendMLdebugEvalRequest(script,database,txnId);
+		return this._sendMLdebugEvalRequest(script,database,txnId,modules,root);
 	}
 
 	public initialize(args: any) {
@@ -227,7 +227,7 @@ export class MLRuntime extends EventEmitter {
 		return request.get(url,options);
 	}
 
-	private _sendMLdebugEvalRequest(script: string, database:string, txnId:string): Promise<string> {
+	private _sendMLdebugEvalRequest(script: string, database:string, txnId:string, modules:string, root:string): Promise<string> {
 		const url = `http://${this._hostName}:8002/jsdbg/v1/eval`;
 		const options = {
 			headers : {
@@ -242,6 +242,8 @@ export class MLRuntime extends EventEmitter {
 		};
 		if(database) options.body += `&database=${database}`;
 		if(txnId) options.body += `&txnId=${txnId}`;
+		if(modules) options.body += `&modules=${modules}`;
+		if(root) options.body += `&root=${root}`;
 		return request.post(url, options);
 	}
 

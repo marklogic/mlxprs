@@ -160,6 +160,16 @@
                                 "type": "string",
                                 "description": "Transaction ID to use with launch.",
                                 "default": ""
+                            },
+                            "modules": {
+                                "type": "string",
+                                "description": "modules databse, 0 for file system",
+                                "default": "0"
+                            },
+                            "root": {
+                                "type": "string",
+                                "description": "modules root path",
+                                "default": "/"
                             }
                         }
                     },

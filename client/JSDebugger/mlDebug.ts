@@ -23,6 +23,10 @@ interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 	database?:string;
 
 	txnId?:string;
+
+	modules?: string;
+
+	root?: string;
 }
 
 interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
@@ -124,7 +128,8 @@ export class MLDebugSession extends LoggingDebugSession {
 		await this._configurationDone.wait(1000);
 		this._runtime.initialize(args);
 		try{
-			const result = await this._runtime.launchWithDebugEval(args.path, args.database, args.txnId);
+			const result = await this._runtime.launchWithDebugEval(
+				args.path, args.database, args.txnId, args.modules, args.root);
 			const rid = JSON.parse(result).requestId;
 			this._runtime.setRid(rid);
 			// runtime set up
