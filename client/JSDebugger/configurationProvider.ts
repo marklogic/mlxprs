@@ -4,7 +4,6 @@
 
 import * as vscode from 'vscode'
 import {DebugConfiguration,WorkspaceFolder, CancellationToken, ProviderResult} from 'vscode'
-// @ do not ts - ignore
 import * as request from 'request-promise'
 
 export class MLConfigurationProvider implements vscode.DebugConfigurationProvider {
@@ -109,8 +108,8 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
             const item = await vscode.window.showQuickPick(
                 items,
                 { placeHolder: 'Select the request to attach to' })
-            if(!item) {
-                return vscode.window.showErrorMessage('Request not selected').then(_ => {
+            if (!item) {
+                return vscode.window.showErrorMessage('Request not selected').then(() => {
                     return undefined	// abort
                 })
             }
@@ -121,7 +120,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
     }
 
     private async getAvailableRequests(username: string, password: string, servername: string, hostname: string): Promise<any> {
-        const url = `http://${hostname}:8002/jsdbg/v1/paused-requests/` + servername
+        const url = `http://${hostname}:8002/jsdbg/v1/paused-requests/${servername}`
         const options = {
             auth: {
                 user: username,
