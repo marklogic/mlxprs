@@ -2,7 +2,7 @@
 import * as path from 'path'
 import * as vscode from 'vscode'
 import * as ml from 'marklogic'
-import { _sendJSQuery, _sendXQuery } from './queryDirector'
+import { _sendJSQuery, editorXQuery } from './queryDirector'
 import { MarklogicVSClient, cascadeOverrideClient } from './marklogicClient'
 import { QueryResultsContentProvider } from './queryResultsContentProvider'
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting'
@@ -26,7 +26,7 @@ export function activate(context: vscode.ExtensionContext): void {
         const client: MarklogicVSClient = cascadeOverrideClient(actualQuery, XQY, cfg, context.globalState)
         const host = client.params.host; const port = client.params.port
         const qUri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port)
-        _sendXQuery(client, actualQuery, qUri, editor, provider)
+        editorXQuery(client, actualQuery, qUri, editor, provider)
     })
     const sendJSQuery = vscode.commands.registerTextEditorCommand('extension.sendJSQuery', editor => {
         const actualQuery: string = editor.document.getText()

@@ -7,7 +7,6 @@ import { DebugConfiguration, DebugConfigurationProvider, WorkspaceFolder, Cancel
     WorkspaceConfiguration, workspace, Memento} from 'vscode'
 import { createServer, Server, AddressInfo } from 'net'
 import { XqyDebugSession } from './xqyDebug'
-import { getStoppedXQueryRequests } from '../client/queryDirector'
 import { MarklogicVSClient, cascadeOverrideClient } from '../client/marklogicClient'
 
 const XQY = 'xqy'

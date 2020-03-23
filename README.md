@@ -11,6 +11,7 @@ The extension adds two commands to the VS Code command palette:
 
 1. Eval JavaScript
 2. Eval XQuery
+3. Debug XQuery
 
 This will take the contents of the current active editor window and run it against a configured MarkLogic database instance.
 The results of the query will be shown in the next tab over.

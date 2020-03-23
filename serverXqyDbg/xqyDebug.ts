@@ -4,9 +4,14 @@ import { Handles, InitializedEvent,
     StoppedEvent, OutputEvent, Source, TerminatedEvent, Breakpoint, Thread, StackFrame, Scope
 } from 'vscode-debugadapter'
 import * as CNST from './debugConstants'
-import { XqyRuntime, Stack } from './xqyRuntime'
+// import { XqyRuntime, Stack } from './xqyRuntimeMocked'
+import { XqyRuntime } from './xqyRuntime'
 import { basename } from 'path'
 import { Memento, WorkspaceConfiguration } from 'vscode'
+import { MarklogicVSClient } from '../client/marklogicClient'
+import { sendXQuery } from '../client/queryDirector'
+// import * as ml from 'marklogic'
+
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { Subject } = require('await-notify')
@@ -25,6 +30,7 @@ const timeout = (ms: number): Promise<any> => {
 export class XqyDebugSession extends LoggingDebugSession {
 
     private static THREAD_ID = 1
+    private requestId: string
 
     private _runtime: XqyRuntime
     private _variableHandles = new Handles<string>();
@@ -45,6 +51,7 @@ export class XqyDebugSession extends LoggingDebugSession {
     public constructor() {
         super()
 
+        this.requestId = '0'
         this.setDebuggerLinesStartAt1(false)
         this.setDebuggerColumnsStartAt1(false)
 
@@ -101,7 +108,21 @@ export class XqyDebugSession extends LoggingDebugSession {
 
     protected async launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): Promise<void> {
         logger.setup(args.trace ? Logger.LogLevel.Verbose : Logger.LogLevel.Stop, false)
-        await this._configurationDone.wait(1000)
+        const client: MarklogicVSClient = this._runtime.getMlClient()
+
+        await sendXQuery(client, '1 + 5', 'dbg').result(
+            (fulfill: Record<string, any>[]) => {
+                const result0: object = fulfill[0]
+                this.requestId = result0.value
+                response.body = result0
+            },
+            (error: Record<string, any>[]) => {
+                const error0 = error.body.errorResponse
+                response.body = {
+                    error: error0
+                }
+            }
+        )
         this._runtime.start(args.program, !!args.stopOnEntry)
         this.sendResponse(response)
     }

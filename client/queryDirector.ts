@@ -59,15 +59,13 @@ export function _sendJSQuery(
             return provider.handleError(uri, error)
         })
         .then(responseUri => showFormattedResults(responseUri, editor))
-};
+}
 
 
-export function _sendXQuery(
+export function sendXQuery(
     db: MarklogicVSClient,
     actualQuery: string,
-    uri: Uri,
-    editor: TextEditor,
-    provider: QueryResultsContentProvider): void
+    prefix = 'xdmp'): ml.ResultProvider<Record<string, any>>
 {
     const query =
         'xquery version "1.0-ml";' +
@@ -79,19 +77,31 @@ export function _sendXQuery(
         '   <database>{xdmp:database($documentsDb)}</database>' +
         '   <modules>{xdmp:database($modulesDb)}</modules>' +
         '</options>' +
-        'return xdmp:eval($actualQuery, (), $options)'
+        `return ${prefix}:eval($actualQuery, (), $options)`
     const extVars = {
         'actualQuery': actualQuery,
         'documentsDb': db.params.contentDb,
         'modulesDb': db.params.modulesDb
     } as ml.Variables
 
-    db.mldbClient.xqueryEval(query, extVars).result(
-        (fulfill: Record<string, any>[]) => {
-            return provider.writeResponseToUri(uri, fulfill)
-        },
-        (error: Record<string, any>[]) => {
-            return provider.handleError(uri, error)
-        })
+    return db.mldbClient.xqueryEval(query, extVars)
+}
+
+export function editorXQuery(
+    db: MarklogicVSClient,
+    actualQuery: string,
+    uri: Uri,
+    editor: TextEditor,
+    provider: QueryResultsContentProvider,
+    prefix = 'xdmp'): void
+{
+    sendXQuery(db, actualQuery, prefix)
+        .result(
+            (fulfill: Record<string, any>[]) => {
+                return provider.writeResponseToUri(uri, fulfill)
+            },
+            (error: Record<string, any>[]) => {
+                return provider.handleError(uri, error)
+            })
         .then(responseUri => showFormattedResults(responseUri, editor))
-};
+}
