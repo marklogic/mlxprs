@@ -30,10 +30,7 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
         return null
     }
 
-    private async resolveRemainingDebugConfiguration(
-        folder: WorkspaceFolder | undefined,
-        config: XqyDebugConfiguration,
-        state: Memento, token?: CancellationToken): Promise<DebugConfiguration> {
+    private async resolveRemainingDebugConfiguration(folder: WorkspaceFolder | undefined, config: XqyDebugConfiguration, state: Memento, token?: CancellationToken): Promise<DebugConfiguration> {
         const cfg: WorkspaceConfiguration = workspace.getConfiguration()
         const client: MarklogicVSClient = cascadeOverrideClient('', XQY, cfg, state)
 
@@ -41,7 +38,7 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
         config.password = client.params.pwd
 
         if (config.username && config.password) {
-            // this.getAvailableRequests(db)
+            this.getAvailableRequests(client)
             console.info('we should get the open requests here')
         }
         return config
@@ -50,19 +47,19 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
     /**
      * @override
      */
-    resolveDebugConfiguration(
-        folder: WorkspaceFolder | undefined,
-        config: XqyDebugConfiguration,
-        token?: CancellationToken): ProviderResult<DebugConfiguration> {
+    resolveDebugConfiguration(folder: WorkspaceFolder | undefined, config: XqyDebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
         if (!config.type && !config.request && !config.name) {
             const editor = window.activeTextEditor
             if (editor && editor.document.languageId === 'xquery-ml') {
                 config.type = 'xquery-ml'
-                config.name = 'Launch'
+                config.name = 'Launch XQY Debug Request'
                 config.request = 'launch'
                 config.program = '${file}'
                 config.stopOnEntry = true
             }
+        }
+        if (config.request === 'launch') {
+            config.path = '${file}'
         }
 
         if (!config.program) {

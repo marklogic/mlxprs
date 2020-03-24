@@ -8,7 +8,7 @@ import { Memento, WorkspaceConfiguration, window } from 'vscode'
 const MLDBCLIENT = 'mldbClient'
 const MLSETTINGSFLAG = /mlxprs:settings/
 const SJS = 'sjs'
-const XQY = 'xqy'
+export const XQY = 'xqy'
 
 export class MlClientParameters {
     contentDb: string;
