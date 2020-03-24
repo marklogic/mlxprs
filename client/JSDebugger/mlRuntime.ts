@@ -16,6 +16,7 @@ export interface V8Frame {
 	functionName?: string;
 	functionLocation?: object;
 	location: {
+        
 		scriptId: string;
 		lineNumber: number;
 		columnNumber: number;
@@ -142,7 +143,7 @@ export class MLRuntime extends EventEmitter {
 	}
 
 	public evaluateOnCallFrame(expr: string, cid?: string): Promise<string> {
-	    const qs: any = {expr:expr}
+	    const qs: any = {expr: expr}
 	    if (cid !== '') {qs['call-frame'] = cid}
 	    return this._sendMLdebugRequestGET('eval-on-call-frame', qs)
 	}
@@ -166,7 +167,7 @@ export class MLRuntime extends EventEmitter {
 	}
 
 	public async waitTillPaused(): Promise<string> {
-	    try{
+	    try {
 	        const result = await this.wait()
 	        if(result === '') {return this.waitTillPaused()}
 	        else {return result}

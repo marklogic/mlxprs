@@ -137,7 +137,7 @@ export class MLDebugSession extends LoggingDebugSession {
 	    }
 	}
 
-	protected async attachRequest(response: DebugProtocol.AttachResponse, args: AttachRequestArguments) {
+	protected async attachRequest(response: DebugProtocol.AttachResponse, args: AttachRequestArguments): Promise<void> {
 	    logger.setup(Logger.LogLevel.Stop, false)
 	    await this._configurationDone.wait(1000)
 	    this._runtime.initialize(args)
@@ -447,14 +447,14 @@ export class MLDebugSession extends LoggingDebugSession {
 	    this._bpCache.forEach(bp => {
 	        const breakpoint =JSON.parse(String(bp))
 	        mlrequests.push(this._runtime.setBreakPoint({
-	            url:this._mapLocalFiletoUrl(breakpoint.path),
-	            line:this.convertClientLineToDebugger(breakpoint.line),
-	            column:this.convertClientLineToDebugger(breakpoint.column),
-	            condition:breakpoint.condition
+	            url: this._mapLocalFiletoUrl(breakpoint.path),
+	            line: this.convertClientLineToDebugger(breakpoint.line),
+	            column: this.convertClientLineToDebugger(breakpoint.column),
+	            condition: breakpoint.condition
 	        } as MLbreakPoint))
 	    })
 
-	    Promise.all(mlrequests).then().catch(err=>{
+	    Promise.all(mlrequests).then().catch(err => {
 	        this._handleError(err)
 	    })
 	}
