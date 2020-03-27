@@ -16,7 +16,6 @@
         "Debuggers",
         "Programming Languages",
         "Snippets",
-        "Debuggers",
         "Other"
     ],
     "repository": "https://github.com/mikrovvelle/mlxprs",
@@ -43,10 +42,143 @@
         ],
         "breakpoints": [
             {
+                "language": "javascript"
+            },
+            {
                 "language": "xquery-ml"
             }
         ],
         "debuggers": [
+            {
+                "type": "ml-jsdebugger",
+                "label": "MarkLogic JS Debugger",
+                "program": "./dist/jsDebug.js",
+                "runtime": "node",
+                "configurationAttributes": {
+                    "launch": {
+                        "required": [
+                            "hostname"
+                        ],
+                        "properties": {
+                            "hostname": {
+                                "type": "string",
+                                "description": "hostname of MarkLogic server",
+                                "default": ""
+                            },
+                            "username": {
+                                "type": "string",
+                                "description": "Username.",
+                                "default": ""
+                            },
+                            "password": {
+                                "type": "string",
+                                "description": "Password.",
+                                "default": ""
+                            },
+                            "database": {
+                                "type": "string",
+                                "description": "Database to use with launch",
+                                "default": ""
+                            },
+                            "txnId": {
+                                "type": "string",
+                                "description": "Transaction ID to use with launch.",
+                                "default": ""
+                            },
+                            "modules": {
+                                "type": "string",
+                                "description": "modules databse, 0 for file system",
+                                "default": "0"
+                            },
+                            "root": {
+                                "type": "string",
+                                "description": "modules root path",
+                                "default": "/"
+                            }
+                        }
+                    },
+                    "attach": {
+                        "required": [
+                            "path",
+                            "hostname",
+                            "servername"
+                        ],
+                        "properties": {
+                            "path": {
+                                "type": "string",
+                                "description": "Absolute path to a text file.",
+                                "default": ""
+                            },
+                            "hostname": {
+                                "type": "string",
+                                "description": "hostname of MarkLogic server",
+                                "default": ""
+                            },
+                            "servername": {
+                                "type": "string",
+                                "description": "Port number of debug server",
+                                "default": ""
+                            },
+                            "username": {
+                                "type": "string",
+                                "description": "Username.",
+                                "default": ""
+                            },
+                            "password": {
+                                "type": "string",
+                                "description": "Password.",
+                                "default": ""
+                            },
+                            "rid": {
+                                "type": "string",
+                                "description": "Request Id",
+                                "default": ""
+                            }
+                        }
+                    }
+                },
+                "initialConfigurations": [
+                    {
+                        "type": "ml-jsdebugger",
+                        "request": "launch",
+                        "name": "Launch Debug Request",
+                        "path": "",
+                        "hostname": "Enter host name",
+                        "servername": "Enter debug server name"
+                    },
+                    {
+                        "type": "ml-jsdebugger",
+                        "request": "attach",
+                        "name": "Attach to Debug Request",
+                        "hostname": "Enter host name"
+                    }
+                ],
+                "configurationSnippets": [
+                    {
+                        "label": "MarkLogic JS Debugger: Launch",
+                        "description": "A new configuration for 'debugging' a user selected javascript file.",
+                        "body": {
+                            "type": "ml-jsdebugger",
+                            "request": "launch",
+                            "name": "Launch Debug Request",
+                            "hostname": "Enter host name"
+                        }
+                    },
+                    {
+                        "label": "MarkLogic JS Debugger: Attach",
+                        "description": "A new configuration for 'debugging' a user selected javascript file.",
+                        "body": {
+                            "type": "ml-jsdebugger",
+                            "request": "attach",
+                            "name": "Attach to Debug Request",
+                            "path": "",
+                            "hostname": "Enter host name",
+                            "servername": "Enter debug server name"
+                        }
+                    }
+                ],
+                "variables": {}
+            },
             {
                 "type": "xquery-ml",
                 "label": "MarkLogic XQY Debugger",
@@ -235,143 +367,6 @@
             {
                 "language": "xquery-ml",
                 "path": "./snippets/snippets.json"
-            }
-        ],
-        "breakpoints": [
-            {
-                "language": "javascript"
-            }
-        ],
-        "debuggers": [
-            {
-                "type": "ml-jsdebugger",
-                "label": "MarkLogic JS Debugger",
-                "program": "./dist/jsDebug.js",
-                "runtime": "node",
-                "configurationAttributes": {
-                    "launch": {
-                        "required": [
-                            "hostname"
-                        ],
-                        "properties": {
-                            "hostname": {
-                                "type": "string",
-                                "description": "hostname of MarkLogic server",
-                                "default": ""
-                            },
-                            "username": {
-                                "type": "string",
-                                "description": "Username.",
-                                "default": ""
-                            },
-                            "password": {
-                                "type": "string",
-                                "description": "Password.",
-                                "default": ""
-                            },
-                            "database": {
-                                "type": "string",
-                                "description": "Database to use with launch",
-                                "default": ""
-                            },
-                            "txnId": {
-                                "type": "string",
-                                "description": "Transaction ID to use with launch.",
-                                "default": ""
-                            },
-                            "modules": {
-                                "type": "string",
-                                "description": "modules databse, 0 for file system",
-                                "default": "0"
-                            },
-                            "root": {
-                                "type": "string",
-                                "description": "modules root path",
-                                "default": "/"
-                            }
-                        }
-                    },
-                    "attach": {
-                        "required": [
-                            "path",
-                            "hostname",
-                            "servername"
-                        ],
-                        "properties": {
-                            "path": {
-                                "type": "string",
-                                "description": "Absolute path to a text file.",
-                                "default": ""
-                            },
-                            "hostname": {
-                                "type": "string",
-                                "description": "hostname of MarkLogic server",
-                                "default": ""
-                            },
-                            "servername": {
-                                "type": "string",
-                                "description": "Port number of debug server",
-                                "default": ""
-                            },
-                            "username": {
-                                "type": "string",
-                                "description": "Username.",
-                                "default": ""
-                            },
-                            "password": {
-                                "type": "string",
-                                "description": "Password.",
-                                "default": ""
-                            },
-                            "rid": {
-                                "type": "string",
-                                "description": "Request Id",
-                                "default": ""
-                            }
-                        }
-                    }
-                },
-                "initialConfigurations": [
-                    {
-                        "type": "ml-jsdebugger",
-                        "request": "launch",
-                        "name": "Launch Debug Request",
-                        "path": "",
-                        "hostname": "Enter host name",
-                        "servername": "Enter debug server name"
-                    },
-                    {
-                        "type": "ml-jsdebugger",
-                        "request": "attach",
-                        "name": "Attach to Debug Request",
-                        "hostname": "Enter host name"
-                    }
-                ],
-                "configurationSnippets": [
-                    {
-                        "label": "MarkLogic JS Debugger: Launch",
-                        "description": "A new configuration for 'debugging' a user selected javascript file.",
-                        "body": {
-                            "type": "ml-jsdebugger",
-                            "request": "launch",
-                            "name": "Launch Debug Request",
-                            "hostname": "Enter host name"
-                        }
-                    },
-                    {
-                        "label": "MarkLogic JS Debugger: Attach",
-                        "description": "A new configuration for 'debugging' a user selected javascript file.",
-                        "body": {
-                            "type": "ml-jsdebugger",
-                            "request": "attach",
-                            "name": "Attach to Debug Request",
-                            "path": "",
-                            "hostname": "Enter host name",
-                            "servername": "Enter debug server name"
-                        }
-                    }
-                ],
-                "variables": {}
             }
         ]
     },
