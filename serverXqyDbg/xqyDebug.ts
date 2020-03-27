@@ -7,10 +7,10 @@ import * as CNST from './debugConstants'
 // import { XqyRuntime, Stack } from './xqyRuntimeMocked'
 import { XqyRuntime, XqyBreakPoint } from './xqyRuntime'
 import { basename } from 'path'
-import { Memento, WorkspaceConfiguration } from 'vscode'
+import { Memento, WorkspaceConfiguration, SourceBreakpoint, CommentThreadCollapsibleState } from 'vscode'
 import { MarklogicVSClient, getDbClient, XQY } from '../client/marklogicClient'
-import { sendXQuery } from '../client/queryDirector'
-// import * as ml from 'marklogic'
+
+import { ResultProvider } from 'marklogic'
 
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -28,6 +28,13 @@ interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
     rid: string;
 }
 
+interface XqyFrame {
+    uri: string;
+    line: number;
+    operation?: string;
+    xid?: string;       // xpath to the frame in the debug:stack element
+}
+
 const timeout = (ms: number): Promise<any> => {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
@@ -39,11 +46,15 @@ export class XqyDebugSession extends LoggingDebugSession {
 
     private _runtime: XqyRuntime
     private _variableHandles = new Handles<string>()
+    private _frameHandles = new Handles<XqyFrame>()
 	private _configurationDone = new Subject()
-    private _stackRespString = '';
-    private _bpCache = new Set();
-    private _vsCodeState: Memento = null;
-    private _vsCodeCfg: WorkspaceConfiguration = null;
+    private _stackRespString = ''
+    private _bpCache = new Set()
+    private _workDir = ''
+
+    private _vsCodeState: Memento = null
+    private _vsCodeCfg: WorkspaceConfiguration = null
+    private _client: MarklogicVSClient = null
 
     private _cancelationTokens = new Map<number, boolean>()
     private _isLongrunning = new Map<number, boolean>()
@@ -54,10 +65,10 @@ export class XqyDebugSession extends LoggingDebugSession {
     }
 
     public setMlClientContext(state: Memento, cfg: WorkspaceConfiguration): void {
-        const client: MarklogicVSClient = getDbClient('', XQY, cfg, state)
+        this._client = getDbClient('', XQY, cfg, state)
         this._vsCodeState = state
         this._vsCodeCfg = cfg
-        this._runtime.initialize(client)
+        this._runtime.initialize(this._client)
     }
 
     public constructor() {
@@ -95,7 +106,7 @@ export class XqyDebugSession extends LoggingDebugSession {
 
     private _mapLocalFiletoUrl(path: string): string {
 	    return path.replace(this._workDir, '')
-	}
+    }
 
     private _setBufferedBreakPoints() {
         const xqyRequests = []
@@ -116,15 +127,18 @@ export class XqyDebugSession extends LoggingDebugSession {
     }
 
     protected async launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): Promise<void> {
-        logger.setup(args.trace ? Logger.LogLevel.Verbose : Logger.LogLevel.Stop, false)
+        logger.setup(Logger.LogLevel.Stop, false)
+        // TODO: are we only doing this because it was in the mock debugger?
+        // is there an actual race condition this addresses?
         await this._configurationDone.wait(1000)
 
+        this.setMlClientContext(this._vsCodeState, this._vsCodeCfg)
         try {
-            const results = await this._runtime.launchWithDebugEval(args.program)
-            const rid = 99
-            this._runtime.setRid(rid)
+            const results = await this._runtime.launchWithDebugEval(args.path)
+            const rid = results
+            this._runtime.setRid(`${rid}`)
             this._runtime.setRunTimeState('launched')
-            this._stackRespString = await this._runtime.waitUntilPaused()
+            this._stackRespString = await this._runtime.getCurrentStack()
             await this._setBufferedBreakPoints()
             this.sendResponse(response)
             this.sendEvent(new StoppedEvent('entry', XqyDebugSession.THREAD_ID))
@@ -136,216 +150,204 @@ export class XqyDebugSession extends LoggingDebugSession {
     protected async attachRequest(response: DebugProtocol.AttachResponse, args: AttachRequestArguments): Promise<void> {
         logger.setup(Logger.LogLevel.Stop, false)
         await this._configurationDone.wait(1000)
-        this._runtime
+        this.setMlClientContext(this._vsCodeState, this._vsCodeCfg)
+        this._runtime.setRid(args.rid)
+        this._workDir = args.path
+        this._runtime.setRunTimeState('attached')
+        this._stackRespString = await this._runtime.getCurrentStack()
+        await this._setBufferedBreakPoints()
+        this.sendResponse(response)
+        this.sendEvent(new StoppedEvent('entry', XqyDebugSession.THREAD_ID))
     }
 
     protected setBreakPointsRequest(response: DebugProtocol.SetDataBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): void {
         const path = args.source.path as string
-        const clientLines = args.lines || []
 
-        this._runtime.clearBreakPoints(path)
+        const xqyRequests = []
+        if (args.breakpoints) {
+            const actualBreakpoints = args.breakpoints.map((b, idx) => {
+                const bp = new Breakpoint(true, b.line, b.column) as DebugProtocol.Breakpoint
+                return bp
+            })
 
-        const actualBreakpoints = clientLines.map(l => {
-            const { verified, line, id } = this._runtime.setBreakPoint(path, this.convertClientColumnToDebugger(l))
-            const bp = new Breakpoint(verified, this.convertDebuggerLineToClient(line)) as DebugProtocol.Breakpoint
-            bp.id = id
-            return bp
-        })
+            const newBp = new Set()
+            args.breakpoints.forEach((breakpoint: DebugProtocol.SourceBreakpoint) => {
+                newBp.add(JSON.stringify({
+                    path: path,
+                    line: breakpoint.line,
+                    column: breakpoint.column,
+                    condition: breakpoint.condition
+                }))
+            })
 
-        response.body = {
-            breakpoints: actualBreakpoints
-        }
-        this.sendResponse(response)
-    }
+            const toDelete = new Set([...this._bpCache].filter(x => !newBp.has(x)))
+            const toAdd = new Set([...newBp].filter(x => !this._bpCache.has(x)))
+            this._bpCache = newBp
 
-    protected breakpointLocationsRequest(
-        response: DebugProtocol.BreakpointLocationsResponse,
-        args: DebugProtocol.BreakpointLocationsArguments,
-        request: DebugProtocol.Request): void {
-        if (args.source.path) {
-            const bps = this._runtime.getBreakpoints(args.source.path, this.convertClientLineToDebugger(args.line))
-            response.body = {
-                breakpoints: bps.map(col => {
-                    return {
-                        line: args.line,
-                        column: this.convertDebuggerColumnToClient(col)
-                    }
+            if (this._runtime.getRunTimeState() !== 'shutdown') {
+                toDelete.forEach(bp => {
+                    const breakpoint = JSON.parse(String(bp))
+                    xqyRequests.push(this._runtime.removeBreakPoint({
+                        uri: this._mapLocalFiletoUrl(breakpoint.path),
+                        line: this.convertClientLineToDebugger(breakpoint.line),
+                        column: this.convertClientColumnToDebugger(breakpoint.column)
+                    } as XqyBreakPoint))
                 })
+
+                toAdd.forEach(bp => {
+                    const breakpoint = JSON.parse(String(bp))
+                    xqyRequests.push(this._runtime.setBreakPoint({
+                        uri: this._mapLocalFiletoUrl(breakpoint.path),
+                        line: this.convertClientLineToDebugger(breakpoint.line),
+                        column: this.convertClientColumnToDebugger(breakpoint.column),
+                        condition: breakpoint.condition
+                    } as XqyBreakPoint))
+                })
+
+                response.body = { breakpoints: actualBreakpoints }
+
+                Promise.all(xqyRequests).then(() => {
+                    this.sendResponse(response)
+                }).catch(err => {
+                    this._handleError(err, 'Error setting XQY breakpoitns', false, 'setBreakPointsRequest')
+                })
+            } else {
+                response.body = { breakpoints: [] }
             }
-        } else {
-            response.body = {
-                breakpoints: []
-            }
+            this.sendResponse(response)
         }
-        this.sendResponse(response)
     }
 
     protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
         response.body = {
             threads: [
-                new Thread(XqyDebugSession.THREAD_ID, 'thread 1 (single threaded)')
+                new Thread(XqyDebugSession.THREAD_ID, 'XQY thread 1 (single threaded)')
             ]
         }
         this.sendResponse(response)
     }
 
     protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
-        const startFrame = typeof args.startFrame === 'number' ? args.startFrame : 0
-        const maxLevels = typeof args.levels === 'number' ? args.levels : 1000
-        const endFrame = startFrame + maxLevels
-
-        const stk: Stack = this._runtime.stack(startFrame, endFrame)
-
+        const body = this._stackRespString
+        const frames: StackFrame[] = []
+        // TODO: empty for now
         response.body = {
-            stackFrames: stk.frames.map(f  => new StackFrame(f.index, f.name, this.createSource(f.file), this.convertDebuggerLineToClient(f.line))),
-            totalFrames: stk.count
+            stackFrames: frames,
+            totalFrames: 1
         }
         this.sendResponse(response)
     }
 
     protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
-        response.body = {
-            scopes: [
-                new Scope(CNST.LOCAL, this._variableHandles.create(CNST.lOCAL), false),
-                new Scope(CNST.GLOBAL, this._variableHandles.create(CNST.gLOBAL), true)
-            ]
-        }
+        const scopes: Scope[] = []
+        // TODO implement
+        response.body = { scopes: scopes }
         this.sendResponse(response)
     }
 
-    protected async variablesRequest(
-        response: DebugProtocol.VariablesResponse,
-        args: DebugProtocol.VariablesArguments,
-        request?: DebugProtocol.Request): Promise<void> {
-
+    protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request): Promise<void> {
         const variables: DebugProtocol.Variable[] = []
-
-        if (this._isLongrunning.get(args.variablesReference)) {
-            if (request) {
-                this._cancelationTokens.set(request.seq, false)
-            }
-            for (let i = 0; i < 100; i++) {
-                await timeout(1000)
-                variables.push({
-                    name: `i_${i}`,
-                    type: 'integer',
-                    value: `${i}`,
-                    variablesReference: 0
-                })
-                if (request && this._cancelationTokens.get(request.seq)) {
-                    break
-                }
-            }
-            if (request) {
-                this._cancelationTokens.delete(request.seq)
-            }
-
-        } else {
-            const id = this._variableHandles.get(args.variablesReference)
-
-            if (id) {
-                variables.push({
-                    name: `${id}_f`,
-                    type: 'string',
-                    value: 'TODO!!1',
-                    variablesReference: 0
-                })
-            }
-
-            const nm = `${id}_long_running`
-            const ref = this._variableHandles.create(`${id}_lr`)
-            variables.push({
-                name: nm,
-                type: 'object',
-                value: 'TODO',
-                variablesReference: ref
-            })
-            this._isLongrunning.set(ref, true)
-
-        }
-
-        response.body = {
-            variables: variables
-        }
-
+        const objId = this._variableHandles.get(args.variablesReference)
+        // TODO implement server-side parsing from dbg:stack results
+        response.body = { variables: variables }
         this.sendResponse(response)
     }
 
     protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ReverseContinueArguments): void {
-        this._runtime.continue()
-        this.sendResponse(response)
-    }
-
-    protected reverseContinueRequest(response: DebugProtocol.ReverseContinueResponse, args: DebugProtocol.ReverseContinueArguments): void {
-        this._runtime.continue()
+        this._runtime.resume().result(() => {
+            this.sendResponse(response)
+            this._runtime.getCurrentStack().then(resp => {
+                this._stackRespString = resp
+                this.sendEvent(new StoppedEvent('breakpoint', XqyDebugSession.THREAD_ID))
+                this._resetHandles()
+            }).catch(err => {
+                this._handleError(err, 'Error awaiting XQY request', true, 'continueRequest')
+            })
+        }).catch(err => {
+            this._handleError(err, 'Error in XQY continue command', true, 'continueRequest')
+        })
         this.sendResponse(response)
     }
 
     protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
-        this._runtime.step()
+        this._runtime.stepInto().result(() => {
+            this.sendResponse(response)
+            this._runtime.getCurrentStack().then(resp => {
+                this._stackRespString = resp
+                this.sendEvent(new StoppedEvent('step', XqyDebugSession.THREAD_ID))
+                this._resetHandles()
+            }).catch(err => {
+                this._handleError(err, 'Error awaiting XQY request', true, 'nextRequest')
+            })
+        }).catch(err => {
+            this._handleError(err, 'Error in XQY next command', true, 'nextRequest')
+        })
         this.sendResponse(response)
     }
 
-    protected stepBackRequest(response: DebugProtocol.StepBackResponse, args: DebugProtocol.StepBackArguments): void {
-        this._runtime.step(true)
-        this.sendResponse(response)
+    protected stepOutRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
+        const stepOutQuery: ResultProvider<Record<string, any>> = this._runtime.stepOut()
+        stepOutQuery.result(() => {
+            this.sendResponse(response)
+            this._runtime.getCurrentStack().then(stackString => {
+                this._stackRespString = stackString
+                this.sendEvent(new StoppedEvent('step', XqyDebugSession.THREAD_ID))
+                this._resetHandles()
+            }).catch(err => {
+                this._handleError(err, 'Error awaiting XQY stepout request', true, 'stepOutRequest')
+            })
+        }).catch(err => {
+            this._handleError(err, 'Error in XQY stepOut command', true, 'stepOutRequest')
+        })
     }
 
     protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
-        const reply: string | undefined = undefined
-
-        if (args.context === 'repl') {
-            console.info(`eval ${args.context} not yet implemented`)
+        let xid = ''
+        if (typeof args.frameId === 'number' && args.frameId > 0) {
+            const frameInfo: XqyFrame = this._frameHandles.get(args.frameId)
+            xid = frameInfo.xid
         }
-
-        this.sendResponse(response)
-    }
-
-    protected dataBreakpointInfoRequest(response: DebugProtocol.DataBreakpointInfoResponse, args: DebugProtocol.DataBreakpointInfoArguments): void {
-        response.body = {
-            dataId: null,
-            description: 'cannot break on data access',
-            accessTypes: undefined,
-            canPersist: false
-        }
-        if (args.variablesReference && args.name) {
-            const id = this._variableHandles.get(args.variablesReference)
-            if (id.startsWith('global_')) {
-                response.body.dataId = args.name
-                response.body.description = args.name
-                response.body.accessTypes = ['read']
-                response.body.canPersist = true
+        this._runtime.evaluateInContext(args.expression, xid).result((resp: Record<string, any>) => {
+            const body = resp.get('result')
+            const evalResult = JSON.parse(body).result.result
+            response.body = {
+                result: 'not yet implemented, sorry',
+                type: null,
+                variablesReference: 0
             }
-        }
-        this.sendResponse(response)
+            this.sendResponse(response)
+        }).catch(err => {
+            this._handleError(err, 'Error evaluating expression', false, 'evaluateRequest')
+        })
     }
 
     protected completionsRequest(response: DebugProtocol.CompletionsResponse, args: DebugProtocol.CompletionsArguments): void {
-        response.body = {
-            targets: [
-                {
-                    label: 'item 10',
-                    sortText: '10'
-                },
-                {
-                    label: 'item 1',
-                    sortText: '01'
-                },
-                {
-                    label: 'item 2',
-                    sortText: '02'
-                }
-            ]
-        }
         this.sendResponse(response)
     }
 
-    protected cancelRequest(response: DebugProtocol.CancelResponse, args: DebugProtocol.CancelArguments): void {
-        if (args.requestId) {
-            this._cancelationTokens.set(args.requestId, true)
+    private _trace(message: string): void {
+        this.sendEvent(new OutputEvent(message + '\n', 'console'))
+    }
+
+    private _handleError(error: Error, msg?: string, terminate?: boolean, func?: string): void {
+        if (error.message.includes('XDMP-NOREQUEST')) {
+            this._runtime.setRunTimeState('shutdown')
+            this.sendEvent(new TerminatedEvent())
+            this._trace(`Request ${this._runtime.getRid()} is over`)
+        } else {
+            if (terminate === true) {
+                this.sendEvent(new TerminatedEvent())
+            }
+            if (msg) {
+                this._trace(msg)
+            }
         }
     }
 
+    private _resetHandles(): void {
+        this._variableHandles.reset()
+        this._frameHandles.reset()
+    }
 
 }
 
