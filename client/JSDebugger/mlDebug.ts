@@ -155,7 +155,7 @@ export class MLDebugSession extends LoggingDebugSession {
 	    const path = args.source.path as string
 
 	    const mlrequests: any = []
-	    if(args.breakpoints){
+	    if(args.breakpoints) {
 	        //for response only
 	        const actualBreakpoints = args.breakpoints.map((b, idx) => {
 	            const bp = new Breakpoint(true, b.line, b.column) as DebugProtocol.Breakpoint
@@ -165,11 +165,11 @@ export class MLDebugSession extends LoggingDebugSession {
 	        const newBp = new Set()
 	        args.breakpoints.forEach(breakpoint => {
 	            newBp.add(JSON.stringify({
-	                path:path,
-	                line:breakpoint.line,
+	                path: path,
+	                line: breakpoint.line,
 	                column: breakpoint.column,
 	                condition: breakpoint.condition
-	            }))//construct the set of new breakpoints, better ways?
+	            })) //construct the set of new breakpoints, better ways?
 	        })
 
 	        const toDelete = new Set([...this._bpCache].filter(x => !newBp.has(x)))
@@ -177,35 +177,35 @@ export class MLDebugSession extends LoggingDebugSession {
 	        this._bpCache = newBp
 	        if (this._runtime.getRunTimeState() !== 'shutdown') {
 	            toDelete.forEach(bp => {
-	                const breakpoint =JSON.parse(String(bp))
+	                const breakpoint = JSON.parse(String(bp))
 	                mlrequests.push(this._runtime.removeBreakPoint({
-	                    url:this._mapLocalFiletoUrl(breakpoint.path),
-	                    line:this.convertClientLineToDebugger(breakpoint.line),
-	                    column:this.convertClientLineToDebugger(breakpoint.column),
+	                    url: this._mapLocalFiletoUrl(breakpoint.path),
+	                    line: this.convertClientLineToDebugger(breakpoint.line),
+	                    column: this.convertClientLineToDebugger(breakpoint.column),
 	                } as MLbreakPoint))
 	            })
 
 	            toAdd.forEach(bp => {
-	                const breakpoint =JSON.parse(String(bp))
+	                const breakpoint = JSON.parse(String(bp))
 	                mlrequests.push(this._runtime.setBreakPoint({
-	                    url:this._mapLocalFiletoUrl(breakpoint.path),
-	                    line:this.convertClientLineToDebugger(breakpoint.line),
-	                    column:this.convertClientLineToDebugger(breakpoint.column),
-	                    condition:breakpoint.condition
+	                    url: this._mapLocalFiletoUrl(breakpoint.path),
+	                    line: this.convertClientLineToDebugger(breakpoint.line),
+	                    column: this.convertClientLineToDebugger(breakpoint.column),
+	                    condition: breakpoint.condition
 	                } as MLbreakPoint))
 	            })
 
-	            response.body ={
+	            response.body = {
 	                breakpoints: actualBreakpoints
 	            }
 
-	            Promise.all(mlrequests).then(()=>{
+	            Promise.all(mlrequests).then(() => {
 	                this.sendResponse(response)
-	            }).catch(err=>{
+	            }).catch(err => {
 	                this._handleError(err, 'Error setting breakpoints', false, 'setBreakPointsRequest')
 	            })
 	        } else {
-	            response.body ={
+	            response.body = {
 	                breakpoints: []
 	            }
 	            this.sendResponse(response)
@@ -225,7 +225,7 @@ export class MLDebugSession extends LoggingDebugSession {
 	}
 
 	protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
-	    try{
+	    try {
 	        const body = this._stackRespString
 	        const stacks = JSON.parse(body) as V8Frame[]
 
@@ -246,13 +246,13 @@ export class MLDebugSession extends LoggingDebugSession {
 	            totalFrames: stacks.length
 	        }
 	        this.sendResponse(response)
-	    } catch(e){
+	    } catch(e) {
 	        this._handleError(e, 'Error reading stack trace', true, 'stackTraceRequest')
 	    }
 	}
 
 	protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
-	    try{
+	    try {
 	        const scopes: Scope[] = []
 	        const v8frame = this._frameHandles.get(args.frameId)
 	        const scopesMl = v8frame.scopeChain as ScopeObject[]
@@ -276,12 +276,12 @@ export class MLDebugSession extends LoggingDebugSession {
 	    }
 	}
 
-	protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request) {
+	protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request): Promise<void> {
 	    const variables: DebugProtocol.Variable[] = []
 	    const objId = this._variableHandles.get(args.variablesReference)
 	    this._runtime.getProperties(objId).then(resp => {
 	        const propertiesMl = JSON.parse(resp).result.result as V8PropertyObject[] //array of properties
-	        for(let i = 0; i< propertiesMl.length; i++){
+	        for (let i = 0; i< propertiesMl.length; i++) {
 	            try {
 	                const element = propertiesMl[i]
 	                // console.log(element);
@@ -323,7 +323,7 @@ export class MLDebugSession extends LoggingDebugSession {
 	protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
 	    this._runtime.resume().then(() => {
 	        this.sendResponse(response)
-	        this._runtime.waitTillPaused().then( resp=>{
+	        this._runtime.waitTillPaused().then(resp => {
 	            this._stackRespString = resp
 	            this.sendEvent(new StoppedEvent('breakpoint', MLDebugSession.THREAD_ID))
 	            this._resetHandles()
@@ -342,7 +342,7 @@ export class MLDebugSession extends LoggingDebugSession {
 	            this._stackRespString = resp
 	            this.sendEvent(new StoppedEvent('step', MLDebugSession.THREAD_ID))
 	            this._resetHandles()
-	        }).catch(err=>{
+	        }).catch(err => {
 	            this._handleError(err, 'Error in waiting request', true, 'nextRequest')
 	        })
 	    }).catch(err => {
@@ -353,11 +353,11 @@ export class MLDebugSession extends LoggingDebugSession {
 	protected stepInRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
 	    this._runtime.stepInto().then(() => {
 	        this.sendResponse(response)
-	        this._runtime.waitTillPaused().then( resp=>{
+	        this._runtime.waitTillPaused().then(resp => {
 	            this._stackRespString = resp
 	            this.sendEvent(new StoppedEvent('step', MLDebugSession.THREAD_ID))
 	            this._resetHandles()
-	        }).catch(err=>{
+	        }).catch(err => {
 	            this._handleError(err, 'Error in waiting request', true, 'stepInRequest')
 	        })
 	    }).catch(err => {
@@ -368,11 +368,11 @@ export class MLDebugSession extends LoggingDebugSession {
 	protected stepOutRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
 	    this._runtime.stepOut().then(() => {
 	        this.sendResponse(response)
-	        this._runtime.waitTillPaused().then( resp=>{
+	        this._runtime.waitTillPaused().then(resp => {
 	            this._stackRespString = resp
 	            this.sendEvent(new StoppedEvent('step', MLDebugSession.THREAD_ID))
 	            this._resetHandles()
-	        }).catch(err=>{
+	        }).catch(err => {
 	            this._handleError(err, 'Error in waiting request', true, 'stepOutRequest')
 	        })
 	    }).catch(err => {
@@ -409,16 +409,16 @@ export class MLDebugSession extends LoggingDebugSession {
 	        const frameInfo = this._frameHandles.get(args.frameId)
 	        cid = frameInfo.callFrameId
 	    }
-	    this._runtime.evaluateOnCallFrame(args.expression, cid).then(resp=> {
+	    this._runtime.evaluateOnCallFrame(args.expression, cid).then(resp => {
 	        const body = resp
 	        const evalResult = JSON.parse(body).result.result as V8PropertyValue
 	        response.body = {
-	            result: evalResult.value? String(evalResult.value): (evalResult.description? String(evalResult.description): 'undefined'),
-	            type:evalResult.type,
-	            variablesReference:evalResult.objectId? this._variableHandles.create(evalResult.objectId):0
+	            result: evalResult.value ? String(evalResult.value): (evalResult.description? String(evalResult.description): 'undefined'),
+	            type: evalResult.type,
+	            variablesReference: evalResult.objectId ? this._variableHandles.create(evalResult.objectId) : 0
 	        }
 	        this.sendResponse(response)
-	    }).catch(err=>{
+	    }).catch(err => {
 	        this._handleError(err, 'Error in evaluating expression', false, 'evaluateRequest')
 	    })
 	}
@@ -459,25 +459,25 @@ export class MLDebugSession extends LoggingDebugSession {
 	    })
 	}
 
-	private _trace(message: string) {
+	private _trace(message: string): void {
 	    this.sendEvent(new OutputEvent(message + '\n', 'console'))
 	}
 
-	private _resetHandles(){
+	private _resetHandles(): void {
 	    this._variableHandles.reset()
 	    this._frameHandles.reset()
 	}
 
-	private _handleError(err: Error, msg?: string, terminate?: boolean, func?: string){
-	    if (err.message.includes('JSDBG-REQUESTRECOR') || err.message.includes('XDMP-NOREQUEST')){
+	private _handleError(err: Error, msg?: string, terminate?: boolean, func?: string): void {
+	    if (err.message.includes('JSDBG-REQUESTRECOR') || err.message.includes('XDMP-NOREQUEST')) {
 	        this._runtime.setRunTimeState('shutdown')
 	        this.sendEvent(new TerminatedEvent())
 	        this._trace(`Request ${this._runtime.getRid()} has ended`)
 	    } else {
-	        if(terminate === true) {
+	        if (terminate === true) {
 	            this.sendEvent(new TerminatedEvent())
 	        }
-	        if(msg) {
+	        if (msg) {
 	            this._trace(msg)
 	        }
 	    }
