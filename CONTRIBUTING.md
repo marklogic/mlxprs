@@ -32,7 +32,7 @@ Please refer to [Github's documentation on the matter](https://help.github.com/a
 
 #### Formatting code
 
-I use [.editorconfig](http://editorconfig.org) for consistent code formatting.
-If you're developing this extension, you're probably using VS Code, so you should probably
-install the [editorconfig VS Code extension](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig).
+It'd be extra helpfult if you follow the guidelines defined in `.editorconfig` and `.eslintrc.json`. Both of these tools offer VS Code extensions to automatically recommend and/or apply style rules while editing:
 
+- [editorconfig VS Code extension](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig): 
+- [eslint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint).
