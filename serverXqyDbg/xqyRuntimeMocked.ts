@@ -120,7 +120,7 @@ export class XqyRuntime extends EventEmitter {
             this._currentLine = 0
             this.sendEvent(CNST.STOPONENTRY)
         } else {
-            for(let ln = this._currentLine + 1; ln < this._sourceLines.length; ln++) {
+            for (let ln = this._currentLine + 1; ln < this._sourceLines.length; ln++) {
                 if (this.fireEventsForLine(ln, stepEvent)) {
                     this._currentLine = ln
                     return true

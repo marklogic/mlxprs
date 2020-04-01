@@ -230,7 +230,7 @@ export function cascadeOverrideClient(
     let client: MarklogicVSClient = {} as MarklogicVSClient
     try {
         client = getDbClient(actualQuery, language, cfg, state)
-    } catch(error) {
+    } catch (error) {
         window.showErrorMessage('could not parse JSON for overrides: ' + error.message)
         client = getDbClient('', language, cfg, state)
     }

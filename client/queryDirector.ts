@@ -65,7 +65,7 @@ export function _sendJSQuery(
 export function sendXQuery(
     db: MarklogicVSClient,
     actualQuery: string,
-    prefix = 'xdmp'): ml.ResultProvider<Record<string, any>>
+    prefix: 'xdmp' | 'dbg' = 'xdmp'): ml.ResultProvider<Record<string, any>>
 {
     const query =
         'xquery version "1.0-ml";' +
@@ -93,7 +93,7 @@ export function editorXQuery(
     uri: Uri,
     editor: TextEditor,
     provider: QueryResultsContentProvider,
-    prefix = 'xdmp'): void
+    prefix: 'xdmp' | 'dbg' = 'xdmp'): void
 {
     sendXQuery(db, actualQuery, prefix)
         .result(

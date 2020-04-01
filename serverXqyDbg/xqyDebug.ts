@@ -134,7 +134,7 @@ export class XqyDebugSession extends LoggingDebugSession {
 
         this.setMlClientContext(this._vsCodeState, this._vsCodeCfg)
         try {
-            const results = await this._runtime.launchWithDebugEval(args.path)
+            const results = await this._runtime.launchWithDebugEval(args.program)
             const rid = results
             this._runtime.setRid(`${rid}`)
             this._runtime.setRunTimeState('launched')
@@ -142,7 +142,7 @@ export class XqyDebugSession extends LoggingDebugSession {
             await this._setBufferedBreakPoints()
             this.sendResponse(response)
             this.sendEvent(new StoppedEvent('entry', XqyDebugSession.THREAD_ID))
-        } catch(error) {
+        } catch (error) {
             this._handleError(error, 'Error launching XQY request', true, 'launchRequest')
         }
     }

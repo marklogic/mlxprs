@@ -36,11 +36,9 @@ export class XqyRuntime extends EventEmitter {
         this._runTimeState = state
     }
 
-    public launchWithDebugEval(scriptLocation: string): ResultProvider<Record<string, any>> {
-	    const script = fs.readFileSync(scriptLocation).toString()
+    public launchWithDebugEval(query: string): ResultProvider<Record<string, any>> {
 	    this.setRunTimeState('launched')
-
-        return sendXQuery(this._mlClient, script, 'dbg')
+        return sendXQuery(this._mlClient, query, 'dbg')
     }
 
     public initialize(marklogicClient: MarklogicVSClient): void {
