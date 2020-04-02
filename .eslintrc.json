@@ -61,6 +61,13 @@
                 "before": true,
                 "after": true
             }
+        ],
+        "comma-spacing": [
+            "error",
+            {
+                "before": false,
+                "after": true
+            }
         ]
     }
 }

@@ -7,7 +7,7 @@ import { MarklogicVSClient, cascadeOverrideClient } from './marklogicClient'
 import { QueryResultsContentProvider } from './queryResultsContentProvider'
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting'
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient'
-import { MLConfigurationProvider, DebugAdapterExecutableFactory } from './JSDebugger/configurationProvider'
+import {MLConfigurationProvider, DebugAdapterExecutableFactory, _connectServer, _disonnectServer} from './JSDebugger/configurationProvider'
 
 const MLDBCLIENT = 'mldbClient'
 const SJS = 'sjs'
@@ -36,9 +36,25 @@ export function activate(context: vscode.ExtensionContext): void {
         const uri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port)
         _sendJSQuery(client, actualQuery, uri, editor, provider)
     })
+    const connectServer = vscode.commands.registerCommand('extension.connectServer',  () => {
+        vscode.window.showInputBox({
+            placeHolder: 'Please enter server you want to connect',
+            value: ''
+        }).then(servername => {
+            _connectServer(servername)
+        })
+    })
+    const disconnectServer = vscode.commands.registerCommand('extension.disconnectServer',  () => {
+        vscode.window.showInputBox({
+            placeHolder: 'Please enter server you want to disconnect',
+            value: ''
+        }).then(servername => {
+            _disonnectServer(servername)
+        })
+    })
 
-
-
+    context.subscriptions.push(connectServer)
+    context.subscriptions.push(disconnectServer)
     context.subscriptions.push(sendXQuery)
     context.subscriptions.push(sendJSQuery)
     context.subscriptions.push(
@@ -81,7 +97,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     const factory: DebugAdapterExecutableFactory =  new DebugAdapterExecutableFactory()
     context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('ml-jsdebugger', factory))
-    context.subscriptions.push(factory as any)
+    context.subscriptions.push(factory as never)
 }
 
 // this method is called when your extension is deactivated
