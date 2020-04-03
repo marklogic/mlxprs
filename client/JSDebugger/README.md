@@ -40,7 +40,7 @@ Example config:
         "path": "${workspaceFolder}"
     }
 ```
-Attach mode attahes to a paused request in a <strong>debug server<strong>. A debug server is an app server that is connected to js debugger.
+Attach mode attahes to a paused request in a <strong>debug server</strong>. A debug server is an app server that is connected to js debugger.
 To make a debug server, open command palette, type connectServer and enter an app server name to connect. Type disconnectServer if you no longer 
 need the debug server.
 <strong>Only requests that are launched after a server is connected/made debug server can be attached.</strong>
