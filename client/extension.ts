@@ -77,9 +77,10 @@ export function activate(context: vscode.ExtensionContext): void {
     const disposable = new LanguageClient('xQueryLanguageServer', 'XQuery Language Server', serverOptions, clientOptions).start()
     context.subscriptions.push(disposable)
 
-    const factory: XqyInlineDebugAdatperFactory = new XqyInlineDebugAdatperFactory()
+    const xqyDebugFactory: XqyInlineDebugAdatperFactory = new XqyInlineDebugAdatperFactory()
+    const sjsDebugFactory: DebugAdapterExecutableFactory = new DebugAdapterExecutableFactory()
 
-    factory.setUpMlClientContext(context.globalState, vscode.workspace.getConfiguration())
+    xqyDebugFactory.setUpMlClientContext(context.globalState, vscode.workspace.getConfiguration())
 
     // context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('xquery-ml', factory))
     // if ('dispose' in factory) {
@@ -92,8 +93,10 @@ export function activate(context: vscode.ExtensionContext): void {
     const debugConfigProvider: MLConfigurationProvider = new MLConfigurationProvider()
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('ml-jsdebugger', debugConfigProvider))
 
-    context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('ml-jsdebugger', factory))
-    context.subscriptions.push(factory as any)
+    context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('ml-jsdebugger', sjsDebugFactory))
+    context.subscriptions.push(sjsDebugFactory as any)
+
+    context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('ml-xqdebugger', xqyDebugFactory))
 }
 
 // this method is called when your extension is deactivated
