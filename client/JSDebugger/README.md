@@ -41,7 +41,8 @@ Example config:
     }
 ```
 Attach mode attahes to a paused request in a <strong>debug server<strong>. A debug server is an app server that is connected to js debugger.
-To make a debug server, open command palette and type connectServer to connect. Type disconnectServer if you no longer need the debug server.
+To make a debug server, open command palette, type connectServer and enter an app server name to connect. Type disconnectServer if you no longer 
+need the debug server.
 <strong>Only requests that are launched after a server is connected/made debug server can be attached.</strong>
 
 In attach mode, debugServerName and path are required parameters. Once you start debugging,
@@ -51,7 +52,7 @@ There is one optional parameter rid if you already have the request ID for the d
 
 ## Coming soon
 
-We have not implemented streaming files currently, so if you import other modules in your script, you won't be able to inspect, set breakpoints in those files. Unless in attach mode, when you have a mirror copy of the modules directory or set path to the module root, you will be able to work on multiple files. This limitation will hopefully be soon addressed.
+We have not implemented streaming files currently, so if you import other modules in your script, you won't be able to inspect, set breakpoints in those files. Unless in attach mode, when you have a mirror copy of the modules directory in local machine, you will be able to work on multiple files. This limitation will hopefully be soon addressed.
 
 
 
