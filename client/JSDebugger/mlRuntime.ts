@@ -60,6 +60,8 @@ export class MLRuntime extends EventEmitter {
 	private _password = '';
 	private _rid = '';
 	private _timeout = 1;
+	private _ssl = false;
+	private _ca: undefined | Buffer;
 
 	//Internal
 	private _runTimeState: 'shutdown' | 'launched' | 'attached' | 'error' = 'shutdown';
@@ -86,6 +88,10 @@ export class MLRuntime extends EventEmitter {
 	    this._hostName = args.hostname
 	    this._username = args.username
 	    this._password = args.password
+	    this._ssl = args.ssl
+	    if (args.pathToCa) {
+	        this._ca = fs.readFileSync(args.pathToCa)
+	    }
 	}
 
 	public setRid(rid: string): void {
@@ -177,7 +183,8 @@ export class MLRuntime extends EventEmitter {
 	//---- helpers
 
 	private _sendMLdebugRequestPOST(module: string, body?: string): Promise<string> {
-	    const url = `http://${this._hostName}:8002/jsdbg/v1/${module}/${this._rid}`
+	    const url = this._ssl? `https://${this._hostName}:8002/jsdbg/v1/${module}/${this._rid}` : 
+	        `http://${this._hostName}:8002/jsdbg/v1/${module}/${this._rid}`
 	    const options: object = {
 	        headers : {
 	            'Content-type': 'application/x-www-form-urlencoded',
@@ -190,11 +197,13 @@ export class MLRuntime extends EventEmitter {
 	        }
 	    }
 	    if (body) {options['body'] = body}
+	    if (this._ca) options['agentOptions'] = {ca: this._ca}
 	    return request.post(url, options)
 	}
 
 	private _sendMLdebugRequestGET(module: string, queryString?: object): Promise<string> {
-	    const url = `http://${this._hostName}:8002/jsdbg/v1/${module}/${this._rid}`
+	    const url = this._ssl? `https://${this._hostName}:8002/jsdbg/v1/${module}/${this._rid}` :
+	        `http://${this._hostName}:8002/jsdbg/v1/${module}/${this._rid}`
 	    const options: object = {
 	        headers : {
 	            'X-Error-Accept': 'application/json'
@@ -206,11 +215,12 @@ export class MLRuntime extends EventEmitter {
 	        }
 	    }
 	    if (queryString) {options['qs'] = queryString}
+	    if (this._ca) options['agentOptions'] = {ca: this._ca}
 	    return request.get(url, options)
 	}
 
 	private _sendMLdebugEvalRequest(script: string, database: string, txnId: string, modules: string, root: string): Promise<string> {
-	    const url = `http://${this._hostName}:8002/jsdbg/v1/eval`
+	    const url = this._ssl? `https://${this._hostName}:8002/jsdbg/v1/eval`: `http://${this._hostName}:8002/jsdbg/v1/eval`
 	    const options = {
 	        headers : {
 	            'Content-type': 'application/x-www-form-urlencoded',
@@ -223,6 +233,7 @@ export class MLRuntime extends EventEmitter {
 	        },
 	        body: `javascript=${querystring.escape(script)}`
 	    }
+	    if (this._ca) options['agentOptions'] = {ca: this._ca}
 	    if (database) options.body += `&database=${database}`
 	    if (txnId) options.body += `&txnId=${txnId}`
 	    if (modules) options.body += `&modules=${modules}`

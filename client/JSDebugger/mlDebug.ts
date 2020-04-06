@@ -23,6 +23,8 @@ interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 	txnId?: string;
 	modules?: string;
 	root?: string;
+	ssl?: boolean;
+	pathToCa?: Buffer;
 }
 
 interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
@@ -32,6 +34,8 @@ interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
 	username: string;
 	password: string;
 	rid: string;
+	ssl?: boolean;
+	pathToCa?: Buffer;
 }
 
 export class MLDebugSession extends LoggingDebugSession {

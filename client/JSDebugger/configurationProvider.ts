@@ -6,6 +6,7 @@ import * as vscode from 'vscode'
 import {DebugConfiguration, WorkspaceFolder, CancellationToken, ProviderResult} from 'vscode'
 import * as request from 'request-promise'
 import * as querystring from 'querystring'
+import * as fs from 'fs'
 
 export class MLConfigurationProvider implements vscode.DebugConfigurationProvider {
     resolveDebugConfiguration(folder: WorkspaceFolder | undefined, config: DebugConfiguration, _token?: CancellationToken): ProviderResult<DebugConfiguration> {
@@ -37,6 +38,12 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         config.database = String(wcfg.get('marklogic.documentsDb'))
         config.modules = String(wcfg.get('marklogic.modulesDb'))
         config.root = String(wcfg.get('marklogic.modulesRoot'))
+        config.ssl = Boolean(wcfg.get('marklogic.ssl'))
+        
+        if (config.ssl) config.pathToCa = String(wcfg.get('marklogic.pathToCa'))
+        let ca: Buffer
+        if (config.pathToCa)
+            ca = fs.readFileSync(config.pathToCa)
 
         if (!config.hostname) {
             return vscode.window.showErrorMessage('Hostname is not provided').then(() => {
@@ -58,8 +65,9 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
                 return undefined
             })
         }
-        if (config.request == 'launch' && !config.database.match('/^\d+$/')) {
-            await this.resolveDatabsetoId(config.username, config.password, config.database, config.hostname).then(resp => {
+        if (config.request == 'launch' && !config.database.match(/^\d+$/)) {
+            await this.resolveDatabasetoId(config.username, config.password, config.database, config.hostname,
+                config.ssl, ca).then(resp => {
                 config.database = resp.match('\r\n\r\n(.*[0-9])\r\n')[1] //better way of parsing?
             }).catch(() => {
                 return vscode.window.showErrorMessage('Please enter valid Database').then(() => {
@@ -67,8 +75,9 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
                 })
             })
         }
-        if (config.request == 'launch' && !config.modules.match('/^\d+$/')) {
-            await this.resolveDatabsetoId(config.username, config.password, config.modules, config.hostname).then(resp => {
+        if (config.request == 'launch' && !config.modules.match(/^\d+$/)) {
+            await this.resolveDatabasetoId(config.username, config.password, config.modules, config.hostname,
+                config.ssl, ca).then(resp => {
                 config.modules = resp.match('\r\n\r\n(.*[0-9])\r\n')[1] //better way of parsing?
             }).catch(() => {
                 return vscode.window.showErrorMessage('Please enter valid Modules Database or 0 for file system').then(() => {
@@ -79,13 +88,15 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
 
         //query for paused requests
         if (config.request === 'attach' && config.username && config.password) {
-            const resp = await this.getAvailableRequests(config.username, config.password, config.debugServerName, config.hostname)
+            const resp = await this.getAvailableRequests(config.username,
+                config.password, config.debugServerName, config.hostname, config.ssl, ca)
             const requests: string[] = JSON.parse(resp).requestIds
             const items = []
             for (let i=0; i< requests.length; i++) {
                 try {
                     let resp = await this.getRequestInfo(
-                        config.username, config.password, requests[i] as string, config.debugServerName, config.hostname)
+                        config.username, config.password, requests[i] as string,
+                        config.debugServerName, config.hostname, config.ssl, ca)
                     resp = resp.match('\r\n\r\n(.*)\r\n')[1]
                     const requestText = JSON.parse(resp)['requestText']
                     const startTime = JSON.parse(resp)['startTime']
@@ -113,25 +124,33 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         return config
     }
 
-    private async getAvailableRequests(username: string, password: string, debugServerName: string, hostname: string): Promise<string> {
-        const url = `http://${hostname}:8002/jsdbg/v1/paused-requests/${debugServerName}`
+    private async getAvailableRequests(username: string, password: string, debugServerName: string,
+        hostname: string, ssl?: boolean, ca?: Buffer ): Promise<string> {
+        const url = ssl? `https://${hostname}:8002/jsdbg/v1/paused-requests/${debugServerName}`: 
+            `http://${hostname}:8002/jsdbg/v1/paused-requests/${debugServerName}`
         const options = {
+            headers:{
+                'X-Error-Accept':' application/json'
+            },
             auth: {
                 user: username,
                 pass: password,
                 'sendImmediately': false
             }
         }
+        if (ca) options['agentOptions'] = {ca: ca}
         return request.get(url, options)
     }
 
-    private async resolveDatabsetoId(username: string, password: string, database: string, hostname: string): Promise<string> {
-        const url = `http://${hostname}:8002/v1/eval`
+    private async resolveDatabasetoId(username: string, password: string, database: string, hostname: string, 
+        ssl?: boolean, ca?: Buffer): Promise<string> {
+        const url = ssl? `https://${hostname}:8002/v1/eval`: `http://${hostname}:8002/v1/eval`
         const script=`xdmp.database("${database}")`
 	    const options: object = {
 	        headers : {
 	            'Content-type': 'application/x-www-form-urlencoded',
-	            'Accept': 'multipart/mixed'
+                'Accept': 'multipart/mixed',
+                'X-Error-Accept':' application/json'
 	        },
 	        auth: {
 	            user: username,
@@ -139,17 +158,20 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
 	            'sendImmediately': false
             },
             body: `javascript=${querystring.escape(script)}`
-	    }
+        }
+        if (ca) options['agentOptions'] = {ca: ca}
 	    return request.post(url, options)
     }
 
-    private async getRequestInfo(username: string, password: string, requestId: string, debugServerName: string, hostname: string): Promise<string> {
-        const url = `http://${hostname}:8002/v1/eval`
+    private async getRequestInfo(username: string, password: string, requestId: string, debugServerName: string, hostname: string, 
+        ssl?: boolean, ca?: Buffer): Promise<string> {
+        const url = ssl? `https://${hostname}:8002/v1/eval` : `http://${hostname}:8002/v1/eval`
         const script=`xdmp.requestStatus(xdmp.host(),xdmp.server("${debugServerName}"),"${requestId}")`
 	    const options: object = {
 	        headers : {
 	            'Content-type': 'application/x-www-form-urlencoded',
-	            'Accept': 'multipart/mixed'
+                'Accept': 'multipart/mixed',
+                'X-Error-Accept':' application/json'
 	        },
 	        auth: {
 	            user: username,
@@ -157,7 +179,8 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
 	            'sendImmediately': false
             },
             body: `javascript=${querystring.escape(script)}`
-	    }
+        }
+        if (ca) options['agentOptions'] = {ca: ca}
 	    return request.post(url, options)
     }
 }
@@ -173,6 +196,9 @@ export function _connectServer(servername: string ): void {
     const username = cfg.get('marklogic.username')
     const password = cfg.get('marklogic.password')
     const hostname = cfg.get('marklogic.host')
+    const ssl = Boolean(cfg.get('marklogic.ssl'))    
+    const pathToCa = String(cfg.get('marklogic.pathToCa'))
+
     if (!hostname) {
         vscode.window.showErrorMessage('Hostname is not provided')
         return
@@ -183,9 +209,10 @@ export function _connectServer(servername: string ): void {
     }
     if (!password) {
         vscode.window.showErrorMessage('Password is not provided')
-        return
-    }
-    const url = `http://${hostname}:8002/jsdbg/v1/connect/${servername}`
+        return 
+    }	
+    const url = ssl? `https://${hostname}:8002/jsdbg/v1/connect/${servername}` : 
+        `http://${hostname}:8002/jsdbg/v1/connect/${servername}`
     const options = {
         headers : {
             'Content-type': 'application/x-www-form-urlencoded',
@@ -197,6 +224,9 @@ export function _connectServer(servername: string ): void {
             'sendImmediately': false
         }
     }
+    if (pathToCa !== '')
+        options['agentOptions'] = {ca: fs.readFileSync(pathToCa)}
+
     request.post(url, options).then(() => {
         vscode.window.showInformationMessage('Debug server connected')
     }).catch(() => {
@@ -209,6 +239,9 @@ export function _disonnectServer(servername: string ): void {
     const username = cfg.get('marklogic.username')
     const password = cfg.get('marklogic.password')
     const hostname = cfg.get('marklogic.host')
+    const ssl = Boolean(cfg.get('marklogic.ssl'))    
+    const pathToCa = String(cfg.get('marklogic.pathToCa'))
+
     if (!hostname) {
         vscode.window.showErrorMessage('Hostname is not provided')
         return
@@ -219,9 +252,11 @@ export function _disonnectServer(servername: string ): void {
     }
     if (!password) {
         vscode.window.showErrorMessage('Password is not provided')
-        return
-    }
-    const url = `http://${hostname}:8002/jsdbg/v1/disconnect/${servername}`
+        return 
+    }	
+    const url = ssl? `https://${hostname}:8002/jsdbg/v1/disconnect/${servername}` : 
+        `http://${hostname}:8002/jsdbg/v1/disconnect/${servername}`
+    
     const options = {
         headers : {
             'Content-type': 'application/x-www-form-urlencoded',
@@ -233,6 +268,9 @@ export function _disonnectServer(servername: string ): void {
             'sendImmediately': false
         }
     }
+    if (pathToCa !== '')
+        options['agentOptions'] = {ca: fs.readFileSync(pathToCa)}
+        
     request.post(url, options).then(() => {
         vscode.window.showInformationMessage('Debug server disconnected')
     }).catch(() => {
