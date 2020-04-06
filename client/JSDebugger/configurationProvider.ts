@@ -40,22 +40,22 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
 
         if (!config.hostname) {
             return vscode.window.showErrorMessage('Hostname is not provided').then(() => {
-                return undefined	
+                return undefined
             })
-        }	
+        }
         if (!config.username) {
             return vscode.window.showErrorMessage('Username is not provided').then(() => {
-                return undefined	
+                return undefined
             })
         }
         if (!config.password) {
             return vscode.window.showErrorMessage('Password is not provided').then(() => {
-                return undefined	
+                return undefined
             })
-        }		
+        }
         if (config.request === 'attach' && !config.debugServerName) {
             return vscode.window.showErrorMessage('Debug server name is not provided').then(() => {
-                return undefined	
+                return undefined
             })
         }
         if (config.request == 'launch' && !config.database.match('/^\d+$/')) {
@@ -63,7 +63,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
                 config.database = resp.match('\r\n\r\n(.*[0-9])\r\n')[1] //better way of parsing?
             }).catch(() => {
                 return vscode.window.showErrorMessage('Please enter valid Database').then(() => {
-                    return undefined	
+                    return undefined
                 })
             })
         }
@@ -72,7 +72,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
                 config.modules = resp.match('\r\n\r\n(.*[0-9])\r\n')[1] //better way of parsing?
             }).catch(() => {
                 return vscode.window.showErrorMessage('Please enter valid Modules Database or 0 for file system').then(() => {
-                    return undefined	
+                    return undefined
                 })
             })
         }
@@ -89,7 +89,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
                     resp = resp.match('\r\n\r\n(.*)\r\n')[1]
                     const requestText = JSON.parse(resp)['requestText']
                     const startTime = JSON.parse(resp)['startTime']
-					
+
                     items.push({
                         label:requests[i],
                         description:'module: ' + String(requestText),
@@ -104,7 +104,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
             const item = await vscode.window.showQuickPick(items, {placeHolder: 'Select the request to attach to' })
             if (!item) {
                 return vscode.window.showErrorMessage('Request not selected').then(() => {
-                    return undefined	// abort 
+                    return undefined	// abort
                 })
             }
             config.rid = item.label
@@ -176,15 +176,15 @@ export function _connectServer(servername: string ): void {
     if (!hostname) {
         vscode.window.showErrorMessage('Hostname is not provided')
         return
-    }	
+    }
     if (!username) {
         vscode.window.showErrorMessage('Username is not provided')
-        return 
+        return
     }
     if (!password) {
         vscode.window.showErrorMessage('Password is not provided')
-        return 
-    }	
+        return
+    }
     const url = `http://${hostname}:8002/jsdbg/v1/connect/${servername}`
     const options = {
         headers : {
@@ -212,15 +212,15 @@ export function _disonnectServer(servername: string ): void {
     if (!hostname) {
         vscode.window.showErrorMessage('Hostname is not provided')
         return
-    }	
+    }
     if (!username) {
         vscode.window.showErrorMessage('Username is not provided')
-        return 
+        return
     }
     if (!password) {
         vscode.window.showErrorMessage('Password is not provided')
-        return 
-    }	
+        return
+    }
     const url = `http://${hostname}:8002/jsdbg/v1/disconnect/${servername}`
     const options = {
         headers : {
