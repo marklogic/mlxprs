@@ -36,6 +36,14 @@
             {
                 "command": "extension.sendJSQuery",
                 "title": "MarkLogic: Eval JS"
+            },
+            {
+                "command": "extension.connectServer",
+                "title": "MarkLogic: Connect Debug Server"
+            },
+            {
+                "command": "extension.disconnectServer",
+                "title": "MarkLogic: Disconnect Debug Server"
             }
         ],
         "configuration": {
@@ -71,6 +79,11 @@
                     "type": "string",
                     "default": "Modules",
                     "description": "modules database used in queries"
+                },
+                "marklogic.modulesRoot": {
+                    "type": "string",
+                    "default": "/",
+                    "description": "modules root if using filesystem"
                 },
                 "marklogic.authType": {
                     "type": "string",
@@ -132,52 +145,24 @@
                 "runtime": "node",
                 "configurationAttributes": {
                     "launch": {
-                        "required": [
-                            "hostname"
-                        ],
+                        "required": [],
                         "properties": {
-                            "hostname": {
+                            "path": {
                                 "type": "string",
-                                "description": "hostname of MarkLogic server",
-                                "default": ""
-                            },
-                            "username": {
-                                "type": "string",
-                                "description": "Username.",
-                                "default": ""
-                            },
-                            "password": {
-                                "type": "string",
-                                "description": "Password.",
-                                "default": ""
-                            },
-                            "database": {
-                                "type": "string",
-                                "description": "Database to use with launch",
+                                "description": "location of script",
                                 "default": ""
                             },
                             "txnId": {
                                 "type": "string",
                                 "description": "Transaction ID to use with launch.",
                                 "default": ""
-                            },
-                            "modules": {
-                                "type": "string",
-                                "description": "modules databse, 0 for file system",
-                                "default": "0"
-                            },
-                            "root": {
-                                "type": "string",
-                                "description": "modules root path",
-                                "default": "/"
                             }
                         }
                     },
                     "attach": {
                         "required": [
                             "path",
-                            "hostname",
-                            "servername"
+                            "debugServerName"
                         ],
                         "properties": {
                             "path": {
@@ -185,24 +170,9 @@
                                 "description": "Absolute path to a text file.",
                                 "default": ""
                             },
-                            "hostname": {
+                            "debugServerName": {
                                 "type": "string",
-                                "description": "hostname of MarkLogic server",
-                                "default": ""
-                            },
-                            "servername": {
-                                "type": "string",
-                                "description": "Port number of debug server",
-                                "default": ""
-                            },
-                            "username": {
-                                "type": "string",
-                                "description": "Username.",
-                                "default": ""
-                            },
-                            "password": {
-                                "type": "string",
-                                "description": "Password.",
+                                "description": "Debug server name, please connect the server before use",
                                 "default": ""
                             },
                             "rid": {
@@ -217,16 +187,14 @@
                     {
                         "type": "ml-jsdebugger",
                         "request": "launch",
-                        "name": "Launch Debug Request",
-                        "path": "",
-                        "hostname": "Enter host name",
-                        "servername": "Enter debug server name"
+                        "name": "Launch Debug Request"
                     },
                     {
                         "type": "ml-jsdebugger",
                         "request": "attach",
                         "name": "Attach to Debug Request",
-                        "hostname": "Enter host name"
+                        "path": "Enter the path to local modules root",
+                        "debugServerName": "Enter debug server name"
                     }
                 ],
                 "configurationSnippets": [
@@ -236,8 +204,7 @@
                         "body": {
                             "type": "ml-jsdebugger",
                             "request": "launch",
-                            "name": "Launch Debug Request",
-                            "hostname": "Enter host name"
+                            "name": "Launch Debug Request"
                         }
                     },
                     {
@@ -247,9 +214,8 @@
                             "type": "ml-jsdebugger",
                             "request": "attach",
                             "name": "Attach to Debug Request",
-                            "path": "",
-                            "hostname": "Enter host name",
-                            "servername": "Enter debug server name"
+                            "path": "Enter the path to local modules root",
+                            "debugServerName": "Enter debug server name"
                         }
                     }
                 ],

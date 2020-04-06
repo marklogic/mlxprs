@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /*
  * Copyright (c) 2020 MarkLogic Corporation
  */
@@ -9,10 +10,8 @@ import {
 } from 'vscode-debugadapter'
 import { DebugProtocol } from 'vscode-debugprotocol'
 import { basename } from 'path'
-import { MLRuntime, MLbreakPoint, V8Frame, ScopeObject,  V8PropertyObject, V8PropertyValue } from './mlRuntime'
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { Subject } = require('await-notify')
+import { MLRuntime, MLbreakPoint, V8Frame, ScopeObject, V8PropertyObject, V8PropertyValue } from './mlRuntime'
+import {Subject} from 'await-notify'
 
 interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 	path: string;
@@ -29,7 +28,7 @@ interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
 	path: string;
 	hostname: string;
-	servername: string;
+	debugServerName: string;
 	username: string;
 	password: string;
 	rid: string;
@@ -113,13 +112,13 @@ export class MLDebugSession extends LoggingDebugSession {
 	    this._configurationDone.notify()
 	}
 
-	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments) {
+	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): Promise<void> {
 	    // temporary
 	    // started the request in jsdbg.eval()
 	    logger.setup(Logger.LogLevel.Stop, false)
 	    await this._configurationDone.wait(1000)
 	    this._runtime.initialize(args)
-	    try{
+	    try {
 	        const result = await this._runtime.launchWithDebugEval(
 	            args.path, args.database, args.txnId, args.modules, args.root)
 	        const rid = JSON.parse(result).requestId
@@ -133,7 +132,11 @@ export class MLDebugSession extends LoggingDebugSession {
 	        this.sendResponse(response)
 	        this.sendEvent(new StoppedEvent('entry', MLDebugSession.THREAD_ID))
 	    } catch (err) {
-	        this._handleError(err, 'Error launching request', true, 'launchRequest')
+	        this._runtime.setRunTimeState('shutdown')
+	        this.sendResponse(response)
+	        //error launching request
+	        this.sendEvent(new TerminatedEvent())
+			
 	    }
 	}
 
@@ -144,7 +147,14 @@ export class MLDebugSession extends LoggingDebugSession {
 	    this._runtime.setRid(args.rid)
 	    this._workDir = args.path
 	    this._runtime.setRunTimeState('attached')
-	    this._stackRespString = await this._runtime.waitTillPaused()
+	    try {
+	        this._stackRespString = await this._runtime.waitTillPaused()
+	    } catch (e) {
+	        this._runtime.setRunTimeState('shutdown')
+	        this.sendResponse(response)
+	        this.sendEvent(new TerminatedEvent())
+	        return
+	    }
 	    await this._setBufferedBreakPoints()
 	    this.sendResponse(response)
 	    this.sendEvent(new StoppedEvent('entry', MLDebugSession.THREAD_ID))
@@ -153,11 +163,10 @@ export class MLDebugSession extends LoggingDebugSession {
 	protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): void {
 
 	    const path = args.source.path as string
-
-	    const mlrequests: any = []
-	    if(args.breakpoints) {
+	    const mlrequests: Promise<string>[] = []
+	    if (args.breakpoints) {
 	        //for response only
-	        const actualBreakpoints = args.breakpoints.map((b, idx) => {
+	        const actualBreakpoints = args.breakpoints.map(b => {
 	            const bp = new Breakpoint(true, b.line, b.column) as DebugProtocol.Breakpoint
 	            return bp
 	        })
@@ -203,10 +212,11 @@ export class MLDebugSession extends LoggingDebugSession {
 	                this.sendResponse(response)
 	            }).catch(err => {
 	                this._handleError(err, 'Error setting breakpoints', false, 'setBreakPointsRequest')
+	                this.sendResponse(response)
 	            })
 	        } else {
 	            response.body = {
-	                breakpoints: []
+	                breakpoints: actualBreakpoints
 	            }
 	            this.sendResponse(response)
 	        }
@@ -230,7 +240,7 @@ export class MLDebugSession extends LoggingDebugSession {
 	        const stacks = JSON.parse(body) as V8Frame[]
 
 	        const frames: StackFrame[] = []
-	        for(let i = 0; i<stacks.length; i++){
+	        for (let i = 0; i<stacks.length; i++) {
 	            const stk = stacks[i]
 	            const url = stacks[i].url
 	            frames.push(new StackFrame(
@@ -246,8 +256,9 @@ export class MLDebugSession extends LoggingDebugSession {
 	            totalFrames: stacks.length
 	        }
 	        this.sendResponse(response)
-	    } catch(e) {
+	    } catch (e) {
 	        this._handleError(e, 'Error reading stack trace', true, 'stackTraceRequest')
+	        this.sendResponse(response)
 	    }
 	}
 
@@ -257,13 +268,13 @@ export class MLDebugSession extends LoggingDebugSession {
 	        const v8frame = this._frameHandles.get(args.frameId)
 	        const scopesMl = v8frame.scopeChain as ScopeObject[]
 
-	        for(let i = 0; i<scopesMl.length; i++) {
+	        for (let i = 0; i<scopesMl.length; i++) {
 	            const scope = scopesMl[i]
-	            const expensive = scope.type === 'global' ? true : false
+	            const expensive = scope.type === 'global'? true:false
 
 	            scopes.push(
 	                new Scope(scope.type,
-	                    scope.object.objectId ? this._variableHandles.create(scope.object.objectId as string) : 0,
+	                    scope.object.objectId? this._variableHandles.create(scope.object.objectId as string):0,
 	                    expensive),
 	            )
 	        }
@@ -271,8 +282,9 @@ export class MLDebugSession extends LoggingDebugSession {
 	            scopes: scopes
 	        }
 	        this.sendResponse(response)
-	    }catch(e){
+	    } catch (e) {
 	        this._handleError(e, 'Error reading scopes', true, 'scopesRequest')
+	        this.sendResponse(response)
 	    }
 	}
 
@@ -286,8 +298,7 @@ export class MLDebugSession extends LoggingDebugSession {
 	                const element = propertiesMl[i]
 	                // console.log(element);
 	                const name = element.name
-	                let value
-	                if(!element.value) {
+	                if (!element.value) {
 	                    variables.push({
 	                        name: name,
 	                        value: 'null',
@@ -295,19 +306,18 @@ export class MLDebugSession extends LoggingDebugSession {
 	                    } as DebugProtocol.Variable)
 	                    continue
 	                }
-	                const type = element.value.type ? element.value.type: 'undefined'
-	                if (element.value.value) value = String(element.value.value)
-	                else if (element.value.description) value = String(element.value.description)
-	                else value = 'undefined'
+	                const type = element.value.type? element.value.type: 'undefined'
+	                let value
+	                if (element.value.value) {value = String(element.value.value)}
+	                else if (element.value.description) {value = String(element.value.description)}
+	                else {value = 'undefined'}
 	                variables.push({
 	                    name: name,
-	                    type: type ,
+	                    type: type,
 	                    value: value,
 	                    variablesReference: element.value.objectId ? this._variableHandles.create(element.value.objectId): 0
 	                } as DebugProtocol.Variable)
-	            } catch(e) {
-	                this._trace(JSON.stringify(propertiesMl[i]))
-	                this._trace(e.toString())
+	            } catch (e) {
 	                this._handleError(e, 'Error inspecting variables', false, 'variablesRequest')
 	            }
 	        }
@@ -317,18 +327,37 @@ export class MLDebugSession extends LoggingDebugSession {
 	        this.sendResponse(response)
 	    }).catch(err => {
 	        this._handleError(err, 'Error retrieving variables', false, 'variablesRequest')
+	        this.sendResponse(response)
+	    })
+	}
+
+	protected pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments): void {
+	    this._runtime.pause().then(() => {
+	        this.sendResponse(response)
+	        //get stackTrace
+	        this._runtime.waitTillPaused().then( resp => {
+	            this._stackRespString = resp
+	            this.sendEvent(new StoppedEvent('pause', MLDebugSession.THREAD_ID))
+	            this._resetHandles()
+	        }).catch(err => {
+	            this._handleError(err, 'Error in waiting request', true, 'pauseRequest')
+	            this.sendResponse(response)
+	        })
+	    }).catch(err => {
+	        this._handleError(err, 'Error in pause command', true, 'pauseRequest')
 	    })
 	}
 
 	protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
 	    this._runtime.resume().then(() => {
 	        this.sendResponse(response)
-	        this._runtime.waitTillPaused().then(resp => {
+	        this._runtime.waitTillPaused().then( resp => {
 	            this._stackRespString = resp
 	            this.sendEvent(new StoppedEvent('breakpoint', MLDebugSession.THREAD_ID))
 	            this._resetHandles()
-	        }).catch(err=>{
+	        }).catch(err => {
 	            this._handleError(err, 'Error in waiting request', true, 'continueRequest')
+	            this.sendResponse(response)
 	        })
 	    }).catch(err => {
 	        this._handleError(err, 'Error in continue command', true, 'continueRequest')
@@ -338,12 +367,13 @@ export class MLDebugSession extends LoggingDebugSession {
 	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
 	    this._runtime.stepOver().then(() => {
 	        this.sendResponse(response)
-	        this._runtime.waitTillPaused().then( resp=>{
+	        this._runtime.waitTillPaused().then( resp => {
 	            this._stackRespString = resp
 	            this.sendEvent(new StoppedEvent('step', MLDebugSession.THREAD_ID))
 	            this._resetHandles()
 	        }).catch(err => {
 	            this._handleError(err, 'Error in waiting request', true, 'nextRequest')
+	            this.sendResponse(response)
 	        })
 	    }).catch(err => {
 	        this._handleError(err, 'Error in next command', true, 'nextRequest')
@@ -353,12 +383,13 @@ export class MLDebugSession extends LoggingDebugSession {
 	protected stepInRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
 	    this._runtime.stepInto().then(() => {
 	        this.sendResponse(response)
-	        this._runtime.waitTillPaused().then(resp => {
+	        this._runtime.waitTillPaused().then( resp => {
 	            this._stackRespString = resp
 	            this.sendEvent(new StoppedEvent('step', MLDebugSession.THREAD_ID))
 	            this._resetHandles()
 	        }).catch(err => {
 	            this._handleError(err, 'Error in waiting request', true, 'stepInRequest')
+	            this.sendResponse(response)
 	        })
 	    }).catch(err => {
 	        this._handleError(err, 'Error in stepIn command', true, 'stepInRequest')
@@ -368,12 +399,13 @@ export class MLDebugSession extends LoggingDebugSession {
 	protected stepOutRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
 	    this._runtime.stepOut().then(() => {
 	        this.sendResponse(response)
-	        this._runtime.waitTillPaused().then(resp => {
+	        this._runtime.waitTillPaused().then( resp => {
 	            this._stackRespString = resp
 	            this.sendEvent(new StoppedEvent('step', MLDebugSession.THREAD_ID))
 	            this._resetHandles()
 	        }).catch(err => {
 	            this._handleError(err, 'Error in waiting request', true, 'stepOutRequest')
+	            this.sendResponse(response)
 	        })
 	    }).catch(err => {
 	        this._handleError(err, 'Error in stepOut command', true, 'stepOutRequest')
@@ -387,19 +419,21 @@ export class MLDebugSession extends LoggingDebugSession {
 	            this.sendResponse(response)
 	        }).catch((e) => {
 	            this._handleError(e, 'Error terminating request')
+	            this.sendResponse(response)
 	        })
 	    } else if (this._runtime.getRunTimeState() === 'attached') {
 	        this._runtime.setRunTimeState('shutdown')
 	        this._runtime.disable().then(() => {
-	            if(args.restart === true){
+	            if (args.restart === true) {
 	                this._trace('Restart is not supported for attach, please attach to a new request')
 	            }
 	            this.sendResponse(response)
 	        }).catch((e) => {
 	            this._handleError(e, 'Error disconnecting request')
+	            this.sendResponse(response)
 	        })
 	    } else {
-	        //do nothing if its already shutdown
+	        this.sendResponse(response)
 	    }
 	}
 
@@ -413,13 +447,14 @@ export class MLDebugSession extends LoggingDebugSession {
 	        const body = resp
 	        const evalResult = JSON.parse(body).result.result as V8PropertyValue
 	        response.body = {
-	            result: evalResult.value ? String(evalResult.value): (evalResult.description? String(evalResult.description): 'undefined'),
-	            type: evalResult.type,
-	            variablesReference: evalResult.objectId ? this._variableHandles.create(evalResult.objectId) : 0
+	            result: evalResult.value? String(evalResult.value): (evalResult.description? String(evalResult.description): 'undefined'),
+	            type:evalResult.type,
+	            variablesReference:evalResult.objectId? this._variableHandles.create(evalResult.objectId):0
 	        }
 	        this.sendResponse(response)
 	    }).catch(err => {
 	        this._handleError(err, 'Error in evaluating expression', false, 'evaluateRequest')
+	        this.sendResponse(response)
 	    })
 	}
 
@@ -441,9 +476,9 @@ export class MLDebugSession extends LoggingDebugSession {
 	    return path.replace(this._workDir, '')
 	}
 
-	private _setBufferedBreakPoints() {
+	private _setBufferedBreakPoints(): void {
 
-	    const mlrequests: any[] = []
+	    const mlrequests: Promise<string>[] = []
 	    this._bpCache.forEach(bp => {
 	        const breakpoint =JSON.parse(String(bp))
 	        mlrequests.push(this._runtime.setBreakPoint({
@@ -454,7 +489,7 @@ export class MLDebugSession extends LoggingDebugSession {
 	        } as MLbreakPoint))
 	    })
 
-	    Promise.all(mlrequests).then().catch(err => {
+	    Promise.all(mlrequests).catch(err => {
 	        this._handleError(err)
 	    })
 	}
@@ -468,8 +503,10 @@ export class MLDebugSession extends LoggingDebugSession {
 	    this._frameHandles.reset()
 	}
 
-	private _handleError(err: Error, msg?: string, terminate?: boolean, func?: string): void {
-	    if (err.message.includes('JSDBG-REQUESTRECOR') || err.message.includes('XDMP-NOREQUEST')) {
+	private _handleError(err, msg?: string, terminate?: boolean, func?: string): void {
+	    const errResp = JSON.parse(err.error).errorResponse
+	    const messageCode = errResp.messageCode
+	    if (messageCode === 'JSDBG-REQUESTRECORD' || messageCode === 'XDMP-NOREQUEST') {
 	        this._runtime.setRunTimeState('shutdown')
 	        this.sendEvent(new TerminatedEvent())
 	        this._trace(`Request ${this._runtime.getRid()} has ended`)
