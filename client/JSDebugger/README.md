@@ -13,6 +13,8 @@ Configuration for these two modes differs slightly, and is documented below.
 
 Where it can, query debugging uses the same VS Code settings that are used for running queries (e.g. `marklogic.host`, `marklogic.username`). You'll also need a launch config in your project (under `.vscode/launch.json`) that specifies debug-specific parameters.
 
+![Alt](../../images/setting_screenshot.png "Example configs")
+
 ### Launch
 
 Example config:
@@ -50,6 +52,8 @@ In attach mode, `debugServerName` and `path` are required. Once you start debugg
 a dropdown menu will pop up listing all paused requests on the debug server. Choose the one you want to debug.
 
 There is one optional parameter: `rid`. You can use this if you already know the request ID and don't want to be prompted for it.
+
+![Alt](../../images/attach_screenshot.png "attach screenshot")
 
 ## Coming soon
 

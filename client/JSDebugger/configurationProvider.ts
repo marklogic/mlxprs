@@ -70,7 +70,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
                 config.ssl, ca).then(resp => {
                 config.database = resp.match('\r\n\r\n(.*[0-9])\r\n')[1] //better way of parsing?
             }).catch(() => {
-                return vscode.window.showErrorMessage('Please enter valid Database').then(() => {
+                return vscode.window.showErrorMessage('Error getting database setting').then(() => {
                     return undefined
                 })
             })
@@ -80,7 +80,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
                 config.ssl, ca).then(resp => {
                 config.modules = resp.match('\r\n\r\n(.*[0-9])\r\n')[1] //better way of parsing?
             }).catch(() => {
-                return vscode.window.showErrorMessage('Please enter valid Modules Database or 0 for file system').then(() => {
+                return vscode.window.showErrorMessage('Error getting modules database setting').then(() => {
                     return undefined
                 })
             })
