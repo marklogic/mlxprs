@@ -3,8 +3,6 @@
  */
 
 import { EventEmitter } from 'events'
-//@ do-not ts-ignore
-
 import * as request from 'request-promise'
 import * as fs from 'fs'
 import * as querystring from 'querystring'
@@ -16,7 +14,7 @@ export interface V8Frame {
 	functionName?: string;
 	functionLocation?: object;
 	location: {
-        
+
 		scriptId: string;
 		lineNumber: number;
 		columnNumber: number;
@@ -42,7 +40,7 @@ export interface V8PropertyObject {
 
 export interface V8PropertyValue {
 	type: string;
-	value?: any;
+	value?;
 	classname?: string;
 	description?: string;
 	objectId?: string;
@@ -71,7 +69,7 @@ export class MLRuntime extends EventEmitter {
 	    super()
 	}
 
-	public getRunTimeState():  'shutdown' | 'launched' | 'attached' | 'error' {
+	public getRunTimeState(): 'shutdown' | 'launched' | 'attached' | 'error' {
 	    return this._runTimeState
 	}
 
@@ -81,12 +79,10 @@ export class MLRuntime extends EventEmitter {
 
 	public launchWithDebugEval(scriptLocation: string, database: string, txnId: string, modules: string, root: string): Promise<string> {
 	    const script = fs.readFileSync(scriptLocation).toString()
-	    this.setRunTimeState('launched')
-
 	    return this._sendMLdebugEvalRequest(script, database, txnId, modules, root)
 	}
 
-	public initialize(args: any): void {
+	public initialize(args): void {
 	    //placeholder for now
 	    this._hostName = args.hostname
 	    this._username = args.username
@@ -99,6 +95,10 @@ export class MLRuntime extends EventEmitter {
 
 	public getRid(): string {
 	    return this._rid
+	}
+
+	public pause(): Promise<string> {
+	    return this._sendMLdebugRequestPOST('pause')
 	}
 
 	public resume(): Promise<string> {
@@ -120,10 +120,10 @@ export class MLRuntime extends EventEmitter {
 
 	public setBreakPoint(location: MLbreakPoint): Promise<string> {
 	    let body = `url=${location.url}&lno=${location.line}`
-	    if(location.column){
+	    if (location.column) {
 	        body = body.concat(`&cno=${location.column}`)
 	    }
-	    if(location.condition){
+	    if (location.condition) {
 	        body = body.concat(`&condition=${location.condition}`)
 	    }
 	    return this._sendMLdebugRequestPOST('set-breakpoint', body)
@@ -131,7 +131,7 @@ export class MLRuntime extends EventEmitter {
 
 	public removeBreakPoint(location: MLbreakPoint): Promise<string> {
 	    let body = `url=${location.url}&lno=${location.line}`
-	    if(location.column){
+	    if (location.column) {
 	        body = body.concat(`&cno=${location.column}`)
 	    }
 	    return this._sendMLdebugRequestPOST('remove-breakpoint', body)
@@ -143,7 +143,7 @@ export class MLRuntime extends EventEmitter {
 	}
 
 	public evaluateOnCallFrame(expr: string, cid?: string): Promise<string> {
-	    const qs: any = {expr: expr}
+	    const qs: object = {expr:expr}
 	    if (cid !== '') {qs['call-frame'] = cid}
 	    return this._sendMLdebugRequestGET('eval-on-call-frame', qs)
 	}
@@ -169,63 +169,44 @@ export class MLRuntime extends EventEmitter {
 	public async waitTillPaused(): Promise<string> {
 	    try {
 	        const result = await this.wait()
-	        if(result === '') {return this.waitTillPaused()}
+	        if (result === '') {return this.waitTillPaused()}
 	        else {return result}
-	    } catch(e) {
+	    } catch (e) {
 	        throw e
 	    }
 	}
-
-	/** Replaced with wait() function, keep it for now */
-	// public checkRequestStatus(action: string) {
-	// 	this._sendMLdebugRequest("requestStatus").then(
-	// 		result => {
-	// 			// console.log(result)
-	// 			if(result== ""){
-	// 				this.sendEvent('end');
-	// 				this.requestStatus = "end";
-	// 				return;
-	// 			}
-	// 			const status = JSON.parse( result.split("\r\n\r\n")[1].split("\r\n")[0]).requestState
-	// 			if(status == "stopped") {
-	// 				if(action == "step") this.sendEvent('stopOnStep');
-	// 				else this.sendEvent("stopOnBreakpoint");
-	// 			} else if(status == "running") {
-	// 				setTimeout(() => this.checkRequestStatus(action), 200);
-	// 			}
-	// 		}
-	// 	).catch(
-	// 		err => {
-	// 			console.log(err)
-	// 		}
-	// 	)
-	// }
-
 	//---- helpers
 
-	private _sendMLdebugRequestPOST(module: string, body?: string): Promise<string>{
+	private _sendMLdebugRequestPOST(module: string, body?: string): Promise<string> {
 	    const url = `http://${this._hostName}:8002/jsdbg/v1/${module}/${this._rid}`
-	    const options: any = {
+	    const options: object = {
+	        headers : {
+	            'Content-type': 'application/x-www-form-urlencoded',
+	            'X-Error-Accept': 'application/json'
+	        },
 	        auth: {
 	            user: this._username,
 	            pass: this._password,
 	            'sendImmediately': false
 	        }
 	    }
-	    if(body) {options.body = body}
+	    if (body) {options['body'] = body}
 	    return request.post(url, options)
 	}
 
 	private _sendMLdebugRequestGET(module: string, queryString?: object): Promise<string> {
 	    const url = `http://${this._hostName}:8002/jsdbg/v1/${module}/${this._rid}`
-	    const options: any = {
+	    const options: object = {
+	        headers : {
+	            'X-Error-Accept': 'application/json'
+	        },
 	        auth: {
 	            user: this._username,
 	            pass: this._password,
 	            'sendImmediately': false
 	        }
 	    }
-	    if(queryString) {options.qs = queryString}
+	    if (queryString) {options['qs'] = queryString}
 	    return request.get(url, options)
 	}
 
@@ -233,7 +214,8 @@ export class MLRuntime extends EventEmitter {
 	    const url = `http://${this._hostName}:8002/jsdbg/v1/eval`
 	    const options = {
 	        headers : {
-	            'Content-type': 'application/x-www-form-urlencoded'
+	            'Content-type': 'application/x-www-form-urlencoded',
+	            'X-Error-Accept': 'application/json'
 	        },
 	        auth: {
 	            user: this._username,
@@ -242,10 +224,10 @@ export class MLRuntime extends EventEmitter {
 	        },
 	        body: `javascript=${querystring.escape(script)}`
 	    }
-	    if(database) options.body += `&database=${database}`
-	    if(txnId) options.body += `&txnId=${txnId}`
-	    if(modules) options.body += `&modules=${modules}`
-	    if(root) options.body += `&root=${root}`
+	    if (database) options.body += `&database=${database}`
+	    if (txnId) options.body += `&txnId=${txnId}`
+	    if (modules) options.body += `&modules=${modules}`
+	    if (root) options.body += `&root=${root}`
 	    return request.post(url, options)
 	}
 

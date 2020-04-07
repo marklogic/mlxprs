@@ -8,7 +8,7 @@ import { QueryResultsContentProvider } from './queryResultsContentProvider'
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting'
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient'
 import { XqyDebugConfigurationProvider, XqyInlineDebugAdatperFactory } from '../serverXqyDbg/xqyDebugConfigProvider'
-import { MLConfigurationProvider, DebugAdapterExecutableFactory } from './JSDebugger/configurationProvider'
+import { MLConfigurationProvider, DebugAdapterExecutableFactory, _connectServer, _disonnectServer } from './JSDebugger/configurationProvider'
 
 const MLDBCLIENT = 'mldbClient'
 const SJS = 'sjs'
@@ -37,9 +37,25 @@ export function activate(context: vscode.ExtensionContext): void {
         const uri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port)
         _sendJSQuery(client, actualQuery, uri, editor, provider)
     })
+    const connectServer = vscode.commands.registerCommand('extension.connectServer',  () => {
+        vscode.window.showInputBox({
+            placeHolder: 'Please enter server you want to connect',
+            value: ''
+        }).then(servername => {
+            _connectServer(servername)
+        })
+    })
+    const disconnectServer = vscode.commands.registerCommand('extension.disconnectServer',  () => {
+        vscode.window.showInputBox({
+            placeHolder: 'Please enter server you want to disconnect',
+            value: ''
+        }).then(servername => {
+            _disonnectServer(servername)
+        })
+    })
 
-
-
+    context.subscriptions.push(connectServer)
+    context.subscriptions.push(disconnectServer)
     context.subscriptions.push(sendXQuery)
     context.subscriptions.push(sendJSQuery)
     context.subscriptions.push(
@@ -90,13 +106,14 @@ export function activate(context: vscode.ExtensionContext): void {
     const xqyDbgProvider: XqyDebugConfigurationProvider = new XqyDebugConfigurationProvider()
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('xquery-ml', xqyDbgProvider))
 
-    const debugConfigProvider: MLConfigurationProvider = new MLConfigurationProvider()
-    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('ml-jsdebugger', debugConfigProvider))
-
-    context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('ml-jsdebugger', sjsDebugFactory))
-    context.subscriptions.push(sjsDebugFactory as any)
+    const sjsDbgProvider: MLConfigurationProvider = new MLConfigurationProvider()
+    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('ml-jsdebugger', sjsDbgProvider))
 
     context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('ml-xqdebugger', xqyDebugFactory))
+    context.subscriptions.push(xqyDebugFactory as never)
+
+    context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('ml-jsdebugger', sjsDebugFactory))
+    context.subscriptions.push(sjsDebugFactory as never)
 }
 
 // this method is called when your extension is deactivated
