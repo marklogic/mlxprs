@@ -59,14 +59,16 @@ There is one optional parameter: `rid`. You can use this if you already know the
 
 To use the debugger, a debug user may need following priviledges and more:
 
-| Name | Action URI | Description |
-|---|---|---|
-| xdmp-eval | *http://marklogic.com/xdmp/privileges/xdmp-eval* | required priviledge |
-| debug-my-request | *http://marklogic.com/xdmp/privileges/debug-my-request* | priviledge to debug request launched by debug user |
-| debug-any-request | *http://marklogic.com/xdmp/privileges/debug-any-request* | priviledge to debug request launched by any user |
-| xdmp-eval-in | *http://marklogic.com/xdmp/privileges/xdmp-eval-in* | priviledge to launch debug request in other database |
-| xdmp-eval-modules-change | *http://marklogic.com/xdmp/privileges/xdmp-eval-modules-change* | priviledge to launch debug request with other modules database |
-| xdmp-eval-modules-change-file | *http://marklogic.com/xdmp/privileges/xdmp-eval-modules-change-file* | priviledge to launch debug request with filesystem as modules database |
+| Name | Action URI |
+|---|---|
+| xdmp-eval | *http://marklogic.com/xdmp/privileges/xdmp-eval* |
+| debug-my-request | *http://marklogic.com/xdmp/privileges/debug-my-request* |
+| debug-any-request | *http://marklogic.com/xdmp/privileges/debug-any-request* |
+| xdmp-eval-in | *http://marklogic.com/xdmp/privileges/xdmp-eval-in* | 
+| xdmp-eval-modules-change | *http://marklogic.com/xdmp/privileges/xdmp-eval-modules-change* |
+| xdmp-eval-modules-change-file | *http://marklogic.com/xdmp/privileges/xdmp-eval-modules-change-file* | 
+
+Note: *http://marklogic.com/xdmp/privileges/debug-my-request* allows debugging requests launched by the debug user only. *http://marklogic.com/xdmp/privileges/debug-any-request* allows debugging requests launched by any user. A debug user must have at least one of these two priviledges.
 
 ## Coming soon
 
