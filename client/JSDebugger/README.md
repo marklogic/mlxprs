@@ -55,6 +55,19 @@ There is one optional parameter: `rid`. You can use this if you already know the
 
 ![Alt](../../images/attach_screenshot.png "attach screenshot")
 
+## Required priviledges
+
+To use the debugger, a debug user may need following priviledges and more:
+
+| Name | Action URI | Description |
+|---|---|---|
+| xdmp-eval | *http://marklogic.com/xdmp/privileges/xdmp-eval* | required priviledge |
+| debug-my-request | *http://marklogic.com/xdmp/privileges/debug-my-request* | priviledge to debug request launched by debug user |
+| debug-any-request | *http://marklogic.com/xdmp/privileges/debug-any-request* | priviledge to debug request launched by any user |
+| xdmp-eval-in | *http://marklogic.com/xdmp/privileges/xdmp-eval-in* | priviledge to launch debug request in other database |
+| xdmp-eval-modules-change | *http://marklogic.com/xdmp/privileges/xdmp-eval-modules-change* | priviledge to launch debug request with other modules database |
+| xdmp-eval-modules-change-file | *http://marklogic.com/xdmp/privileges/xdmp-eval-modules-change-file* | priviledge to launch debug request with filesystem as modules database |
+
 ## Coming soon
 
 We have not implemented streaming files currently, so if you import other modules in your script, you won't be able to inspect, set breakpoints in those files. You will only be able to work on multiple files in attach mode when you have a mirror copy of the modules directory on your local machine. This limitation will hopefully be addressed soon.
