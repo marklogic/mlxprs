@@ -8,7 +8,10 @@ import * as request from 'request-promise'
 import * as querystring from 'querystring'
 import * as fs from 'fs'
 
+const dbgPort = 8002
+
 export class MLConfigurationProvider implements vscode.DebugConfigurationProvider {
+
     resolveDebugConfiguration(folder: WorkspaceFolder | undefined, config: DebugConfiguration, _token?: CancellationToken): ProviderResult<DebugConfiguration> {
 
         // if launch.json is missing or empty
@@ -39,7 +42,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         config.modules = String(wcfg.get('marklogic.modulesDb'))
         config.root = String(wcfg.get('marklogic.modulesRoot'))
         config.ssl = Boolean(wcfg.get('marklogic.ssl'))
-        
+
         if (config.ssl) config.pathToCa = String(wcfg.get('marklogic.pathToCa'))
         let ca: Buffer
         if (config.pathToCa)
@@ -69,7 +72,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
             await this.resolveDatabasetoId(config.username, config.password, config.database, config.hostname,
                 config.ssl, ca).then(resp => {
                 config.database = resp.match('\r\n\r\n(.*[0-9])\r\n')[1] //better way of parsing?
-            }).catch(() => {
+            }).catch(e => {
                 return vscode.window.showErrorMessage('Error getting database setting').then(() => {
                     return undefined
                 })
@@ -126,8 +129,8 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
 
     private async getAvailableRequests(username: string, password: string, debugServerName: string,
         hostname: string, ssl?: boolean, ca?: Buffer ): Promise<string> {
-        const url = ssl? `https://${hostname}:8002/jsdbg/v1/paused-requests/${debugServerName}`: 
-            `http://${hostname}:8002/jsdbg/v1/paused-requests/${debugServerName}`
+        const scheme: string = ssl ? 'https' : 'http'
+        const url = `${scheme}://${hostname}:${dbgPort}/jsdbg/v1/paused-requests/${debugServerName}`
         const options = {
             headers:{
                 'X-Error-Accept':' application/json'
@@ -142,9 +145,10 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         return request.get(url, options)
     }
 
-    private async resolveDatabasetoId(username: string, password: string, database: string, hostname: string, 
+    private async resolveDatabasetoId(username: string, password: string, database: string, hostname: string,
         ssl?: boolean, ca?: Buffer): Promise<string> {
-        const url = ssl? `https://${hostname}:8002/v1/eval`: `http://${hostname}:8002/v1/eval`
+        const scheme: string = ssl ? 'https' : 'http'
+        const url = `${scheme}://${hostname}:${dbgPort}/v1/eval`
         const script=`xdmp.database("${database}")`
 	    const options: object = {
 	        headers : {
@@ -163,9 +167,10 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
 	    return request.post(url, options)
     }
 
-    private async getRequestInfo(username: string, password: string, requestId: string, debugServerName: string, hostname: string, 
+    private async getRequestInfo(username: string, password: string, requestId: string, debugServerName: string, hostname: string,
         ssl?: boolean, ca?: Buffer): Promise<string> {
-        const url = ssl? `https://${hostname}:8002/v1/eval` : `http://${hostname}:8002/v1/eval`
+        const scheme: string = ssl ? 'https' : 'http'
+        const url = `${scheme}://${hostname}:${dbgPort}/v1/eval`
         const script=`xdmp.requestStatus(xdmp.host(),xdmp.server("${debugServerName}"),"${requestId}")`
 	    const options: object = {
 	        headers : {
@@ -196,7 +201,7 @@ export function _connectServer(servername: string ): void {
     const username = cfg.get('marklogic.username')
     const password = cfg.get('marklogic.password')
     const hostname = cfg.get('marklogic.host')
-    const ssl = Boolean(cfg.get('marklogic.ssl'))    
+    const ssl = Boolean(cfg.get('marklogic.ssl'))
     const pathToCa = String(cfg.get('marklogic.pathToCa'))
 
     if (!hostname) {
@@ -209,10 +214,10 @@ export function _connectServer(servername: string ): void {
     }
     if (!password) {
         vscode.window.showErrorMessage('Password is not provided')
-        return 
-    }	
-    const url = ssl? `https://${hostname}:8002/jsdbg/v1/connect/${servername}` : 
-        `http://${hostname}:8002/jsdbg/v1/connect/${servername}`
+        return
+    }
+    const scheme: string = ssl ? 'https' : 'http'
+    const url = `${scheme}://${hostname}:${dbgPort}/jsdbg/v1/connect/${servername}`
     const options = {
         headers : {
             'Content-type': 'application/x-www-form-urlencoded',
@@ -239,7 +244,7 @@ export function _disonnectServer(servername: string ): void {
     const username = cfg.get('marklogic.username')
     const password = cfg.get('marklogic.password')
     const hostname = cfg.get('marklogic.host')
-    const ssl = Boolean(cfg.get('marklogic.ssl'))    
+    const ssl = Boolean(cfg.get('marklogic.ssl'))
     const pathToCa = String(cfg.get('marklogic.pathToCa'))
 
     if (!hostname) {
@@ -252,11 +257,11 @@ export function _disonnectServer(servername: string ): void {
     }
     if (!password) {
         vscode.window.showErrorMessage('Password is not provided')
-        return 
-    }	
-    const url = ssl? `https://${hostname}:8002/jsdbg/v1/disconnect/${servername}` : 
-        `http://${hostname}:8002/jsdbg/v1/disconnect/${servername}`
-    
+        return
+    }
+    const scheme: string = ssl ? 'https' : 'http'
+    const url = `${scheme}://${hostname}:${dbgPort}/jsdbg/v1/disconnect/${servername}`
+
     const options = {
         headers : {
             'Content-type': 'application/x-www-form-urlencoded',
@@ -270,7 +275,7 @@ export function _disonnectServer(servername: string ): void {
     }
     if (pathToCa !== '')
         options['agentOptions'] = {ca: fs.readFileSync(pathToCa)}
-        
+
     request.post(url, options).then(() => {
         vscode.window.showInformationMessage('Debug server disconnected')
     }).catch(() => {

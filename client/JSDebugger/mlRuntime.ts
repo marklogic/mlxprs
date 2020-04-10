@@ -60,11 +60,19 @@ export class MLRuntime extends EventEmitter {
 	private _password = '';
 	private _rid = '';
 	private _timeout = 1;
-	private _ssl = false;
+    private _ssl = false;
+    private _scheme = '';
+    private _dbgPort = 8002;
+    private _endpointRoot = '/jsdbg/v1'
 	private _ca: undefined | Buffer;
 
 	//Internal
 	private _runTimeState: 'shutdown' | 'launched' | 'attached' | 'error' = 'shutdown';
+
+	private buildUrl(uriPath: string): string {
+	    const url = `${this._scheme}://${this._hostName}:${this._dbgPort}${this._endpointRoot}${uriPath}`
+	    return url
+	}
 
 	constructor() {
 	    super()
@@ -89,6 +97,7 @@ export class MLRuntime extends EventEmitter {
 	    this._username = args.username
 	    this._password = args.password
 	    this._ssl = args.ssl
+	    this._scheme = this._ssl ? 'https' : 'http'
 	    if (args.pathToCa) {
 	        this._ca = fs.readFileSync(args.pathToCa)
 	    }
@@ -183,8 +192,7 @@ export class MLRuntime extends EventEmitter {
 	//---- helpers
 
 	private _sendMLdebugRequestPOST(module: string, body?: string): Promise<string> {
-	    const url = this._ssl? `https://${this._hostName}:8002/jsdbg/v1/${module}/${this._rid}` : 
-	        `http://${this._hostName}:8002/jsdbg/v1/${module}/${this._rid}`
+	    const url = this.buildUrl(`/${module}/${this._rid}`)
 	    const options: object = {
 	        headers : {
 	            'Content-type': 'application/x-www-form-urlencoded',
@@ -202,8 +210,7 @@ export class MLRuntime extends EventEmitter {
 	}
 
 	private _sendMLdebugRequestGET(module: string, queryString?: object): Promise<string> {
-	    const url = this._ssl? `https://${this._hostName}:8002/jsdbg/v1/${module}/${this._rid}` :
-	        `http://${this._hostName}:8002/jsdbg/v1/${module}/${this._rid}`
+	    const url = this.buildUrl(`/${module}/${this._rid}`)
 	    const options: object = {
 	        headers : {
 	            'X-Error-Accept': 'application/json'
@@ -220,7 +227,7 @@ export class MLRuntime extends EventEmitter {
 	}
 
 	private _sendMLdebugEvalRequest(script: string, database: string, txnId: string, modules: string, root: string): Promise<string> {
-	    const url = this._ssl? `https://${this._hostName}:8002/jsdbg/v1/eval`: `http://${this._hostName}:8002/jsdbg/v1/eval`
+	    const url = this.buildUrl('/eval')
 	    const options = {
 	        headers : {
 	            'Content-type': 'application/x-www-form-urlencoded',
