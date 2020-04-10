@@ -11,7 +11,7 @@ Configuration for these two modes differs slightly, and is documented below.
 
 ## Configuration
 
-Where it can, query debugging uses the same VS Code settings that are used for running queries (e.g. `marklogic.host`, `marklogic.username`). You'll also need a launch config in your project (under `.vscode/launch.json`) that specifies debug-specific parameters.
+Where it can, query debugging uses the same VS Code settings used for running queries (e.g. `marklogic.host`, `marklogic.username`). You'll also need a launch config in your project (under `.vscode/launch.json`) that specifies debug-specific parameters.
 
 ![Alt](../../images/setting_screenshot.png "Example configs")
 
@@ -43,9 +43,7 @@ Example config:
     }
 ```
 
-Attach mode attaches to a paused request in a *debug server*. A debug server is an app server that is connected to js debugger.
-To make a debug server, open command palette, type connectServer and enter an app server name to connect. Type disconnectServer if you no longer 
-need the debug server.
+Attach mode attaches to a paused request in a *debug server*. A debug server is an app server that is connected to js debugger. To make a debug server, open command palette, type "connectServer" and enter an app server name to connect. Type disconnectServer if you no longer need the debug server.
 **Only requests that are launched after a server is connected/made debug server can be attached.**
 
 In attach mode, `debugServerName` and `path` are required. Once you start debugging,
@@ -57,16 +55,16 @@ There is one optional parameter: `rid`. You can use this if you already know the
 
 ## Required priviledges
 
-To use the debugger, a debug user may need following priviledges and more:
+To run the debugger, a user may need following priviledges in MarkLogic:
 
-| Name | Action URI |
-|---|---|
-| xdmp-eval | *http://marklogic.com/xdmp/privileges/xdmp-eval* |
-| debug-my-request | *http://marklogic.com/xdmp/privileges/debug-my-request* |
-| debug-any-request | *http://marklogic.com/xdmp/privileges/debug-any-request* |
-| xdmp-eval-in | *http://marklogic.com/xdmp/privileges/xdmp-eval-in* | 
-| xdmp-eval-modules-change | *http://marklogic.com/xdmp/privileges/xdmp-eval-modules-change* |
-| xdmp-eval-modules-change-file | *http://marklogic.com/xdmp/privileges/xdmp-eval-modules-change-file* | 
+| Name                          | Action URI                                                           |
+| ----------------------------- | -------------------------------------------------------------------- |
+| xdmp-eval                     | *http://marklogic.com/xdmp/privileges/xdmp-eval*                     |
+| debug-my-request              | *http://marklogic.com/xdmp/privileges/debug-my-request*              |
+| debug-any-request             | *http://marklogic.com/xdmp/privileges/debug-any-request*             |
+| xdmp-eval-in                  | *http://marklogic.com/xdmp/privileges/xdmp-eval-in*                  |
+| xdmp-eval-modules-change      | *http://marklogic.com/xdmp/privileges/xdmp-eval-modules-change*      |
+| xdmp-eval-modules-change-file | *http://marklogic.com/xdmp/privileges/xdmp-eval-modules-change-file* |
 
 Note: *http://marklogic.com/xdmp/privileges/debug-my-request* allows debugging requests launched by the debug user only. *http://marklogic.com/xdmp/privileges/debug-any-request* allows debugging requests launched by any user. A debug user must have at least one of these two priviledges.
 
