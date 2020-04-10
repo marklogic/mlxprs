@@ -13,6 +13,8 @@ Configuration for these two modes differs slightly, and is documented below.
 
 Where it can, query debugging uses the same VS Code settings that are used for running queries (e.g. `marklogic.host`, `marklogic.username`). You'll also need a launch config in your project (under `.vscode/launch.json`) that specifies debug-specific parameters.
 
+![Alt](../../images/setting_screenshot.png "Example configs")
+
 ### Launch
 
 Example config:
@@ -50,6 +52,23 @@ In attach mode, `debugServerName` and `path` are required. Once you start debugg
 a dropdown menu will pop up listing all paused requests on the debug server. Choose the one you want to debug.
 
 There is one optional parameter: `rid`. You can use this if you already know the request ID and don't want to be prompted for it.
+
+![Alt](../../images/attach_screenshot.png "attach screenshot")
+
+## Required priviledges
+
+To use the debugger, a debug user may need following priviledges and more:
+
+| Name | Action URI |
+|---|---|
+| xdmp-eval | *http://marklogic.com/xdmp/privileges/xdmp-eval* |
+| debug-my-request | *http://marklogic.com/xdmp/privileges/debug-my-request* |
+| debug-any-request | *http://marklogic.com/xdmp/privileges/debug-any-request* |
+| xdmp-eval-in | *http://marklogic.com/xdmp/privileges/xdmp-eval-in* | 
+| xdmp-eval-modules-change | *http://marklogic.com/xdmp/privileges/xdmp-eval-modules-change* |
+| xdmp-eval-modules-change-file | *http://marklogic.com/xdmp/privileges/xdmp-eval-modules-change-file* | 
+
+Note: *http://marklogic.com/xdmp/privileges/debug-my-request* allows debugging requests launched by the debug user only. *http://marklogic.com/xdmp/privileges/debug-any-request* allows debugging requests launched by any user. A debug user must have at least one of these two priviledges.
 
 ## Coming soon
 
