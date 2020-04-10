@@ -154,42 +154,42 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         ssl?: boolean, ca?: Buffer): Promise<string> {
         const url = buildUrl(hostname, '/v1/eval', ssl)
         const script=`xdmp.database("${database}")`
-	    const options: object = {
-	        headers : {
-	            'Content-type': 'application/x-www-form-urlencoded',
+        const options: object = {
+            headers : {
+                'Content-type': 'application/x-www-form-urlencoded',
                 'Accept': 'multipart/mixed',
                 'X-Error-Accept':' application/json'
-	        },
-	        auth: {
-	            user: username,
-	            pass: password,
-	            'sendImmediately': false
+            },
+            auth: {
+                user: username,
+                pass: password,
+                'sendImmediately': false
             },
             body: `javascript=${querystring.escape(script)}`
         }
         if (ca) options['agentOptions'] = {ca: ca}
-	    return request.post(url, options)
+        return request.post(url, options)
     }
 
     private async getRequestInfo(username: string, password: string, requestId: string, debugServerName: string, hostname: string,
         ssl?: boolean, ca?: Buffer): Promise<string> {
         const url = buildUrl(hostname, '/v1/eval', ssl)
         const script=`xdmp.requestStatus(xdmp.host(),xdmp.server("${debugServerName}"),"${requestId}")`
-	    const options: object = {
-	        headers : {
-	            'Content-type': 'application/x-www-form-urlencoded',
+        const options: object = {
+            headers : {
+                'Content-type': 'application/x-www-form-urlencoded',
                 'Accept': 'multipart/mixed',
                 'X-Error-Accept':' application/json'
-	        },
-	        auth: {
-	            user: username,
-	            pass: password,
-	            'sendImmediately': false
+            },
+            auth: {
+                user: username,
+                pass: password,
+                'sendImmediately': false
             },
             body: `javascript=${querystring.escape(script)}`
         }
         if (ca) options['agentOptions'] = {ca: ca}
-	    return request.post(url, options)
+        return request.post(url, options)
     }
 }
 
