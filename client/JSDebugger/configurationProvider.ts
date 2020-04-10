@@ -8,7 +8,13 @@ import * as request from 'request-promise'
 import * as querystring from 'querystring'
 import * as fs from 'fs'
 
-const dbgPort = 8002
+
+function buildUrl(hostname: string, endpointPath: string, ssl = true): string {
+    const dbgPort = 8002
+    const scheme: string = ssl ? 'https' : 'http'
+    const url = `${scheme}://${hostname}:${dbgPort}${endpointPath}`
+    return url
+}
 
 export class MLConfigurationProvider implements vscode.DebugConfigurationProvider {
 
@@ -129,8 +135,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
 
     private async getAvailableRequests(username: string, password: string, debugServerName: string,
         hostname: string, ssl?: boolean, ca?: Buffer ): Promise<string> {
-        const scheme: string = ssl ? 'https' : 'http'
-        const url = `${scheme}://${hostname}:${dbgPort}/jsdbg/v1/paused-requests/${debugServerName}`
+        const url = buildUrl(hostname, `/jsdbg/v1/paused-requests/${debugServerName}`, ssl)
         const options = {
             headers:{
                 'X-Error-Accept':' application/json'
@@ -147,8 +152,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
 
     private async resolveDatabasetoId(username: string, password: string, database: string, hostname: string,
         ssl?: boolean, ca?: Buffer): Promise<string> {
-        const scheme: string = ssl ? 'https' : 'http'
-        const url = `${scheme}://${hostname}:${dbgPort}/v1/eval`
+        const url = buildUrl(hostname, '/v1/eval', ssl)
         const script=`xdmp.database("${database}")`
 	    const options: object = {
 	        headers : {
@@ -169,8 +173,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
 
     private async getRequestInfo(username: string, password: string, requestId: string, debugServerName: string, hostname: string,
         ssl?: boolean, ca?: Buffer): Promise<string> {
-        const scheme: string = ssl ? 'https' : 'http'
-        const url = `${scheme}://${hostname}:${dbgPort}/v1/eval`
+        const url = buildUrl(hostname, '/v1/eval', ssl)
         const script=`xdmp.requestStatus(xdmp.host(),xdmp.server("${debugServerName}"),"${requestId}")`
 	    const options: object = {
 	        headers : {
@@ -198,9 +201,9 @@ export class DebugAdapterExecutableFactory implements vscode.DebugAdapterDescrip
 
 export function _connectServer(servername: string ): void {
     const cfg = vscode.workspace.getConfiguration()
-    const username = cfg.get('marklogic.username')
-    const password = cfg.get('marklogic.password')
-    const hostname = cfg.get('marklogic.host')
+    const username: string = cfg.get('marklogic.username')
+    const password: string = cfg.get('marklogic.password')
+    const hostname: string = cfg.get('marklogic.host')
     const ssl = Boolean(cfg.get('marklogic.ssl'))
     const pathToCa = String(cfg.get('marklogic.pathToCa'))
 
@@ -216,8 +219,7 @@ export function _connectServer(servername: string ): void {
         vscode.window.showErrorMessage('Password is not provided')
         return
     }
-    const scheme: string = ssl ? 'https' : 'http'
-    const url = `${scheme}://${hostname}:${dbgPort}/jsdbg/v1/connect/${servername}`
+    const url = buildUrl(hostname, `/jsdbg/v1/connect/${servername}`, ssl)
     const options = {
         headers : {
             'Content-type': 'application/x-www-form-urlencoded',
@@ -241,9 +243,9 @@ export function _connectServer(servername: string ): void {
 
 export function _disonnectServer(servername: string ): void {
     const cfg = vscode.workspace.getConfiguration()
-    const username = cfg.get('marklogic.username')
-    const password = cfg.get('marklogic.password')
-    const hostname = cfg.get('marklogic.host')
+    const username: string = cfg.get('marklogic.username')
+    const password: string = cfg.get('marklogic.password')
+    const hostname: string = cfg.get('marklogic.host')
     const ssl = Boolean(cfg.get('marklogic.ssl'))
     const pathToCa = String(cfg.get('marklogic.pathToCa'))
 
@@ -259,9 +261,7 @@ export function _disonnectServer(servername: string ): void {
         vscode.window.showErrorMessage('Password is not provided')
         return
     }
-    const scheme: string = ssl ? 'https' : 'http'
-    const url = `${scheme}://${hostname}:${dbgPort}/jsdbg/v1/disconnect/${servername}`
-
+    const url = buildUrl(hostname, `/jsdbg/v1/disconnect/${servername}`, ssl)
     const options = {
         headers : {
             'Content-type': 'application/x-www-form-urlencoded',
