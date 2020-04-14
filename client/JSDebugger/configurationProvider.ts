@@ -111,13 +111,13 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
                     const startTime = JSON.parse(resp)['startTime']
 
                     items.push({
-                        label:requests[i],
-                        description:'module: ' + String(requestText),
-                        detail:'startTime: ' + String(startTime)
+                        label: requests[i],
+                        description: 'module: ' + String(requestText),
+                        detail: 'startTime: ' + String(startTime)
                     })
                 } catch (e) {
                     items.push({
-                        label:requests[i]
+                        label: requests[i]
                     })
                 }
             }
@@ -137,8 +137,8 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         hostname: string, ssl?: boolean, ca?: Buffer ): Promise<string> {
         const url = buildUrl(hostname, `/jsdbg/v1/paused-requests/${debugServerName}`, ssl)
         const options = {
-            headers:{
-                'X-Error-Accept':' application/json'
+            headers: {
+                'X-Error-Accept': ' application/json'
             },
             auth: {
                 user: username,
@@ -155,10 +155,10 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         const url = buildUrl(hostname, '/v1/eval', ssl)
         const script=`xdmp.database("${database}")`
         const options: object = {
-            headers : {
+            headers: {
                 'Content-type': 'application/x-www-form-urlencoded',
                 'Accept': 'multipart/mixed',
-                'X-Error-Accept':' application/json'
+                'X-Error-Accept': ' application/json'
             },
             auth: {
                 user: username,
@@ -176,10 +176,10 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         const url = buildUrl(hostname, '/v1/eval', ssl)
         const script=`xdmp.requestStatus(xdmp.host(),xdmp.server("${debugServerName}"),"${requestId}")`
         const options: object = {
-            headers : {
+            headers: {
                 'Content-type': 'application/x-www-form-urlencoded',
                 'Accept': 'multipart/mixed',
-                'X-Error-Accept':' application/json'
+                'X-Error-Accept': ' application/json'
             },
             auth: {
                 user: username,
@@ -221,7 +221,7 @@ export function _connectServer(servername: string ): void {
     }
     const url = buildUrl(hostname, `/jsdbg/v1/connect/${servername}`, ssl)
     const options = {
-        headers : {
+        headers: {
             'Content-type': 'application/x-www-form-urlencoded',
             'X-Error-Accept': 'application/json'
         },
@@ -263,7 +263,7 @@ export function _disonnectServer(servername: string ): void {
     }
     const url = buildUrl(hostname, `/jsdbg/v1/disconnect/${servername}`, ssl)
     const options = {
-        headers : {
+        headers: {
             'Content-type': 'application/x-www-form-urlencoded',
             'X-Error-Accept': 'application/json'
         },
