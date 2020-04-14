@@ -68,6 +68,13 @@
                 "before": false,
                 "after": true
             }
+        ],
+        "key-spacing": [
+            "error",
+            {
+                "beforeColon": false,
+                "afterColon": true
+            }
         ]
     }
 }

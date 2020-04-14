@@ -452,8 +452,8 @@ export class MLDebugSession extends LoggingDebugSession {
             const evalResult = JSON.parse(body).result.result as V8PropertyValue
             response.body = {
                 result: evalResult.value? String(evalResult.value): (evalResult.description? String(evalResult.description): 'undefined'),
-                type:evalResult.type,
-                variablesReference:evalResult.objectId? this._variableHandles.create(evalResult.objectId):0
+                type: evalResult.type,
+                variablesReference: evalResult.objectId? this._variableHandles.create(evalResult.objectId):0
             }
             this.sendResponse(response)
         }).catch(err => {
