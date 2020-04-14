@@ -9,9 +9,8 @@ It also adds syntax highlighting for the MarkLogic XQuery (`version "1.0-ml"`) d
 
 The extension adds two commands to the VS Code command palette:
 
-1. Eval JavaScript
-2. Eval XQuery
-3. Debug XQuery
+1. Eval and debug JavaScript
+2. Eval XQuery (debugging coming soon)
 
 This will take the contents of the current active editor window and run it against a configured MarkLogic database instance.
 The results of the query will be shown in the next tab over.
@@ -22,11 +21,6 @@ The results of the query will be shown in the next tab over.
 - Changes to the config file take immediate effect, switch databases and credentials on-the-fly
 - Readability—pretty-formatting of query results based on their contents
 - SJS and XQuery code completion with functions from the MarkLogic API
-
-## Coming soon (hopefully)
-
-- Code completion with user-defined functions (locally or in the configured modules database)
-- Edit MarkLogic XML and JSON documents in the text editor, save them back to the database
 
 ## Getting started
 
@@ -130,16 +124,98 @@ fn:doc('/my-testing-doc.json')
 When this query runs, it will use the host, port and contentDb specified in the comment, along with the VS Code
 configuration parameters for the rest of the MarkLogic client definition. (The "note" will be ignored.). Other queries in other editor tabs will not be affected.
 
+## Debugging
 
+The debugger supports two modes of debugging:
 
-## Requirements
+1. Launch
+2. Attach
 
-I've been building and testing with the following ingredients:
+Where it can, query debugging uses the same VS Code settings used for running queries (e.g. `marklogic.host`, `marklogic.username`).
+In addition to these, you'll need a **launch config** in your project (under `.vscode/launch.json`) for debug-specific parameters.
+You can open the `launch.json` from the VS Code command palette, with the command: "Debug: Open launch.json".
 
-- MarkLogic 10, with admin access
-- Visual Studio Code, version 1.36.1
-- `npm` version 6.9.0
-- node.js v11.13.0
+A typical `launch.json` file looks like this:
+
+```json
+{
+  "version": "2.0.0",
+  "configurations": [
+    {
+        "request": "launch",
+        "type": "ml-jsdebugger",
+        "name": "Launch Debug Request"
+    },
+    {
+        "request": "attach",
+        "type": "ml-jsdebugger",
+        "name": "Attach to Debug Request",
+        "path": "Enter the path to local modules root",
+        "debugServerName": "Enter debug server name"
+    }
+  ]
+}
+```
+
+VS Code is syntax-aware of what should go into `launch.json`, so you will get autocomplete and hover hints as you edit.
+
+### Launch
+
+An example 'launch' type configuration item:
+
+```json
+    {
+        "type": "ml-jsdebugger",
+        "request": "launch",
+        "name": "Launch Debug Request"
+    }
+```
+By default, launch mode will launch the currently opened file for debugging.
+An optional "path" parameter can be provided to specify another file for debugging.
+
+### Attach
+
+An example 'attach' type configuration item:
+
+```json
+    {
+        "type": "ml-jsdebugger",
+        "request": "attach",
+        "name": "Attach to Debug Request",
+        "debugServerName": "jsdbg",
+        "path": "${workspaceFolder}"
+    }
+```
+
+Attach mode attaches to a paused request in a given *debug server* (an app server connected to js debugger). To make a debug server, open command palette, type "connectServer" and enter an app server name to connect. Type "disconnectServer" if you no longer need the debug server.
+**Only requests that are launched after a server is connected/made debug server can be attached.**
+
+In attach mode, `debugServerName` and `path` are required. Once you start debugging,
+a dropdown menu will pop up listing all paused requests on the debug server. Choose the one you want to debug.
+
+![Attach screenshot](images/attach_screenshot.png "attach screenshot")
+
+There is one optional parameter: `rid`. You can use this if you already know the request ID and don't want to be prompted for it.
+
+## Notes
+
+### debugging limitations
+
+Streaming JS source files from the MarkLogic server is not yet implemented (it's on the roadmap). If you import other modules in your script, you won't be able to inspect or set breakpoints in those files. To work on multiple files in attach mode, you will need a mirror copy of the modules directory on your local machine.
+
+### required privileges for eval and debugging
+
+To run queries with mlxprs, your user will need eval priviliges on your MarkLogic server. These include:
+
+- **xdmp-eval**: absolute minimum
+- **xdmp-eval-in**: to use a non-default content database
+- **xdmp-eval-modules-change**: to use a non-default modules database or modules root
+- **xdmp-eval-modules-change-file**: to use the filesystem for modules
+
+For debugging, a user must also have at least one of these privileges:
+
+- **debug-my-request**: for debugging requests launched by the debug user only.
+- **debug-any-request**: for debugging requests launched by any user.
 
 ## Credit
 

@@ -32,7 +32,15 @@ Please refer to [Github's documentation on the matter](https://help.github.com/a
 
 #### Formatting code
 
-It'd be extra helpfult if you follow the guidelines defined in `.editorconfig` and `.eslintrc.json`. Both of these tools offer VS Code extensions to automatically recommend and/or apply style rules while editing:
+It'd be extra helpful if you follow the guidelines defined in `.editorconfig` and `.eslintrc.json`. Both of these tools offer VS Code extensions to automatically recommend and/or apply style rules while editing:
 
-- [editorconfig VS Code extension](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig): 
-- [eslint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint).
+- [editorconfig VS Code extension](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig) 
+- [eslint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
+
+### Notes on development environment
+
+Please try to develop, build, and test with the most recent stable releases of the following components:
+
+- Visual Studio Code
+- node.js, `npm`
+- MarkLogic 9 or 10
