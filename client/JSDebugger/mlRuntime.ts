@@ -157,7 +157,7 @@ export class MLRuntime extends EventEmitter {
     }
 
     public evaluateOnCallFrame(expr: string, cid?: string): Promise<string> {
-        const qs: object = {expr:expr}
+        const qs: object = {expr: expr}
         if (cid !== '') {qs['call-frame'] = cid}
         return this._sendMLdebugRequestGET('eval-on-call-frame', qs)
     }
@@ -194,7 +194,7 @@ export class MLRuntime extends EventEmitter {
     private _sendMLdebugRequestPOST(module: string, body?: string): Promise<string> {
         const url = this.buildUrl(`/${module}/${this._rid}`)
         const options: object = {
-            headers : {
+            headers: {
                 'Content-type': 'application/x-www-form-urlencoded',
                 'X-Error-Accept': 'application/json'
             },
@@ -212,7 +212,7 @@ export class MLRuntime extends EventEmitter {
     private _sendMLdebugRequestGET(module: string, queryString?: object): Promise<string> {
         const url = this.buildUrl(`/${module}/${this._rid}`)
         const options: object = {
-            headers : {
+            headers: {
                 'X-Error-Accept': 'application/json'
             },
             auth: {
@@ -229,7 +229,7 @@ export class MLRuntime extends EventEmitter {
     private _sendMLdebugEvalRequest(script: string, database: string, txnId: string, modules: string, root: string): Promise<string> {
         const url = this.buildUrl('/eval')
         const options = {
-            headers : {
+            headers: {
                 'Content-type': 'application/x-www-form-urlencoded',
                 'X-Error-Accept': 'application/json'
             },
@@ -241,21 +241,13 @@ export class MLRuntime extends EventEmitter {
             body: `javascript=${querystring.escape(script)}`
         }
         if (this._ca) options['agentOptions'] = {ca: this._ca}
-        if (database) options.body += `&database=${database}`
-        if (txnId) options.body += `&txnId=${txnId}`
-        if (modules) options.body += `&modules=${modules}`
-        if (root) options.body += `&root=${root}`
+        const evalOptions = {
+            database: database,
+            modules: modules
+        }
+        if (txnId) evalOptions['txnId'] = txnId
+        if (root) evalOptions['root'] = root
+        options['qs'] = evalOptions
         return request.post(url, options)
     }
-
-    // private _sendTerminateRequest(): Promise<string> {
-
-    // }
 }
-
-/*  Mapping between local file (be it local copy of module or a script to be evaled)
-    and remote file in MarkLogic Server
-*/
-// class Mapper {
-
-// }
