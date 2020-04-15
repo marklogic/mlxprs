@@ -1,8 +1,8 @@
-# mlxprs
+# MarkLogic JavaScript and XQuery Debugger
 
 *A MarkLogic Visual Studio Code extension*
 
-This extension allows you to run Server-side JavaScript (SJS) and XQuery Queries against a MarkLogic database.
+This extension allows you to run JavaScript and XQuery (*.sjs, *.mjs, *.xqy) code against a MarkLogic Data Hub or MarkLogic database.
 It also adds syntax highlighting for the MarkLogic XQuery (`version "1.0-ml"`) dialect.
 
 ## What it does
@@ -12,19 +12,18 @@ The extension adds two commands to the VS Code command palette:
 1. Eval and debug JavaScript
 2. Eval XQuery (debugging coming soon)
 
-This will take the contents of the current active editor window and run it against a configured MarkLogic database instance.
-The results of the query will be shown in the next tab over.
+This tool takes the contents of the current active editor window and runs the code against a configured MarkLogic Data Hub instance (or MarkLogic database). The query results appear in the adjacent tab.
 
 ## Features
 
-- It's asynchronous: long-running queries won't freeze the editor
-- Changes to the config file take immediate effect, switch databases and credentials on-the-fly
-- Readability—pretty-formatting of query results based on their contents
-- SJS and XQuery code completion with functions from the MarkLogic API
+- It's asynchronous: Long-running queries won't freeze the editor
+- Changes to the config file take immediate effect, you can switch databases and credentials on-the-fly
+- Readability: Pretty-formatting of query results based on their contents
+- JavaScript and XQuery code completion with functions from the MarkLogic API
 
 ## Getting started
 
-The easiest way to install this is to use VS Code's built-in marketplace. Search for "mlxprs" or "MarkLogic", and then simply click "install" when you find this extension.
+Install this tool using the VS Code built-in marketplace. Search for "mlxprs" or "MarkLogic". Click "install" when you find the extension.
 
 ### Configuration
 
@@ -43,27 +42,27 @@ for example:
 }
 ```
 
-You can also set `marklogic.authType` to `DIGEST` or `BASIC`. DIGEST is default,
-and appears to work even if the server is running BASIC authentication.
+You can also set `marklogic.authType` to `DIGEST` or `BASIC`. DIGEST is the default,
+and works even if the server is running BASIC authentication.
 
 ### Connect and query
 
 If you're running MarkLogic on localhost:8000 admin/admin, and want to query the "Documents" database,
-simply:
+do the following:
 
-1. type a valid SJS query in the editor,
-2. open the command palette (`[Shift]`+`[Cmd]`+`[P]`),
-3. type "MarkLogic: Eval JS", or better yet, let the command palette autocomplete it.
+1. Type a valid JavaScript query in the editor.
+2. Open the command palette (`[Shift]`+`[Cmd]`+`[P]`).
+3. Type "MarkLogic: Eval JS", or better yet, let the command palette autocomplete it.
 
 If your query can be completed, it will open a new tab and output the results there.
-If not, the error message will be shown.
+If not, an error message will be shown.
 
 ### SSL Configuration
 
 You can turn on SSL with the `marklogic.ssl` configuration property.
-If the CA is not in your chain of trust (e.g. if the certificate is self-signed),
-you need to point to it in your configuration as well, using `marklogic.pathToCa`.
-It will look something like this:
+If the CA is not in your chain of trust (for example, if the certificate is self-signed),
+you need to point to the CA in your configuration as well using `marklogic.pathToCa`.
+The configuration will look something like this:
 
 ```json
 {
@@ -72,24 +71,24 @@ It will look something like this:
 }
 ```
 
-You can acquire the CA file from MarkLogic's admin panel (usually port 8001), by
+You can acquire the CA file from the MarkLogic admin pane (usually port 8001), by
 going to 'Security' -> 'Certificate Templates' -> (cert host name), and then
 selecting the "Status" tab. There is an "download" button in the "certificate template status"
-section. Click that button to download a copy of your root CA.
+section. Click the "download" button to download a copy of your root CA.
 
 ### Per-query configuration override 
 
 You can override your VS Code configured settings by using a block comment as the first language token
 in the query. The comment should conform to the following:
 
-- first line includes the string `mlxprs:settings`
-- the rest of the comment is valid JSON
-- at least one of the following keys: `host`, `port`, `user`, `pwd`, `contentDb`, `modulesDb`, `authType`, `ssl`, `pathToCa`.
-- the corresponding value should be the right type for the configuration (number for `port`, boolean for `ssl`, string otherwise)
+- First line includes the string `mlxprs:settings`
+- The rest of the comment is valid JSON
+- Includes at least one of the following keys: `host`, `port`, `user`, `pwd`, `contentDb`, `modulesDb`, `authType`, `ssl`, `pathToCa`
+- The corresponding value should be of the right type for the configuration (number for `port`, boolean for `ssl`, string otherwise)
 
 The values defined in the JSON will override VS Code's MarkLogic client configuration.
 
-e.g.:
+For example:
 
 ```js
 /* mlxprs:settings
@@ -121,8 +120,8 @@ xquery version "1.0-ml";
 fn:doc('/my-testing-doc.json')
 ```
 
-When this query runs, it will use the host, port and contentDb specified in the comment, along with the VS Code
-configuration parameters for the rest of the MarkLogic client definition. (The "note" will be ignored.). Other queries in other editor tabs will not be affected.
+When this query runs, it will use the host, port, and contentDb specified in the comment, along with the VS Code
+configuration parameters for the rest of the MarkLogic client definition. (The "note" will be ignored.) Other queries in other editor tabs will not be affected.
 
 ## Debugging
 
@@ -131,9 +130,9 @@ The debugger supports two modes of debugging:
 1. Launch
 2. Attach
 
-Where it can, query debugging uses the same VS Code settings used for running queries (e.g. `marklogic.host`, `marklogic.username`).
-In addition to these, you'll need a **launch config** in your project (under `.vscode/launch.json`) for debug-specific parameters.
-You can open the `launch.json` from the VS Code command palette, with the command: "Debug: Open launch.json".
+Where it can, query debugging uses the same VS Code settings used for running queries (for example, `marklogic.host`, `marklogic.username`).
+In addition to these code settings, you will need a **launch config** in your project (under `.vscode/launch.json`) for debug-specific parameters.
+Open the `launch.json` from the VS Code command palette with the command: "Debug: Open launch.json".
 
 A typical `launch.json` file looks like this:
 
@@ -157,7 +156,7 @@ A typical `launch.json` file looks like this:
 }
 ```
 
-VS Code is syntax-aware of what should go into `launch.json`, so you will get autocomplete and hover hints as you edit.
+VS Code is syntax-aware of what information should go into `launch.json`, so take advantage of autocomplete and hover hints as you edit.
 
 ### Launch
 
@@ -175,7 +174,7 @@ An optional "path" parameter can be provided to specify another file for debuggi
 
 ### Attach
 
-An example 'attach' type configuration item:
+Here's an example of an 'attach' type configuration item:
 
 ```json
     {
@@ -199,13 +198,13 @@ There is one optional parameter: `rid`. You can use this if you already know the
 
 ## Notes
 
-### debugging limitations
+### Debugging Limitations
 
-Streaming JS source files from the MarkLogic server is not yet implemented (it's on the roadmap). If you import other modules in your script, you won't be able to inspect or set breakpoints in those files. To work on multiple files in attach mode, you will need a mirror copy of the modules directory on your local machine.
+Streaming JavaScript source files from the MarkLogic server is not yet implemented (it's on the roadmap). If you import other modules into your script, you won't be able to inspect or set breakpoints in those files. To work on multiple files in attach mode, you will need a mirror copy of the modules directory on your local machine.
 
-### required privileges for eval and debugging
+### Required Privileges for eval and debugging
 
-To run queries with mlxprs, your user will need eval priviliges on your MarkLogic server. These include:
+To run queries with the MarkLogic JavaScript and XQuery Debugger, a user will need eval priviliges on your MarkLogic server. These include:
 
 - **xdmp-eval**: absolute minimum
 - **xdmp-eval-in**: to use a non-default content database
@@ -214,8 +213,10 @@ To run queries with mlxprs, your user will need eval priviliges on your MarkLogi
 
 For debugging, a user must also have at least one of these privileges:
 
-- **debug-my-request**: for debugging requests launched by the debug user only.
-- **debug-any-request**: for debugging requests launched by any user.
+- **debug-my-request**: for debugging requests launched by the debug user only
+- **debug-any-request**: for debugging requests launched by any user
+
+For more about privileges, see [xdmp:eval] (https://docs.marklogic.com/10.0/xdmp:eval) and [Debug functions](https://docs.marklogic.com/dbg) in the API docs, along with [Pre-defined Executive Privileges](https://docs.marklogic.com/guide/admin/exec_privs) in the MarkLogic server documentation. 
 
 ## Credit
 
