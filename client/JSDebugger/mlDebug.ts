@@ -302,7 +302,7 @@ export class MLDebugSession extends LoggingDebugSession {
                     const element = propertiesMl[i]
                     // console.log(element);
                     const name = element.name
-                    if (!element.value) {
+                    if (!element.hasOwnProperty('value')) {
                         variables.push({
                             name: name,
                             value: 'null',
@@ -310,10 +310,10 @@ export class MLDebugSession extends LoggingDebugSession {
                         } as DebugProtocol.Variable)
                         continue
                     }
-                    const type = element.value.type? element.value.type: 'undefined'
+                    const type = element.value.hasOwnProperty('type')? element.value.type: 'undefined'
                     let value
-                    if (element.value.value) {value = String(element.value.value)}
-                    else if (element.value.description) {value = String(element.value.description)}
+                    if (element.value.hasOwnProperty('value')) {value = String(element.value.value)}
+                    else if (element.value.hasOwnProperty('description')) {value = String(element.value.description)}
                     else {value = 'undefined'}
                     variables.push({
                         name: name,
@@ -451,9 +451,10 @@ export class MLDebugSession extends LoggingDebugSession {
             const body = resp
             const evalResult = JSON.parse(body).result.result as V8PropertyValue
             response.body = {
-                result: evalResult.value? String(evalResult.value): (evalResult.description? String(evalResult.description): 'undefined'),
+                result: evalResult.hasOwnProperty('value')? String(evalResult.value): 
+                    (evalResult.hasOwnProperty('description')? String(evalResult.description): 'undefined'),
                 type: evalResult.type,
-                variablesReference: evalResult.objectId? this._variableHandles.create(evalResult.objectId):0
+                variablesReference: evalResult.hasOwnProperty('objectId')? this._variableHandles.create(evalResult.objectId):0
             }
             this.sendResponse(response)
         }).catch(err => {
