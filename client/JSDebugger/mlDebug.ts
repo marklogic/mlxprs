@@ -132,7 +132,7 @@ export class MLDebugSession extends LoggingDebugSession {
             this._runtime.setRunTimeState('launched')
             this._stackRespString = await this._runtime.waitTillPaused()
             await this._setBufferedBreakPoints()
-            this._trace('Launched Request with id: '+ rid)
+            this._trace('Launched Request with id: ' + rid)
             this.sendResponse(response)
             this.sendEvent(new StoppedEvent('entry', MLDebugSession.THREAD_ID))
         } catch (err) {
@@ -244,12 +244,12 @@ export class MLDebugSession extends LoggingDebugSession {
             const stacks = JSON.parse(body) as V8Frame[]
 
             const frames: StackFrame[] = []
-            for (let i = 0; i<stacks.length; i++) {
+            for (let i = 0; i < stacks.length; i++) {
                 const stk = stacks[i]
                 const url = stacks[i].url
                 frames.push(new StackFrame(
                     this._frameHandles.create(stk),
-                    (stk.functionName) ? stk.functionName: '<anonymous>',
+                    (stk.functionName) ? stk.functionName : '<anonymous>',
                     this.createSource(this._mapUrlToLocalFile(url)),
                     this.convertDebuggerLineToClient(stk.location.lineNumber),
                     this.convertDebuggerLineToClient(stk.location.columnNumber)
@@ -272,13 +272,13 @@ export class MLDebugSession extends LoggingDebugSession {
             const v8frame = this._frameHandles.get(args.frameId)
             const scopesMl = v8frame.scopeChain as ScopeObject[]
 
-            for (let i = 0; i<scopesMl.length; i++) {
+            for (let i = 0; i < scopesMl.length; i++) {
                 const scope = scopesMl[i]
-                const expensive = scope.type === 'global'? true:false
+                const expensive = scope.type === 'global' ? true : false
 
                 scopes.push(
                     new Scope(scope.type,
-                        scope.object.objectId? this._variableHandles.create(scope.object.objectId as string):0,
+                        scope.object.objectId ? this._variableHandles.create(scope.object.objectId as string) : 0,
                         expensive),
                 )
             }
@@ -297,12 +297,12 @@ export class MLDebugSession extends LoggingDebugSession {
         const objId = this._variableHandles.get(args.variablesReference)
         this._runtime.getProperties(objId).then(resp => {
             const propertiesMl = JSON.parse(resp).result.result as V8PropertyObject[] //array of properties
-            for (let i = 0; i< propertiesMl.length; i++) {
+            for (let i = 0; i < propertiesMl.length; i++) {
                 try {
                     const element = propertiesMl[i]
                     // console.log(element);
                     const name = element.name
-                    if (!element.value) {
+                    if (!element.hasOwnProperty('value')) {
                         variables.push({
                             name: name,
                             value: 'null',
@@ -310,16 +310,16 @@ export class MLDebugSession extends LoggingDebugSession {
                         } as DebugProtocol.Variable)
                         continue
                     }
-                    const type = element.value.type? element.value.type: 'undefined'
+                    const type = element.value.hasOwnProperty('type') ? element.value.type : 'undefined'
                     let value
-                    if (element.value.value) {value = String(element.value.value)}
-                    else if (element.value.description) {value = String(element.value.description)}
+                    if (element.value.hasOwnProperty('value')) {value = String(element.value.value)}
+                    else if (element.value.hasOwnProperty('description')) {value = String(element.value.description)}
                     else {value = 'undefined'}
                     variables.push({
                         name: name,
                         type: type,
                         value: value,
-                        variablesReference: element.value.objectId ? this._variableHandles.create(element.value.objectId): 0
+                        variablesReference: element.value.objectId ? this._variableHandles.create(element.value.objectId) : 0
                     } as DebugProtocol.Variable)
                 } catch (e) {
                     this._handleError(e, 'Error inspecting variables', false, 'variablesRequest')
@@ -451,9 +451,10 @@ export class MLDebugSession extends LoggingDebugSession {
             const body = resp
             const evalResult = JSON.parse(body).result.result as V8PropertyValue
             response.body = {
-                result: evalResult.value? String(evalResult.value): (evalResult.description? String(evalResult.description): 'undefined'),
+                result: evalResult.hasOwnProperty('value') ? String(evalResult.value) :
+                    (evalResult.hasOwnProperty('description') ? String(evalResult.description) : 'undefined'),
                 type: evalResult.type,
-                variablesReference: evalResult.objectId? this._variableHandles.create(evalResult.objectId):0
+                variablesReference: evalResult.hasOwnProperty('objectId') ? this._variableHandles.create(evalResult.objectId) : 0
             }
             this.sendResponse(response)
         }).catch(err => {
@@ -484,7 +485,7 @@ export class MLDebugSession extends LoggingDebugSession {
 
         const mlrequests: Promise<string>[] = []
         this._bpCache.forEach(bp => {
-            const breakpoint =JSON.parse(String(bp))
+            const breakpoint = JSON.parse(String(bp))
             mlrequests.push(this._runtime.setBreakPoint({
                 url: this._mapLocalFiletoUrl(breakpoint.path),
                 line: this.convertClientLineToDebugger(breakpoint.line),

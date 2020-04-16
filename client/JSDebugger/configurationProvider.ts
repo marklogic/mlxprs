@@ -101,7 +101,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
                 config.password, config.debugServerName, config.hostname, config.ssl, ca)
             const requests: string[] = JSON.parse(resp).requestIds
             const items = []
-            for (let i=0; i< requests.length; i++) {
+            for (let i = 0; i < requests.length; i++) {
                 try {
                     let resp = await this.getRequestInfo(
                         config.username, config.password, requests[i] as string,
@@ -153,7 +153,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
     private async resolveDatabasetoId(username: string, password: string, database: string, hostname: string,
         ssl?: boolean, ca?: Buffer): Promise<string> {
         const url = buildUrl(hostname, '/v1/eval', ssl)
-        const script=`xdmp.database("${database}")`
+        const script = `xdmp.database("${database}")`
         const options: object = {
             headers: {
                 'Content-type': 'application/x-www-form-urlencoded',
@@ -174,7 +174,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
     private async getRequestInfo(username: string, password: string, requestId: string, debugServerName: string, hostname: string,
         ssl?: boolean, ca?: Buffer): Promise<string> {
         const url = buildUrl(hostname, '/v1/eval', ssl)
-        const script=`xdmp.requestStatus(xdmp.host(),xdmp.server("${debugServerName}"),"${requestId}")`
+        const script = `xdmp.requestStatus(xdmp.host(),xdmp.server("${debugServerName}"),"${requestId}")`
         const options: object = {
             headers: {
                 'Content-type': 'application/x-www-form-urlencoded',
