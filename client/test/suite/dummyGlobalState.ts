@@ -1,27 +1,27 @@
 'use strict'
 
 import { Memento } from 'vscode'
-import { MarklogicVSClient, MlClientParameters } from '../../marklogicClient'
+import { MarklogicClient, MlClientParameters } from '../../marklogicClient'
 
 /**
  *
  */
 export class DummyGlobalState implements Memento {
-    dummyClient: MarklogicVSClient;
+    dummyClient: MarklogicClient;
     get<T>(key: string): T
     get<T>(key: string, defaultValue: T): T
 
-    get(key: any, defaultValue?: any): MarklogicVSClient {
+    get(key: any, defaultValue?: any): MarklogicClient {
         return this.dummyClient
     }
     update(key: string, value: any): Thenable<void> {
         return new Promise(() => {
-            this.dummyClient = value as MarklogicVSClient
+            this.dummyClient = value as MarklogicClient
         })
     }
 
     constructor(params: MlClientParameters) {
-        this.dummyClient = new MarklogicVSClient(params)
+        this.dummyClient = new MarklogicClient(params)
     }
 }
 

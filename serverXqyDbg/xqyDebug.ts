@@ -7,8 +7,6 @@ import * as CNST from './debugConstants'
 // import { XqyRuntime, Stack } from './xqyRuntimeMocked'
 import { XqyRuntime, XqyBreakPoint } from './xqyRuntime'
 import { basename } from 'path'
-import { Memento, WorkspaceConfiguration, SourceBreakpoint, CommentThreadCollapsibleState } from 'vscode'
-import { MarklogicVSClient, getDbClient, XQY } from '../client/marklogicClient'
 
 import { ResultProvider } from 'marklogic'
 
@@ -52,9 +50,6 @@ export class XqyDebugSession extends LoggingDebugSession {
     private _bpCache = new Set()
     private _workDir = ''
 
-    private _vsCodeState: Memento = null
-    private _vsCodeCfg: WorkspaceConfiguration = null
-    private _client: MarklogicVSClient = null
 
     private _cancelationTokens = new Map<number, boolean>()
     private _isLongrunning = new Map<number, boolean>()
@@ -62,13 +57,6 @@ export class XqyDebugSession extends LoggingDebugSession {
     private createSource(filePath: string): Source {
         return new Source(basename(filePath), this.convertDebuggerPathToClient(filePath),
             undefined, undefined, 'data-placeholder')
-    }
-
-    public setMlClientContext(state: Memento, cfg: WorkspaceConfiguration): void {
-        this._client = getDbClient('', XQY, cfg, state)
-        this._vsCodeState = state
-        this._vsCodeCfg = cfg
-        this._runtime.initialize(this._client)
     }
 
     public constructor() {
@@ -132,7 +120,6 @@ export class XqyDebugSession extends LoggingDebugSession {
         // is there an actual race condition this addresses?
         await this._configurationDone.wait(1000)
 
-        this.setMlClientContext(this._vsCodeState, this._vsCodeCfg)
         try {
             const results = await this._runtime.launchWithDebugEval(args.program)
             const rid = results
@@ -150,7 +137,6 @@ export class XqyDebugSession extends LoggingDebugSession {
     protected async attachRequest(response: DebugProtocol.AttachResponse, args: AttachRequestArguments): Promise<void> {
         logger.setup(Logger.LogLevel.Stop, false)
         await this._configurationDone.wait(1000)
-        this.setMlClientContext(this._vsCodeState, this._vsCodeCfg)
         this._runtime.setRid(args.rid)
         this._workDir = args.path
         this._runtime.setRunTimeState('attached')
@@ -351,3 +337,5 @@ export class XqyDebugSession extends LoggingDebugSession {
 
 }
 
+
+XqyDebugSession.run(XqyDebugSession)

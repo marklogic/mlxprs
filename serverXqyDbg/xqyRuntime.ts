@@ -3,8 +3,8 @@ import { EventEmitter } from 'events'
 import * as fs from 'fs'
 import { ResultProvider } from 'marklogic'
 
-import { sendXQuery } from '../client/queryDirector'
-import { MarklogicVSClient } from '../client/marklogicClient'
+import { sendXQuery, MarklogicClient } from '../client/marklogicClient'
+// import { MarklogicVSClient } from '../client/marklogicClient'
 
 export interface XqyBreakPoint {
     uri: string;
@@ -18,7 +18,7 @@ export interface XqyBreakPoint {
 
 export class XqyRuntime extends EventEmitter {
 
-    private _mlClient: MarklogicVSClient
+    private _mlClient: MarklogicClient
     private _rid = ''
     private _timeout = 1
 
@@ -41,7 +41,7 @@ export class XqyRuntime extends EventEmitter {
         return sendXQuery(this._mlClient, query, 'dbg')
     }
 
-    public initialize(marklogicClient: MarklogicVSClient): void {
+    public initialize(marklogicClient: MarklogicClient): void {
         this._mlClient = marklogicClient
     }
 
@@ -81,23 +81,54 @@ export class XqyRuntime extends EventEmitter {
             })
     }
 
-    public setBreakPoint(location: XqyBreakPoint): ResultProvider<Record<string, any>> {
+    public setBreakPoint(location: XqyBreakPoint): Promise<void> {
         if (!location.expr) {
             return this.findBreakPointExpr(location).then((expr: number) => {
                 sendXQuery(this._mlClient, `dbg:break(${this._rid}, ${expr})`)
+                    .result(
+                        (fulfill: Record<string, any>[]) => {
+                            console.info('fulfull: ' + JSON.stringify(fulfill))
+                        },
+                        (error: Record<string, any>[]) => {
+                            console.info('error: ' + JSON.stringify(error))
+                        })
             })
         } else {
             return sendXQuery(this._mlClient, `dbg:break(${this._rid}, ${location.expr})`)
+                .result(
+                    (fulfill: Record<string, any>[]) => {
+                        console.info('fulfill: ' + JSON.stringify(fulfill))
+                    },
+                    (error: Record<string, any>[]) => {
+                        console.error('errro: ' + JSON.stringify(error))
+                    }
+                )
         }
     }
 
-    public removeBreakPoint(location: XqyBreakPoint): ResultProvider<Record<string, any>> {
+    public removeBreakPoint(location: XqyBreakPoint): Promise<void> {
         if (!location.expr) {
             return this.findBreakPointExpr(location).then((expr: number) => {
                 sendXQuery(this._mlClient, `dbg:clear(${this._rid}, ${expr})`)
+                    .result(
+                        (fulfill: Record<string, any>[]) => {
+                            console.info('fulfill: ' + JSON.stringify(fulfill))
+                        },
+                        (error: Record<string, any>[]) => {
+                            console.error('errro: ' + JSON.stringify(error))
+                        }
+                    )
             })
         } else {
             return sendXQuery(this._mlClient, `dbg:clear(${this._rid}, ${location.expr})`)
+                .result(
+                    (fulfill: Record<string, any>[]) => {
+                        console.info('fulfill: ' + JSON.stringify(fulfill))
+                    },
+                    (error: Record<string, any>[]) => {
+                        console.error('errro: ' + JSON.stringify(error))
+                    }
+                )
         }
     }
 

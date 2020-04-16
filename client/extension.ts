@@ -2,12 +2,13 @@
 import * as path from 'path'
 import * as vscode from 'vscode'
 import * as ml from 'marklogic'
-import { _sendJSQuery, editorXQuery } from './queryDirector'
-import { MarklogicVSClient, cascadeOverrideClient } from './marklogicClient'
+import { editorJSQuery, editorXQuery } from './vscQueryDirector'
+import { MarklogicClient } from './marklogicClient'
+import { cascadeOverrideClient } from './vscQueryParameterTools'
 import { QueryResultsContentProvider } from './queryResultsContentProvider'
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting'
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient'
-import { XqyDebugConfigurationProvider, XqyInlineDebugAdatperFactory } from '../serverXqyDbg/xqyDebugConfigProvider'
+import { XqyDebugConfigurationProvider, XqyDebugAdapterDescriptorFactory } from '../serverXqyDbg/xqyDebugConfigProvider'
 import { MLConfigurationProvider, DebugAdapterExecutableFactory, _connectServer, _disonnectServer } from './JSDebugger/configurationProvider'
 
 const MLDBCLIENT = 'mldbClient'
@@ -24,7 +25,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const sendXQuery = vscode.commands.registerTextEditorCommand('extension.sendXQuery', editor => {
         const actualQuery: string = editor.document.getText()
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration()
-        const client: MarklogicVSClient = cascadeOverrideClient(actualQuery, XQY, cfg, context.globalState)
+        const client: MarklogicClient = cascadeOverrideClient(actualQuery, XQY, cfg, context.globalState)
         const host = client.params.host; const port = client.params.port
         const qUri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port)
         editorXQuery(client, actualQuery, qUri, editor, provider)
@@ -32,10 +33,10 @@ export function activate(context: vscode.ExtensionContext): void {
     const sendJSQuery = vscode.commands.registerTextEditorCommand('extension.sendJSQuery', editor => {
         const actualQuery: string = editor.document.getText()
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration()
-        const client: MarklogicVSClient = cascadeOverrideClient(actualQuery, SJS, cfg, context.globalState)
+        const client: MarklogicClient = cascadeOverrideClient(actualQuery, SJS, cfg, context.globalState)
         const host = client.params.host; const port = client.params.port
         const uri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port)
-        _sendJSQuery(client, actualQuery, uri, editor, provider)
+        editorJSQuery(client, actualQuery, uri, editor, provider)
     })
     const connectServer = vscode.commands.registerCommand('extension.connectServer',  () => {
         vscode.window.showInputBox({
@@ -93,25 +94,16 @@ export function activate(context: vscode.ExtensionContext): void {
     const disposable = new LanguageClient('xQueryLanguageServer', 'XQuery Language Server', serverOptions, clientOptions).start()
     context.subscriptions.push(disposable)
 
-    const xqyDebugFactory: XqyInlineDebugAdatperFactory = new XqyInlineDebugAdatperFactory()
     const sjsDebugFactory: DebugAdapterExecutableFactory = new DebugAdapterExecutableFactory()
-
-    xqyDebugFactory.setUpMlClientContext(context.globalState, vscode.workspace.getConfiguration())
-
-    // context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('xquery-ml', factory))
-    // if ('dispose' in factory) {
-    //     context.subscriptions.push(factory)
-    // }
-
-    const xqyDbgProvider: XqyDebugConfigurationProvider = new XqyDebugConfigurationProvider()
-    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('xquery-ml', xqyDbgProvider))
-
     const sjsDbgProvider: MLConfigurationProvider = new MLConfigurationProvider()
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('ml-jsdebugger', sjsDbgProvider))
 
-    context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('ml-xqdebugger', xqyDebugFactory))
-    context.subscriptions.push(xqyDebugFactory as never)
+    const xqyDebugFactory: DebugAdapterExecutableFactory = new XqyDebugAdapterDescriptorFactory()
+    const xqyDbgProvider: XqyDebugConfigurationProvider = new XqyDebugConfigurationProvider()
+    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('xquery-ml', xqyDbgProvider))
 
+    context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('xquery-ml', xqyDebugFactory))
+    context.subscriptions.push(xqyDebugFactory as never)
     context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('ml-jsdebugger', sjsDebugFactory))
     context.subscriptions.push(sjsDebugFactory as never)
 }

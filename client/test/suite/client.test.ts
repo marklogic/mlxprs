@@ -6,7 +6,8 @@ import { defaultDummyGlobalState } from './dummyGlobalState'
 import { testOverrideQueryWithGoodJSON,  testOverrideQueryWithBadJSON, testQueryWithoutOverrides,
     testOverrideXQueryWithGoodJSON, testOverrideXQueryWithBadJSON, testXQueryWithoutOverrides
 } from './testOverrideQuery'
-import { getDbClient, MarklogicVSClient, parseQueryForOverrides, MlClientParameters } from '../../marklogicClient'
+import { MarklogicClient } from '../../marklogicClient'
+import { getDbClient, parseQueryForOverrides } from '../../vscQueryParameterTools'
 
 const SJS = 'sjs'
 const XQY = 'xqy'
@@ -22,11 +23,11 @@ suite('Extension Test Suite', () => {
         const newHost: string = Math.random().toString(36)
 
         // get the client and differentiate it from the one in gstate by host
-        let mlClient1: MarklogicVSClient = getDbClient('', SJS, config, gstate)
+        let mlClient1: MarklogicClient = getDbClient('', SJS, config, gstate)
         mlClient1.params.host = newHost
 
         // get a second client, should not be the same or deepequal to first
-        const mlClient2: MarklogicVSClient = getDbClient('', SJS, config, gstate)
+        const mlClient2: MarklogicClient = getDbClient('', SJS, config, gstate)
         assert.notEqual(mlClient1, mlClient2)
         assert.notDeepStrictEqual(mlClient1, mlClient2)
 
@@ -51,7 +52,7 @@ suite('Extension Test Suite', () => {
         const queryText: string = testOverrideQueryWithGoodJSON()
         const overrides = parseQueryForOverrides(queryText, SJS)
         const gstate = defaultDummyGlobalState()
-        const mlClient1: MarklogicVSClient = getDbClient(queryText, SJS, config, gstate)
+        const mlClient1: MarklogicClient = getDbClient(queryText, SJS, config, gstate)
 
         assert.equal(overrides.host, mlClient1.params.host)
         assert.equal(mlClient1.params.pwd, cfgPwd)
