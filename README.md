@@ -207,7 +207,7 @@ For debugging, a user must also have at least one of these privileges:
 - **debug-my-request**: for debugging requests launched by the debug user only
 - **debug-any-request**: for debugging requests launched by any user
 
-For more about privileges, see [xdmp:eval] (https://docs.marklogic.com/10.0/xdmp:eval) and [Debug functions](https://docs.marklogic.com/dbg) in the API docs, along with [Pre-defined Executive Privileges](https://docs.marklogic.com/guide/admin/exec_privs) in the MarkLogic server documentation. 
+For more about privileges, see [xdmp:eval](https://docs.marklogic.com/10.0/xdmp:eval) and [Debug functions](https://docs.marklogic.com/dbg) in the API docs, along with [Pre-defined Executive Privileges](https://docs.marklogic.com/guide/admin/exec_privs) in the MarkLogic server documentation. 
 
 ## Credit
 
