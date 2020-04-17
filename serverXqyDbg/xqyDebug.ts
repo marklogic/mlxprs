@@ -4,7 +4,6 @@ import { Handles, InitializedEvent,
     StoppedEvent, OutputEvent, Source, TerminatedEvent, Breakpoint, Thread, StackFrame, Scope
 } from 'vscode-debugadapter'
 import * as CNST from './debugConstants'
-// import { XqyRuntime, Stack } from './xqyRuntimeMocked'
 import { XqyRuntime, XqyBreakPoint } from './xqyRuntime'
 import { basename } from 'path'
 
@@ -18,7 +17,16 @@ interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 	program: string;
 	stopOnEntry?: boolean;
 	/** enable logging the Debug Adapter Protocol */
-	trace?: boolean;
+    trace?: boolean;
+    hostname: string;
+    username: string;
+    password: string;
+    rid: string;
+    contentDb?: string;
+    modulesDb?: string;
+    root?: string;
+    ssl?: boolean;
+    pathToCa?: Buffer;
 }
 
 interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
@@ -119,6 +127,7 @@ export class XqyDebugSession extends LoggingDebugSession {
         // TODO: are we only doing this because it was in the mock debugger?
         // is there an actual race condition this addresses?
         await this._configurationDone.wait(1000)
+        // this._runtime.initialize(args)
 
         try {
             const results = await this._runtime.launchWithDebugEval(args.program)

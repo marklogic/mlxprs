@@ -93,10 +93,17 @@
     ],
     "compounds": [
         {
-            "name": "Extension + Server",
+            "name": "Extension + SJS Server",
             "configurations": [
                 "Launch Extension",
                 "Launch SJS Debug Adapter Server"
+            ]
+        },
+        {
+            "name": "Extension + XQY Server",
+            "configurations": [
+                "Launch Extension",
+                "Launch XQY Debug Adapter Server"
             ]
         }
     ]

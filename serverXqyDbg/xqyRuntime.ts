@@ -1,10 +1,8 @@
 import { EventEmitter } from 'events'
 
-import * as fs from 'fs'
 import { ResultProvider } from 'marklogic'
 
 import { sendXQuery, MarklogicClient } from '../client/marklogicClient'
-// import { MarklogicVSClient } from '../client/marklogicClient'
 
 export interface XqyBreakPoint {
     uri: string;

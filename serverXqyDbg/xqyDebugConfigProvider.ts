@@ -2,12 +2,10 @@ import { DebugConfiguration, DebugConfigurationProvider, WorkspaceFolder, Cancel
     window,
     DebugAdapterDescriptorFactory,
     DebugAdapterExecutable,
-    DebugAdapterDescriptor, DebugAdapterInlineImplementation,
+    DebugAdapterDescriptor,
     DebugSession,
     WorkspaceConfiguration, workspace, Memento } from 'vscode'
-import { createServer, Server, AddressInfo } from 'net'
-import { XqyDebugSession } from './xqyDebug'
-import { MarklogicClient } from '../client/marklogicClient'
+import { MarklogicClient, MlClientParameters } from '../client/marklogicClient'
 import { cascadeOverrideClient } from '../client/vscQueryParameterTools'
 
 const XQY = 'xqy'
@@ -20,23 +18,31 @@ export class XqyDebugConfiguration implements DebugConfiguration {
 
     program: string
     stopOnEntry: boolean
-    username: string
-    password: string
+
+    client: MarklogicClient
 }
 
 export class XqyDebugConfigurationProvider implements DebugConfigurationProvider {
     // TODO: use ML Node.js eval here
     private async getAvailableRequests(db: MarklogicClient): Promise<any> {
-        // getStoppedXQueryRequests(db)
         return null
     }
 
-    private async resolveRemainingDebugConfiguration(folder: WorkspaceFolder | undefined, config: XqyDebugConfiguration, state: Memento, token?: CancellationToken): Promise<DebugConfiguration> {
+    private async resolveRemainingDebugConfiguration(folder: WorkspaceFolder | undefined, config: XqyDebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration> {
         const cfg: WorkspaceConfiguration = workspace.getConfiguration()
-        const client: MarklogicClient = cascadeOverrideClient('', XQY, cfg, state)
-
-        config.username = client.params.user
-        config.password = client.params.pwd
+        const clientParams: MlClientParameters = new MlClientParameters({
+            host: String(cfg.get('marklogic.host')),
+            port: Number(cfg.get('marklogic.port')),
+            user: String(cfg.get('marklogic.username')),
+            pwd: String(cfg.get('marklogic.password')),
+            contentDb: String(cfg.get('marklogic.documentsDb')),
+            modulesDb: String(cfg.get('marklogic.modulesDb')),
+            authType: String(cfg.get('marklogic.authType')),
+            ssl: Boolean(cfg.get('marklogic.ssl')),
+            pathToCa: String(cfg.get('marklogic.pathToCa'))
+        })
+        const client: MarklogicClient = new MarklogicClient(clientParams)
+        config.client = client
 
         if (config.username && config.password) {
             this.getAvailableRequests(client)
@@ -67,7 +73,7 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
             config.program = window.activeTextEditor.document.getText()
         }
 
-        return config
+        return this.resolveRemainingDebugConfiguration(folder, config)
     }
 }
 
@@ -77,18 +83,3 @@ export class XqyDebugAdapterDescriptorFactory implements DebugAdapterDescriptorF
     }
 }
 
-// export class XqyInlineDebugAdatperFactory implements DebugAdapterDescriptorFactory {
-//     private state: Memento
-//     private cfg: WorkspaceConfiguration
-
-//     public setUpMlClientContext(state: Memento, cfg: WorkspaceConfiguration): void {
-//         this.state = state
-//         this.cfg = cfg
-//     }
-
-//     createDebugAdapterDescriptor(_session: DebugSession): ProviderResult<DebugAdapterDescriptor> {
-//         const xqyDebugSession = new XqyDebugSession()
-//         // xqyDebugSession.setMlClientContext(this.state, this.cfg)
-//         return new DebugAdapterInlineImplementation(xqyDebugSession)
-//     }
-// }
