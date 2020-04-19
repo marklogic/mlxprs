@@ -1,28 +1,25 @@
-# MarkLogic Developer Tools for Visual Studio Code
+# MarkLogic Extension for Visual Studio Code
 
-The MarkLogic Visual Studio Code extensions allows you to run JavaScript and XQuery (*.sjs, *.mjs, *.xqy) code against a MarkLogic Data Hub or MarkLogic database.
-It also adds syntax highlighting for the MarkLogic XQuery dialect  (`version "1.0-ml"`).
+_Develop, run, and debug code for MarkLogic in the popular VS Code IDE_
 
-## What it does
-
-The extension adds two commands to the VS Code command palette:
-
-1. Evaluate and debug JavaScript
-2. Evaluate XQuery (_debugging coming soon_)
+[Visual Studio Code](https://code.visualstudio.com) is a free, cross-platform code editor and development tool from Microsoft. The free, open-source **MarkLogic extension for VS Code** integrates MarkLogic in the cloud or on your laptop into this modern development environment.
 
 ## Features
 
-- JavaScript and XQuery code completion with functions from the MarkLogic API
-- Readability: Pretty-formatting of query results based on their contents
-- Responsiveness: Long-running queries won’t freeze the editor and changes to the configuration take immediate effect so you can switch databases and credentials on-the-fly
+* Syntax highlighting and IntelliSense for MarkLogic Server-Side JavaScript and XQuery
+* Interactive debugging of JavaScript running in Data Hub Service or MarkLogic, including attaching to in-flight requests and inspecting live variables (_XQuery coming soon._)
+*  Real-time query evaluation of JavaScript or XQuery against a live Data Hub Service or MarkLogic instance
+
+_JavaScript debugging requires version 2.0.0+ of the MarkLogic extension and [MarkLogic 10.0-4+](https://developer.marklogic.com/products/marklogic-server/10.0)._
+
 
 ## Getting started
 
-Install this tool using the VS Code built-in marketplace. Search "MarkLogic" from the Extension tab of the activity bar. Click “Install” to download and install the extension.
+Install this tool using the VS Code built-in [marketplace](https://marketplace.visualstudio.com/items?itemName=mlxprs.mlxprs). Search “MarkLogic” from the Extension tab of the activity bar. Click “Install” to download and install the extension.
 
 ### Configuration
 
-The MarkLogic extension exposes several configuration options from the standard VS Code `settings.json` file (`[Cmd]`-`[,]`),
+The MarkLogic extension exposes several configuration options from the standard VS Code `settings.json` file (<kbd>Cmd<kbd>-<kbd>,<kbd>),
 
 ```json
 {
@@ -35,8 +32,8 @@ The MarkLogic extension exposes several configuration options from the standard 
 }
 ```
 
-You can also set `marklogic.authType` to `DIGEST` or `BASIC`. DIGEST is the default,
-and works even if the server is running BASIC authentication.
+You can also set `marklogic.authType` to `DIGEST` or `BASIC`. Digest is the default,
+and works even if the server is running basic authentication.
 
 ### Connect and query
 
@@ -117,12 +114,12 @@ When this query runs, it will use the host, port, and `contentDb` specified in t
 
 The debugger supports two modes of debugging:
 
-1. Launch
-2. Attach
+1. Launch: Evaluates the current main module
+2. Attach: Intecepts an existing request, such as from an integration test
 
-Where it can, query debugging uses the same VS Code settings used for running queries (for example, `marklogic.host`, `marklogic.username`).
-In addition to these code settings, you will need a **launch config** in your project (under `.vscode/launch.json`) for debug-specific parameters.
-Open the `launch.json` from the VS Code command palette with the command: "Debug: Open launch.json".
+Where it can, query debugging uses the same VS Code settings used for running queries (for example, `marklogic.host`, `marklogic.username`). In addition to these code settings, you will need a **launch config** in your project (under `.vscode/launch.json`) for debug-specific parameters.
+
+Open the `launch.json` from the VS Code command palette with the command: “Debug: Open launch.json”.
 
 A typical `launch.json` file looks like this:
 
@@ -139,7 +136,7 @@ A typical `launch.json` file looks like this:
         "request": "attach",
         "type": "ml-jsdebugger",
         "name": "Attach to Debug Request",
-        "path": "Enter the path to local modules root",
+        "path": "${workspaceFolder}/src/main/ml-modules/root",
         "debugServerName": "Enter debug server name"
     }
   ]
@@ -165,7 +162,7 @@ An optional "path" parameter can be provided to specify another file for debuggi
 
 ### Attach
 
-Here's an example of an 'attach' type configuration item:
+Here's an example of an _attach_ configuration:
 
 ```json
     {
@@ -177,7 +174,7 @@ Here's an example of an 'attach' type configuration item:
     }
 ```
 
-Attach mode attaches to a paused request in a given *debug server* (an app server connected to js debugger). To make a debug server, open command palette, type `connectServer` and enter an app server name to connect. This will automatically pause all requests to that server so that you can attach the debugger. Use `disconnectServer` disable debugging and resume handling requests as normal.
+Attach mode intercepts a paused request in a given *debug server*, an app server connected to the VS Code debugger. To make a debug server, open command palette, type `connectServer` and enter the name of the app server name to connect to. Use the name of the app server in the MarkLogic configuration, _not_ its hostname or IP address. A connected server will automatically pause all requests so that you can attach the debugger. Use `disconnectServer` disable debugging and resume handling requests as normal.
 
 **Note: Only requests that are launched after a server is connected/made debug server can be attached.**
 
@@ -191,9 +188,9 @@ Use the optional parameter `rid` to specify a request ID in advance and avoid be
 
 ### Debugging Limitations
 
-Streaming JavaScript source files from the MarkLogic server is not yet implemented (it's on the roadmap). If you import other modules into your script, you won't be able to inspect or set breakpoints in those files. To work on multiple files in attach mode, you will need a mirror copy of the modules directory on your local machine.
+The JavaScript debugger assumes you have a local copy of the modules you are debugging. Streaming JavaScript source files from the MarkLogic is not yet implemented. If you import other modules into your script, you won't be able to inspect or set breakpoints in those files. 
 
-### Required Privileges for eval and debugging
+### Required Privileges for Evaluation and Debugging
 
 To run queries with the MarkLogic JavaScript and XQuery Debugger, a user will need eval priviliges on your MarkLogic server. These include:
 
