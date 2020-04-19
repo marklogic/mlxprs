@@ -19,7 +19,7 @@ Install this tool using the VS Code built-in [marketplace](https://marketplace.v
 
 ### Configuration
 
-The MarkLogic extension exposes several configuration options from the standard VS Code `settings.json` file (<kbd>Cmd<kbd>-<kbd>,<kbd>),
+The MarkLogic extension exposes several configuration options from the standard VS Code `settings.json` file (<kbd>Cmd</kbd>-<kbd>,</kbd>),
 
 ```json
 {
@@ -40,7 +40,7 @@ and works even if the server is running basic authentication.
 To evaluate JavaScript
 
 1. Type a valid JavaScript query in the editor.
-2. Open the command palette (<kbd>[Shift]</kbd>+<kbd>[Cmd]</kbd>+<kbd>[P]</kbd>)
+2. Open the command palette (<kbd>Shift</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd>)
 3. Select `MarkLogic: Eval JS`
 
 Query results will open in a new document in the current workspace. 
