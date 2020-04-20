@@ -1,17 +1,16 @@
 # Contributing to mlxprs
 
-You can help by identifying bugs, requesting features you'd like to see, or even submitting code.
- 
-## Got a Question or Problem?
+The MarkLogic extension for Visual Studio Code is an open-source project developed and maintained by the community. You can help by identifying bugs, requesting features you’d like to see, or even submitting code.
 
-For now, just email me at dquinlan@marklogic.com or on twitter @blockedport. I'll do my best to respond quickly.
+_This project and its code and functionality are not representative of MarkLogic Server and are not supported by MarkLogic._
 
 ## Found a bug or issue?
 
-If you find a problem, or want to request something that's lacking, feel free to use the [GitHub Issue Tracker](https://github.com/mikrovvelle/mlxprs/issues).
-Even better you can submit a Pull Request with a fix for the issue you filed.
+If you find a problem, or want to request something that’s lacking, please [file an issue](https://github.com/mikrovvelle/mlxprs/issues/new). Make sure to specify which version of the extension you’re using as well as the version of MarkLogic you’re working against.
 
-If you would like to implement a new feature, it's probably wise to first create a new issue and then discuss implementation details with me.
+Even better, you can submit a Pull Request with a fix for the issue you filed.
+
+If you would like to implement a new feature, please create a new issue with your proposal.
 
 ### Submitting an Issue
 
@@ -32,7 +31,7 @@ Please refer to [Github's documentation on the matter](https://help.github.com/a
 
 #### Formatting code
 
-It'd be extra helpful if you follow the guidelines defined in `.editorconfig` and `.eslintrc.json`. Both of these tools offer VS Code extensions to automatically recommend and/or apply style rules while editing:
+Project coding standards for formatting and styling are documented in `.editorconfig` and `.eslintrc.json`. Both of these tools offer VS Code extensions to automatically recommend and/or apply rules while editing:
 
 - [editorconfig VS Code extension](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig) 
 - [eslint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
