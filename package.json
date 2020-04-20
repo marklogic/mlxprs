@@ -187,34 +187,34 @@
                     {
                         "type": "ml-jsdebugger",
                         "request": "launch",
-                        "name": "Launch Debug Request"
+                        "name": "Evaluate Current JavaScript Module"
                     },
                     {
                         "type": "ml-jsdebugger",
                         "request": "attach",
-                        "name": "Attach to Debug Request",
-                        "path": "Enter the path to local modules root",
+                        "name": "Attach to Remote JavaScript Request",
+                        "path": "${workspaceFolder}",
                         "debugServerName": "Enter debug server name"
                     }
                 ],
                 "configurationSnippets": [
                     {
-                        "label": "MarkLogic JS Debugger: Launch",
+                        "label": "MarkLogic: Evaluate Current JavaScript Module",
                         "description": "A new configuration for 'debugging' a user selected javascript file.",
                         "body": {
                             "type": "ml-jsdebugger",
                             "request": "launch",
-                            "name": "Launch Debug Request"
+                            "name": "Evaluate Current JavaScript Module"
                         }
                     },
                     {
-                        "label": "MarkLogic JS Debugger: Attach",
+                        "label": "MarkLogic: Attach to Remote JavaScript Request",
                         "description": "A new configuration for 'debugging' a user selected javascript file.",
                         "body": {
                             "type": "ml-jsdebugger",
                             "request": "attach",
-                            "name": "Attach to Debug Request",
-                            "path": "Enter the path to local modules root",
+                            "name": "Attach to Remote JavaScript Request",
+                            "path": "^\"\\${workspaceFolder}\"",
                             "debugServerName": "Enter debug server name"
                         }
                     }

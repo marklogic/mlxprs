@@ -130,7 +130,7 @@ A typical `launch.json` file looks like this:
     {
         "request": "launch",
         "type": "ml-jsdebugger",
-        "name": "Launch Debug Request"
+        "name": "Evaluate Current JavaScript Module"
     },
     {
         "request": "attach",
@@ -153,7 +153,7 @@ An example 'launch' type configuration item:
     {
         "type": "ml-jsdebugger",
         "request": "launch",
-        "name": "Launch Debug Request"
+        "name": "Evaluate Current JavaScript Module"
     }
 ```
 
@@ -168,7 +168,7 @@ Here's an example of an _attach_ configuration:
     {
         "type": "ml-jsdebugger",
         "request": "attach",
-        "name": "Attach to Debug Request",
+        "name": "Attach to Remote JavaScript Request",
         "debugServerName": "jsdbg",
         "path": "${workspaceFolder}"
     }
