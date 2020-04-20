@@ -193,7 +193,7 @@
                         "type": "ml-jsdebugger",
                         "request": "attach",
                         "name": "Attach to Remote JavaScript Request",
-                        "path": "${workspaceFolder}",
+                        "path": "${workspaceFolder}/src/main/ml-modules/root",
                         "debugServerName": "Enter debug server name"
                     }
                 ],
@@ -214,8 +214,8 @@
                             "type": "ml-jsdebugger",
                             "request": "attach",
                             "name": "Attach to Remote JavaScript Request",
-                            "path": "^\"\\${workspaceFolder}\"",
-                            "debugServerName": "Enter debug server name"
+                            "path": "^\"\\${workspaceFolder}/src/main/ml-modules/root\"",
+                            "debugServerName": "data-hub-STAGING"
                         }
                     }
                 ],
