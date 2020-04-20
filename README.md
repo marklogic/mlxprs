@@ -2,7 +2,7 @@
 
 _Develop, run, and debug code for MarkLogic in the popular VS Code IDE_
 
-[Visual Studio Code](https://code.visualstudio.com) is a free, cross-platform code editor and development tool from Microsoft. The free, open-source **MarkLogic extension for VS Code** integrates MarkLogic in the cloud or on your laptop into this modern development environment.
+[Visual Studio Code](https://code.visualstudio.com) is a free, cross-platform code editor and development tool from Microsoft. The free, open-source [**MarkLogic extension for VS Code**](https://marketplace.visualstudio.com/items?itemName=mlxprs.mlxprs) integrates MarkLogic in the cloud or on your laptop into this modern development environment.
 
 ## Features
 

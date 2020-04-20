@@ -1,7 +1,7 @@
 {
     "name": "mlxprs",
-    "displayName": "mlxprs MarkLogic developer tools",
-    "description": "MarkLogic SJS and XQuery development tools",
+    "displayName": "MarkLogic developer tools",
+    "description": "MarkLogic JavaScript and XQuery development tools",
     "version": "1.2.2",
     "publisher": "mlxprs",
     "engines": {
