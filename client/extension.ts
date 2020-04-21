@@ -97,15 +97,14 @@ export function activate(context: vscode.ExtensionContext): void {
     const sjsDebugFactory: DebugAdapterExecutableFactory = new DebugAdapterExecutableFactory()
     const sjsDbgProvider: MLConfigurationProvider = new MLConfigurationProvider()
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('ml-jsdebugger', sjsDbgProvider))
+    context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('ml-jsdebugger', sjsDebugFactory))
+    context.subscriptions.push(sjsDebugFactory as never)
 
     const xqyDebugFactory: DebugAdapterExecutableFactory = new XqyDebugAdapterDescriptorFactory()
     const xqyDbgProvider: XqyDebugConfigurationProvider = new XqyDebugConfigurationProvider()
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('xquery-ml', xqyDbgProvider))
-
     context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('xquery-ml', xqyDebugFactory))
     context.subscriptions.push(xqyDebugFactory as never)
-    context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('ml-jsdebugger', sjsDebugFactory))
-    context.subscriptions.push(sjsDebugFactory as never)
 }
 
 // this method is called when your extension is deactivated

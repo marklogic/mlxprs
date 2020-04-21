@@ -1,8 +1,7 @@
 import { EventEmitter } from 'events'
-
 import { ResultProvider } from 'marklogic'
-
-import { sendXQuery, MarklogicClient } from '../client/marklogicClient'
+import { LaunchRequestArguments, XqyFrame } from './xqyDebug'
+import { sendXQuery, MarklogicClient, MlClientParameters } from '../client/marklogicClient'
 
 export interface XqyBreakPoint {
     uri: string;
@@ -34,13 +33,22 @@ export class XqyRuntime extends EventEmitter {
         this._runTimeState = state
     }
 
-    public launchWithDebugEval(query: string): ResultProvider<Record<string, any>> {
-	    this.setRunTimeState('launched')
+    public launchWithDebugEval(query: string): Promise<void> {
         return sendXQuery(this._mlClient, query, 'dbg')
+            .result(
+                (fulfill: Record<string, any>) => {
+                    console.log('fulfill (dbg): ' + JSON.stringify(fulfill))
+                    this._rid = fulfill[0]['value']
+            	    this.setRunTimeState('launched')
+                },
+                (error: Record<string, any>) => {
+                    console.log('error (dbg): ' + JSON.stringify(error))
+                    this._runTimeState = 'error'
+                })
     }
 
-    public initialize(marklogicClient: MarklogicClient): void {
-        this._mlClient = marklogicClient
+    public initialize(args: LaunchRequestArguments): void {
+        this._mlClient = new MarklogicClient(args.clientParams)
     }
 
     public setRid(rid: string): void {
@@ -150,9 +158,19 @@ export class XqyRuntime extends EventEmitter {
         return sendXQuery(this._mlClient, 'dbg:disconnent(xdmp:server())')
     }
 
+    public parseStackXML(stackXML): Array<XqyFrame> {
+        return []
+    }
+
     public async getCurrentStack(): Promise<string> {
-        return sendXQuery(this._mlClient, `dbg:stack(${this._rid})`).result(resp => {
-            return JSON.stringify(resp)
-        })
+        return sendXQuery(this._mlClient, `dbg:stack(${this._rid})`).result(
+            (fulfill: Record<string, any>) => {
+                // TODO: parse frameXML into stack
+                console.info('stack: ' + JSON.stringify(fulfill))
+                return JSON.stringify(fulfill)
+            },
+            (error: Record<string, any>) => {
+                console.info('error (stack): ' + JSON.stringify(error))
+            })
     }
 }

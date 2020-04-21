@@ -8,25 +8,19 @@ import { XqyRuntime, XqyBreakPoint } from './xqyRuntime'
 import { basename } from 'path'
 
 import { ResultProvider } from 'marklogic'
+import { MlClientParameters } from '../client/marklogicClient'
 
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { Subject } = require('await-notify')
 
-interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
+export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 	program: string;
 	stopOnEntry?: boolean;
 	/** enable logging the Debug Adapter Protocol */
     trace?: boolean;
-    hostname: string;
-    username: string;
-    password: string;
     rid: string;
-    contentDb?: string;
-    modulesDb?: string;
-    root?: string;
-    ssl?: boolean;
-    pathToCa?: Buffer;
+    clientParams: MlClientParameters;
 }
 
 interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
@@ -34,7 +28,7 @@ interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
     rid: string;
 }
 
-interface XqyFrame {
+export interface XqyFrame {
     uri: string;
     line: number;
     operation?: string;
@@ -127,13 +121,10 @@ export class XqyDebugSession extends LoggingDebugSession {
         // TODO: are we only doing this because it was in the mock debugger?
         // is there an actual race condition this addresses?
         await this._configurationDone.wait(1000)
-        // this._runtime.initialize(args)
+        this._runtime.initialize(args)
 
         try {
-            const results = await this._runtime.launchWithDebugEval(args.program)
-            const rid = results
-            this._runtime.setRid(`${rid}`)
-            this._runtime.setRunTimeState('launched')
+            await this._runtime.launchWithDebugEval(args.program)
             this._stackRespString = await this._runtime.getCurrentStack()
             await this._setBufferedBreakPoints()
             this.sendResponse(response)

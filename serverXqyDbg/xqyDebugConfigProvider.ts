@@ -5,7 +5,7 @@ import { DebugConfiguration, DebugConfigurationProvider, WorkspaceFolder, Cancel
     DebugAdapterDescriptor,
     DebugSession,
     WorkspaceConfiguration, workspace, Memento } from 'vscode'
-import { MarklogicClient, MlClientParameters } from '../client/marklogicClient'
+import { MarklogicClient, MlClientParameters, sendXQuery } from '../client/marklogicClient'
 import { cascadeOverrideClient } from '../client/vscQueryParameterTools'
 
 const XQY = 'xqy'
@@ -19,13 +19,22 @@ export class XqyDebugConfiguration implements DebugConfiguration {
     program: string
     stopOnEntry: boolean
 
-    client: MarklogicClient
+    clientParams: MlClientParameters
 }
 
 export class XqyDebugConfigurationProvider implements DebugConfigurationProvider {
-    // TODO: use ML Node.js eval here
-    private async getAvailableRequests(db: MarklogicClient): Promise<any> {
-        return null
+    private async getAvailableRequests(params: MlClientParameters): Promise<any> {
+        const client: MarklogicClient = new MarklogicClient(params)
+        const resp = await sendXQuery(client, 'dbg:stopped()')
+            .result(
+                (fulfill: Record<string, any>[]) => {
+                    console.info(JSON.stringify(fulfill))
+                },
+                (error: Record<string, any>[]) => {
+                    console.error(JSON.stringify(error))
+                }
+            )
+        return resp
     }
 
     private async resolveRemainingDebugConfiguration(folder: WorkspaceFolder | undefined, config: XqyDebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration> {
@@ -41,13 +50,11 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
             ssl: Boolean(cfg.get('marklogic.ssl')),
             pathToCa: String(cfg.get('marklogic.pathToCa'))
         })
-        const client: MarklogicClient = new MarklogicClient(clientParams)
-        config.client = client
+        config.clientParams = clientParams
 
-        if (config.username && config.password) {
-            this.getAvailableRequests(client)
-            console.info('we should get the open requests here')
-        }
+        // TODO: for attaching to existing requests
+        if (config.request === 'attach')
+            this.getAvailableRequests(clientParams)
         return config
     }
 
