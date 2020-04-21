@@ -1,8 +1,8 @@
 {
     "name": "mlxprs",
-    "displayName": "mlxprs MarkLogic developer tools",
-    "description": "MarkLogic SJS and XQuery development tools",
-    "version": "1.2.2",
+    "displayName": "MarkLogic developer tools",
+    "description": "MarkLogic JavaScript and XQuery development tools",
+    "version": "2.0.0",
     "publisher": "mlxprs",
     "engines": {
         "vscode": "^1.43.0"
@@ -106,35 +106,35 @@
                     {
                         "type": "ml-jsdebugger",
                         "request": "launch",
-                        "name": "Launch Debug Request"
+                        "name": "Evaluate Current JavaScript Module"
                     },
                     {
                         "type": "ml-jsdebugger",
                         "request": "attach",
-                        "name": "Attach to Debug Request",
-                        "path": "Enter the path to local modules root",
+                        "name": "Attach to Remote JavaScript Request",
+                        "path": "${workspaceFolder}/src/main/ml-modules/root",
                         "debugServerName": "Enter debug server name"
                     }
                 ],
                 "configurationSnippets": [
                     {
-                        "label": "MarkLogic JS Debugger: Launch",
+                        "label": "MarkLogic: Evaluate Current JavaScript Module",
                         "description": "A new configuration for 'debugging' a user selected javascript file.",
                         "body": {
                             "type": "ml-jsdebugger",
                             "request": "launch",
-                            "name": "Launch Debug Request"
+                            "name": "Evaluate Current JavaScript Module"
                         }
                     },
                     {
-                        "label": "MarkLogic JS Debugger: Attach",
+                        "label": "MarkLogic: Attach to Remote JavaScript Request",
                         "description": "A new configuration for 'debugging' a user selected javascript file.",
                         "body": {
                             "type": "ml-jsdebugger",
                             "request": "attach",
-                            "name": "Attach to Debug Request",
-                            "path": "Enter the path to local modules root",
-                            "debugServerName": "Enter debug server name"
+                            "name": "Attach to Remote JavaScript Request",
+                            "path": "^\"\\${workspaceFolder}/src/main/ml-modules/root\"",
+                            "debugServerName": "data-hub-STAGING"
                         }
                     }
                 ],

@@ -1,3 +1,7 @@
+## [2.0.0](https://github.com/mikrovvelle/mlxprs/tree/v2.0.0)
+
+- add JavaScript debugging
+
 ## [1.2.2](https://github.com/mikrovvelle/mlxprs/tree/v1.2.2)
 
 - dependency upgrades under the hood
