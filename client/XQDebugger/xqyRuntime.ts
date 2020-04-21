@@ -1,7 +1,8 @@
 import { EventEmitter } from 'events'
 import { ResultProvider } from 'marklogic'
-import { LaunchRequestArguments, XqyFrame } from './xqyDebug'
-import { sendXQuery, MarklogicClient, MlClientParameters } from '../client/marklogicClient'
+import { LaunchRequestArguments } from './xqyDebug'
+import { sendXQuery, MarklogicClient, MlClientParameters } from '../marklogicClient'
+import { parseString } from 'xml2js'
 
 export interface XqyBreakPoint {
     uri: string;
@@ -11,6 +12,12 @@ export interface XqyBreakPoint {
     expr?: number;
 }
 
+export interface XqyFrame {
+    uri: string;
+    line: number;
+    operation?: string;
+    xid?: string;       // xpath to the frame in the debug:stack element
+}
 
 
 export class XqyRuntime extends EventEmitter {
@@ -158,8 +165,24 @@ export class XqyRuntime extends EventEmitter {
         return sendXQuery(this._mlClient, 'dbg:disconnent(xdmp:server())')
     }
 
-    public parseStackXML(stackXML): Array<XqyFrame> {
-        return []
+    public static parseStackXML(stackXMLString): Array<XqyFrame> {
+        let parsed: any
+        const stackArray: Array<XqyFrame> = []
+        parseString(stackXMLString, (err: Error, result: any) => {
+            parsed = result
+            const expr: any = parsed.stack.expr[0]
+            const uri: string = expr.uri[0]
+            const operation: string = expr['expr-source'][0]
+            for (let i = 0; i < parsed.stack.frame.length; i++) {
+                stackArray.push({
+                    uri: uri,
+                    line: Number(parsed.stack.frame[i].line[0]),
+                    operation: operation,
+                    xid: `/debug:stack/debug:frame[${i}]`
+                } as XqyFrame)
+            }
+        })
+        return stackArray
     }
 
     public async getCurrentStack(): Promise<string> {
@@ -171,6 +194,8 @@ export class XqyRuntime extends EventEmitter {
             },
             (error: Record<string, any>) => {
                 console.info('error (stack): ' + JSON.stringify(error))
+                return JSON.stringify(error)
             })
+
     }
 }

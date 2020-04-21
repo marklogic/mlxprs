@@ -5,8 +5,8 @@ import { DebugConfiguration, DebugConfigurationProvider, WorkspaceFolder, Cancel
     DebugAdapterDescriptor,
     DebugSession,
     WorkspaceConfiguration, workspace, Memento } from 'vscode'
-import { MarklogicClient, MlClientParameters, sendXQuery } from '../client/marklogicClient'
-import { cascadeOverrideClient } from '../client/vscQueryParameterTools'
+import { MarklogicClient, MlClientParameters, sendXQuery } from '../marklogicClient'
+import { cascadeOverrideClient } from '../vscQueryParameterTools'
 
 const XQY = 'xqy'
 

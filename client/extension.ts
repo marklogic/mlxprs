@@ -8,7 +8,7 @@ import { cascadeOverrideClient } from './vscQueryParameterTools'
 import { QueryResultsContentProvider } from './queryResultsContentProvider'
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting'
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient'
-import { XqyDebugConfigurationProvider, XqyDebugAdapterDescriptorFactory } from '../serverXqyDbg/xqyDebugConfigProvider'
+import { XqyDebugConfigurationProvider, XqyDebugAdapterDescriptorFactory } from './XQDebugger/xqyDebugConfigProvider'
 import { MLConfigurationProvider, DebugAdapterExecutableFactory, _connectServer, _disonnectServer } from './JSDebugger/configurationProvider'
 
 const MLDBCLIENT = 'mldbClient'

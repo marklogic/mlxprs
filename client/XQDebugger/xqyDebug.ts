@@ -4,11 +4,11 @@ import { Handles, InitializedEvent,
     StoppedEvent, OutputEvent, Source, TerminatedEvent, Breakpoint, Thread, StackFrame, Scope
 } from 'vscode-debugadapter'
 import * as CNST from './debugConstants'
-import { XqyRuntime, XqyBreakPoint } from './xqyRuntime'
+import { XqyRuntime, XqyBreakPoint, XqyFrame } from './xqyRuntime'
 import { basename } from 'path'
 
 import { ResultProvider } from 'marklogic'
-import { MlClientParameters } from '../client/marklogicClient'
+import { MlClientParameters } from '../marklogicClient'
 
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -26,13 +26,6 @@ export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArgum
 interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
     path: string;
     rid: string;
-}
-
-export interface XqyFrame {
-    uri: string;
-    line: number;
-    operation?: string;
-    xid?: string;       // xpath to the frame in the debug:stack element
 }
 
 const timeout = (ms: number): Promise<any> => {
