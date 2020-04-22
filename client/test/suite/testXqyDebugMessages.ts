@@ -3,7 +3,7 @@ export function testStackXml(): string {
   <expr>
     <expr-id>9444875716397283355</expr-id>
     <expr-source>for $row in $rows let $row-idx := $row let $row-uri := fn:string-join(($prefix, $filename, "row", $row-idx || ".json"), "/") return xdmp:document-insert($row-uri, $row)</expr-source>
-    <uri></uri>
+    <uri>/test-module.xqy</uri>
     <line>8</line>
     <column>0</column>
     <global-variables>
