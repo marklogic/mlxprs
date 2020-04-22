@@ -68,7 +68,7 @@
             "type": "node",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/serverXqyDbg/xqyDebug.ts",
+            "program": "${workspaceFolder}/client/XQDebugger/xqyDebug.ts",
             "preLaunchTask": "npm",
             "args": [
                 "--server=4712",
