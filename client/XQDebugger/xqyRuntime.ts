@@ -185,17 +185,16 @@ export class XqyRuntime extends EventEmitter {
         return stackArray
     }
 
-    public async getCurrentStack(): Promise<string> {
+    public async getCurrentStack(): Promise<Array<XqyFrame>> {
         return sendXQuery(this._mlClient, `dbg:stack(${this._rid})`).result(
             (fulfill: Record<string, any>) => {
                 // TODO: parse frameXML into stack
                 console.info('stack: ' + JSON.stringify(fulfill))
-                return JSON.stringify(fulfill)
+                return XqyRuntime.parseStackXML(fulfill[0].value)
             },
             (error: Record<string, any>) => {
                 console.info('error (stack): ' + JSON.stringify(error))
-                return JSON.stringify(error)
+                return []
             })
-
     }
 }

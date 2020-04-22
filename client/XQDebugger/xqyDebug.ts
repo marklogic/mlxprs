@@ -41,7 +41,7 @@ export class XqyDebugSession extends LoggingDebugSession {
     private _variableHandles = new Handles<string>()
     private _frameHandles = new Handles<XqyFrame>()
 	private _configurationDone = new Subject()
-    private _stackRespString = ''
+    private _stackFrames: Array<XqyFrame> = []
     private _bpCache = new Set()
     private _workDir = ''
 
@@ -118,7 +118,7 @@ export class XqyDebugSession extends LoggingDebugSession {
 
         try {
             await this._runtime.launchWithDebugEval(args.program)
-            this._stackRespString = await this._runtime.getCurrentStack()
+            this._stackFrames = await this._runtime.getCurrentStack()
             await this._setBufferedBreakPoints()
             this.sendResponse(response)
             this.sendEvent(new StoppedEvent('entry', XqyDebugSession.THREAD_ID))
@@ -133,7 +133,7 @@ export class XqyDebugSession extends LoggingDebugSession {
         this._runtime.setRid(args.rid)
         this._workDir = args.path
         this._runtime.setRunTimeState('attached')
-        this._stackRespString = await this._runtime.getCurrentStack()
+        this._stackFrames = await this._runtime.getCurrentStack()
         await this._setBufferedBreakPoints()
         this.sendResponse(response)
         this.sendEvent(new StoppedEvent('entry', XqyDebugSession.THREAD_ID))
@@ -207,7 +207,7 @@ export class XqyDebugSession extends LoggingDebugSession {
     }
 
     protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
-        const body = this._stackRespString
+        const body = this._stackFrames
         const frames: StackFrame[] = []
         // TODO: empty for now
         response.body = {
@@ -236,7 +236,7 @@ export class XqyDebugSession extends LoggingDebugSession {
         this._runtime.resume().result(() => {
             this.sendResponse(response)
             this._runtime.getCurrentStack().then(resp => {
-                this._stackRespString = resp
+                this._stackFrames = resp
                 this.sendEvent(new StoppedEvent('breakpoint', XqyDebugSession.THREAD_ID))
                 this._resetHandles()
             }).catch(err => {
@@ -252,7 +252,7 @@ export class XqyDebugSession extends LoggingDebugSession {
         this._runtime.stepInto().result(() => {
             this.sendResponse(response)
             this._runtime.getCurrentStack().then(resp => {
-                this._stackRespString = resp
+                this._stackFrames = resp
                 this.sendEvent(new StoppedEvent('step', XqyDebugSession.THREAD_ID))
                 this._resetHandles()
             }).catch(err => {
@@ -269,7 +269,7 @@ export class XqyDebugSession extends LoggingDebugSession {
         stepOutQuery.result(() => {
             this.sendResponse(response)
             this._runtime.getCurrentStack().then(stackString => {
-                this._stackRespString = stackString
+                this._stackFrames = stackString
                 this.sendEvent(new StoppedEvent('step', XqyDebugSession.THREAD_ID))
                 this._resetHandles()
             }).catch(err => {
