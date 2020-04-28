@@ -16,6 +16,7 @@ export class XqyDebugConfiguration implements DebugConfiguration {
     name: string
     request: string
 
+    path?: string
     program: string
     stopOnEntry: boolean
 

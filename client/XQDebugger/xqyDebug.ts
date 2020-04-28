@@ -1,7 +1,8 @@
 import { DebugProtocol } from 'vscode-debugprotocol'
 import { Handles, InitializedEvent,
     Logger, logger, LoggingDebugSession,
-    StoppedEvent, OutputEvent, Source, TerminatedEvent, Breakpoint, Thread, StackFrame, Scope
+    StoppedEvent, OutputEvent, Source, TerminatedEvent, Breakpoint, Thread,
+    StackFrame, Scope
 } from 'vscode-debugadapter'
 import * as CNST from './debugConstants'
 import { XqyRuntime, XqyBreakPoint, XqyFrame } from './xqyRuntime'
@@ -15,12 +16,13 @@ import { MlClientParameters } from '../marklogicClient'
 const { Subject } = require('await-notify')
 
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
-	program: string;
-	stopOnEntry?: boolean;
-	/** enable logging the Debug Adapter Protocol */
+    program: string;
+    stopOnEntry?: boolean;
+    /** enable logging the Debug Adapter Protocol */
     trace?: boolean;
     rid: string;
     clientParams: MlClientParameters;
+    path: string;
 }
 
 interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
@@ -40,7 +42,7 @@ export class XqyDebugSession extends LoggingDebugSession {
     private _runtime: XqyRuntime
     private _variableHandles = new Handles<string>()
     private _frameHandles = new Handles<XqyFrame>()
-	private _configurationDone = new Subject()
+    private _configurationDone = new Subject()
     private _stackFrames: Array<XqyFrame> = []
     private _bpCache = new Set()
     private _workDir = ''
@@ -50,6 +52,7 @@ export class XqyDebugSession extends LoggingDebugSession {
     private _isLongrunning = new Map<number, boolean>()
 
     private createSource(filePath: string): Source {
+        if (!filePath) filePath = this._workDir
         return new Source(basename(filePath), this.convertDebuggerPathToClient(filePath),
             undefined, undefined, 'data-placeholder')
     }
@@ -88,10 +91,10 @@ export class XqyDebugSession extends LoggingDebugSession {
     }
 
     private _mapLocalFiletoUrl(path: string): string {
-	    return path.replace(this._workDir, '')
+        return path.replace(this._workDir, '')
     }
 
-    private _setBufferedBreakPoints() {
+    private _setBufferedBreakPoints(): void {
         const xqyRequests = []
         this._bpCache.forEach(bp => {
             const breakpoint = JSON.parse(String(bp))
@@ -114,6 +117,7 @@ export class XqyDebugSession extends LoggingDebugSession {
         // TODO: are we only doing this because it was in the mock debugger?
         // is there an actual race condition this addresses?
         await this._configurationDone.wait(1000)
+        this._workDir = args.path
         this._runtime.initialize(args)
 
         try {
@@ -191,7 +195,7 @@ export class XqyDebugSession extends LoggingDebugSession {
                     this._handleError(err, 'Error setting XQY breakpoitns', false, 'setBreakPointsRequest')
                 })
             } else {
-                response.body = { breakpoints: [] }
+                response.body = { breakpoints: actualBreakpoints }
             }
             this.sendResponse(response)
         }
@@ -208,11 +212,20 @@ export class XqyDebugSession extends LoggingDebugSession {
 
     protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
         const body = this._stackFrames
-        const frames: StackFrame[] = []
-        // TODO: empty for now
+        const stackFrames: StackFrame[] = body.map(xqyFrame => {
+            {
+                return new StackFrame(
+                    this._frameHandles.create(xqyFrame),
+                    xqyFrame.operation ? xqyFrame.operation : '<anonymous>',
+                    this.createSource(this._mapLocalFiletoUrl(xqyFrame.uri)),
+                    this.convertDebuggerLineToClient(xqyFrame.line),
+                    this.convertDebuggerLineToClient(xqyFrame.line)
+                )
+            }
+        })
         response.body = {
-            stackFrames: frames,
-            totalFrames: 1
+            stackFrames: stackFrames,
+            totalFrames: stackFrames.length
         }
         this.sendResponse(response)
     }
@@ -261,7 +274,7 @@ export class XqyDebugSession extends LoggingDebugSession {
         }).catch(err => {
             this._handleError(err, 'Error in XQY next command', true, 'nextRequest')
         })
-        this.sendResponse(response)
+
     }
 
     protected stepOutRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
