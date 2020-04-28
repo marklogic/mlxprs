@@ -23,6 +23,7 @@ export interface XqyFrame {
 export class XqyRuntime extends EventEmitter {
 
     private _mlClient: MarklogicClient
+    private _clientParams: MlClientParameters
     private _rid = ''
     private _timeout = 1
 
@@ -52,10 +53,16 @@ export class XqyRuntime extends EventEmitter {
                     console.log('error (dbg): ' + JSON.stringify(error))
                     this._runTimeState = 'error'
                 })
+            .then(() => this.refreshClient())
     }
 
     public initialize(args: LaunchRequestArguments): void {
-        this._mlClient = new MarklogicClient(args.clientParams)
+        this._clientParams = args.clientParams
+        this.refreshClient()
+    }
+
+    private refreshClient(): void {
+        this._mlClient = new MarklogicClient(this._clientParams)
     }
 
     public setRid(rid: string): void {
