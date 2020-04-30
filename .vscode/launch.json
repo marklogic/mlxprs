@@ -26,7 +26,7 @@
             "outFiles": [
                 "${workspaceFolder}/dist/**/*.js"
             ],
-            "preLaunchTask": "npm",
+            "preLaunchTask": "npm: compile",
             "cwd": "${workspaceFolder}"
         },
         {
@@ -69,7 +69,7 @@
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/client/XQDebugger/xqyDebug.ts",
-            "preLaunchTask": "npm",
+            "preLaunchTask": "npm: compile",
             "args": [
                 "--server=4712",
             ],

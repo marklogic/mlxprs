@@ -10,19 +10,22 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "npm",
-            "command": "npm",
-            "type": "shell",
+            "type": "npm",
+            "script": "compile",
+            "problemMatcher": "$tsc-watch",
+            "isBackground": true,
             "presentation": {
                 "reveal": "silent"
             },
-            "args": [ "run", "compile", "--loglevel", "silent" ],
-            "isBackground": true,
-            "problemMatcher": "$tsc-watch"
+            "group": "build"
         },
         {
             "type": "npm",
             "script": "watch",
+            "problemMatcher": [
+                "$ts-webpack-watch"
+            ],
+            "isBackground": true,
             "presentation": {
                 "echo": true,
                 "reveal": "silent",
@@ -31,10 +34,17 @@
                 "showReuseMessage": true,
                 "clear": false
             },
-            "problemMatcher": [
-                "$ts-webpack-watch"
-            ],
-            "isBackground": true
+            "group": "build"
+        },
+        {
+            "type": "npm",
+            "script": "pretest",
+            "problemMatcher": "$tsc-watch",
+            "isBackground": true,
+            "presentation": {
+                "reveal": "never"
+            },
+            "group": "build"
         }
     ]
 }
