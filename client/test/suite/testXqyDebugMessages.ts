@@ -63,3 +63,24 @@ export function testStackXml(): string {
     <variables></variables>
   </frame>
 </stack>`}
+
+export function testExprXml(): string {
+    return `<a>
+    <expr xmlns="http://marklogic.com/xdmp/debug">
+    <expr-id>3023757983150276589</expr-id>
+    <expr-source>for $row in $rows let $row-idx := $row let $row-uri := fn:string-join(($prefix, $filename, "row", $row-idx || ".json"), "/") return xdmp:document-insert($row-uri, $row)</expr-source>
+    <uri></uri>
+    <line>7</line>
+    <column>0</column>
+    <statements></statements>
+  </expr>
+  <expr xmlns="http://marklogic.com/xdmp/debug">
+    <expr-id>2110626143992423407</expr-id>
+    <expr-source>xdmp:document-insert($row-uri, $row)</expr-source>
+    <uri></uri>
+    <line>10</line>
+    <column>7</column>
+    <statements></statements>
+  </expr>
+</a>`
+}

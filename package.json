@@ -156,6 +156,11 @@
                                 "description": "Absolute path to a text file.",
                                 "default": ""
                             },
+                            "path": {
+                                "type": "string",
+                                "description": "path to root of modules being deployed to MarkLogic",
+                                "default": "${workspaceFolder}/src/main/ml-modules/root"
+                            },
                             "hostname": {
                                 "type": "string",
                                 "description": "hostname of MarkLogic server",

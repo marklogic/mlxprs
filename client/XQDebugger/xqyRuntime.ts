@@ -9,7 +9,16 @@ export interface XqyBreakPoint {
     line: number;
     column?: number;
     condition?: string;
-    expr?: number;
+    expr: Array<XqyExpr>;
+
+}
+
+export interface XqyExpr {
+    id: string;
+    source: string;
+    uri?: string;
+    line: number;
+    statements: string[];
 }
 
 export interface XqyFrame {
@@ -42,7 +51,7 @@ export class XqyRuntime extends EventEmitter {
     }
 
     public launchWithDebugEval(query: string): Promise<void> {
-        return sendXQuery(this._mlClient, query, 'dbg')
+        return this.sendFreshQuery(query, 'dbg')
             .result(
                 (fulfill: Record<string, any>) => {
                     console.log('fulfill (dbg): ' + JSON.stringify(fulfill))
@@ -53,16 +62,16 @@ export class XqyRuntime extends EventEmitter {
                     console.log('error (dbg): ' + JSON.stringify(error))
                     this._runTimeState = 'error'
                 })
-            .then(() => this.refreshClient())
     }
 
     public initialize(args: LaunchRequestArguments): void {
         this._clientParams = args.clientParams
-        this.refreshClient()
+        this._mlClient = new MarklogicClient(this._clientParams)
     }
 
-    private refreshClient(): void {
+    private sendFreshQuery(query: string, prefix: 'xdmp' | 'dbg' = 'xdmp'): ResultProvider<Record<string, any>> {
         this._mlClient = new MarklogicClient(this._clientParams)
+        return sendXQuery(this._mlClient, query, prefix)
     }
 
     public setRid(rid: string): void {
@@ -93,63 +102,92 @@ export class XqyRuntime extends EventEmitter {
         return sendXQuery(this._mlClient, `dbg:stack(${this._rid})`)
     }
 
-    private findBreakPointExpr(location: XqyBreakPoint): Promise<number> {
-        return sendXQuery(this._mlClient, `dbg:line(${this._rid}, ${location.uri}, ${location.line})`)
-            .result((fulfill: Record<string, any>[]) => {
-                location.expr = fulfill['value'][0]
-                return fulfill['value'][0]
-            })
+    /**
+     * XQuery fns dbg:clear() and and dbg:break() require expression IDs, not lines,
+     * in order to clear andset breakpoints.
+     *
+     * @param location
+     * @return expression ID as a string
+     */
+    private findBreakPointExpr(location: XqyBreakPoint): Promise<Array<string>> {
+        const findExprQuery =
+        `try {
+            <a>{dbg:line(${this._rid}, "${location.uri}", ${location.line}) ! dbg:expr(${this._rid}, .)}</a>
+        } catch($e) {
+            <a>{dbg:line(${this._rid}, "", ${location.line}) ! dbg:expr(${this._rid}, .)}</a>
+        }`
+        return this.sendFreshQuery(findExprQuery)
+            .result(
+                (fulfill: Record<string, any>[]) => {
+                    console.info('fulfull fbpe: ' + JSON.stringify(fulfill))
+                    try {
+                        location.expr = XqyRuntime.parseExprXML(fulfill[0]['value'])
+                        return location.expr.map((e: XqyExpr) => e.id)
+                    } catch (err) {
+                        console.error(`Failed parsing dbg:line(): ${JSON.stringify(err)}`)
+                        location.expr = null
+                        return []
+                    }
+                },
+                (error: Record<string, any>[]) => {
+                    console.error('error fbpe: ' + JSON.stringify(error))
+                    return []
+                })
     }
 
+    /**
+     * Set a breakpoint on MarkLogic server. If we don't know the `<expr/>` for
+     * the location, look it up first and then set the breakpoint.
+     *
+     * Uses `dbg:break()`
+     *
+     * @param location: The XqyBreakPoint to be set
+     *
+     */
     public setBreakPoint(location: XqyBreakPoint): Promise<void> {
         if (!location.expr) {
-            return this.findBreakPointExpr(location).then((expr: number) => {
-                sendXQuery(this._mlClient, `dbg:break(${this._rid}, ${expr})`)
-                    .result(
-                        (fulfill: Record<string, any>[]) => {
-                            console.info('fulfull: ' + JSON.stringify(fulfill))
-                        },
-                        (error: Record<string, any>[]) => {
-                            console.info('error: ' + JSON.stringify(error))
-                        })
+            return this.findBreakPointExpr(location).then((exprIds: string[]) => {
+                exprIds.forEach((exprId: string) => this.setBreakPointOnMl(exprId))
             })
         } else {
-            return sendXQuery(this._mlClient, `dbg:break(${this._rid}, ${location.expr})`)
-                .result(
-                    (fulfill: Record<string, any>[]) => {
-                        console.info('fulfill: ' + JSON.stringify(fulfill))
-                    },
-                    (error: Record<string, any>[]) => {
-                        console.error('errro: ' + JSON.stringify(error))
-                    }
-                )
+            const exprIds: string[] = location.expr.map(e => e.id)
+            exprIds.forEach((exprId: string) => this.setBreakPointOnMl(exprId))
+            return null
         }
     }
 
     public removeBreakPoint(location: XqyBreakPoint): Promise<void> {
         if (!location.expr) {
-            return this.findBreakPointExpr(location).then((expr: number) => {
-                sendXQuery(this._mlClient, `dbg:clear(${this._rid}, ${expr})`)
-                    .result(
-                        (fulfill: Record<string, any>[]) => {
-                            console.info('fulfill: ' + JSON.stringify(fulfill))
-                        },
-                        (error: Record<string, any>[]) => {
-                            console.error('errro: ' + JSON.stringify(error))
-                        }
-                    )
+            return this.findBreakPointExpr(location).then((exprIds: string[]) => {
+                exprIds.forEach((exprId: string) => this.removeBreakPointOnMl(exprId))
             })
         } else {
-            return sendXQuery(this._mlClient, `dbg:clear(${this._rid}, ${location.expr})`)
-                .result(
-                    (fulfill: Record<string, any>[]) => {
-                        console.info('fulfill: ' + JSON.stringify(fulfill))
-                    },
-                    (error: Record<string, any>[]) => {
-                        console.error('errro: ' + JSON.stringify(error))
-                    }
-                )
+            const exprIds: string[] = location.expr.map(e => e.id)
+            exprIds.forEach((exprId: string) => this.removeBreakPointOnMl(exprId))
+            return null
         }
+    }
+
+    private setBreakPointOnMl(exprId: string): Promise<void> {
+        return this.sendFreshQuery(`dbg:break(${this._rid}, ${exprId})`)
+            .result(
+                (fulfill: Record<string, any>[]) => {
+                    console.debug(`set breakpoint on ${this._rid} at ${exprId}`)
+                },
+                (error: Record<string, any>[]) => {
+                    console.info('error: ' + JSON.stringify(error))
+                })
+    }
+
+    private removeBreakPointOnMl(exprId: string): Promise<void> {
+        return this.sendFreshQuery(`dbg:clear(${this._rid}, ${exprId})`)
+            .result(
+                (fulfill: Record<string, any>[]) => {
+                    console.info('fulfull: ' + JSON.stringify(fulfill))
+                },
+                (error: Record<string, any>[]) => {
+                    console.info('error: ' + JSON.stringify(error))
+                })
     }
 
     public wait(): ResultProvider<Record<string, any>> {
@@ -172,7 +210,25 @@ export class XqyRuntime extends EventEmitter {
         return sendXQuery(this._mlClient, 'dbg:disconnent(xdmp:server())')
     }
 
-    public static parseStackXML(stackXMLString): Array<XqyFrame> {
+    public static parseExprXML(exprXMLString: string): Array<XqyExpr> {
+        let parsed: any
+        const exprArray: Array<XqyExpr> = []
+        parseString(exprXMLString, (err: Error, result: any) => {
+            parsed = result
+            parsed.a.expr.forEach(expr => {
+                exprArray.push({
+                    id: expr['expr-id'][0],
+                    source: expr['expr-source'][0],
+                    uri: expr.uri[0],
+                    line: expr.line[0],
+                    statements: [] // TODO: find an example, parse it
+                })
+            })
+        })
+        return exprArray
+    }
+
+    public static parseStackXML(stackXMLString: string): Array<XqyFrame> {
         let parsed: any
         const stackArray: Array<XqyFrame> = []
         parseString(stackXMLString, (err: Error, result: any) => {

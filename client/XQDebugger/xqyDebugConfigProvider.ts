@@ -73,9 +73,6 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
                 config.stopOnEntry = true
             }
         }
-        if (config.request === 'launch') {
-            config.path = '${file}'
-        }
 
         if (!config.program) {
             config.program = window.activeTextEditor.document.getText()

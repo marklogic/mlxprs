@@ -44,7 +44,7 @@ export class XqyDebugSession extends LoggingDebugSession {
     private _frameHandles = new Handles<XqyFrame>()
     private _configurationDone = new Subject()
     private _stackFrames: Array<XqyFrame> = []
-    private _bpCache = new Set()
+    private _bpCache: Set<XqyBreakPoint> = new Set()
     private _workDir = ''
 
 
@@ -97,14 +97,8 @@ export class XqyDebugSession extends LoggingDebugSession {
     private _setBufferedBreakPoints(): void {
         const xqyRequests = []
         this._bpCache.forEach(bp => {
-            const breakpoint = JSON.parse(String(bp))
-            xqyRequests.push(this._runtime.setBreakPoint({
-                uri: this._mapLocalFiletoUrl(breakpoint.path),
-                line: this.convertClientColumnToDebugger(breakpoint.line),
-                column: this.convertClientColumnToDebugger(breakpoint.column),
-                condition: breakpoint.condition,
-                expr: breakpoint.expr
-            } as XqyBreakPoint))
+            bp.uri = this._mapLocalFiletoUrl(this._workDir)
+            xqyRequests.push(this._runtime.setBreakPoint(bp))
         })
 
         Promise.all(xqyRequests).then().catch(error => {
@@ -153,14 +147,14 @@ export class XqyDebugSession extends LoggingDebugSession {
                 return bp
             })
 
-            const newBp = new Set()
+            const newBp: Set<XqyBreakPoint> = new Set()
             args.breakpoints.forEach((breakpoint: DebugProtocol.SourceBreakpoint) => {
-                newBp.add(JSON.stringify({
-                    path: path,
+                newBp.add({
+                    uri: path,
                     line: breakpoint.line,
                     column: breakpoint.column,
                     condition: breakpoint.condition
-                }))
+                } as XqyBreakPoint)
             })
 
             const toDelete = new Set([...this._bpCache].filter(x => !newBp.has(x)))
@@ -169,22 +163,13 @@ export class XqyDebugSession extends LoggingDebugSession {
 
             if (this._runtime.getRunTimeState() !== 'shutdown') {
                 toDelete.forEach(bp => {
-                    const breakpoint = JSON.parse(String(bp))
-                    xqyRequests.push(this._runtime.removeBreakPoint({
-                        uri: this._mapLocalFiletoUrl(breakpoint.path),
-                        line: this.convertClientLineToDebugger(breakpoint.line),
-                        column: this.convertClientColumnToDebugger(breakpoint.column)
-                    } as XqyBreakPoint))
+                    bp.uri = this._mapLocalFiletoUrl(this._workDir)
+                    xqyRequests.push(this._runtime.removeBreakPoint(bp))
                 })
 
                 toAdd.forEach(bp => {
-                    const breakpoint = JSON.parse(String(bp))
-                    xqyRequests.push(this._runtime.setBreakPoint({
-                        uri: this._mapLocalFiletoUrl(breakpoint.path),
-                        line: this.convertClientLineToDebugger(breakpoint.line),
-                        column: this.convertClientColumnToDebugger(breakpoint.column),
-                        condition: breakpoint.condition
-                    } as XqyBreakPoint))
+                    bp.uri = this._mapLocalFiletoUrl(this._workDir)
+                    xqyRequests.push(this._runtime.setBreakPoint(bp))
                 })
 
                 response.body = { breakpoints: actualBreakpoints }
@@ -258,7 +243,6 @@ export class XqyDebugSession extends LoggingDebugSession {
         }).catch(err => {
             this._handleError(err, 'Error in XQY continue command', true, 'continueRequest')
         })
-        this.sendResponse(response)
     }
 
     protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
