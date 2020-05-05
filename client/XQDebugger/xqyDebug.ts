@@ -5,7 +5,7 @@ import { Handles, InitializedEvent,
     StackFrame, Scope
 } from 'vscode-debugadapter'
 import * as CNST from './debugConstants'
-import { XqyRuntime, XqyBreakPoint, XqyFrame } from './xqyRuntime'
+import { XqyRuntime, XqyBreakPoint, XqyFrame, XqyScopeObject, XqyVariable } from './xqyRuntime'
 import { basename } from 'path'
 
 import { ResultProvider } from 'marklogic'
@@ -196,8 +196,7 @@ export class XqyDebugSession extends LoggingDebugSession {
     }
 
     protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
-        const body = this._stackFrames
-        const stackFrames: StackFrame[] = body.map(xqyFrame => {
+        const stackFrames: StackFrame[] = this._stackFrames.map(xqyFrame => {
             {
                 return new StackFrame(
                     this._frameHandles.create(xqyFrame),
@@ -217,7 +216,18 @@ export class XqyDebugSession extends LoggingDebugSession {
 
     protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
         const scopes: Scope[] = []
-        // TODO implement
+        const frame: XqyFrame = this._frameHandles.get(args.frameId)
+
+        for (let i = 0; i < frame.scopeChain.length; i++) {
+            const xqyScope: XqyScopeObject = frame.scopeChain[i]
+            const scope: Scope = new Scope(
+                xqyScope.type,
+                xqyScope.variables.length,
+                xqyScope.type === 'global'
+            )
+            scopes.push(scope)
+        }
+
         response.body = { scopes: scopes }
         this.sendResponse(response)
     }

@@ -26,8 +26,18 @@ export interface XqyFrame {
     line: number;
     operation?: string;
     xid?: string;       // xpath to the frame in the debug:stack element
+    scopeChain: XqyScopeObject[];
 }
 
+export interface XqyScopeObject {
+    type: 'global' | 'external' | 'local';
+    variables: XqyVariable[];
+}
+
+export interface XqyVariable {
+    name: string;
+    prefix: string;
+}
 
 export class XqyRuntime extends EventEmitter {
 
@@ -50,17 +60,19 @@ export class XqyRuntime extends EventEmitter {
         this._runTimeState = state
     }
 
-    public launchWithDebugEval(query: string): Promise<void> {
+    public launchWithDebugEval(query: string): Promise<string> {
         return this.sendFreshQuery(query, 'dbg')
             .result(
                 (fulfill: Record<string, any>) => {
                     console.log('fulfill (dbg): ' + JSON.stringify(fulfill))
                     this._rid = fulfill[0]['value']
-            	    this.setRunTimeState('launched')
+                    this.setRunTimeState('launched')
+                    return this._rid
                 },
                 (error: Record<string, any>) => {
                     console.log('error (dbg): ' + JSON.stringify(error))
                     this._runTimeState = 'error'
+                    return ''
                 })
     }
 
@@ -190,8 +202,17 @@ export class XqyRuntime extends EventEmitter {
                 })
     }
 
-    public wait(): ResultProvider<Record<string, any>> {
-        return sendXQuery(this._mlClient, `dbg:wait(${this._rid}, 5)`)
+    public wait(): Promise<string> {
+        return this.sendFreshQuery(`dbg:wait(${this._rid}, 5)`)
+            .result(
+                (fulfill: Record<string, any>[]) => {
+                    return fulfill[0]['value']
+                },
+                (error: Record<string, any>[]) => {
+                    console.error('error on dbg:wait(): ' + JSON.stringify(error))
+                    return ''
+                }
+            )
     }
 
     public evaluateInContext(expr: string, cid?: string): ResultProvider<Record<string, any>> {
@@ -228,6 +249,36 @@ export class XqyRuntime extends EventEmitter {
         return exprArray
     }
 
+    public static parseScopeXML(frameObj: any): Array<XqyScopeObject> {
+        const globalScope: XqyScopeObject = {type: 'global', variables: []} as XqyScopeObject
+        const externalScope: XqyScopeObject = {type: 'external', variables: []} as XqyScopeObject
+        const localScope: XqyScopeObject = {type: 'local', variables: []} as XqyScopeObject
+
+        const globalScopeXMLObj = frameObj['global-variables'][0]
+        const externalScopeXMLObj = frameObj['external-variables'][0]
+        const localScopeXMLObj = frameObj.variables[0]
+
+        if (globalScopeXMLObj) globalScopeXMLObj['global-variable'].forEach(gv => {
+            globalScope.variables.push({
+                name: gv.name[0]._,
+                prefix: gv.prefix[0] ? gv.prefix[0]._ : ''
+            } as XqyVariable)
+        })
+        if (externalScopeXMLObj) externalScopeXMLObj['external-variable'].forEach(ev => {
+            externalScope.variables.push({
+                name: ev.name[0]._,
+                prefix: ev.prefix ? ev.prefix[0]._ : ''
+            })
+        })
+        if (localScopeXMLObj) localScopeXMLObj['variable'].forEach(v => {
+            localScope.variables.push({
+                name: v.name[0]._,
+                prefix: v.prefix ? v.prefix[0]._ : ''
+            })
+        })
+        return [globalScope, externalScope, localScope]
+    }
+
     public static parseStackXML(stackXMLString: string): Array<XqyFrame> {
         let parsed: any
         const stackArray: Array<XqyFrame> = []
@@ -241,7 +292,8 @@ export class XqyRuntime extends EventEmitter {
                     uri: uri,
                     line: Number(parsed.stack.frame[i].line[0]),
                     operation: operation,
-                    xid: `/debug:stack/debug:frame[${i}]`
+                    xid: `/debug:stack/debug:frame[${i}]`,
+                    scopeChain: this.parseScopeXML(parsed.stack.frame[i])
                 } as XqyFrame)
             }
         })
@@ -249,7 +301,7 @@ export class XqyRuntime extends EventEmitter {
     }
 
     public async getCurrentStack(): Promise<Array<XqyFrame>> {
-        return sendXQuery(this._mlClient, `dbg:stack(${this._rid})`).result(
+        return this.sendFreshQuery(`dbg:stack(${this._rid})`).result(
             (fulfill: Record<string, any>) => {
                 // TODO: parse frameXML into stack
                 console.info('stack: ' + JSON.stringify(fulfill))
