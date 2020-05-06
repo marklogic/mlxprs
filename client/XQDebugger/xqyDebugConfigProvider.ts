@@ -6,6 +6,7 @@ import { DebugConfiguration, DebugConfigurationProvider, WorkspaceFolder, Cancel
     DebugSession,
     WorkspaceConfiguration, workspace, Memento } from 'vscode'
 import { MarklogicClient, MlClientParameters, sendXQuery } from '../marklogicClient'
+import { readFileSync } from 'fs'
 import { cascadeOverrideClient } from '../vscQueryParameterTools'
 
 const XQY = 'xqy'
@@ -18,6 +19,8 @@ export class XqyDebugConfiguration implements DebugConfiguration {
 
     path?: string
     program: string
+    query: string
+
     stopOnEntry: boolean
 
     clientParams: MlClientParameters
@@ -75,7 +78,10 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
         }
 
         if (!config.program) {
-            config.program = window.activeTextEditor.document.getText()
+            config.program = window.activeTextEditor.document.fileName
+            config.query = window.activeTextEditor.document.getText()
+        } else {
+            config.query = readFileSync(config.program).toString()
         }
 
         return this.resolveRemainingDebugConfiguration(folder, config)

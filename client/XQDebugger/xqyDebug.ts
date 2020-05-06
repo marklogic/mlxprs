@@ -17,6 +17,7 @@ const { Subject } = require('await-notify')
 
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
     program: string;
+    query: string;
     stopOnEntry?: boolean;
     /** enable logging the Debug Adapter Protocol */
     trace?: boolean;
@@ -46,6 +47,7 @@ export class XqyDebugSession extends LoggingDebugSession {
     private _stackFrames: Array<XqyFrame> = []
     private _bpCache: Set<XqyBreakPoint> = new Set()
     private _workDir = ''
+    private _queryPath = ''
 
 
     private _cancelationTokens = new Map<number, boolean>()
@@ -53,8 +55,8 @@ export class XqyDebugSession extends LoggingDebugSession {
 
     private createSource(filePath: string): Source {
         if (!filePath) filePath = this._workDir
-        return new Source(basename(filePath), this.convertDebuggerPathToClient(filePath),
-            undefined, undefined, 'data-placeholder')
+        const name: string = basename(filePath)
+        return new Source(name, filePath, undefined, undefined, 'data-placeholder')
     }
 
     public constructor() {
@@ -91,17 +93,27 @@ export class XqyDebugSession extends LoggingDebugSession {
     }
 
     private _mapLocalFiletoUrl(path: string): string {
+        if (!path) {
+            path = this._queryPath
+        }
         return path.replace(this._workDir, '')
     }
 
-    private _setBufferedBreakPoints(): void {
+    private _mapUrlToLocalFile(url: string): string {
+        if (!url) {
+            return this._queryPath
+        } else {
+            return `${this._workDir}${url}`.replace(/\/+/, '/')
+        }
+    }
+
+    private _setBufferedBreakPoints(): Promise<void|any> {
         const xqyRequests = []
         this._bpCache.forEach(bp => {
-            bp.uri = this._mapLocalFiletoUrl(this._workDir)
             xqyRequests.push(this._runtime.setBreakPoint(bp))
         })
 
-        Promise.all(xqyRequests).then().catch(error => {
+        return Promise.all(xqyRequests).then().catch(error => {
             this._handleError(error)
         })
     }
@@ -112,10 +124,11 @@ export class XqyDebugSession extends LoggingDebugSession {
         // is there an actual race condition this addresses?
         await this._configurationDone.wait(1000)
         this._workDir = args.path
+        this._queryPath = args.program
         this._runtime.initialize(args)
 
         try {
-            await this._runtime.launchWithDebugEval(args.program)
+            await this._runtime.launchWithDebugEval(args.query)
             this._stackFrames = await this._runtime.getCurrentStack()
             await this._setBufferedBreakPoints()
             this.sendResponse(response)
@@ -147,19 +160,20 @@ export class XqyDebugSession extends LoggingDebugSession {
                 return bp
             })
 
-            const newBp: Set<XqyBreakPoint> = new Set()
+            const newBps: Set<XqyBreakPoint> = new Set()
             args.breakpoints.forEach((breakpoint: DebugProtocol.SourceBreakpoint) => {
-                newBp.add({
-                    uri: path,
+                newBps.add({
+                    filePath: path,
+                    uri: this._mapLocalFiletoUrl(path),
                     line: breakpoint.line,
                     column: breakpoint.column,
                     condition: breakpoint.condition
                 } as XqyBreakPoint)
             })
 
-            const toDelete = new Set([...this._bpCache].filter(x => !newBp.has(x)))
-            const toAdd = new Set([...newBp].filter(x => !this._bpCache.has(x)))
-            this._bpCache = newBp
+            const toDelete = new Set([...this._bpCache].filter(x => !newBps.has(x)))
+            const toAdd = new Set([...newBps].filter(x => !this._bpCache.has(x)))
+            this._bpCache = newBps
 
             if (this._runtime.getRunTimeState() !== 'shutdown') {
                 toDelete.forEach(bp => {
@@ -201,7 +215,7 @@ export class XqyDebugSession extends LoggingDebugSession {
                 return new StackFrame(
                     this._frameHandles.create(xqyFrame),
                     xqyFrame.operation ? xqyFrame.operation : '<anonymous>',
-                    this.createSource(this._mapLocalFiletoUrl(xqyFrame.uri)),
+                    this.createSource(this._mapUrlToLocalFile(xqyFrame.uri)),
                     this.convertDebuggerLineToClient(xqyFrame.line),
                     this.convertDebuggerLineToClient(xqyFrame.line)
                 )

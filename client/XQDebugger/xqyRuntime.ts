@@ -5,7 +5,8 @@ import { sendXQuery, MarklogicClient, MlClientParameters } from '../marklogicCli
 import { parseString } from 'xml2js'
 
 export interface XqyBreakPoint {
-    uri: string;
+    uri: string;      // module URI on MarkLogic
+    filePath: string; // local file location
     line: number;
     column?: number;
     condition?: string;
@@ -142,7 +143,7 @@ export class XqyRuntime extends EventEmitter {
         return this.sendFreshQuery(findExprQuery)
             .result(
                 (fulfill: Record<string, any>[]) => {
-                    console.info('fulfull fbpe: ' + JSON.stringify(fulfill))
+                    console.debug('fulfull fbpe: ' + JSON.stringify(fulfill))
                     try {
                         location.expr = XqyRuntime.parseExprXML(fulfill[0]['value'])
                         return location.expr.map((e: XqyExpr) => e.id)
