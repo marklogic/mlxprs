@@ -241,7 +241,7 @@ export class XqyDebugSession extends LoggingDebugSession {
     }
 
     protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ReverseContinueArguments): void {
-        this._runtime.resume().result(() => {
+        this._runtime.resume().then(() => {
             this.sendResponse(response)
             this._runtime.getCurrentStack().then(resp => {
                 this._stackFrames = resp
@@ -256,7 +256,7 @@ export class XqyDebugSession extends LoggingDebugSession {
     }
 
     protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
-        this._runtime.stepInto().result(() => {
+        this._runtime.stepInto().then(() => {
             this.sendResponse(response)
             this._runtime.getCurrentStack().then(resp => {
                 this._stackFrames = resp
@@ -272,8 +272,7 @@ export class XqyDebugSession extends LoggingDebugSession {
     }
 
     protected stepOutRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
-        const stepOutQuery: ResultProvider<Record<string, any>> = this._runtime.stepOut()
-        stepOutQuery.result(() => {
+        this._runtime.stepOut().then(() => {
             this.sendResponse(response)
             this._runtime.getCurrentStack().then(stackString => {
                 this._stackFrames = stackString

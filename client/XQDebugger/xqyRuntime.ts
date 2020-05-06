@@ -94,20 +94,31 @@ export class XqyRuntime extends EventEmitter {
         return this._rid
     }
 
-    public resume(): ResultProvider<Record<string, any>> {
-	    return sendXQuery(this._mlClient, `dbg:continue(${this._rid})`)
+    private dbgControlCall(call: 'continue' | 'next' | 'step' | 'out'): Promise<void> {
+        return this.sendFreshQuery(`dbg:${call}(${this._rid})`)
+            .result(
+                () => {
+                    console.debug(`resume (dbg:${call}(${this._rid}))`)
+                },
+                (error: Record<string, any>[]) => {
+                    console.error(`error in dbg:${call}(): ${JSON.stringify(error)}`)
+                })
     }
 
-    public stepOver(): ResultProvider<Record<string, any>> {
-        return sendXQuery(this._mlClient, `dbg:next(${this._rid})`)
+    public resume(): Promise<void> {
+        return this.dbgControlCall('continue')
     }
 
-    public stepInto(): ResultProvider<Record<string, any>> {
-        return sendXQuery(this._mlClient, `dbg:step(${this._rid})`)
+    public stepOver(): Promise<void> {
+        return this.dbgControlCall('next')
     }
 
-    public stepOut(): ResultProvider<Record<string, any>> {
-        return sendXQuery(this._mlClient, `dbg:out(${this._rid})`)
+    public stepInto(): Promise<void> {
+        return this.dbgControlCall('step')
+    }
+
+    public stepOut(): Promise<void> {
+        return this.dbgControlCall('out')
     }
 
     public getStackTrace(): ResultProvider<Record<string, any>> {
@@ -116,7 +127,7 @@ export class XqyRuntime extends EventEmitter {
 
     /**
      * XQuery fns dbg:clear() and and dbg:break() require expression IDs, not lines,
-     * in order to clear andset breakpoints.
+     * in order to clear and set breakpoints.
      *
      * @param location
      * @return expression ID as a string
@@ -261,19 +272,19 @@ export class XqyRuntime extends EventEmitter {
         if (globalScopeXMLObj) globalScopeXMLObj['global-variable'].forEach(gv => {
             globalScope.variables.push({
                 name: gv.name[0]._,
-                prefix: gv.prefix[0] ? gv.prefix[0]._ : ''
+                prefix: gv.prefix[0] ? gv.prefix[0] : ''
             } as XqyVariable)
         })
         if (externalScopeXMLObj) externalScopeXMLObj['external-variable'].forEach(ev => {
             externalScope.variables.push({
                 name: ev.name[0]._,
-                prefix: ev.prefix ? ev.prefix[0]._ : ''
+                prefix: ev.prefix ? ev.prefix[0] : ''
             })
         })
         if (localScopeXMLObj) localScopeXMLObj['variable'].forEach(v => {
             localScope.variables.push({
                 name: v.name[0]._,
-                prefix: v.prefix ? v.prefix[0]._ : ''
+                prefix: v.prefix ? v.prefix[0] : ''
             })
         })
         return [globalScope, externalScope, localScope]
