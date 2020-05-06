@@ -95,7 +95,7 @@ export class XqyRuntime extends EventEmitter {
         return this._rid
     }
 
-    private dbgControlCall(call: 'continue' | 'next' | 'step' | 'out'): Promise<void> {
+    public dbgControlCall(call: 'continue' | 'next' | 'step' | 'out'): Promise<void> {
         return this.sendFreshQuery(`dbg:${call}(${this._rid})`)
             .result(
                 () => {
@@ -104,22 +104,6 @@ export class XqyRuntime extends EventEmitter {
                 (error: Record<string, any>[]) => {
                     console.error(`error in dbg:${call}(): ${JSON.stringify(error)}`)
                 })
-    }
-
-    public resume(): Promise<void> {
-        return this.dbgControlCall('continue')
-    }
-
-    public stepOver(): Promise<void> {
-        return this.dbgControlCall('next')
-    }
-
-    public stepInto(): Promise<void> {
-        return this.dbgControlCall('step')
-    }
-
-    public stepOut(): Promise<void> {
-        return this.dbgControlCall('out')
     }
 
     public getStackTrace(): ResultProvider<Record<string, any>> {

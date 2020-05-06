@@ -4,7 +4,6 @@ import { Handles, InitializedEvent,
     StoppedEvent, OutputEvent, Source, TerminatedEvent, Breakpoint, Thread,
     StackFrame, Scope
 } from 'vscode-debugadapter'
-import * as CNST from './debugConstants'
 import { XqyRuntime, XqyBreakPoint, XqyFrame, XqyScopeObject, XqyVariable } from './xqyRuntime'
 import { basename } from 'path'
 
@@ -156,7 +155,7 @@ export class XqyDebugSession extends LoggingDebugSession {
         const xqyRequests = []
         if (args.breakpoints) {
             const actualBreakpoints = args.breakpoints.map((b, idx) => {
-                const bp = new Breakpoint(true, b.line, b.column) as DebugProtocol.Breakpoint
+                const bp = new Breakpoint(true, b.line, b.column, this.createSource(path)) as DebugProtocol.Breakpoint
                 return bp
             })
 
@@ -254,50 +253,34 @@ export class XqyDebugSession extends LoggingDebugSession {
         this.sendResponse(response)
     }
 
-    protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ReverseContinueArguments): void {
-        this._runtime.resume().then(() => {
+    private controlRequest(call: 'continue' | 'next' | 'step' | 'out', response: DebugProtocol.Response, args: any): void {
+        this._runtime.dbgControlCall(call).then(() => {
             this.sendResponse(response)
             this._runtime.getCurrentStack().then(resp => {
                 this._stackFrames = resp
                 this.sendEvent(new StoppedEvent('breakpoint', XqyDebugSession.THREAD_ID))
                 this._resetHandles()
             }).catch(err => {
-                this._handleError(err, 'Error awaiting XQY request', true, 'continueRequest')
+                this._handleError(err,
+                    `Error in command dbg:${call}(): ${JSON.stringify(err)}`, true, `dbg:${call}`)
             })
-        }).catch(err => {
-            this._handleError(err, 'Error in XQY continue command', true, 'continueRequest')
         })
+    }
+
+    protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ReverseContinueArguments): void {
+        return this.controlRequest('continue', response, args)
+    }
+
+    protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments): void {
+        return this.controlRequest('step', response, args)
+    }
+
+    protected stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments): void {
+        return this.controlRequest('out', response, args)
     }
 
     protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
-        this._runtime.stepInto().then(() => {
-            this.sendResponse(response)
-            this._runtime.getCurrentStack().then(resp => {
-                this._stackFrames = resp
-                this.sendEvent(new StoppedEvent('step', XqyDebugSession.THREAD_ID))
-                this._resetHandles()
-            }).catch(err => {
-                this._handleError(err, 'Error awaiting XQY request', true, 'nextRequest')
-            })
-        }).catch(err => {
-            this._handleError(err, 'Error in XQY next command', true, 'nextRequest')
-        })
-
-    }
-
-    protected stepOutRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
-        this._runtime.stepOut().then(() => {
-            this.sendResponse(response)
-            this._runtime.getCurrentStack().then(stackString => {
-                this._stackFrames = stackString
-                this.sendEvent(new StoppedEvent('step', XqyDebugSession.THREAD_ID))
-                this._resetHandles()
-            }).catch(err => {
-                this._handleError(err, 'Error awaiting XQY stepout request', true, 'stepOutRequest')
-            })
-        }).catch(err => {
-            this._handleError(err, 'Error in XQY stepOut command', true, 'stepOutRequest')
-        })
+        return this.controlRequest('next', response, args)
     }
 
     protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
