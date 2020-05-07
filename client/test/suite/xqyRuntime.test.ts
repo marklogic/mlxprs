@@ -21,7 +21,7 @@ suite('XQyuery Debug Test Suite', () => {
     })
 
     test('parseStackXML produces XqyFrames', () => {
-        assert.equal(2, stackFrames.length)
+        assert.equal(3, stackFrames.length)
         assert.ok(stackFrames[0].operation.match(/for \$row in \$rows let/))
         assert.equal(8, stackFrames[0].line)
         assert.equal('/test-module.xqy', stackFrames[0].uri)
