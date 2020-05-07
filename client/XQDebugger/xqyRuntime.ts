@@ -38,6 +38,7 @@ export interface XqyScopeObject {
 export interface XqyVariable {
     name: string;
     prefix: string;
+    value?: string;
 }
 
 export class XqyRuntime extends EventEmitter {
@@ -46,7 +47,6 @@ export class XqyRuntime extends EventEmitter {
     private _clientParams: MlClientParameters
     private _rid = ''
     private _timeout = 1
-    private _lineOffset = 1
 
     public constructor() {
         super()
@@ -246,6 +246,14 @@ export class XqyRuntime extends EventEmitter {
         return exprArray
     }
 
+    private static parseVariableXML(v: any): XqyVariable {
+        return {
+            name: v.name[0]._,
+            prefix: v.prefix ? v.prefix[0] : '',
+            value: v.value ? v.value[0] : undefined
+        } as XqyVariable
+    }
+
     public static parseScopeXML(frameObj: any): Array<XqyScopeObject> {
         const globalScope: XqyScopeObject = {type: 'global', variables: []} as XqyScopeObject
         const externalScope: XqyScopeObject = {type: 'external', variables: []} as XqyScopeObject
@@ -258,35 +266,26 @@ export class XqyRuntime extends EventEmitter {
         const scopesToReturn = []
         if (globalScopeXMLObj) {
             globalScopeXMLObj['global-variable'].forEach(gv => {
-                globalScope.variables.push({
-                    name: gv.name[0]._,
-                    prefix: gv.prefix[0] ? gv.prefix[0] : ''
-                } as XqyVariable)
+                globalScope.variables.push(this.parseVariableXML(gv))
             })
             scopesToReturn.push(globalScope)
         }
         if (externalScopeXMLObj) {
             externalScopeXMLObj['external-variable'].forEach(ev => {
-                externalScope.variables.push({
-                    name: ev.name[0]._,
-                    prefix: ev.prefix ? ev.prefix[0] : ''
-                })
+                externalScope.variables.push(this.parseVariableXML(ev))
             })
             scopesToReturn.push(externalScope)
         }
         if (localScopeXMLObj.variable) {
             localScopeXMLObj.variable.forEach(v => {
-                localScope.variables.push({
-                    name: v.name[0]._,
-                    prefix: v.prefix ? v.prefix[0] : ''
-                })
+                localScope.variables.push(this.parseVariableXML(v))
             })
             scopesToReturn.push(localScope)
         }
         return scopesToReturn
     }
 
-    public static parseStackXML(stackXMLString: string, _lineOffset = 1): Array<XqyFrame> {
+    public static parseStackXML(stackXMLString: string): Array<XqyFrame> {
         let parsed: any
         const stackArray: Array<XqyFrame> = []
         parseString(stackXMLString, (err: Error, result: any) => {
@@ -297,7 +296,7 @@ export class XqyRuntime extends EventEmitter {
 
             stackArray.push({
                 uri: uri,
-                line: Number(expr.line[0]) + _lineOffset,
+                line: Number(expr.line[0]),
                 operation: operation,
                 xid: '/debug:stack/debug:expr',
                 scopeChain: this.parseScopeXML(expr)
@@ -307,7 +306,7 @@ export class XqyRuntime extends EventEmitter {
                 const frame: any = parsed.stack.frame[i]
                 stackArray.push({
                     uri: frame.uri,
-                    line: Number(frame.line[0]) + _lineOffset,
+                    line: Number(frame.line[0]),
                     operation: frame.operation ? frame.operation[0] : '<anonymous>',
                     xid: `/debug:stack/debug:frame[${i}]`,
                     scopeChain: this.parseScopeXML(frame)

@@ -106,13 +106,13 @@ export class XqyDebugSession extends LoggingDebugSession {
         }
     }
 
-    private _setBufferedBreakPoints(): Promise<void|any> {
+    private _setBufferedBreakPoints(): void {
         const xqyRequests = []
         this._bpCache.forEach(bp => {
             xqyRequests.push(this._runtime.setBreakPoint(bp))
         })
 
-        return Promise.all(xqyRequests).then().catch(error => {
+        Promise.all(xqyRequests).then().catch(error => {
             this._handleError(error)
         })
     }

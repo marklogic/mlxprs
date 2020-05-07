@@ -2,13 +2,15 @@ import * as assert from 'assert'
 import { after, before } from 'mocha'
 
 import { window } from 'vscode'
-import { testStackXml, testExprXml } from './testXqyDebugMessages'
+import { testStackXml, testExprXml, testLargerStackXml } from './testXqyDebugMessages'
 import { XqyRuntime, XqyFrame, XqyExpr } from '../../XQDebugger/xqyRuntime'
 
 suite('XQyuery Debug Test Suite', () => {
     let stackFrames: Array<XqyFrame>
+    let largerStackFrames: Array<XqyFrame>
     let expr: Array<XqyExpr>
     const stackXmlString: string = testStackXml()
+    const largerStackXmlString: string = testLargerStackXml()
     const exprXmlString: string = testExprXml()
 
     after(() => {
@@ -17,6 +19,7 @@ suite('XQyuery Debug Test Suite', () => {
 
     before(() => {
         stackFrames = XqyRuntime.parseStackXML(stackXmlString)
+        largerStackFrames = XqyRuntime.parseStackXML(largerStackXmlString)
         expr = XqyRuntime.parseExprXML(exprXmlString)
     })
 
@@ -25,6 +28,30 @@ suite('XQyuery Debug Test Suite', () => {
         assert.ok(stackFrames[0].operation.match(/for \$row in \$rows let/))
         assert.equal(8, stackFrames[0].line)
         assert.equal('/test-module.xqy', stackFrames[0].uri)
+    })
+
+    test('parseStackXML produces usable stack', () => {
+        assert.equal(4, largerStackFrames.length)
+    })
+
+    test('parseStackXML produces usable scopeChain', () => {
+        assert.equal(4, largerStackFrames[0].scopeChain[0].variables.length)
+        assert.equal('global', largerStackFrames[0].scopeChain[0].type)
+        assert.equal(5, largerStackFrames[3].scopeChain[0].variables.length)
+    })
+
+    test('parseStackXML scopeChains include usable variables', () => {
+        assert.equal(1, largerStackFrames[3].scopeChain.length)
+        assert.equal(2, largerStackFrames[2].scopeChain.length)
+        assert.equal('local', largerStackFrames[2].scopeChain[1].type)
+    })
+
+    test('parseStackXML exposes variable values when available', () => {
+        assert.ok(largerStackFrames[2].scopeChain[1].variables[1].value)
+        assert.ok(largerStackFrames[2].scopeChain[1].variables[0].value)
+        assert.equal('map:map()', largerStackFrames[2].scopeChain[1].variables[1].value)
+
+        assert.ok(!largerStackFrames[3].scopeChain[0].variables[0].value)
     })
 
     test('parseExprXML produces XqyExprs', () => {
