@@ -212,8 +212,22 @@ export class XqyRuntime extends EventEmitter {
             )
     }
 
-    public evaluateInContext(expr: string, cid?: string): ResultProvider<Record<string, any>> {
-        return sendXQuery(this._mlClient, `dbg:value(${this._rid}, ${expr})`)
+    /**
+     * Run a query in the context of a stopped debug process, using dbg:value($this._rid, ${query})
+     * @param query query to be evaluated in context of stopped request
+     * @returns results of the eval
+     */
+    public evaluateInContext(query: string): Promise<any> {
+        return this.sendFreshQuery(`dbg:value(${this._rid}, "${query}")`)
+            .result(
+                (fulfill: Record<string, any>[]) => {
+                    return fulfill[0]
+                },
+                (error: Record<string, any>[]) => {
+                    console.error('error on dbg:value(): ' + JSON.stringify(error))
+                    return error
+                }
+            )
     }
 
     public async getProperties(objectId: string): Promise<string> {
@@ -285,20 +299,21 @@ export class XqyRuntime extends EventEmitter {
         return scopesToReturn
     }
 
-    public static parseStackXML(stackXMLString: string): Array<XqyFrame> {
+    public static parseStackXML(stackXMLString: string, offset = -1): Array<XqyFrame> {
         let parsed: any
         const stackArray: Array<XqyFrame> = []
         parseString(stackXMLString, (err: Error, result: any) => {
             parsed = result
             const expr: any = parsed.stack.expr[0]
+            const exprId: string = expr['expr-id'][0]
             const uri: string = expr.uri[0]
             const operation: string = expr['expr-source'][0]
 
             stackArray.push({
                 uri: uri,
-                line: Number(expr.line[0]),
+                line: Number(expr.line[0]) + offset,
                 operation: operation,
-                xid: '/debug:stack/debug:expr',
+                xid: exprId,
                 scopeChain: this.parseScopeXML(expr)
             } as XqyFrame)
 
@@ -306,9 +321,9 @@ export class XqyRuntime extends EventEmitter {
                 const frame: any = parsed.stack.frame[i]
                 stackArray.push({
                     uri: frame.uri,
-                    line: Number(frame.line[0]),
+                    line: Number(frame.line[0]) + offset,
                     operation: frame.operation ? frame.operation[0] : '<anonymous>',
-                    xid: `/debug:stack/debug:frame[${i}]`,
+                    xid: exprId,
                     scopeChain: this.parseScopeXML(frame)
                 } as XqyFrame)
             }

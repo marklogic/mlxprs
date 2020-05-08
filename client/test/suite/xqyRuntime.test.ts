@@ -18,7 +18,7 @@ suite('XQyuery Debug Test Suite', () => {
     })
 
     before(() => {
-        stackFrames = XqyRuntime.parseStackXML(stackXmlString)
+        stackFrames = XqyRuntime.parseStackXML(stackXmlString, 0)
         largerStackFrames = XqyRuntime.parseStackXML(largerStackXmlString)
         expr = XqyRuntime.parseExprXML(exprXmlString)
     })
@@ -28,6 +28,7 @@ suite('XQyuery Debug Test Suite', () => {
         assert.ok(stackFrames[0].operation.match(/for \$row in \$rows let/))
         assert.equal(8, stackFrames[0].line)
         assert.equal('/test-module.xqy', stackFrames[0].uri)
+        assert.equal('9444875716397283355', stackFrames[0].xid)
     })
 
     test('parseStackXML produces usable stack', () => {

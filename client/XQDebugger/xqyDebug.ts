@@ -288,18 +288,11 @@ export class XqyDebugSession extends LoggingDebugSession {
     }
 
     protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
-        let xid = ''
-        if (typeof args.frameId === 'number' && args.frameId > 0) {
-            const frameInfo: XqyFrame = this._frameHandles.get(args.frameId)
-            xid = frameInfo.xid
-        }
-        this._runtime.evaluateInContext(args.expression, xid).result((resp: Record<string, any>) => {
-            const body = resp.get('result')
-            const evalResult = JSON.parse(body).result.result
+        this._runtime.evaluateInContext(`\$${args.expression}`).then((resp: any) => {
             response.body = {
-                result: 'not yet implemented, sorry',
-                type: null,
-                variablesReference: 0
+                result: resp.value,
+                type: resp.datatype,
+                variablesReference: resp.length ? resp.length : 0
             }
             this.sendResponse(response)
         }).catch(err => {
