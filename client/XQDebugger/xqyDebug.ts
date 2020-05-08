@@ -2,12 +2,11 @@ import { DebugProtocol } from 'vscode-debugprotocol'
 import { Handles, InitializedEvent,
     Logger, logger, LoggingDebugSession,
     StoppedEvent, OutputEvent, Source, TerminatedEvent, Breakpoint, Thread,
-    StackFrame, Scope
+    StackFrame, Scope, Variable
 } from 'vscode-debugadapter'
 import { XqyRuntime, XqyBreakPoint, XqyFrame, XqyScopeObject, XqyVariable } from './xqyRuntime'
 import { basename } from 'path'
 
-import { ResultProvider } from 'marklogic'
 import { MlClientParameters } from '../marklogicClient'
 
 
@@ -40,7 +39,7 @@ export class XqyDebugSession extends LoggingDebugSession {
     private requestId: string
 
     private _runtime: XqyRuntime
-    private _variableHandles = new Handles<string>()
+    private _variableHandles = new Handles<XqyVariable[]>()
     private _frameHandles = new Handles<XqyFrame>()
     private _configurationDone = new Subject()
     private _stackFrames: Array<XqyFrame> = []
@@ -235,8 +234,8 @@ export class XqyDebugSession extends LoggingDebugSession {
             const xqyScope: XqyScopeObject = frame.scopeChain[i]
             const scope: Scope = new Scope(
                 xqyScope.type,
-                xqyScope.variables.length,
-                xqyScope.type === 'global'
+                this._variableHandles.create(xqyScope.variables),
+                false
             )
             scopes.push(scope)
         }
@@ -246,9 +245,13 @@ export class XqyDebugSession extends LoggingDebugSession {
     }
 
     protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request): Promise<void> {
-        const variables: DebugProtocol.Variable[] = []
-        const objId = this._variableHandles.get(args.variablesReference)
-        // TODO implement server-side parsing from dbg:stack results
+        const variables: Variable[] = []
+        const otherXqyVars: XqyVariable[] = this._variableHandles.get(args.variablesReference)
+
+        otherXqyVars.forEach((xqvar: XqyVariable) => {
+            variables.push(new Variable(xqvar.name, xqvar.value ? xqvar.value : '', 0))
+        })
+
         response.body = { variables: variables }
         this.sendResponse(response)
     }
@@ -259,6 +262,7 @@ export class XqyDebugSession extends LoggingDebugSession {
             this._runtime.getCurrentStack().then(resp => {
                 this._stackFrames = resp
                 this.sendEvent(new StoppedEvent('breakpoint', XqyDebugSession.THREAD_ID))
+                this._resetHandles()
                 this._resetHandles()
             }).catch(err => {
                 this._handleError(err,
