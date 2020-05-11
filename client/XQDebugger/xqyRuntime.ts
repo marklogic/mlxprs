@@ -96,11 +96,11 @@ export class XqyRuntime extends EventEmitter {
         return this._rid
     }
 
-    public dbgControlCall(call: 'continue' | 'next' | 'step' | 'out'): Promise<void> {
+    public dbgControlCall(call: 'continue' | 'next' | 'step' | 'out' | 'detach'): Promise<void> {
         return this.sendFreshQuery(`dbg:${call}(${this._rid})`)
             .result(
                 () => {
-                    console.debug(`resume (dbg:${call}(${this._rid}))`)
+                    console.debug(`called dbg:${call}(${this._rid})`)
                 },
                 (error: Record<string, any>[]) => {
                     console.error(`error in dbg:${call}(): ${JSON.stringify(error)}`)
@@ -139,7 +139,7 @@ export class XqyRuntime extends EventEmitter {
                     }
                 },
                 (error: Record<string, any>[]) => {
-                    console.error('error fbpe: ' + JSON.stringify(error))
+                    console.error(`error finding breakpoint ${this._rid}: ${JSON.stringify(error)}`)
                     return []
                 })
     }
@@ -199,6 +199,18 @@ export class XqyRuntime extends EventEmitter {
                 })
     }
 
+    public removeAllBreakPointsOnMl(): Promise<void> {
+        return this.sendFreshQuery(`dbg:breakpoints(${this._rid}) ! dbg:clear(${this._rid}, .)`)
+            .result(
+                (fulfill: Record<string, any>[]) => {
+                    console.debug(`cleared breakpoints on ${this._rid}`)
+                },
+                (error: Record<string, any>[]) => {
+                    console.error(`error clearing breakpoints: ${JSON.stringify(error)}`)
+                }
+            )
+    }
+
     public wait(): Promise<string> {
         return this.sendFreshQuery(`dbg:wait(${this._rid}, 5)`)
             .result(
@@ -224,7 +236,8 @@ export class XqyRuntime extends EventEmitter {
                     return fulfill[0]
                 },
                 (error: Record<string, any>[]) => {
-                    console.error('error on dbg:value(): ' + JSON.stringify(error))
+                    console.error(
+                        `error on dbg:value(${this._rid}, "${query}"): ${JSON.stringify(error)}`)
                     return error
                 }
             )

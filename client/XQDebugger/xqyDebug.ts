@@ -72,7 +72,7 @@ export class XqyDebugSession extends LoggingDebugSession {
         response.body = response.body || {}
         response.body.supportsConfigurationDoneRequest = true
         response.body.supportsFunctionBreakpoints = false
-        response.body.supportsConditionalBreakpoints = true
+        response.body.supportsConditionalBreakpoints = false
         response.body.supportsCompletionsRequest = true
         response.body.supportsDelayedStackTraceLoading = false
         response.body.supportsCompletionsRequest = true
@@ -111,9 +111,13 @@ export class XqyDebugSession extends LoggingDebugSession {
             xqyRequests.push(this._runtime.setBreakPoint(bp))
         })
 
-        Promise.all(xqyRequests).then().catch(error => {
-            this._handleError(error)
-        })
+        Promise.all(xqyRequests)
+            .then(fulfill => {
+                console.debug(`breakpoints set ${JSON.stringify(fulfill)}`)
+            })
+            .catch(error => {
+                this._handleError(error)
+            })
     }
 
     protected async launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): Promise<void> {
@@ -256,18 +260,22 @@ export class XqyDebugSession extends LoggingDebugSession {
         this.sendResponse(response)
     }
 
-    private controlRequest(call: 'continue' | 'next' | 'step' | 'out', response: DebugProtocol.Response, args: any): void {
+    private controlRequest(call: 'continue' | 'next' | 'step' | 'out' | 'detach', response: DebugProtocol.Response, args: any): void {
         this._runtime.dbgControlCall(call).then(() => {
             this.sendResponse(response)
-            this._runtime.getCurrentStack().then(resp => {
-                this._stackFrames = resp
-                this.sendEvent(new StoppedEvent('breakpoint', XqyDebugSession.THREAD_ID))
-                this._resetHandles()
-                this._resetHandles()
-            }).catch(err => {
-                this._handleError(err,
-                    `Error in command dbg:${call}(): ${JSON.stringify(err)}`, true, `dbg:${call}`)
-            })
+            if (call === 'detach') {
+                this._runtime.setRunTimeState('shutdown')
+                this.sendEvent(new TerminatedEvent())
+            } else if (this._runtime.getRunTimeState() !== 'shutdown') {
+                this._runtime.getCurrentStack().then(resp => {
+                    this._stackFrames = resp
+                    this.sendEvent(new StoppedEvent('breakpoint', XqyDebugSession.THREAD_ID))
+                    this._resetHandles()
+                }).catch(err => {
+                    this._handleError(err,
+                        `Error in command dbg:${call}(): ${JSON.stringify(err)}`, true, `dbg:${call}`)
+                })
+            }
         })
     }
 
@@ -285,6 +293,15 @@ export class XqyDebugSession extends LoggingDebugSession {
 
     protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
         return this.controlRequest('next', response, args)
+    }
+
+    /** the red stop button */
+    protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request): void {
+        this._runtime.removeAllBreakPointsOnMl().then(() => {
+            return this.controlRequest('continue', response, args)
+        }).then(() => {
+            return this.controlRequest('detach', response, args)
+        })
     }
 
     protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
