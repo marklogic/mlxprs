@@ -131,7 +131,7 @@ export class XqyDebugSession extends LoggingDebugSession {
 
         try {
             await this._runtime.launchWithDebugEval(args.query)
-            this._stackFrames = await this._runtime.getCurrentStack()
+            this.refreshStack('launchRequest')
             await this._setBufferedBreakPoints()
             this.sendResponse(response)
             this.sendEvent(new StoppedEvent('entry', XqyDebugSession.THREAD_ID))
@@ -146,7 +146,7 @@ export class XqyDebugSession extends LoggingDebugSession {
         this._runtime.setRid(args.rid)
         this._workDir = args.path
         this._runtime.setRunTimeState('attached')
-        this._stackFrames = await this._runtime.getCurrentStack()
+        this.refreshStack('attachRequest')
         await this._setBufferedBreakPoints()
         this.sendResponse(response)
         this.sendEvent(new StoppedEvent('entry', XqyDebugSession.THREAD_ID))
@@ -260,6 +260,17 @@ export class XqyDebugSession extends LoggingDebugSession {
         this.sendResponse(response)
     }
 
+    private refreshStack(callerName: string): void {
+        this._runtime.getCurrentStack().then(resp => {
+            this._stackFrames = resp
+            this.sendEvent(new StoppedEvent('breakpoint', XqyDebugSession.THREAD_ID))
+            this._resetHandles()
+        }).catch(err => {
+            this._handleError(err,
+                `Error in after ${callerName}: ${JSON.stringify(err)}`, true, callerName)
+        })
+    }
+
     private controlRequest(call: 'continue' | 'next' | 'step' | 'out' | 'detach', response: DebugProtocol.Response, args: any): void {
         this._runtime.dbgControlCall(call).then(() => {
             this.sendResponse(response)
@@ -267,14 +278,7 @@ export class XqyDebugSession extends LoggingDebugSession {
                 this._runtime.setRunTimeState('shutdown')
                 this.sendEvent(new TerminatedEvent())
             } else if (this._runtime.getRunTimeState() !== 'shutdown') {
-                this._runtime.getCurrentStack().then(resp => {
-                    this._stackFrames = resp
-                    this.sendEvent(new StoppedEvent('breakpoint', XqyDebugSession.THREAD_ID))
-                    this._resetHandles()
-                }).catch(err => {
-                    this._handleError(err,
-                        `Error in command dbg:${call}(): ${JSON.stringify(err)}`, true, `dbg:${call}`)
-                })
+                this.refreshStack(`dbg:${call}()`)
             }
         })
     }
@@ -297,13 +301,15 @@ export class XqyDebugSession extends LoggingDebugSession {
 
     /** the red stop button */
     protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request): void {
-        this._runtime.removeAllBreakPointsOnMl().then(() => {
-            this.controlRequest('continue', response, args)
-        }).then(() => {
-            this.controlRequest('detach', response, args)
-        }).then(() => {
-            this._runtime.setRunTimeState('shutdown')
-        })
+        if (this._runtime.getRunTimeState() === 'launched') {
+            this._runtime.removeAllBreakPointsOnMl().then(() => {
+                this.controlRequest('continue', response, args)
+            }).then(() => {
+                this.controlRequest('detach', response, args)
+            }).then(() => {
+                this._runtime.setRunTimeState('shutdown')
+            })
+        }
     }
 
     protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
@@ -328,10 +334,10 @@ export class XqyDebugSession extends LoggingDebugSession {
     }
 
     private _handleError(error: Error, msg?: string, terminate?: boolean, func?: string): void {
-        if (error.message.includes('XDMP-NOREQUEST')) {
+        if (error.message.includes('XDMP-NOREQUEST') || msg.includes('DBG-REQUESTRECORD')) {
             this._runtime.setRunTimeState('shutdown')
             this.sendEvent(new TerminatedEvent())
-            this._trace(`Request ${this._runtime.getRid()} is over`)
+            this._trace(`Request ${this._runtime.getRid()} is done`)
         } else {
             if (terminate === true) {
                 this.sendEvent(new TerminatedEvent())

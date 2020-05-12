@@ -107,10 +107,6 @@ export class XqyRuntime extends EventEmitter {
                 })
     }
 
-    public getStackTrace(): ResultProvider<Record<string, any>> {
-        return sendXQuery(this._mlClient, `dbg:stack(${this._rid})`)
-    }
-
     /**
      * XQuery fns dbg:clear() and and dbg:break() require expression IDs, not lines,
      * in order to clear and set breakpoints.
@@ -360,7 +356,7 @@ export class XqyRuntime extends EventEmitter {
                     return this.getCurrentStack()
                 }
                 console.error('error (stack): ' + JSON.stringify(error))
-                return []
+                throw error
             })
     }
 }
