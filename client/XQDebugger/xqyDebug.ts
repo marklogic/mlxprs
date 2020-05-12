@@ -113,7 +113,7 @@ export class XqyDebugSession extends LoggingDebugSession {
 
         Promise.all(xqyRequests)
             .then(fulfill => {
-                console.debug(`breakpoints set ${JSON.stringify(fulfill)}`)
+                console.debug(`${fulfill.length} breakpoints set.`)
             })
             .catch(error => {
                 this._handleError(error)
@@ -280,27 +280,29 @@ export class XqyDebugSession extends LoggingDebugSession {
     }
 
     protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ReverseContinueArguments): void {
-        return this.controlRequest('continue', response, args)
+        this.controlRequest('continue', response, args)
     }
 
     protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments): void {
-        return this.controlRequest('step', response, args)
+        this.controlRequest('step', response, args)
     }
 
     protected stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments): void {
-        return this.controlRequest('out', response, args)
+        this.controlRequest('out', response, args)
     }
 
     protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
-        return this.controlRequest('next', response, args)
+        this.controlRequest('next', response, args)
     }
 
     /** the red stop button */
     protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request): void {
         this._runtime.removeAllBreakPointsOnMl().then(() => {
-            return this.controlRequest('continue', response, args)
+            this.controlRequest('continue', response, args)
         }).then(() => {
-            return this.controlRequest('detach', response, args)
+            this.controlRequest('detach', response, args)
+        }).then(() => {
+            this._runtime.setRunTimeState('shutdown')
         })
     }
 

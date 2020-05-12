@@ -207,8 +207,7 @@ export class XqyRuntime extends EventEmitter {
                 },
                 (error: Record<string, any>[]) => {
                     console.error(`error clearing breakpoints: ${JSON.stringify(error)}`)
-                }
-            )
+                })
     }
 
     public wait(): Promise<string> {
@@ -220,8 +219,7 @@ export class XqyRuntime extends EventEmitter {
                 (error: Record<string, any>[]) => {
                     console.error('error on dbg:wait(): ' + JSON.stringify(error))
                     return ''
-                }
-            )
+                })
     }
 
     /**
@@ -239,8 +237,7 @@ export class XqyRuntime extends EventEmitter {
                     console.error(
                         `error on dbg:value(${this._rid}, "${query}"): ${JSON.stringify(error)}`)
                     return error
-                }
-            )
+                })
     }
 
     public async getProperties(objectId: string): Promise<string> {
@@ -345,13 +342,24 @@ export class XqyRuntime extends EventEmitter {
     }
 
     public async getCurrentStack(): Promise<Array<XqyFrame>> {
+        // This is usually called immediately after a dbg control call, so the
+        // request may not have been stopped by the time we get here. 60ms delay
+        // should be enough time to wait, without bothering to the user
+        await new Promise(resolve => setTimeout(resolve, 60))
+
         return this.sendFreshQuery(`dbg:stack(${this._rid})`).result(
             (fulfill: Record<string, any>) => {
-                console.info('stack: ' + JSON.stringify(fulfill))
+                console.debug('stack: ' + JSON.stringify(fulfill))
                 return XqyRuntime.parseStackXML(fulfill[0].value)
             },
             (error: Record<string, any>) => {
-                console.info('error (stack): ' + JSON.stringify(error))
+                // combined with the 60 ms delay above, retry if the request
+                // hasn't been stopped yet
+                if (error.body.errorResponse.messageCode === 'DBG-NOTSTOPPED') {
+                    console.debug(`Request ${this._rid} not yet stopped`)
+                    return this.getCurrentStack()
+                }
+                console.error('error (stack): ' + JSON.stringify(error))
                 return []
             })
     }
