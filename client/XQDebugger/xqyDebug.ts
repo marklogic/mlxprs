@@ -24,9 +24,16 @@ export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArgum
     path: string;
 }
 
-interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
+export interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
     path: string;
     rid: string;
+    clientParams: MlClientParameters;
+    trace?: boolean;
+    stopOnEntry?: boolean;
+}
+
+export interface InitializeRequestArguments {
+    clientParams: MlClientParameters;
 }
 
 const timeout = (ms: number): Promise<any> => {
@@ -143,9 +150,10 @@ export class XqyDebugSession extends LoggingDebugSession {
     protected async attachRequest(response: DebugProtocol.AttachResponse, args: AttachRequestArguments): Promise<void> {
         logger.setup(Logger.LogLevel.Stop, false)
         await this._configurationDone.wait(1000)
-        this._runtime.setRid(args.rid)
         this._workDir = args.path
+        this._runtime.setRid(args.rid)
         this._runtime.setRunTimeState('attached')
+        this._runtime.initialize(args)
         this.refreshStack('attachRequest')
         await this._setBufferedBreakPoints()
         this.sendResponse(response)

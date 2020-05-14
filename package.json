@@ -187,6 +187,40 @@
                                 "default": ""
                             }
                         }
+                    },
+                    "attach": {
+                        "properties": {
+                            "path": {
+                                "type": "string",
+                                "description": "path to root of modules being deployed to MarkLogic",
+                                "default": "${workspaceFolder}/src/main/ml-modules/root"
+                            },
+                            "hostname": {
+                                "type": "string",
+                                "description": "hostname of MarkLogic server",
+                                "default": ""
+                            },
+                            "serverName": {
+                                "type": "string",
+                                "description": "Port number of debug server",
+                                "default": ""
+                            },
+                            "username": {
+                                "type": "string",
+                                "description": "Username.",
+                                "default": "${command:AskForUsername}"
+                            },
+                            "password": {
+                                "type": "string",
+                                "description": "Password.",
+                                "default": "${command:AskForPassword}"
+                            },
+                            "rid": {
+                                "type": "string",
+                                "description": "Request Id",
+                                "default": ""
+                            }
+                        }
                     }
                 },
                 "initialConfigurations": [
@@ -196,17 +230,23 @@
                         "name": "Ask for file name: ",
                         "program": "",
                         "stopOnEntry": true
+                    },
+                    {
+                        "type": "xquery-ml",
+                        "request": "attach",
+                        "name": "Ask for file name: ",
+                        "stopOnEntry": true
                     }
                 ],
                 "configurationSnippets": [
                     {
-                        "label": "ML Mock Debug: Launch!",
-                        "description": "A new configuration for 'debugging' a user selected markdown file.",
+                        "label": "ML Debug: Attach!",
+                        "description": "Launch debug",
                         "body": {
                             "type": "ml-debug",
                             "request": "launch",
+                            "rid": 0,
                             "name": "Launch XQY Debug Request",
-                            "program": "",
                             "stopOnEntry": true
                         }
                     }

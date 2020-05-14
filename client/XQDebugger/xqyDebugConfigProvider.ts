@@ -3,11 +3,10 @@ import { DebugConfiguration, DebugConfigurationProvider, WorkspaceFolder, Cancel
     DebugAdapterDescriptorFactory,
     DebugAdapterExecutable,
     DebugAdapterDescriptor,
-    DebugSession,
-    WorkspaceConfiguration, workspace, Memento } from 'vscode'
+    DebugSession, QuickPickItem, QuickPickOptions,
+    WorkspaceConfiguration, workspace } from 'vscode'
 import { MarklogicClient, MlClientParameters, sendXQuery } from '../marklogicClient'
 import { readFileSync } from 'fs'
-import { cascadeOverrideClient } from '../vscQueryParameterTools'
 
 const XQY = 'xqy'
 
@@ -16,6 +15,7 @@ export class XqyDebugConfiguration implements DebugConfiguration {
     type: string
     name: string
     request: string
+    rid: string
 
     path?: string
     program: string
@@ -26,16 +26,21 @@ export class XqyDebugConfiguration implements DebugConfiguration {
     clientParams: MlClientParameters
 }
 
+const placeholder: QuickPickOptions = {
+    placeHolder: 'Select the request to attach'
+}
+
 export class XqyDebugConfigurationProvider implements DebugConfigurationProvider {
-    private async getAvailableRequests(params: MlClientParameters): Promise<any> {
+    private async getAvailableRequests(params: MlClientParameters): Promise<Array<string>> {
         const client: MarklogicClient = new MarklogicClient(params)
         const resp = await sendXQuery(client, 'dbg:stopped()')
             .result(
                 (fulfill: Record<string, any>[]) => {
-                    console.info(JSON.stringify(fulfill))
+                    return [].concat(fulfill[0]['value'] || [])
                 },
                 (error: Record<string, any>[]) => {
                     console.error(JSON.stringify(error))
+                    return []
                 }
             )
         return resp
@@ -57,8 +62,24 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
         config.clientParams = clientParams
 
         // TODO: for attaching to existing requests
-        if (config.request === 'attach')
-            this.getAvailableRequests(clientParams)
+        if (config.request === 'attach') {
+            const rid: string = await this.getAvailableRequests(clientParams)
+                .then((requests: Array<string>) => {
+                    const qpRequests: QuickPickItem[] = requests.map((request: string) => {
+                        return {
+                            label: request,
+                            description: `Stopped request on ${clientParams.host}:${clientParams.port}`,
+                            detail: `${clientParams.contentDb} database, ${clientParams.modulesDb} modules `
+                        } as QuickPickItem
+                    })
+                    return window.showQuickPick(qpRequests, placeholder)
+                        .then((pickedRequest: QuickPickItem) => {
+                            config.rid = pickedRequest.label
+                            return config.rid
+                        })
+                })
+            config.rid = rid
+        }
         return config
     }
 

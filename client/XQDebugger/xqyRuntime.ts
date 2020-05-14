@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 import { ResultProvider } from 'marklogic'
-import { LaunchRequestArguments } from './xqyDebug'
+import { InitializeRequestArguments } from './xqyDebug'
 import { sendXQuery, MarklogicClient, MlClientParameters } from '../marklogicClient'
 import { parseString } from 'xml2js'
 
@@ -78,7 +78,7 @@ export class XqyRuntime extends EventEmitter {
                 })
     }
 
-    public initialize(args: LaunchRequestArguments): void {
+    public initialize(args: InitializeRequestArguments): void {
         this._clientParams = args.clientParams
         this._mlClient = new MarklogicClient(this._clientParams)
     }
