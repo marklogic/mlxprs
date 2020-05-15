@@ -54,9 +54,16 @@ export function activate(context: vscode.ExtensionContext): void {
             _disonnectServer(servername)
         })
     })
+    const connectXqyServer = vscode.commands.registerCommand('extension.connectXqyServer', () => {
+        const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration()
+        const client: MarklogicClient = cascadeOverrideClient('', SJS, cfg, context.globalState)
+        XqyDebugConfigurationProvider.chooseXqyServer(client)
+    })
 
     context.subscriptions.push(connectServer)
     context.subscriptions.push(disconnectServer)
+    context.subscriptions.push(connectXqyServer)
+
     context.subscriptions.push(sendXQuery)
     context.subscriptions.push(sendJSQuery)
     context.subscriptions.push(

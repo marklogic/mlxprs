@@ -4,11 +4,16 @@ import { DebugConfiguration, DebugConfigurationProvider, WorkspaceFolder, Cancel
     DebugAdapterExecutable,
     DebugAdapterDescriptor,
     DebugSession, QuickPickItem, QuickPickOptions,
-    WorkspaceConfiguration, workspace } from 'vscode'
+    WorkspaceConfiguration, workspace, Memento } from 'vscode'
 import { MarklogicClient, MlClientParameters, sendXQuery } from '../marklogicClient'
 import { readFileSync } from 'fs'
+import { cascadeOverrideClient } from '../vscQueryParameterTools'
 
 const XQY = 'xqy'
+const listServersQuery = `
+    xdmp:servers()
+    ! (map:new() => map:with("id", .) => map:with("name", xdmp:server-name(.)))
+    => xdmp:to-json()`
 
 export class XqyDebugConfiguration implements DebugConfiguration {
     [key: string]: any
@@ -29,6 +34,12 @@ export class XqyDebugConfiguration implements DebugConfiguration {
 const placeholder: QuickPickOptions = {
     placeHolder: 'Select the request to attach'
 }
+
+interface ServerQueryResponse {
+    name: string;
+    id: string;
+}
+
 
 export class XqyDebugConfigurationProvider implements DebugConfigurationProvider {
     private async getAvailableRequests(params: MlClientParameters): Promise<Array<string>> {
@@ -106,6 +117,39 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
         }
 
         return this.resolveRemainingDebugConfiguration(folder, config)
+    }
+
+
+    public static async chooseXqyServer(client: MarklogicClient): Promise<void> {
+        await sendXQuery(client, listServersQuery)
+            .result(
+                (fulfill: Record<string, any>) => {
+                    const servers: ServerQueryResponse[] = [].concat(fulfill[0]['value'] || [])
+                    return servers.map((server: ServerQueryResponse) => {
+                        return {
+                            label: server.name,
+                            description: server.id,
+                            detail: `${server.name} on ${client.params.host}:${client.params.port}`
+                        } as QuickPickItem
+                    })
+                },
+                err => {
+                    window.showErrorMessage(`couldn't get a list of active servers: ${err}`)
+                    return []
+                }
+            ).then((choices: QuickPickItem[]) => {
+                return window.showQuickPick(choices)
+            }).then((choice: QuickPickItem) => {
+                return sendXQuery(client, `dbg:connect(${choice.description})`)
+                    .result(
+                        () => {
+                            window.showInformationMessage(`Connected to ${choice.label} on ${client.params.host}`)
+                        },
+                        (err) => {
+                            window.showErrorMessage(`Failed to connect to ${choice.label}: ${JSON.stringify(err)}`)
+                        }
+                    )
+            })
     }
 }
 
