@@ -57,12 +57,18 @@ export function activate(context: vscode.ExtensionContext): void {
     const connectXqyServer = vscode.commands.registerCommand('extension.connectXqyServer', () => {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration()
         const client: MarklogicClient = cascadeOverrideClient('', SJS, cfg, context.globalState)
-        XqyDebugConfigurationProvider.chooseXqyServer(client)
+        XqyDebugConfigurationProvider.chooseXqyServer(client, 'connect')
+    })
+    const disconnectXqyServer = vscode.commands.registerCommand('extension.disconnectXqyServer', () => {
+        const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration()
+        const client: MarklogicClient = cascadeOverrideClient('', SJS, cfg, context.globalState)
+        XqyDebugConfigurationProvider.chooseXqyServer(client, 'disconnect')
     })
 
     context.subscriptions.push(connectServer)
     context.subscriptions.push(disconnectServer)
     context.subscriptions.push(connectXqyServer)
+    context.subscriptions.push(disconnectXqyServer)
 
     context.subscriptions.push(sendXQuery)
     context.subscriptions.push(sendJSQuery)

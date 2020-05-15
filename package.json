@@ -50,6 +50,10 @@
             {
                 "command": "extension.connectXqyServer",
                 "title": "MarkLogic: Connect XQY Debug Server"
+            },
+            {
+                "command": "extension.disconnectXqyServer",
+                "title": "MarkLogic: Disconnect XQY Debug Server"
             }
         ],
         "breakpoints": [
