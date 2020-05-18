@@ -16,6 +16,21 @@ const listServersQuery = `
   => map:with("port", xdmp:server-port(.)))
 => xdmp:to-json()`
 
+const listStoppedRequests = `
+for $rid in dbg:stopped()
+let $status := dbg:status($rid)/*:request
+let $server := xdmp:server-name($status/*:server-id)
+let $rstatus := $status/*:request-status/fn:string()
+let $dstatus := $status/*:debugging-status/fn:string()
+return (json:object()
+  => map:with('rid', $rid)
+  => map:with('serverName', $server)
+  => map:with('debugStatus', $dstatus)
+  => map:with('requestStatus', $rstatus)
+  )`
+
+const doNotDebugThese = ['Admin', 'Manage', 'HealthCheck', 'App-Services']
+
 export class XqyDebugConfiguration implements DebugConfiguration {
     [key: string]: any
     type: string
@@ -39,23 +54,28 @@ const placeholder: QuickPickOptions = {
 interface ServerQueryResponse {
     name: string;
     id: string;
-    port: number;
+    port?: number;
 }
 
+interface DebugStatusQueryResponse {
+    rid: string;
+    serverName: string;
+    debugStatus: string;
+    requestStatus: string;
+}
 
 export class XqyDebugConfigurationProvider implements DebugConfigurationProvider {
-    private async getAvailableRequests(params: MlClientParameters): Promise<Array<string>> {
+    private async getAvailableRequests(params: MlClientParameters): Promise<Array<DebugStatusQueryResponse>> {
         const client: MarklogicClient = new MarklogicClient(params)
-        const resp = await sendXQuery(client, 'dbg:stopped()')
+        const resp = await sendXQuery(client, listStoppedRequests)
             .result(
                 (fulfill: Record<string, any>[]) => {
-                    return [].concat(fulfill[0]['value'] || [])
+                    return fulfill.map(f => f.value as DebugStatusQueryResponse)
                 },
                 (error: Record<string, any>[]) => {
                     console.error(JSON.stringify(error))
                     return []
-                }
-            )
+                })
         return resp
     }
 
@@ -77,12 +97,12 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
         // TODO: for attaching to existing requests
         if (config.request === 'attach') {
             const rid: string = await this.getAvailableRequests(clientParams)
-                .then((requests: Array<string>) => {
-                    const qpRequests: QuickPickItem[] = requests.map((request: string) => {
+                .then((requests: Array<DebugStatusQueryResponse>) => {
+                    const qpRequests: QuickPickItem[] = requests.map((request: DebugStatusQueryResponse) => {
                         return {
-                            label: request,
-                            description: `Stopped request on ${clientParams.host}:${clientParams.port}`,
-                            detail: `${clientParams.contentDb} database, ${clientParams.modulesDb} modules `
+                            label: request.rid,
+                            description: `Request ${request.requestStatus} on ${request.serverName}`,
+                            detail: request.debugStatus
                         } as QuickPickItem
                     })
                     return window.showQuickPick(qpRequests, placeholder)
@@ -129,12 +149,13 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
                 (fulfill: Record<string, ServerQueryResponse>) => {
                     const servers: ServerQueryResponse[] = [].concat(fulfill[0]['value'] || [])
                     return servers
-                        .filter((server: ServerQueryResponse) => server.port !== mlClient.params.port)
+                        .filter((server: ServerQueryResponse) => ((server.port || 0) !== mlClient.params.port || intention === 'disconnect'))
+                        .filter((server: ServerQueryResponse) => (!doNotDebugThese.includes(server.name) || intention === 'disconnect'))
                         .map((server: ServerQueryResponse) => {
                             return {
                                 label: server.name,
                                 description: server.id,
-                                detail: `${server.name} on ${mlClient.params.host}:${server.port}`,
+                                detail: `${server.name} on ${mlClient.params.host}:${server.port || '(none)'}`,
                             } as QuickPickItem
                         })
                 },
@@ -143,18 +164,21 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
                     return []
                 })
             .then((choices: QuickPickItem[]) => {
-                return window.showQuickPick(choices)
-            })
-            .then((choice: QuickPickItem) => {
-                return sendXQuery(mlClient, `dbg:${intention}(${choice.description})`)
-                    .result(
-                        () => {
-                            window.showInformationMessage(`Successfully ${intention}ed ${choice.label} on ${mlClient.params.host}`)
-                        },
-                        (err) => {
-                            window.showErrorMessage(`Failed to connect to ${choice.label}: ${JSON.stringify(err)}`)
-                        }
-                    )
+                if (choices.length) {
+                    return window.showQuickPick(choices)
+                        .then((choice: QuickPickItem) => {
+                            return sendXQuery(mlClient, `dbg:${intention}(${choice.description})`)
+                                .result(
+                                    () => {
+                                        window.showInformationMessage(`Successfully ${intention}ed ${choice.label} on ${mlClient.params.host}`)
+                                    },
+                                    (err) => {
+                                        window.showErrorMessage(`Failed to connect to ${choice.label}: ${JSON.stringify(err)}`)
+                                    })
+                        })
+                }
+                window.showInformationMessage(`No stopped servers found on ${mlClient.params.host}`)
+                return null
             })
     }
 }
