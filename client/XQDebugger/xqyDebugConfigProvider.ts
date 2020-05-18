@@ -9,8 +9,12 @@ import { MarklogicClient, MlClientParameters, sendXQuery } from '../marklogicCli
 import { readFileSync } from 'fs'
 
 const XQY = 'xqy'
-const listServersQuery = `! (map:new() => map:with("id", .) => map:with("name", xdmp:server-name(.)))
-    => xdmp:to-json()`
+const listServersQuery = `
+! (map:new()
+  => map:with("id", .)
+  => map:with("name", xdmp:server-name(.))
+  => map:with("port", xdmp:server-port(.)))
+=> xdmp:to-json()`
 
 export class XqyDebugConfiguration implements DebugConfiguration {
     [key: string]: any
@@ -35,6 +39,7 @@ const placeholder: QuickPickOptions = {
 interface ServerQueryResponse {
     name: string;
     id: string;
+    port: number;
 }
 
 
@@ -121,23 +126,26 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
         const command = intention === 'connect' ? 'xdmp:servers()' : 'dbg:connected()'
         await sendXQuery(mlClient, `${command} ${listServersQuery}`)
             .result(
-                (fulfill: Record<string, any>) => {
+                (fulfill: Record<string, ServerQueryResponse>) => {
                     const servers: ServerQueryResponse[] = [].concat(fulfill[0]['value'] || [])
-                    return servers.map((server: ServerQueryResponse) => {
-                        return {
-                            label: server.name,
-                            description: server.id,
-                            detail: `${server.name} on ${mlClient.params.host}:${mlClient.params.port}`
-                        } as QuickPickItem
-                    })
+                    return servers
+                        .filter((server: ServerQueryResponse) => server.port !== mlClient.params.port)
+                        .map((server: ServerQueryResponse) => {
+                            return {
+                                label: server.name,
+                                description: server.id,
+                                detail: `${server.name} on ${mlClient.params.host}:${server.port}`,
+                            } as QuickPickItem
+                        })
                 },
                 err => {
                     window.showErrorMessage(`couldn't get a list of servers: ${JSON.stringify(err)}`)
                     return []
-                }
-            ).then((choices: QuickPickItem[]) => {
+                })
+            .then((choices: QuickPickItem[]) => {
                 return window.showQuickPick(choices)
-            }).then((choice: QuickPickItem) => {
+            })
+            .then((choice: QuickPickItem) => {
                 return sendXQuery(mlClient, `dbg:${intention}(${choice.description})`)
                     .result(
                         () => {
