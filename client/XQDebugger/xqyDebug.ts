@@ -225,20 +225,23 @@ export class XqyDebugSession extends LoggingDebugSession {
         this.sendResponse(response)
     }
 
-    // placeholder: XqyRuntime sometimes gives line numbers off-by-one
+    // VS Code defaults to add 1. Let's not do that.
     protected convertDebuggerLineToClient(line: number): number {
-        return line - 1
+        return line
     }
 
     protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
         const stackFrames: StackFrame[] = this._stackFrames.map(xqyFrame => {
             {
+                // if the stack frame has a module URI, it's a from module
+                // therefore 'cache-buster' line ML modules needs to be offset
+                const localLine: number = xqyFrame.uri ? xqyFrame.line - 1 : xqyFrame.line
                 return new StackFrame(
                     this._frameHandles.create(xqyFrame),
                     xqyFrame.operation ? xqyFrame.operation : '<anonymous>',
                     this.createSource(this._mapUrlToLocalFile(xqyFrame.uri)),
-                    this.convertDebuggerLineToClient(xqyFrame.line),
-                    this.convertDebuggerLineToClient(xqyFrame.line)
+                    this.convertDebuggerLineToClient(localLine),
+                    this.convertDebuggerColumnToClient(xqyFrame.column)
                 )
             }
         })

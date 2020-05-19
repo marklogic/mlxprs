@@ -25,6 +25,7 @@ export interface XqyExpr {
 export interface XqyFrame {
     uri: string;
     line: number;
+    column: number;
     operation?: string;
     xid?: string;       // xpath to the frame in the debug:stack element
     scopeChain: XqyScopeObject[];
@@ -318,6 +319,7 @@ export class XqyRuntime extends EventEmitter {
             stackArray.push({
                 uri: uri,
                 line: Number(expr.line[0]),
+                column: Number(expr.column[0]),
                 operation: operation,
                 xid: exprId,
                 scopeChain: this.parseScopeXML(expr)
@@ -329,6 +331,7 @@ export class XqyRuntime extends EventEmitter {
                 stackArray.push({
                     uri: frame.uri,
                     line: Number(frame.line[0]),
+                    column: Number(expr.column[0]),
                     operation: frame.operation ? frame.operation[0] : '<anonymous>',
                     xid: exprId,
                     scopeChain: scopeChain
@@ -350,7 +353,7 @@ export class XqyRuntime extends EventEmitter {
 
         return this.sendFreshQuery(`dbg:stack(${this._rid})`).result(
             (fulfill: Record<string, any>) => {
-                console.debug('stack: ' + JSON.stringify(fulfill))
+                console.debug('stack: ' + JSON.stringify(fulfill[0].value))
                 return XqyRuntime.parseStackXML(fulfill[0].value)
             },
             (error: Record<string, any>) => {
