@@ -4,11 +4,10 @@ import { DebugConfiguration, DebugConfigurationProvider, WorkspaceFolder, Cancel
     DebugAdapterExecutable,
     DebugAdapterDescriptor,
     DebugSession, QuickPickItem, QuickPickOptions,
-    WorkspaceConfiguration, workspace, Memento } from 'vscode'
+    WorkspaceConfiguration, workspace } from 'vscode'
 import { MarklogicClient, MlClientParameters, sendXQuery } from '../marklogicClient'
 import { readFileSync } from 'fs'
 
-const XQY = 'xqy'
 const listServersQuery = `
 ! (map:new()
   => map:with("id", .)
@@ -94,22 +93,26 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
         })
         config.clientParams = clientParams
 
-        // TODO: for attaching to existing requests
         if (config.request === 'attach') {
             const rid: string = await this.getAvailableRequests(clientParams)
                 .then((requests: Array<DebugStatusQueryResponse>) => {
-                    const qpRequests: QuickPickItem[] = requests.map((request: DebugStatusQueryResponse) => {
-                        return {
-                            label: request.rid,
-                            description: `Request ${request.requestStatus} on ${request.serverName}`,
-                            detail: request.debugStatus
-                        } as QuickPickItem
-                    })
-                    return window.showQuickPick(qpRequests, placeholder)
-                        .then((pickedRequest: QuickPickItem) => {
-                            config.rid = pickedRequest.label
-                            return config.rid
+                    if (requests.length) {
+                        const qpRequests: QuickPickItem[] = requests.map((request: DebugStatusQueryResponse) => {
+                            return {
+                                label: request.rid,
+                                description: `Request ${request.requestStatus} on ${request.serverName}`,
+                                detail: request.debugStatus
+                            } as QuickPickItem
                         })
+                        return window.showQuickPick(qpRequests, placeholder)
+                            .then((pickedRequest: QuickPickItem) => {
+                                config.rid = pickedRequest.label
+                                return config.rid
+                            })
+                    } else {
+                        window.showWarningMessage(`No requests found to debug on ${clientParams.host}`)
+                        return ''
+                    }
                 })
             config.rid = rid
         }
@@ -173,11 +176,11 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
                                         window.showInformationMessage(`Successfully ${intention}ed ${choice.label} on ${mlClient.params.host}`)
                                     },
                                     (err) => {
-                                        window.showErrorMessage(`Failed to connect to ${choice.label}: ${JSON.stringify(err)}`)
+                                        window.showErrorMessage(`Failed to connect to ${choice.label}: ${JSON.stringify(err.body.errorResponse.message)}`)
                                     })
                         })
                 }
-                window.showInformationMessage(`No stopped servers found on ${mlClient.params.host}`)
+                window.showWarningMessage(`No stopped servers found on ${mlClient.params.host}`)
                 return null
             })
     }

@@ -152,12 +152,18 @@ export class XqyDebugSession extends LoggingDebugSession {
         await this._configurationDone.wait(1000)
         this._workDir = args.path
         this._runtime.setRid(args.rid)
-        this._runtime.setRunTimeState('attached')
-        this._runtime.initialize(args)
-        this.refreshStack('attachRequest')
-        await this._setBufferedBreakPoints()
-        this.sendResponse(response)
-        this.sendEvent(new StoppedEvent('entry', XqyDebugSession.THREAD_ID))
+        if (this._runtime.getRid()) {
+            this._runtime.setRunTimeState('attached')
+            this._runtime.initialize(args)
+            this.refreshStack('attachRequest')
+            await this._setBufferedBreakPoints()
+            this.sendResponse(response)
+            this.sendEvent(new StoppedEvent('entry', XqyDebugSession.THREAD_ID))
+        } else {
+            response.success = false
+            this._runtime.setRunTimeState('shutdown')
+            this.sendEvent(new TerminatedEvent(false))
+        }
     }
 
     protected setBreakPointsRequest(response: DebugProtocol.SetDataBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): void {
