@@ -305,7 +305,7 @@ export class XqyRuntime extends EventEmitter {
         return scopesToReturn
     }
 
-    public static parseStackXML(stackXMLString: string, offset = -1): Array<XqyFrame> {
+    public static parseStackXML(stackXMLString: string): Array<XqyFrame> {
         let parsed: any
         const stackArray: Array<XqyFrame> = []
         parseString(stackXMLString, (err: Error, result: any) => {
@@ -317,7 +317,7 @@ export class XqyRuntime extends EventEmitter {
 
             stackArray.push({
                 uri: uri,
-                line: Number(expr.line[0]) + offset,
+                line: Number(expr.line[0]),
                 operation: operation,
                 xid: exprId,
                 scopeChain: this.parseScopeXML(expr)
@@ -325,13 +325,18 @@ export class XqyRuntime extends EventEmitter {
 
             for (let i = 0; i < parsed.stack.frame.length; i++) {
                 const frame: any = parsed.stack.frame[i]
+                const scopeChain: XqyScopeObject[] = this.parseScopeXML(frame)
                 stackArray.push({
                     uri: frame.uri,
-                    line: Number(frame.line[0]) + offset,
+                    line: Number(frame.line[0]),
                     operation: frame.operation ? frame.operation[0] : '<anonymous>',
                     xid: exprId,
-                    scopeChain: this.parseScopeXML(frame)
+                    scopeChain: scopeChain
                 } as XqyFrame)
+                // include local variables, if present, in the expr scope
+                if (i === 0) {
+                    stackArray[0].scopeChain = scopeChain
+                }
             }
         })
         return stackArray
@@ -340,7 +345,7 @@ export class XqyRuntime extends EventEmitter {
     public async getCurrentStack(): Promise<Array<XqyFrame>> {
         // This is usually called immediately after a dbg control call, so the
         // request may not have been stopped by the time we get here. 60ms delay
-        // should be enough time to wait, without bothering to the user
+        // should be enough time to wait, without bothering the user
         await new Promise(resolve => setTimeout(resolve, 60))
 
         return this.sendFreshQuery(`dbg:stack(${this._rid})`).result(

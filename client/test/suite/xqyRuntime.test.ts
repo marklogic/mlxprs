@@ -18,7 +18,7 @@ suite('XQyuery Debug Test Suite', () => {
     })
 
     before(() => {
-        stackFrames = XqyRuntime.parseStackXML(stackXmlString, 0)
+        stackFrames = XqyRuntime.parseStackXML(stackXmlString)
         largerStackFrames = XqyRuntime.parseStackXML(largerStackXmlString)
         expr = XqyRuntime.parseExprXML(exprXmlString)
     })
@@ -53,6 +53,11 @@ suite('XQyuery Debug Test Suite', () => {
         assert.equal('map:map()', largerStackFrames[2].scopeChain[1].variables[1].value)
 
         assert.ok(!largerStackFrames[3].scopeChain[0].variables[0].value)
+    })
+
+    test('parseStackXML uses local variables from first frame when available', () => {
+        assert.equal(2, largerStackFrames[0].scopeChain.length)
+        assert.ok(largerStackFrames[0].scopeChain.map(scope => {return scope.type}).includes('local'))
     })
 
     test('parseExprXML produces XqyExprs', () => {

@@ -225,6 +225,11 @@ export class XqyDebugSession extends LoggingDebugSession {
         this.sendResponse(response)
     }
 
+    // placeholder: XqyRuntime sometimes gives line numbers off-by-one
+    protected convertDebuggerLineToClient(line: number): number {
+        return line - 1
+    }
+
     protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
         const stackFrames: StackFrame[] = this._stackFrames.map(xqyFrame => {
             {
