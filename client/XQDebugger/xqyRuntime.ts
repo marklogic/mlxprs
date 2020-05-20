@@ -108,88 +108,46 @@ export class XqyRuntime extends EventEmitter {
                 })
     }
 
-    /**
-     * XQuery fns dbg:clear() and and dbg:break() require expression IDs, not lines,
-     * in order to clear and set breakpoints.
-     *
-     * @param location
-     * @return expression ID as a string
-     */
-    private findBreakPointExpr(location: XqyBreakPoint): Promise<Array<string>> {
-        const findExprQuery =
-        `try {
-            <a>{dbg:line(${this._rid}, "${location.uri}", ${location.line}) ! dbg:expr(${this._rid}, .)}</a>
-        } catch($e) {
-            <a>{dbg:line(${this._rid}, "", ${location.line}) ! dbg:expr(${this._rid}, .)}</a>
-        }`
-        return this.sendFreshQuery(findExprQuery)
+    private static setBreakPointsQuery(uri: string, lines: number[], rid: string): string {
+        return `
+        declare variable $uri := '${uri}';
+        declare variable $lines := (${lines.toString()});
+        declare variable $rid as xs:unsignedLong := ${rid};
+
+        let $exprs := $lines ! dbg:line($rid, $uri, .) ! dbg:expr($rid, .)
+        for $expr in fn:distinct-values(($exprs[dbg:line = $lines])/dbg:expr-id/fn:data())
+        return dbg:break($rid, $expr)`
+    }
+
+    private static removeBreakPointsQuery(uri: string, rid: string): string {
+        return `
+        declare variable $uri := '${uri}';
+        declare variable $rid as xs:unsignedLong := ${rid};
+
+        let $exprs as element(dbg:expr)* := dbg:breakpoints($rid) ! dbg:expr($rid, .)
+        for $expr in fn:distinct-values($exprs[dbg:uri/fn:string() = $uri]/dbg:expr-id/fn:data())
+
+        return dbg:clear($rid, $expr)`
+    }
+
+    public setBreakPointsOnMl(uri: string, lines: number[]): Promise<void> {
+        const q = XqyRuntime.setBreakPointsQuery(uri, lines, this._rid)
+        return this.sendFreshQuery(q)
             .result(
-                (fulfill: Record<string, any>[]) => {
-                    console.debug('fulfull fbpe: ' + JSON.stringify(fulfill))
-                    try {
-                        location.expr = XqyRuntime.parseExprXML(fulfill[0]['value'])
-                        return location.expr.map((e: XqyExpr) => e.id)
-                    } catch (err) {
-                        console.error(`Failed parsing dbg:line(): ${JSON.stringify(err)}`)
-                        location.expr = null
-                        return []
-                    }
-                },
-                (error: Record<string, any>[]) => {
-                    console.error(`error finding breakpoint ${this._rid}: ${JSON.stringify(error)}`)
-                    return []
-                })
-    }
-
-    /**
-     * Set a breakpoint on MarkLogic server. If we don't know the `<expr/>` for
-     * the location, look it up first and then set the breakpoint.
-     *
-     * Uses `dbg:break()`
-     *
-     * @param location: The XqyBreakPoint to be set
-     *
-     */
-    public setBreakPoint(location: XqyBreakPoint): Promise<void> {
-        if (!location.expr) {
-            return this.findBreakPointExpr(location).then((exprIds: string[]) => {
-                exprIds.forEach((exprId: string) => this.setBreakPointOnMl(exprId))
-            })
-        } else {
-            const exprIds: string[] = location.expr.map(e => e.id)
-            exprIds.forEach((exprId: string) => this.setBreakPointOnMl(exprId))
-            return null
-        }
-    }
-
-    public removeBreakPoint(location: XqyBreakPoint): Promise<void> {
-        if (!location.expr) {
-            return this.findBreakPointExpr(location).then((exprIds: string[]) => {
-                exprIds.forEach((exprId: string) => this.removeBreakPointOnMl(exprId))
-            })
-        } else {
-            const exprIds: string[] = location.expr.map(e => e.id)
-            exprIds.forEach((exprId: string) => this.removeBreakPointOnMl(exprId))
-            return null
-        }
-    }
-
-    private setBreakPointOnMl(exprId: string): Promise<void> {
-        return this.sendFreshQuery(`dbg:break(${this._rid}, ${exprId})`)
-            .result(
-                (fulfill: Record<string, any>[]) => {
-                    console.debug(`set breakpoint on ${this._rid} at ${exprId}`)
+                () => {
+                    console.debug(`set breakpoints for ${uri} on ${this._rid}`)
                 },
                 (error: Record<string, any>[]) => {
                     console.info('error: ' + JSON.stringify(error))
                 })
     }
 
-    private removeBreakPointOnMl(exprId: string): Promise<void> {
-        return this.sendFreshQuery(`dbg:clear(${this._rid}, ${exprId})`)
+    public removeBreakPointsOnMl(uri: string): Promise<void> {
+        const q = XqyRuntime.removeBreakPointsQuery(uri, this._rid)
+        return this.sendFreshQuery(q)
             .result(
-                (fulfill: Record<string, any>[]) => {
-                    console.info('fulfull: ' + JSON.stringify(fulfill))
+                () => {
+                    console.debug(`removed breakpoints for ${uri} on ${this._rid}`)
                 },
                 (error: Record<string, any>[]) => {
                     console.info('error: ' + JSON.stringify(error))
