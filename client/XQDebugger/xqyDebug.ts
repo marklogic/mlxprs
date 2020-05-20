@@ -290,7 +290,7 @@ export class XqyDebugSession extends LoggingDebugSession {
             this._resetHandles()
         }).catch(err => {
             this._handleError(err,
-                `Error in after ${callerName}: ${JSON.stringify(err)}`, true, callerName)
+                `Error after ${callerName}: ${JSON.stringify(err)}`, true, callerName)
         })
     }
 
