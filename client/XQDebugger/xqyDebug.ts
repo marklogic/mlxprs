@@ -114,7 +114,8 @@ export class XqyDebugSession extends LoggingDebugSession {
 
     private _setBufferedBreakPoints(): void {
         const xqyRequests = []
-        this._bpCache.forEach(bp => {
+        this._bpCache.forEach((bp: XqyBreakPoint) => {
+            bp.uri = this._mapLocalFiletoUrl(bp.filePath)
             xqyRequests.push(this._runtime.setBreakPoint(bp))
         })
 
@@ -172,7 +173,7 @@ export class XqyDebugSession extends LoggingDebugSession {
         const xqyRequests = []
         if (args.breakpoints) {
             const actualBreakpoints = args.breakpoints.map((b, idx) => {
-                const bp = new Breakpoint(true, b.line, b.column, this.createSource(path)) as DebugProtocol.Breakpoint
+                const bp: DebugProtocol.Breakpoint = new Breakpoint(true, b.line, b.column, this.createSource(path))
                 return bp
             })
 
