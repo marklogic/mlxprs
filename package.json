@@ -49,11 +49,11 @@
             },
             {
                 "command": "extension.connectXqyServer",
-                "title": "MarkLogic: Connect XQY Debug Server"
+                "title": "MarkLogic: Connect XQuery Debug Server"
             },
             {
                 "command": "extension.disconnectXqyServer",
-                "title": "MarkLogic: Disconnect XQY Debug Server"
+                "title": "MarkLogic: Disconnect XQuery Debug Server"
             }
         ],
         "breakpoints": [
@@ -94,7 +94,7 @@
                         "properties": {
                             "path": {
                                 "type": "string",
-                                "description": "Absolute path to a text file.",
+                                "description": "local path corresponding to the root directory for the modules deployed on MarkLogic.",
                                 "default": ""
                             },
                             "debugServerName": {
