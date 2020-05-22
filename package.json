@@ -161,7 +161,7 @@
                         "properties": {
                             "program": {
                                 "type": "string",
-                                "description": "Absolute path to the local XQuery query to evaluate in debug mode. If left blank, the current open buffer will be used.",
+                                "description": "Absolute path to the local XQuery source code to evaluate in debug mode. If left blank, the current open buffer will be used.",
                                 "default": ""
                             },
                             "root": {
@@ -188,7 +188,7 @@
                             },
                             "rid": {
                                 "type": "string",
-                                "description": "Request Id to attach to. You will be prompted for one if none is provided.",
+                                "description": "Request Id to attach to. You will be prompted to choose one if none is provided.",
                                 "default": ""
                             }
                         }
@@ -211,14 +211,25 @@
                 ],
                 "configurationSnippets": [
                     {
-                        "label": "ML Debug: Attach!",
-                        "description": "Launch debug",
+                        "label": "MarkLogic: Evaluate Current XQuery Module",
+                        "description": "Launch an XQuery request in debug mode",
                         "body": {
                             "type": "ml-debug",
                             "request": "launch",
-                            "rid": 0,
-                            "name": "Launch XQY Debug Request",
-                            "stopOnEntry": true
+                            "name": "Launch XQuery Debug Request",
+                            "stopOnEntry": true,
+                            "root": "${workspaceFolder}/src/main/ml-modules/root"
+                        }
+                    },
+                    {
+                        "label": "MarkLogic: Attach to Remote XQuery Request",
+                        "description": "Attach to a request to debug on a connected app server",
+                        "body": {
+                            "type": "ml-debug",
+                            "request": "attach",
+                            "name": "Attach XQuery Debug Request",
+                            "stopOnEntry": true,
+                            "root": "${workspaceFolder}/src/main/ml-modules/root"
                         }
                     }
                 ],

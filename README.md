@@ -7,7 +7,7 @@ _Develop, run, and debug code for MarkLogic in the popular VS Code IDE_
 ## Features
 
 * Syntax highlighting and IntelliSense for MarkLogic Server-Side JavaScript and XQuery
-* Interactive debugging of JavaScript running in Data Hub Service or MarkLogic, including attaching to in-flight requests and inspecting live variables (_XQuery coming soon._)
+* Interactive debugging of JavaScript and XQuery running in Data Hub Service or MarkLogic, including attaching to in-flight requests and inspecting live variables
 *  Real-time query evaluation of JavaScript or XQuery against a live Data Hub Service or MarkLogic instance
 
 _JavaScript debugging requires version 2.0.0+ of the MarkLogic extension and [MarkLogic 10.0-4+](https://developer.marklogic.com/products/marklogic-server/10.0)._
@@ -114,12 +114,12 @@ When this query runs, it will use the host, port, and `contentDb` specified in t
 
 Both JavaScript and XQuery debuggers support two modes of debugging:
 
-1. Launch: Evaluates the current main module (for JavaScript) or non-library module (for XQuery)
+1. Launch: Evaluates a main module (for JavaScript) or non-library module (for XQuery)
 2. Attach: Intecepts an existing request, such as from an integration test
 
 Where it can, query debugging uses the same VS Code settings used for running queries (for example, `marklogic.host`, `marklogic.username`). In addition to these code settings, you will need a [**launch config**](https://code.visualstudio.com/docs/editor/debugging#_launch-configurations) in your project (under `.vscode/launch.json`) for debug-specific parameters.
 
-Open the `launch.json` from the VS Code command palette with the command: “Debug: Open launch.json”.
+Open the `launch.json` from the VS Code command palette with the command: “Debug: Open launch.json” or "Debug.
 
 Below is an example of a `launch.json` file, with JavaScript and XQuery configurations for both launch and attach:
 
