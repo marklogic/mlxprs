@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 //@ts-check
 /** @typedef {import('webpack').Configuration} WebpackConfig **/
 
@@ -6,10 +7,11 @@
 const path = require('path')
 const merge = require('merge-options')
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 module.exports = function withDefaults(/**@type WebpackConfig*/extConfig) {
 
     /** @type WebpackConfig */
-    let defaultConfig = {
+    const defaultConfig = {
         mode: 'none',
         target: 'node', // vscode extensions run in a Node.js-context
         // 📖 -> https://webpack.js.org/configuration/node/

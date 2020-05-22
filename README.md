@@ -7,7 +7,7 @@ _Develop, run, and debug code for MarkLogic in the popular VS Code IDE_
 ## Features
 
 * Syntax highlighting and IntelliSense for MarkLogic Server-Side JavaScript and XQuery
-* Interactive debugging of JavaScript running in Data Hub Service or MarkLogic, including attaching to in-flight requests and inspecting live variables (_XQuery coming soon._)
+* Interactive debugging of JavaScript and XQuery running in Data Hub Service or MarkLogic, including attaching to in-flight requests and inspecting live variables
 *  Real-time query evaluation of JavaScript or XQuery against a live Data Hub Service or MarkLogic instance
 
 _JavaScript debugging requires version 2.0.0+ of the MarkLogic extension and [MarkLogic 10.0-4+](https://developer.marklogic.com/products/marklogic-server/10.0)._
@@ -110,34 +110,47 @@ fn:doc('/my-testing-doc.json')
 
 When this query runs, it will use the host, port, and `contentDb` specified in the comment, along with the VS Code configuration parameters for the rest of the MarkLogic client definition. (The "note" will be ignored.) Other queries in other editor tabs will not be affected.
 
-## Debugging JavaScript
+## Debugging
 
-The debugger supports two modes of debugging:
+Both JavaScript and XQuery debuggers support two modes of debugging:
 
-1. Launch: Evaluates the current main module
+1. Launch: Evaluates a main module (for JavaScript) or non-library module (for XQuery)
 2. Attach: Intecepts an existing request, such as from an integration test
 
-Where it can, query debugging uses the same VS Code settings used for running queries (for example, `marklogic.host`, `marklogic.username`). In addition to these code settings, you will need a **launch config** in your project (under `.vscode/launch.json`) for debug-specific parameters.
+Where it can, query debugging uses the same VS Code settings used for running queries (for example, `marklogic.host`, `marklogic.username`). In addition to these code settings, you will need a [**launch config**](https://code.visualstudio.com/docs/editor/debugging#_launch-configurations) in your project (under `.vscode/launch.json`) for debug-specific parameters.
 
-Open the `launch.json` from the VS Code command palette with the command: “Debug: Open launch.json”.
+Open the `launch.json` from the VS Code command palette with the command: “Debug: Open launch.json” or "Debug.
 
-A typical `launch.json` file looks like this:
+Below is an example of a `launch.json` file, with JavaScript and XQuery configurations for both launch and attach:
 
 ```json
 {
   "version": "2.0.0",
   "configurations": [
     {
-        "request": "launch",
-        "type": "ml-jsdebugger",
-        "name": "Evaluate Current JavaScript Module"
+      "request": "launch",
+      "type": "ml-jsdebugger",
+      "name": "Evaluate Current JavaScript Module"
     },
     {
-        "request": "attach",
-        "type": "ml-jsdebugger",
-        "name": "Attach to Debug Request",
-        "path": "${workspaceFolder}/src/main/ml-modules/root",
-        "debugServerName": "Enter debug server name"
+      "request": "attach",
+      "type": "ml-jsdebugger",
+      "name": "Attach to Debug Request",
+      "path": "${workspaceFolder}/src/main/ml-modules/root",
+      "debugServerName": "Enter debug server name"
+    },
+    {
+      "request": "launch",
+      "type": "xquery-ml",
+      "name": "Launch XQY Debug Request",
+      "program": "",
+      "root": "${workspaceFolder}/src/main/ml-modules/root"
+    },
+    {
+      "request": "attach",
+      "type": "xquery-ml",
+      "name": "Attach to XQY Debug request",
+      "root": "${workspaceFolder}/plugins"
     }
   ]
 }
@@ -147,48 +160,78 @@ VS Code is syntax-aware of what information should go into `launch.json`, so tak
 
 ### Launch
 
-An example 'launch' type configuration item:
+Example 'launch' type configuration items for JavaScript and XQuery:
 
 ```json
     {
-        "type": "ml-jsdebugger",
-        "request": "launch",
-        "name": "Evaluate Current JavaScript Module"
+      "type": "ml-jsdebugger",
+      "request": "launch",
+      "name": "Evaluate Current JavaScript Module"
+    },
+    {
+      "type": "xquery-ml",
+      "request": "launch",
+      "name": "Launch XQY Debug Request",
+      "program": "",
+      "root": "${workspaceFolder}/src/main/ml-modules/root"
     }
 ```
 
 By default, launch mode will launch the currently opened file for debugging.
-An optional "path" parameter can be provided to specify another file for debugging.
+An optional "path" (for JavaScript) or "program" (for XQuery) can be provided to specify another file for debugging.
 
 ### Attach
 
-Here's an example of an _attach_ configuration:
+Here's an example of _attach_ configurations for JavaScript and XQuery:
 
 ```json
     {
-        "type": "ml-jsdebugger",
-        "request": "attach",
-        "name": "Attach to Remote JavaScript Request",
-        "debugServerName": "jsdbg",
-        "path": "${workspaceFolder}"
+      "type": "ml-jsdebugger",
+      "request": "attach",
+      "name": "Attach to Remote JavaScript Request",
+      "debugServerName": "jsdbg",
+      "path": "${workspaceFolder}/src/main/ml-modules/root"
+    },
+    {
+      "type": "xquery-ml",
+      "request": "attach",
+      "name": "Attach to XQY Debug request",
+      "root": "${workspaceFolder}/plugins"
     }
 ```
 
-Attach mode intercepts a paused request in a given *debug server*, an app server connected to the VS Code debugger. To make a debug server, open command palette, type `connectServer` and enter the name of the app server name to connect to. Use the name of the app server in the MarkLogic configuration, _not_ its hostname or IP address. A connected server will automatically pause all requests so that you can attach the debugger. Use `disconnectServer` disable debugging and resume handling requests as normal.
+Attach mode intercepts a paused request in a given *debug server*, an app server connected to the VS Code debugger. To connect to an app server for debugging:
+
+1. open the command palette, start typing <kbd>MarkLogic: Connect...</kbd> until autocomplete prompts you with "MarkLogic: Connect JavaScript Debug Server" or "MarkLogic: Connect XQuery Debug Server", and choose the command you want.
+2. You'll be prompted to choose a server. Use the name of the app server in the MarkLogic configuration, _not_ its hostname or IP address.
+3. You should see a confirmation message once you're connected
+
+Connecting a server will automatically pause all requests so that you can attach the debugger. When you're done, use either <kbd>MarkLogic: Disconnect...</kbd> command to disable debugging and resume handling requests as normal.
 
 **Note: Only requests that are launched after a server is connected/made debug server can be attached.**
 
-In attach mode, `debugServerName` and `path` are required. Once you start debugging, a dropdown menu will pop up listing all paused requests on the debug server. Choose the one you want to debug.
+Once you start debugging, a dropdown menu will pop up listing all paused requests on the debug server. Choose the one you want to debug.
 
 ![Attach screenshot](images/attach_screenshot.png "attach screenshot")
 
 Use the optional parameter `rid` to specify a request ID in advance and avoid being prompted for it.
 
+In attach mode for JavaScript, `debugServerName` is a required parameter in the `launch.json`. This should be the same server (by name) that you connected to in the [Attach](#attach) section. XQuery attach mode will simply list all attachable queries.
+
+
+
 ## Notes
+
+### Debugger module mapping
+
+In order to step through modules that get imported in your code, you need to tell the debugger where to find the modules root in your local project. This is the `path` parameter (for JavaScript) and `root` (for XQuery). These parameters are required.
 
 ### Debugging Limitations
 
-The JavaScript debugger assumes you have a local copy of the modules you are debugging. Streaming JavaScript source files from the MarkLogic is not yet implemented. If you import other modules into your script, you won't be able to inspect or set breakpoints in those files. 
+Both debuggers assume you have a local copy of the modules you are debugging. Streaming source files from MarkLogic is not yet implemented. If you import project-external modules into your script, you won't be able to inspect or set breakpoints in those files.
+
+In XQuery attach-mode debugging, you should not 'connect' to the same server you use for queries. Since connecting stops all requests on that app server, you'd lock yourself out. For this reason, the extension will not offer to connect to your configured query client's port. Admin, Manage, HealthCheck, and App-Services are also excluded from debugging.
+
 
 ### Required Privileges for Evaluation and Debugging
 

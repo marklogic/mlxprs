@@ -15,19 +15,6 @@
             "cwd": "${workspaceFolder}/server/"
         },
         {
-            "name": "Launch Debug Adapter Server",
-            "type": "node",
-            "request": "launch",
-            "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/client/JSDebugger/mlDebug.ts",
-            "args": [
-                "--server=4711"
-            ],
-            "outFiles": [
-                "${workspaceFolder}/dist/**/*.js"
-            ]
-        },
-        {
             "name": "Launch Extension",
             "type": "extensionHost",
             "request": "launch",
@@ -39,7 +26,7 @@
             "outFiles": [
                 "${workspaceFolder}/dist/**/*.js"
             ],
-            "preLaunchTask": "npm",
+            "preLaunchTask": "npm: compile",
             "cwd": "${workspaceFolder}"
         },
         {
@@ -75,14 +62,48 @@
             ],
             "preLaunchTask": "npm: copy-files",
             "cwd": "${workspaceFolder}/server"
+        },
+        {
+            "name": "Launch XQY Debug Adapter Server",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/client/XQDebugger/xqyDebug.ts",
+            "preLaunchTask": "npm: compile",
+            "args": [
+                "--server=4712",
+            ],
+            "outFiles": [
+                "${workspaceFolder}/dist/xqyDebug.js"
+            ]
+        },
+        {
+            "name": "Launch SJS Debug Adapter Server",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/client/JSDebugger/mlDebug.ts",
+            "args": [
+                "--server=4711"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.js"
+            ]
         }
     ],
     "compounds": [
         {
-            "name": "Extension + Server",
+            "name": "Extension + SJS Server",
             "configurations": [
                 "Launch Extension",
-                "Launch Debug Adapter Server"
+                "Launch SJS Debug Adapter Server"
+            ]
+        },
+        {
+            "name": "Extension + XQY Server",
+            "configurations": [
+                "Launch Extension",
+                "Launch XQY Debug Adapter Server"
             ]
         }
     ]

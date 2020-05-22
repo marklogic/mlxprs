@@ -272,8 +272,7 @@ export class MLDebugSession extends LoggingDebugSession {
             const v8frame = this._frameHandles.get(args.frameId)
             const scopesMl = v8frame.scopeChain as ScopeObject[]
 
-            for (let i = 0; i < scopesMl.length; i++) {
-                const scope = scopesMl[i]
+            scopesMl.forEach((scope: ScopeObject) => {
                 const expensive = scope.type === 'global' ? true : false
 
                 scopes.push(
@@ -281,7 +280,7 @@ export class MLDebugSession extends LoggingDebugSession {
                         scope.object.objectId ? this._variableHandles.create(scope.object.objectId as string) : 0,
                         expensive),
                 )
-            }
+            })
             response.body = {
                 scopes: scopes
             }
@@ -299,9 +298,9 @@ export class MLDebugSession extends LoggingDebugSession {
             const propertiesMl = JSON.parse(resp).result.result as V8PropertyObject[] //array of properties
             for (let i = 0; i < propertiesMl.length; i++) {
                 try {
-                    const element = propertiesMl[i]
+                    const element: V8PropertyObject = propertiesMl[i]
                     // console.log(element);
-                    const name = element.name
+                    const name: string = element.name
                     if (!element.hasOwnProperty('value')) {
                         variables.push({
                             name: name,
