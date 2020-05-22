@@ -1,3 +1,7 @@
+## [3.0.0](https://github.com/mikrovvelle/mlxprs/tree/v3.0.0)
+
+- add XQuery debugging
+
 ## [2.0.0](https://github.com/mikrovvelle/mlxprs/tree/v2.0.0)
 
 - add JavaScript debugging
