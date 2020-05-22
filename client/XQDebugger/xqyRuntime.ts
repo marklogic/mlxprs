@@ -140,26 +140,29 @@ export class XqyRuntime extends EventEmitter {
     }
 
     /**
-     * Add a set of breakpoints in MarkLogic
+     * Set the breakpoints in MarkLogic. Old breakpoint settings will get cleared
+     * and overwritten with what's given here.
      * @param uri Module URI on MarkLogic. Blank string for the top-level query
-     * @param lines line numbers to add breakpoints
+     * @param lines line numbers in MarkLogic to add breakpoints (keep in mind the +1 for 'cache-buster' line)
      * @returns array of line numbers for which a breakpoint was successfully set
      */
     public setBreakPointsOnMl(uri: string, lines: number[]): Promise<number[]> {
         const q = XqyRuntime.setBreakPointsQuery(uri, lines, this._rid)
-        return this.sendFreshQuery(q)
-            .result(
-                (fulfill: Record<string, number[]>[]) => {
-                    console.debug(`set ${fulfill[0]['value'].length} breakpoints for ${uri} on ${this._rid}`)
-                    return fulfill[0]['value']
-                },
-                (error: Record<string, any>[]) => {
-                    XqyRuntime.reportError(error, 'setBreakPointsOnMl')
-                    return []
-                })
+        return this.removeBreakPointsOnMl(uri).then(() => {
+            return this.sendFreshQuery(q)
+                .result(
+                    (fulfill: Record<string, number[]>[]) => {
+                        console.debug(`set ${fulfill[0]['value'].length} breakpoints for ${uri} on ${this._rid}`)
+                        return fulfill[0]['value']
+                    },
+                    (error: Record<string, any>[]) => {
+                        XqyRuntime.reportError(error, 'setBreakPointsOnMl')
+                        return []
+                    })
+        })
     }
 
-    public removeBreakPointsOnMl(uri: string): Promise<void> {
+    private removeBreakPointsOnMl(uri: string): Promise<void> {
         const q = XqyRuntime.removeBreakPointsQuery(uri, this._rid)
         return this.sendFreshQuery(q)
             .result(

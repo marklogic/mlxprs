@@ -40,6 +40,16 @@ const timeout = (ms: number): Promise<any> => {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+/**
+ * For mapping a debugger line from local source to its
+ * corresponding MarkLogic module. Modules include an extra
+ * 'cache-buster' line. To account for that, add 1 if the
+ * module exists in ML.
+ *
+ * @param localLine line number in local XQY source code
+ * @param uri URI of module in MarkLogic, or `''` for ad-hoc query
+ * @returns predicted line number in MarkLogic module
+ */
 const lineOnMl = (localLine: number, uri: string): number => {
     if (uri) return localLine + 1
     return localLine
@@ -206,16 +216,13 @@ export class XqyDebugSession extends LoggingDebugSession {
             if (this._runtime.getRunTimeState() !== 'shutdown') {
                 const mlLineNos: number[] = [...newBps].map(bp => lineOnMl(bp.line, uri))
 
-                this._runtime.removeBreakPointsOnMl(uri)
-                    .then(() => {
-                        this._runtime.setBreakPointsOnMl(uri, mlLineNos)
-                            .then((confirmedLines: number[]) => {
-                                console.debug(`set ${confirmedLines.length} new breakpoints on ${uri}: ${confirmedLines.toString()}`)
-                                confirmedLines.forEach(mlLineNo => {
-                                    localBreakpoints.find(bp => mlLineNo === lineOnMl(bp.line, uri)).verified = true
-                                })
-                                this.sendResponse(response)
-                            })
+                this._runtime.setBreakPointsOnMl(uri, mlLineNos)
+                    .then((confirmedLines: number[]) => {
+                        console.debug(`set ${confirmedLines.length} new breakpoints on ${uri}: ${confirmedLines.toString()}`)
+                        confirmedLines.forEach(mlLineNo => {
+                            localBreakpoints.find(bp => mlLineNo === lineOnMl(bp.line, uri)).verified = true
+                        })
+                        this.sendResponse(response)
                     })
                     .catch(err => {
                         this._handleError(err, 'Error setting XQY breakpoitns', false, 'setBreakPointsRequest')
