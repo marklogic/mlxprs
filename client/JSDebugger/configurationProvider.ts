@@ -114,7 +114,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
                         label: requests[i],
                         description: 'module: ' + String(requestText),
                         detail: 'startTime: ' + String(startTime)
-                    })
+                    } as vscode.QuickPickItem)
                 } catch (e) {
                     items.push({
                         label: requests[i]
