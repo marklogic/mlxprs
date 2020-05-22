@@ -63,6 +63,11 @@ export class XqyRuntime extends EventEmitter {
         this._runTimeState = state
     }
 
+    /**
+     *
+     * @param query full text of query to run in debug mode on MarkLogic
+     * @returns the request-id of the launched query presently getting debugged
+     */
     public launchWithDebugEval(query: string): Promise<string> {
         return this.sendFreshQuery(query, 'dbg')
             .result(
@@ -73,7 +78,7 @@ export class XqyRuntime extends EventEmitter {
                     return this._rid
                 },
                 (error: Record<string, any>) => {
-                    console.log('error (dbg): ' + JSON.stringify(error))
+                    XqyRuntime.reportError(error, 'launchWithDebugEval')
                     this._runTimeState = 'error'
                     return ''
                 })
@@ -114,9 +119,13 @@ export class XqyRuntime extends EventEmitter {
         declare variable $lines := (${lines.toString()});
         declare variable $rid as xs:unsignedLong := ${rid};
 
+    json:to-array(fn:distinct-values(
         let $exprs := $lines ! dbg:line($rid, $uri, .) ! dbg:expr($rid, .)
         for $expr in fn:distinct-values(($exprs[dbg:line = $lines])/dbg:expr-id/fn:data())
-        return dbg:break($rid, $expr)`
+        return (
+            dbg:break($rid, $expr),
+            dbg:expr($rid, $expr)/dbg:line/fn:data()
+          )))`
     }
 
     private static removeBreakPointsQuery(uri: string, rid: string): string {
@@ -130,15 +139,23 @@ export class XqyRuntime extends EventEmitter {
         return dbg:clear($rid, $expr)`
     }
 
-    public setBreakPointsOnMl(uri: string, lines: number[]): Promise<void> {
+    /**
+     * Add a set of breakpoints in MarkLogic
+     * @param uri Module URI on MarkLogic. Blank string for the top-level query
+     * @param lines line numbers to add breakpoints
+     * @returns array of line numbers for which a breakpoint was successfully set
+     */
+    public setBreakPointsOnMl(uri: string, lines: number[]): Promise<number[]> {
         const q = XqyRuntime.setBreakPointsQuery(uri, lines, this._rid)
         return this.sendFreshQuery(q)
             .result(
-                () => {
-                    console.debug(`set breakpoints for ${uri} on ${this._rid}`)
+                (fulfill: Record<string, number[]>[]) => {
+                    console.debug(`set ${fulfill[0]['value'].length} breakpoints for ${uri} on ${this._rid}`)
+                    return fulfill[0]['value']
                 },
                 (error: Record<string, any>[]) => {
-                    console.info('error: ' + JSON.stringify(error))
+                    XqyRuntime.reportError(error, 'setBreakPointsOnMl')
+                    return []
                 })
     }
 
@@ -150,7 +167,7 @@ export class XqyRuntime extends EventEmitter {
                     console.debug(`removed breakpoints for ${uri} on ${this._rid}`)
                 },
                 (error: Record<string, any>[]) => {
-                    console.info('error: ' + JSON.stringify(error))
+                    XqyRuntime.reportError(error, 'removeBreakPointsOnMl')
                 })
     }
 
@@ -161,7 +178,7 @@ export class XqyRuntime extends EventEmitter {
                     console.debug(`cleared breakpoints on ${this._rid}`)
                 },
                 (error: Record<string, any>[]) => {
-                    console.error(`error clearing breakpoints: ${JSON.stringify(error)}`)
+                    XqyRuntime.reportError(error, 'removeAllBreakPointsOnMl')
                 })
     }
 
@@ -324,5 +341,10 @@ export class XqyRuntime extends EventEmitter {
                 console.error('error (stack): ' + JSON.stringify(error))
                 throw error
             })
+    }
+
+    private static reportError(error: any, functionName: string): void {
+        const informativeMessage = error.body.errorResponse.message || JSON.stringify(error)
+        console.error(`error (${functionName}): ${informativeMessage}`)
     }
 }

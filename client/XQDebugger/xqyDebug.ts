@@ -40,6 +40,12 @@ const timeout = (ms: number): Promise<any> => {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+const lineOnMl = (localLine: number, uri: string): number => {
+    if (uri) return localLine + 1
+    return localLine
+}
+
+
 export class XqyDebugSession extends LoggingDebugSession {
 
     private static THREAD_ID = 1
@@ -54,6 +60,7 @@ export class XqyDebugSession extends LoggingDebugSession {
     // localPath => <set of breakpoints>
     private _bpCache: Map<string, Set<XqyBreakPoint>> = new Map();
 
+    // local modules root
     private _workDir = ''
     private _queryPath = ''
 
@@ -100,11 +107,12 @@ export class XqyDebugSession extends LoggingDebugSession {
         this._configurationDone.notify()
     }
 
-    private _mapLocalFiletoUrl(path: string): string {
-        if (!path) {
-            path = this._queryPath
+    private _mapLocalFiletoUrl(localPath: string): string {
+        // eval'd query => blank URI at top of stack
+        if (this._queryPath === localPath) {
+            return ''
         }
-        return path.replace(this._workDir, '')
+        return localPath.replace(this._workDir, '')
     }
 
     private _mapUrlToLocalFile(url: string): string {
@@ -118,15 +126,16 @@ export class XqyDebugSession extends LoggingDebugSession {
     private _setBufferedBreakPoints(): void {
         const xqyRequests = []
         for (const [localPath, bps] of this._bpCache.entries()) {
-            const lines: number[] = [...bps].map(bp => bp.line)
             const uri: string = this._mapLocalFiletoUrl(localPath)
-            xqyRequests.push(this._runtime.setBreakPointsOnMl(uri, lines))
+            const lines: number[] = [...bps].map(bp => lineOnMl(bp.line, uri))
+            xqyRequests.push(this._runtime.setBreakPointsOnMl(uri, lines)
+                .then((confirmedLines: number[]) => {
+                    console.debug(`${confirmedLines.length} breakpoints set no ${uri}: (${confirmedLines.toString()})`)
+                })
+            )
         }
 
         Promise.all(xqyRequests)
-            .then(fulfill => {
-                console.debug(`${fulfill.length} breakpoints set.`)
-            })
             .catch(error => {
                 this._handleError(error)
             })
@@ -142,7 +151,7 @@ export class XqyDebugSession extends LoggingDebugSession {
         this._runtime.initialize(args)
 
         try {
-            await this._runtime.launchWithDebugEval(args.query)
+            this._runtime.setRid(await this._runtime.launchWithDebugEval(args.query))
             this.refreshStack('launchRequest')
             await this._setBufferedBreakPoints()
             this.sendResponse(response)
@@ -175,16 +184,17 @@ export class XqyDebugSession extends LoggingDebugSession {
         const path: string = args.source.path
 
         if (args.breakpoints) {
-            const actualBreakpoints = args.breakpoints.map((b, idx) => {
-                const bp: DebugProtocol.Breakpoint = new Breakpoint(true, b.line, b.column, this.createSource(path))
+            const localBreakpoints = args.breakpoints.map((b, idx) => {
+                const bp: DebugProtocol.Breakpoint = new Breakpoint(false, b.line, b.column, this.createSource(path))
                 return bp
             })
 
+            const uri: string = this._mapLocalFiletoUrl(path)
             const newBps: Set<XqyBreakPoint> = new Set()
             args.breakpoints.forEach((breakpoint: DebugProtocol.SourceBreakpoint) => {
                 newBps.add({
                     filePath: path,
-                    uri: this._mapLocalFiletoUrl(path),
+                    uri: uri,
                     line: breakpoint.line,
                     column: breakpoint.column,
                     condition: breakpoint.condition
@@ -192,16 +202,18 @@ export class XqyDebugSession extends LoggingDebugSession {
             })
             this._bpCache.set(path, newBps)
 
-            response.body = { breakpoints: actualBreakpoints }
+            response.body = { breakpoints: localBreakpoints }
             if (this._runtime.getRunTimeState() !== 'shutdown') {
-                const lines: number[] = [...newBps].map(bp => bp.line)
-                const uri: string = [...newBps][0].uri
+                const mlLineNos: number[] = [...newBps].map(bp => lineOnMl(bp.line, uri))
 
                 this._runtime.removeBreakPointsOnMl(uri)
                     .then(() => {
-                        this._runtime.setBreakPointsOnMl(uri, lines)
-                            .then(() => {
-                                console.debug(`set new breakpoints on ${uri}`)
+                        this._runtime.setBreakPointsOnMl(uri, mlLineNos)
+                            .then((confirmedLines: number[]) => {
+                                console.debug(`set ${confirmedLines.length} new breakpoints on ${uri}: ${confirmedLines.toString()}`)
+                                confirmedLines.forEach(mlLineNo => {
+                                    localBreakpoints.find(bp => mlLineNo === lineOnMl(bp.line, uri)).verified = true
+                                })
                                 this.sendResponse(response)
                             })
                     })
