@@ -156,76 +156,39 @@
                 "configurationAttributes": {
                     "launch": {
                         "required": [
-                            "program"
+                            "root"
                         ],
                         "properties": {
                             "program": {
                                 "type": "string",
-                                "description": "Absolute path to a text file.",
+                                "description": "Absolute path to the local XQuery query to evaluate in debug mode. If left blank, the current open buffer will be used.",
                                 "default": ""
                             },
-                            "path": {
+                            "root": {
                                 "type": "string",
-                                "description": "path to root of modules being deployed to MarkLogic",
+                                "description": "local path corresponding to the root directory for the modules deployed on MarkLogic.",
                                 "default": "${workspaceFolder}/src/main/ml-modules/root"
-                            },
-                            "hostname": {
-                                "type": "string",
-                                "description": "hostname of MarkLogic server",
-                                "default": ""
-                            },
-                            "serverName": {
-                                "type": "string",
-                                "description": "Port number of debug server",
-                                "default": ""
-                            },
-                            "username": {
-                                "type": "string",
-                                "description": "Username.",
-                                "default": "${command:AskForUsername}"
-                            },
-                            "password": {
-                                "type": "string",
-                                "description": "Password.",
-                                "default": "${command:AskForPassword}"
-                            },
-                            "rid": {
-                                "type": "string",
-                                "description": "Request Id",
-                                "default": ""
                             }
                         }
                     },
                     "attach": {
                         "properties": {
-                            "path": {
+                            "required": [
+                                "root"
+                            ],
+                            "program": {
                                 "type": "string",
-                                "description": "path to root of modules being deployed to MarkLogic",
+                                "description": "In attach mode, this will be the full path to a local source file representing the eval'd ad-hoc query (if present) in MarkLogic.",
+                                "default": ""
+                            },
+                            "root": {
+                                "type": "string",
+                                "description": "local path corresponding to the root directory for the modules deployed on MarkLogic.",
                                 "default": "${workspaceFolder}/src/main/ml-modules/root"
-                            },
-                            "hostname": {
-                                "type": "string",
-                                "description": "hostname of MarkLogic server",
-                                "default": ""
-                            },
-                            "serverName": {
-                                "type": "string",
-                                "description": "Port number of debug server",
-                                "default": ""
-                            },
-                            "username": {
-                                "type": "string",
-                                "description": "Username.",
-                                "default": "${command:AskForUsername}"
-                            },
-                            "password": {
-                                "type": "string",
-                                "description": "Password.",
-                                "default": "${command:AskForPassword}"
                             },
                             "rid": {
                                 "type": "string",
-                                "description": "Request Id",
+                                "description": "Request Id to attach to. You will be prompted for one if none is provided.",
                                 "default": ""
                             }
                         }

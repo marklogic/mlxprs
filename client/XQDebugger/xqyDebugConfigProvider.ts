@@ -93,7 +93,7 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
         })
         config.clientParams = clientParams
 
-        if (config.request === 'attach') {
+        if (config.request === 'attach' && !config.rid) {
             const rid: string = await this.getAvailableRequests(clientParams)
                 .then((requests: Array<DebugStatusQueryResponse>) => {
                     if (requests.length) {

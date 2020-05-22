@@ -21,11 +21,11 @@ export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArgum
     trace?: boolean;
     rid: string;
     clientParams: MlClientParameters;
-    path: string;
+    root: string;
 }
 
 export interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
-    path: string;
+    root: string;
     rid: string;
     clientParams: MlClientParameters;
     trace?: boolean;
@@ -156,7 +156,7 @@ export class XqyDebugSession extends LoggingDebugSession {
         // TODO: are we only doing this because it was in the mock debugger?
         // is there an actual race condition this addresses?
         await this._configurationDone.wait(1000)
-        this._workDir = args.path
+        this._workDir = args.root
         this._queryPath = args.program
         this._runtime.initialize(args)
 
@@ -174,7 +174,7 @@ export class XqyDebugSession extends LoggingDebugSession {
     protected async attachRequest(response: DebugProtocol.AttachResponse, args: AttachRequestArguments): Promise<void> {
         logger.setup(Logger.LogLevel.Stop, false)
         await this._configurationDone.wait(1000)
-        this._workDir = args.path
+        this._workDir = args.root
         this._runtime.setRid(args.rid)
         if (this._runtime.getRid()) {
             this._runtime.setRunTimeState('attached')
