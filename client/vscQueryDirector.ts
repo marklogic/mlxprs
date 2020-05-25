@@ -13,7 +13,7 @@ async function formatResults(uri: Uri, retries = 0): Promise<boolean> {
     await new Promise(resolve => setTimeout(resolve, 60))
     return commands.executeCommand(FCOMMAND, uri, FOPTIONS)
         .then((edits: TextEdit[]) => {
-            if (edits) {
+            if (edits && edits.length) {
                 console.debug(`${Date.now()} Got ${edits.length} edits...`)
                 const formatEdit = new WorkspaceEdit()
                 formatEdit.set(uri, edits)
