@@ -21,7 +21,7 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
      */
     public updateResultsForUri(uri: Uri, val: Array<Record<string, any>>): Map<string, string> {
         const stringResults: string = val.map(o => this.unwrap(o)).join('\n')
-        console.debug(`writing string results: "\n${stringResults}\n"`)
+        console.debug(`${Date.now()} writing string results for ${uri.toString()} ${stringResults.length}"`)
         return this._cache.set(uri.toString(), stringResults)
     }
 
@@ -51,17 +51,16 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
     }
 
     public provideTextDocumentContent(uri: Uri): string {
-        console.debug(`***** Accessing cache for URI: ${uri.toString()}`)
+        console.debug(`${Date.now()} ***** Accessing cache for URI: ${uri.toString()}`)
         const results: string = this._cache.get(uri.toString())
         if (results || results === '') {
-            console.debug(`getting string results: \n${results}\n`)
             return results
         }
         return 'pending...'
     }
 
     public static encodeLocation(uri: Uri, host: string, port: number): Uri {
-        const query = JSON.stringify([uri.toString()])
+        const query = uri.path
         const newUri = Uri.parse(`${QueryResultsContentProvider.scheme}://${host}:${port}/${uri.path}?${query}`)
         return newUri
     }
@@ -81,6 +80,7 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
         }
         const responseUri = Uri.parse(`${QueryResultsContentProvider.scheme}://${uri.authority}${uri.path}.${fmt}?${uri.query}`)
         this.updateResultsForUri(responseUri, response)
+        console.debug(`${Date.now()} ***** Writing cache for URI: ${uri.toString()}`)
         this.update(responseUri)
         await new Promise(resolve => setTimeout(resolve, 60))
         return responseUri
