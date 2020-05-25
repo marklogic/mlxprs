@@ -15,7 +15,7 @@
             "cwd": "${workspaceFolder}/server/"
         },
         {
-            "name": "Launch Extension",
+            "name": "Launch Extension (preprod)",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
@@ -27,6 +27,21 @@
                 "${workspaceFolder}/dist/**/*.js"
             ],
             "preLaunchTask": "npm: compile",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Launch Extension (debug)",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}"
+            ],
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.js"
+            ],
+            "preLaunchTask": "npm: predebug",
             "cwd": "${workspaceFolder}"
         },
         {
