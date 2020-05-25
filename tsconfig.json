@@ -2,14 +2,14 @@
     "compilerOptions": {
         "module": "commonjs",
         "target": "es6",
-        "outDir": "out",
+        "outDir": "dist",
         "lib": [ "es6" ],
         "sourceMap": true,
-        "rootDir": ".",
+        "rootDir": "client",
 
         // "noUnusedLocals": true,
-		// "noUnusedParameters": true,
-		// "noImplicitAny": true,
+        // "noUnusedParameters": true,
+        // "noImplicitAny": true,
         "noImplicitReturns": true
     },
     "exclude": [

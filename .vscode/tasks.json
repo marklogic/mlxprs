@@ -45,6 +45,16 @@
                 "reveal": "never"
             },
             "group": "build"
+        },
+        {
+            "type": "npm",
+            "script": "predebug",
+            "problemMatcher": "$tsc-watch",
+            "isBackground": true,
+            "presentation": {
+                "reveal": "never"
+            },
+            "group": "build"
         }
     ]
 }

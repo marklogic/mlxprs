@@ -328,10 +328,11 @@
     },
     "scripts": {
         "copy-files": "npm run copy-files --prefix server",
+        "clean": "rm -rf dist out server/dist server/out",
         "vscode:prepublish": "./node_modules/.bin/webpack --mode production && ./node_modules/.bin/webpack --mode production --config ./server/webpack.config.js",
-        "compile": "./node_modules/webpack/bin/webpack.js --mode none && ./node_modules/webpack/bin/webpack.js --mode none --config ./server/webpack.config.js",
+        "compile": "npm run clean && ./node_modules/webpack/bin/webpack.js --mode none && ./node_modules/webpack/bin/webpack.js --mode none --config ./server/webpack.config.js",
         "pretest": "rm -rf client/out && tsc -w -p client/test/tsconfig.json",
-        "predebug": "tsc -b serverXqyDbg/tsconfig.json",
+        "predebug": "npm run clean && npm run copy-files --prefix server && tsc -b server && tsc -b -w .",
         "test": "node client/out/test/runTest.js --full-trace",
         "watch": "./node_modules/webpack/bin/webpack.js --mode none --watch & ./node_modules/webpack/bin/webpack.js --mode none --watch --config ./server/webpack.config.js"
     },
