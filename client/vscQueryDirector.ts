@@ -19,7 +19,7 @@ async function formatResults(uri: Uri, retries = 0): Promise<boolean> {
                 formatEdit.set(uri, edits)
                 return workspace.applyEdit(formatEdit)
             } else if (retries > 100) {
-                console.warn(`${Date.now()} Giving up on formatting.`)
+                console.debug(`${Date.now()} Giving up on formatting.`)
                 return false
             } else {
                 console.debug(`${Date.now()} No edits yet. Wait a beat (${retries})...`)
