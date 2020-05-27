@@ -1,3 +1,7 @@
+## [3.0.2](https://github.com/mikrovvelle/mlxprs/tree/v3.0.2)
+
+- bugfix: #67
+
 ## [3.0.1](https://github.com/mikrovvelle/mlxprs/tree/v3.0.1)
 
 - fix: #10 - make best effort to format XML and JSON query results

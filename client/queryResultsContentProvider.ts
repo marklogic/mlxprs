@@ -98,7 +98,7 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
     public async handleError(uri: Uri, error: any): Promise<Uri> {
         let errorMessage = ''
         const errorResultsObject = { datatype: 'node()', format: 'json', value: error }
-        if (error.body === undefined) {
+        if (error.body === undefined || error.body.message === undefined) {
             // problem reaching MarkLogic
             errorMessage = error.message
         } else {
