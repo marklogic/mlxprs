@@ -55,6 +55,21 @@ const lineOnMl = (localLine: number, uri: string): number => {
     return localLine
 }
 
+/**
+ * For mapping a debugger line from MarkLogic module to its
+ * corresponding local source. Modules include an extra
+ * 'cache-buster' line. To account for that, subtract 1 if the
+ * module exists in ML.
+ *
+ * @param localLine line number in local XQY source code
+ * @param uri URI of module in MarkLogic, or `''` for ad-hoc query
+ * @returns predicted line number in local file
+ */
+const mlLineLocally = (mlLine: number, uri: string): number => {
+    if (uri) return mlLine - 1
+    return mlLine
+}
+
 
 export class XqyDebugSession extends LoggingDebugSession {
 
@@ -194,7 +209,7 @@ export class XqyDebugSession extends LoggingDebugSession {
         const path: string = args.source.path
 
         if (args.breakpoints) {
-            const localBreakpoints = args.breakpoints.map((b, idx) => {
+            const localBreakpoints = args.breakpoints.map(b => {
                 const bp: DebugProtocol.Breakpoint = new Breakpoint(false, b.line, b.column, this.createSource(path))
                 return bp
             })
@@ -252,7 +267,7 @@ export class XqyDebugSession extends LoggingDebugSession {
             {
                 // if the stack frame has a module URI, it's a from module
                 // therefore 'cache-buster' line ML modules needs to be offset
-                const localLine: number = xqyFrame.uri ? xqyFrame.line - 1 : xqyFrame.line
+                const localLine: number = mlLineLocally(xqyFrame.line, xqyFrame.uri)
                 return new StackFrame(
                     this._frameHandles.create(xqyFrame),
                     xqyFrame.operation ? xqyFrame.operation : '<anonymous>',
