@@ -54,6 +54,10 @@
             {
                 "command": "extension.disconnectXqyServer",
                 "title": "MarkLogic: Disconnect XQuery Debug Server"
+            },
+            {
+                "command": "extension.showModule",
+                "title": "MarkLogic: Show module"
             }
         ],
         "breakpoints": [
