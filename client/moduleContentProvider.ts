@@ -1,75 +1,40 @@
 'use strict'
 
 import { Event, EventEmitter, TextDocumentContentProvider, Uri } from 'vscode'
-import { MarklogicClient, MlClientParameters, sendXQuery } from './marklogicClient'
-import { QueryResultsContentProvider } from './queryResultsContentProvider'
+import { MarklogicClient } from './marklogicClient'
+import { ModuleContentGetter } from './moduleContentGetter'
 
-const listModulesQuery = `
-        xdmp:invoke-function(
-            function() {cts:uris()},
-            <options xmlns='xdmp:eval'>
-                <database>{xdmp:modules-database()}</database>
-            </options>)`
+const scheme = 'mlmodule'
 
-const moduleQuery = (modulePath: string): string => {
-    return `
-        xdmp:invoke-function(
-            function() {fn:doc('${modulePath}')},
-            <options xmlns='xdmp:eval'>
-                <database>{xdmp:modules-database()}</database>
-            </options>)`
+export function encodeLocation(host: string, port: number, path: string): Uri {
+    const newUri = Uri.parse(`${scheme}://${host}:${port}${path}`)
+    return newUri
 }
 
+
 export class ModuleContentProvider implements TextDocumentContentProvider {
-    static scheme = 'mlmodule'
+    static scheme = scheme
     private _onDidChange = new EventEmitter<Uri>()
-    private _cache = new Map<string, string>()
-    private _mlClient: MarklogicClient
-    private _clientParams: MlClientParameters
+    private _mlModuleGetter: ModuleContentGetter
 
     public initialize(client: MarklogicClient): void {
-        this._mlClient = client
+        this._mlModuleGetter = new ModuleContentGetter(client)
     }
 
     async provideTextDocumentContent(uri: Uri): Promise<string> {
-        if (!this._cache.get(uri.toString())) {
-            await this.cacheModule(uri)
-        }
-        return this._cache.get(uri.toString())
+        return this._mlModuleGetter.provideTextDocumentContent(uri.path)
     }
 
     get onDidChange(): Event<Uri> { return this._onDidChange.event }
 
     public async cacheModule(uri: Uri): Promise<Uri> {
-        return sendXQuery(this._mlClient, moduleQuery(uri.path))
-            .result(
-                (fulfill: Record<string, any>[]) => {
-                    const moduleBinaryContent: Uint8Array = fulfill[0].value
-                    const moduleContent: string = QueryResultsContentProvider.decodeBinaryText(moduleBinaryContent)
-                    this._cache.set(uri.toString(), moduleContent)
-                    return uri
-                },
-                (err) => {
-                    throw err
-                })
+        const modulePath = uri.path
+        return this._mlModuleGetter.cacheModule(modulePath).then(() => {
+            return uri
+        })
     }
 
     public async listModules(): Promise<string[]> {
-        return sendXQuery(this._mlClient, listModulesQuery)
-            .result(
-                (fulfill: Record<string, any>[]) => {
-                    return fulfill.map(o => {
-                        return o.value
-                    })
-                },
-                (err) => {
-                    throw err
-                })
+        return this._mlModuleGetter.listModules()
     }
-
-    public static encodeLocation(host: string, port: number, path: string): Uri {
-        const newUri = Uri.parse(`${ModuleContentProvider.scheme}://${host}:${port}${path}`)
-        return newUri
-    }
-
 }

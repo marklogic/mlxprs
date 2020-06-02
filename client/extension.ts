@@ -10,7 +10,7 @@ import { XmlFormattingEditProvider } from './xmlFormatting/Formatting'
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient'
 import { XqyDebugConfigurationProvider, XqyDebugAdapterDescriptorFactory } from './XQDebugger/xqyDebugConfigProvider'
 import { MLConfigurationProvider, DebugAdapterExecutableFactory, _connectServer, _disonnectServer } from './JSDebugger/configurationProvider'
-import { ModuleContentProvider } from './moduleContentProvider'
+import { ModuleContentProvider, encodeLocation } from './moduleContentProvider'
 
 const MLDBCLIENT = 'mldbClient'
 const SJS = 'sjs'
@@ -77,7 +77,7 @@ export function activate(context: vscode.ExtensionContext): void {
                 return vscode.window.showQuickPick(moduleUris)
             })
             .then((URIstring: string) => {
-                const uri: vscode.Uri = ModuleContentProvider.encodeLocation(client.params.host, client.params.port, URIstring)
+                const uri: vscode.Uri = encodeLocation(client.params.host, client.params.port, URIstring)
                 return mprovider.cacheModule(uri)
             }).then((uri: vscode.Uri) => {
                 return vscode.workspace.openTextDocument(uri)
