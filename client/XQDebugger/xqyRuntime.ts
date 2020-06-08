@@ -3,6 +3,7 @@ import { ResultProvider } from 'marklogic'
 import { InitializeRequestArguments } from './xqyDebug'
 import { sendXQuery, MarklogicClient, MlClientParameters } from '../marklogicClient'
 import { parseString } from 'xml2js'
+import { ModuleContentGetter } from '../moduleContentGetter'
 
 export interface XqyBreakPoint {
     uri: string;      // module URI on MarkLogic
@@ -45,6 +46,7 @@ export interface XqyVariable {
 export class XqyRuntime extends EventEmitter {
 
     private _mlClient: MarklogicClient
+    private _mlModuleGetter: ModuleContentGetter
     private _clientParams: MlClientParameters
     private _rid = ''
     private _timeout = 1
@@ -92,6 +94,12 @@ export class XqyRuntime extends EventEmitter {
     private sendFreshQuery(query: string, prefix: 'xdmp' | 'dbg' = 'xdmp'): ResultProvider<Record<string, any>> {
         this._mlClient = new MarklogicClient(this._clientParams)
         return sendXQuery(this._mlClient, query, prefix)
+    }
+
+    public async getModuleContent(modulePath: string): Promise<string> {
+        this._mlClient = new MarklogicClient(this._clientParams)
+        this._mlModuleGetter = new ModuleContentGetter(this._mlClient)
+        return this._mlModuleGetter.provideTextDocumentContent(modulePath)
     }
 
     public setRid(rid: string): void {

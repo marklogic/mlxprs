@@ -6,6 +6,7 @@ import { Handles, InitializedEvent,
 } from 'vscode-debugadapter'
 import { XqyRuntime, XqyBreakPoint, XqyFrame, XqyScopeObject, XqyVariable } from './xqyRuntime'
 import { basename } from 'path'
+import { existsSync } from 'fs'
 
 import { MlClientParameters } from '../marklogicClient'
 
@@ -40,35 +41,7 @@ const timeout = (ms: number): Promise<any> => {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-/**
- * For mapping a debugger line from local source to its
- * corresponding MarkLogic module. Modules include an extra
- * 'cache-buster' line. To account for that, add 1 if the
- * module exists in ML.
- *
- * @param localLine line number in local XQY source code
- * @param uri URI of module in MarkLogic, or `''` for ad-hoc query
- * @returns predicted line number in MarkLogic module
- */
-const lineOnMl = (localLine: number, uri: string): number => {
-    if (uri) return localLine + 1
-    return localLine
-}
 
-/**
- * For mapping a debugger line from MarkLogic module to its
- * corresponding local source. Modules include an extra
- * 'cache-buster' line. To account for that, subtract 1 if the
- * module exists in ML.
- *
- * @param localLine line number in local XQY source code
- * @param uri URI of module in MarkLogic, or `''` for ad-hoc query
- * @returns predicted line number in local file
- */
-const mlLineLocally = (mlLine: number, uri: string): number => {
-    if (uri) return mlLine - 1
-    return mlLine
-}
 
 
 export class XqyDebugSession extends LoggingDebugSession {
@@ -87,6 +60,9 @@ export class XqyDebugSession extends LoggingDebugSession {
 
     // local modules root
     private _workDir = ''
+
+    // local path to the 'main' query file being debugged.
+    // If the `dbg:stack` gives no URI, refer to this local file
     private _queryPath = ''
 
 
@@ -94,9 +70,19 @@ export class XqyDebugSession extends LoggingDebugSession {
     private _isLongrunning = new Map<number, boolean>()
 
     private createSource(filePath: string): Source {
-        if (!filePath) filePath = this._workDir
-        const name: string = basename(filePath)
-        return new Source(name, filePath, undefined, undefined, 'data-placeholder')
+        let vsCodeUri = ''
+        let origin = 'local file'
+        let id = 0
+        if (!filePath) vsCodeUri = this._workDir
+        else {vsCodeUri = filePath}
+        if (!existsSync(filePath)) {
+            const mlModuleUri = this._mapLocalFiletoUrl(filePath)
+            origin = `mldbg:/${mlModuleUri}`
+            id = 9
+            vsCodeUri = mlModuleUri
+        }
+        const name: string = basename(vsCodeUri)
+        return new Source(name, vsCodeUri, id, origin, 'data-placeholder')
     }
 
     public constructor() {
@@ -152,7 +138,7 @@ export class XqyDebugSession extends LoggingDebugSession {
         const xqyRequests = []
         for (const [localPath, bps] of this._bpCache.entries()) {
             const uri: string = this._mapLocalFiletoUrl(localPath)
-            const lines: number[] = [...bps].map(bp => lineOnMl(bp.line, uri))
+            const lines: number[] = [...bps].map(bp => this.lineOnMl(bp.line, uri))
             xqyRequests.push(this._runtime.setBreakPointsOnMl(uri, lines)
                 .then((confirmedLines: number[]) => {
                     console.debug(`${confirmedLines.length} breakpoints set no ${uri}: (${confirmedLines.toString()})`)
@@ -229,13 +215,13 @@ export class XqyDebugSession extends LoggingDebugSession {
 
             response.body = { breakpoints: localBreakpoints }
             if (this._runtime.getRunTimeState() !== 'shutdown') {
-                const mlLineNos: number[] = [...newBps].map(bp => lineOnMl(bp.line, uri))
+                const mlLineNos: number[] = [...newBps].map(bp => this.lineOnMl(bp.line, uri))
 
                 this._runtime.setBreakPointsOnMl(uri, mlLineNos)
                     .then((confirmedLines: number[]) => {
                         console.debug(`set ${confirmedLines.length} new breakpoints on ${uri}: ${confirmedLines.toString()}`)
                         confirmedLines.forEach(mlLineNo => {
-                            localBreakpoints.find(bp => mlLineNo === lineOnMl(bp.line, uri)).verified = true
+                            localBreakpoints.find(bp => mlLineNo === this.lineOnMl(bp.line, uri)).verified = true
                         })
                         this.sendResponse(response)
                     })
@@ -267,7 +253,7 @@ export class XqyDebugSession extends LoggingDebugSession {
             {
                 // if the stack frame has a module URI, it's a from module
                 // therefore 'cache-buster' line ML modules needs to be offset
-                const localLine: number = mlLineLocally(xqyFrame.line, xqyFrame.uri)
+                const localLine: number = this.mlLineLocally(xqyFrame.line, xqyFrame.uri)
                 return new StackFrame(
                     this._frameHandles.create(xqyFrame),
                     xqyFrame.operation ? xqyFrame.operation : '<anonymous>',
@@ -300,6 +286,16 @@ export class XqyDebugSession extends LoggingDebugSession {
 
         response.body = { scopes: scopes }
         this.sendResponse(response)
+    }
+
+    protected async sourceRequest(response: DebugProtocol.SourceResponse, args: DebugProtocol.SourceArguments, request?: DebugProtocol.Request): Promise<void> {
+        this._runtime.getModuleContent(args.source.path).then(moduleContent => {
+            return response.body = {
+                content: moduleContent
+            }
+        }).then(() => {
+            this.sendResponse(response)
+        })
     }
 
     protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request): Promise<void> {
@@ -406,6 +402,42 @@ export class XqyDebugSession extends LoggingDebugSession {
         this._variableHandles.reset()
         this._frameHandles.reset()
     }
+
+
+    /**
+     * For mapping a debugger line from local source to its
+     * corresponding MarkLogic module. Modules include an extra
+     * 'cache-buster' line. To account for that, add 1 if the
+     * module exists in ML.
+     *
+     * @param localLine line number in local XQY source code
+     * @param uri URI of module in MarkLogic, or `''` for ad-hoc query
+     * @returns predicted line number in MarkLogic module
+     */
+    private lineOnMl(localLine: number, uri: string): number {
+        const localPath = this._mapUrlToLocalFile(uri)
+        const locallyPresent: boolean = existsSync(localPath)
+        if (uri && locallyPresent) return localLine + 1
+        return localLine
+    }
+
+    /**
+     * For mapping a debugger line from MarkLogic module to its
+     * corresponding local source. Modules include an extra
+     * 'cache-buster' line. To account for that, subtract 1 if the
+     * module exists in ML.
+     *
+     * @param localLine line number in local XQY source code
+     * @param uri URI of module in MarkLogic, or `''` for ad-hoc query
+     * @returns predicted line number in local file
+     */
+    private mlLineLocally(mlLine: number, uri: string): number {
+        const localPath = this._mapUrlToLocalFile(uri)
+        const locallyPresent: boolean = existsSync(localPath)
+        if (uri && locallyPresent) return mlLine - 1
+        return mlLine
+    }
+
 
 }
 

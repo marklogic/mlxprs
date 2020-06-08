@@ -10,6 +10,7 @@ import { XmlFormattingEditProvider } from './xmlFormatting/Formatting'
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient'
 import { XqyDebugConfigurationProvider, XqyDebugAdapterDescriptorFactory } from './XQDebugger/xqyDebugConfigProvider'
 import { MLConfigurationProvider, DebugAdapterExecutableFactory, _connectServer, _disonnectServer } from './JSDebugger/configurationProvider'
+import { ModuleContentProvider, pickAndShowModule } from './vscModuleContentProvider'
 
 const MLDBCLIENT = 'mldbClient'
 const SJS = 'sjs'
@@ -18,9 +19,12 @@ const XQY = 'xqy'
 export function activate(context: vscode.ExtensionContext): void {
     context.globalState.update(MLDBCLIENT, null as ml.DatabaseClient)
     const provider = new QueryResultsContentProvider()
+    const mprovider = new ModuleContentProvider()
 
     vscode.workspace.registerTextDocumentContentProvider(
         QueryResultsContentProvider.scheme, provider)
+    vscode.workspace.registerTextDocumentContentProvider(
+        ModuleContentProvider.scheme, mprovider)
 
     const sendXQuery = vscode.commands.registerTextEditorCommand('extension.sendXQuery', editor => {
         const actualQuery: string = editor.document.getText()
@@ -64,6 +68,12 @@ export function activate(context: vscode.ExtensionContext): void {
         const client: MarklogicClient = cascadeOverrideClient('', SJS, cfg, context.globalState)
         XqyDebugConfigurationProvider.chooseXqyServer(client, 'disconnect')
     })
+    const showModule = vscode.commands.registerCommand('extension.showModule', () => {
+        const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration()
+        const client: MarklogicClient = cascadeOverrideClient('', XQY, cfg, context.globalState)
+        pickAndShowModule(mprovider, client)
+    })
+    context.subscriptions.push(showModule)
 
     context.subscriptions.push(connectServer)
     context.subscriptions.push(disconnectServer)

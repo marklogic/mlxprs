@@ -8,7 +8,8 @@ _Develop, run, and debug code for MarkLogic in the popular VS Code IDE_
 
 * Syntax highlighting and IntelliSense for MarkLogic Server-Side JavaScript and XQuery
 * Interactive debugging of JavaScript and XQuery running in Data Hub Service or MarkLogic, including attaching to in-flight requests and inspecting live variables
-*  Real-time query evaluation of JavaScript or XQuery against a live Data Hub Service or MarkLogic instance
+* Real-time query evaluation of JavaScript or XQuery against a live Data Hub Service or MarkLogic instance
+* View modules (read-only) in the editor
 
 _JavaScript debugging requires version 2.0.0+ of the MarkLogic extension and [MarkLogic 10.0-4+](https://developer.marklogic.com/products/marklogic-server/10.0)._
 
@@ -43,7 +44,17 @@ To evaluate JavaScript
 2. Open the command palette (<kbd>Shift</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd>)
 3. Select `MarkLogic: Eval JS`
 
-Query results will open in a new document in the current workspace. 
+Query results will open in a new document in the current workspace.
+
+### Inspect a module
+
+To view a module from the configured modules database:
+
+1. Open the command palette (<kbd>Shift</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd>)
+2. Select `MarkLogic: Show module` from the list
+3. Choose the module you'd like to view from the resulting list. The list searches and filters as you type.
+
+The module will appear read-only in a new text buffer.
 
 ### SSL Configuration
 
@@ -64,7 +75,7 @@ going to 'Security' -> 'Certificate Templates' -> (cert host name), and then
 selecting the "Status" tab. There is an "download" button in the "certificate template status"
 section. Click the "download" button to download a copy of your root CA.
 
-### Per-query configuration override 
+### Per-query configuration override
 
 You can override your VS Code configured settings by using a block comment as the first language token
 in the query. The comment should conform to the following:
@@ -247,7 +258,7 @@ For debugging, a user must also have at least one of these privileges:
 - **debug-my-request**: for debugging requests launched by the debug user only
 - **debug-any-request**: for debugging requests launched by any user
 
-For more about privileges, see [xdmp:eval](https://docs.marklogic.com/10.0/xdmp:eval) and [Debug functions](https://docs.marklogic.com/dbg) in the API docs, along with [Pre-defined Executive Privileges](https://docs.marklogic.com/guide/admin/exec_privs) in the MarkLogic server documentation. 
+For more about privileges, see [xdmp:eval](https://docs.marklogic.com/10.0/xdmp:eval) and [Debug functions](https://docs.marklogic.com/dbg) in the API docs, along with [Pre-defined Executive Privileges](https://docs.marklogic.com/guide/admin/exec_privs) in the MarkLogic server documentation.
 
 ## Credit
 

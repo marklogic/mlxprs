@@ -30,7 +30,7 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
             return JSON.parse(JSON.stringify(o['value']))
         }
         if (o['format'] === 'text' && o['datatype'] === 'node()') {
-            return this.decodeBinaryText(o['value'])
+            return QueryResultsContentProvider.decodeBinaryText(o['value'])
         }
         if (o['format'] === 'text' && o['datatype'] === 'other') {
             return o['value']
@@ -38,7 +38,7 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
         return JSON.stringify(o['value'])
     }
 
-    private decodeBinaryText(arr: Uint8Array): string {
+    public static decodeBinaryText(arr: Uint8Array): string {
         if ((typeof arr[0]) === 'string') {
             return arr.toString()
         }
@@ -90,7 +90,7 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
      * Cache a query *error* response so VS Code will show the results in a new editor window,
      * This should be caught in the promise reject. It may be
      * - a MarkLogic error (query was received, but couldn't run successfully), or
-     * - a network-level error (couldn't reach host, 401 unautorized, etc.)
+     * - a network-level error (couldn't reach host, 401 unauthorized, etc.)
      * @param uri the URI of the VS Code document that sent the query
      * @param error the content of the reject promise from the MarkLogic query
      * @returns Promise responseUri where VS Code will retrieve the content to show @async

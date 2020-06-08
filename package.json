@@ -24,6 +24,7 @@
         "onCommand:extension.getQuery",
         "onCommand:extension.sendXQuery",
         "onCommand:extension.sendJSQuery",
+        "onCommand:extension.showModule",
         "onDebug",
         "onLanguage:xquery-ml",
         "onLanguage:javascript"
@@ -54,6 +55,10 @@
             {
                 "command": "extension.disconnectXqyServer",
                 "title": "MarkLogic: Disconnect XQuery Debug Server"
+            },
+            {
+                "command": "extension.showModule",
+                "title": "MarkLogic: Show module"
             }
         ],
         "breakpoints": [
