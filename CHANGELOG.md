@@ -1,3 +1,8 @@
+## [3.0.3](https://github.com/mikrovvelle/mlxprs/tree/v3.0.3)
+
+- add "MarkLogic: Show module" command
+- fixes: #68. XQuery debugging now streams modules if they're not available locally
+
 ## [3.0.2](https://github.com/mikrovvelle/mlxprs/tree/v3.0.2)
 
 - bugfix: #67
