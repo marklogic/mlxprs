@@ -24,6 +24,7 @@
         "onCommand:extension.getQuery",
         "onCommand:extension.sendXQuery",
         "onCommand:extension.sendJSQuery",
+        "onCommand:extension.showModule",
         "onDebug",
         "onLanguage:xquery-ml",
         "onLanguage:javascript"

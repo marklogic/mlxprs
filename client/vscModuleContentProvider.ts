@@ -1,12 +1,13 @@
 'use strict'
 
-import { Event, EventEmitter, TextDocumentContentProvider, Uri } from 'vscode'
+import { Event, EventEmitter, TextDocument, TextDocumentContentProvider, Uri,
+    window, workspace } from 'vscode'
 import { MarklogicClient } from './marklogicClient'
 import { ModuleContentGetter } from './moduleContentGetter'
 
 const scheme = 'mlmodule'
 
-export function encodeLocation(host: string, port: number, path: string): Uri {
+function encodeLocation(host: string, port: number, path: string): Uri {
     const newUri = Uri.parse(`${scheme}://${host}:${port}${path}`)
     return newUri
 }
@@ -37,4 +38,22 @@ export class ModuleContentProvider implements TextDocumentContentProvider {
     public async listModules(): Promise<string[]> {
         return this._mlModuleGetter.listModules()
     }
+}
+
+export async function pickAndShowModule(mprovider: ModuleContentProvider, client: MarklogicClient): Promise<void> {
+    mprovider.initialize(client)
+    mprovider.listModules()
+        .then((moduleUris: string[]) => {
+            return window.showQuickPick(moduleUris)
+        })
+        .then((URIstring: string) => {
+            const uri: Uri = encodeLocation(client.params.host, client.params.port, URIstring)
+            return mprovider.cacheModule(uri)
+        })
+        .then((uri: Uri) => {
+            return workspace.openTextDocument(uri)
+        })
+        .then((doc: TextDocument) => {
+            window.showTextDocument(doc)
+        })
 }

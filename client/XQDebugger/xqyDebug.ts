@@ -77,7 +77,7 @@ export class XqyDebugSession extends LoggingDebugSession {
         else {vsCodeUri = filePath}
         if (!existsSync(filePath)) {
             const mlModuleUri = this._mapLocalFiletoUrl(filePath)
-            origin = 'module from MarkLogic server'
+            origin = `mldbg:/${mlModuleUri}`
             id = 9
             vsCodeUri = mlModuleUri
         }

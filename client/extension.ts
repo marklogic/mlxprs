@@ -10,7 +10,7 @@ import { XmlFormattingEditProvider } from './xmlFormatting/Formatting'
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient'
 import { XqyDebugConfigurationProvider, XqyDebugAdapterDescriptorFactory } from './XQDebugger/xqyDebugConfigProvider'
 import { MLConfigurationProvider, DebugAdapterExecutableFactory, _connectServer, _disonnectServer } from './JSDebugger/configurationProvider'
-import { ModuleContentProvider, encodeLocation } from './moduleContentProvider'
+import { ModuleContentProvider, pickAndShowModule } from './vscModuleContentProvider'
 
 const MLDBCLIENT = 'mldbClient'
 const SJS = 'sjs'
@@ -71,19 +71,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const showModule = vscode.commands.registerCommand('extension.showModule', () => {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration()
         const client: MarklogicClient = cascadeOverrideClient('', XQY, cfg, context.globalState)
-        mprovider.initialize(client)
-        mprovider.listModules()
-            .then((moduleUris: string[]) => {
-                return vscode.window.showQuickPick(moduleUris)
-            })
-            .then((URIstring: string) => {
-                const uri: vscode.Uri = encodeLocation(client.params.host, client.params.port, URIstring)
-                return mprovider.cacheModule(uri)
-            }).then((uri: vscode.Uri) => {
-                return vscode.workspace.openTextDocument(uri)
-            }).then((doc: vscode.TextDocument) => {
-                vscode.window.showTextDocument(doc)
-            })
+        pickAndShowModule(mprovider, client)
     })
     context.subscriptions.push(showModule)
 
