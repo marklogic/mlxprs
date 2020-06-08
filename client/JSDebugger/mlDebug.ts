@@ -48,7 +48,7 @@ export class MLDebugSession extends LoggingDebugSession {
     private _configurationDone = new Subject();
     private _variableHandles = new Handles<string>();
     private _frameHandles = new Handles<V8Frame>();
-    private _bpCache = new Set();
+    private _bpCache: Record<string, Set<string>> = {};
     private _stackRespString = '';
     private _workDir = '';
 
@@ -175,24 +175,23 @@ export class MLDebugSession extends LoggingDebugSession {
                 return bp
             })
 
-            const newBp = new Set()
+            const newBp: Set<string> = new Set()
             args.breakpoints.forEach(breakpoint => {
                 newBp.add(JSON.stringify({
-                    path: path,
                     line: breakpoint.line,
                     column: breakpoint.column,
                     condition: breakpoint.condition
                 })) //construct the set of new breakpoints, better ways?
             })
 
-            const toDelete = new Set([...this._bpCache].filter(x => !newBp.has(x)))
-            const toAdd = new Set([...newBp].filter(x => !this._bpCache.has(x)))
-            this._bpCache = newBp
+            const toDelete = (path in this._bpCache) ? new Set([...this._bpCache[path]].filter(x => !newBp.has(x))) : new Set()
+            const toAdd = (path in this._bpCache) ? new Set([...newBp].filter(x => !this._bpCache[path].has(x))) : newBp
+            this._bpCache[path] = newBp
             if (this._runtime.getRunTimeState() !== 'shutdown') {
                 toDelete.forEach(bp => {
                     const breakpoint = JSON.parse(String(bp))
                     mlrequests.push(this._runtime.removeBreakPoint({
-                        url: this._mapLocalFiletoUrl(breakpoint.path),
+                        url: this._mapLocalFiletoUrl(path),
                         line: this.convertClientLineToDebugger(breakpoint.line),
                         column: this.convertClientLineToDebugger(breakpoint.column),
                     } as MLbreakPoint))
@@ -201,7 +200,7 @@ export class MLDebugSession extends LoggingDebugSession {
                 toAdd.forEach(bp => {
                     const breakpoint = JSON.parse(String(bp))
                     mlrequests.push(this._runtime.setBreakPoint({
-                        url: this._mapLocalFiletoUrl(breakpoint.path),
+                        url: this._mapLocalFiletoUrl(path),
                         line: this.convertClientLineToDebugger(breakpoint.line),
                         column: this.convertClientLineToDebugger(breakpoint.column),
                         condition: breakpoint.condition
@@ -483,15 +482,17 @@ export class MLDebugSession extends LoggingDebugSession {
     private _setBufferedBreakPoints(): void {
 
         const mlrequests: Promise<string>[] = []
-        this._bpCache.forEach(bp => {
-            const breakpoint = JSON.parse(String(bp))
-            mlrequests.push(this._runtime.setBreakPoint({
-                url: this._mapLocalFiletoUrl(breakpoint.path),
-                line: this.convertClientLineToDebugger(breakpoint.line),
-                column: this.convertClientLineToDebugger(breakpoint.column),
-                condition: breakpoint.condition
-            } as MLbreakPoint))
-        })
+        for (const [path, breakpoints] of Object.entries(this._bpCache)) {
+            breakpoints.forEach(bp => {
+                const breakpoint = JSON.parse(String(bp))
+                mlrequests.push(this._runtime.setBreakPoint({
+                    url: this._mapLocalFiletoUrl(path),
+                    line: this.convertClientLineToDebugger(breakpoint.line),
+                    column: this.convertClientLineToDebugger(breakpoint.column),
+                    condition: breakpoint.condition
+                } as MLbreakPoint))
+            })
+        }
 
         Promise.all(mlrequests).catch(err => {
             this._handleError(err)
