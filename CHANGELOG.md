@@ -1,3 +1,7 @@
+## [3.0.4](https://github.com/mikrovvelle/mlxprs/tree/v3.0.4)
+
+- bugfix: #69
+
 ## [3.0.3](https://github.com/mikrovvelle/mlxprs/tree/v3.0.3)
 
 - add "MarkLogic: Show module" command
