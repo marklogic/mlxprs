@@ -12,6 +12,7 @@ import { DebugProtocol } from 'vscode-debugprotocol'
 import { basename } from 'path'
 import { MLRuntime, MLbreakPoint, V8Frame, ScopeObject, V8PropertyObject, V8PropertyValue } from './mlRuntime'
 import {Subject} from 'await-notify'
+import { existsSync } from 'fs'
 
 interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
     path: string;
@@ -385,7 +386,7 @@ export class MLDebugSession extends LoggingDebugSession {
     protected stepInRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
         this._runtime.stepInto().then(() => {
             this.sendResponse(response)
-            this._runtime.waitTillPaused().then( resp => {
+            this._runtime.waitTillPaused().then(resp => {
                 this._stackRespString = resp
                 this.sendEvent(new StoppedEvent('step', MLDebugSession.THREAD_ID))
                 this._resetHandles()
@@ -461,6 +462,16 @@ export class MLDebugSession extends LoggingDebugSession {
         })
     }
 
+    protected async sourceRequest(response: DebugProtocol.SourceResponse, args: DebugProtocol.SourceArguments, request?: DebugProtocol.Request): Promise<void> {
+        this._runtime.getModuleContent(args.source.path).then(moduleContent => {
+            return response.body = {
+                content: moduleContent
+            }
+        }).then(() => {
+            this.sendResponse(response)
+        })
+    }
+
     protected completionsRequest(response: DebugProtocol.CompletionsResponse, args: DebugProtocol.CompletionsArguments): void {
         this.sendResponse(response)
     }
@@ -468,7 +479,17 @@ export class MLDebugSession extends LoggingDebugSession {
     //---- helpers
 
     private createSource(filePath: string): Source {
-        return new Source(basename(filePath), this.convertDebuggerPathToClient(filePath), undefined, undefined, 'ml-adapter-data')
+        let vsCodeUri = filePath
+        let origin = 'local file'
+        let id = 0
+        if (!existsSync(filePath)) {
+            const mlModuleUri = this._mapLocalFiletoUrl(filePath)
+            origin = `mldbg:/${mlModuleUri}`
+            id = 9
+            vsCodeUri = mlModuleUri
+        }
+        const name = basename(vsCodeUri)
+        return new Source(name, vsCodeUri, id, origin, 'ml-adapter-data')
     }
 
     private _mapUrlToLocalFile(url: string): string {

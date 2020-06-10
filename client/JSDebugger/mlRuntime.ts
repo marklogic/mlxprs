@@ -3,6 +3,8 @@
  */
 
 import { EventEmitter } from 'events'
+import { MarklogicClient, MlClientParameters } from '../marklogicClient'
+import { ModuleContentGetter } from '../moduleContentGetter'
 import * as request from 'request-promise'
 import * as fs from 'fs'
 import * as querystring from 'querystring'
@@ -65,6 +67,9 @@ export class MLRuntime extends EventEmitter {
     private _dbgPort = 8002;
     private _endpointRoot = '/jsdbg/v1'
     private _ca: undefined | Buffer;
+    private _mlClient: MarklogicClient
+    private _mlModuleGetter: ModuleContentGetter
+
 
     //Internal
     private _runTimeState: 'shutdown' | 'launched' | 'attached' | 'error' = 'shutdown';
@@ -101,6 +106,20 @@ export class MLRuntime extends EventEmitter {
         if (args.pathToCa) {
             this._ca = fs.readFileSync(args.pathToCa)
         }
+        this._mlClient = new MarklogicClient(
+            new MlClientParameters({
+                host: this._hostName,
+                port: this._dbgPort,
+                user: this._username,
+                pwd: this._password,
+                contentDb: args.database,
+                ssl: this._ssl,
+                authType: args.authType,
+                modulesDb: args.modules,
+                pathToCa: args.pathToCa
+            })
+        )
+        this._mlModuleGetter = new ModuleContentGetter(this._mlClient)
     }
 
     public setRid(rid: string): void {
@@ -189,6 +208,11 @@ export class MLRuntime extends EventEmitter {
             throw e
         }
     }
+
+    public async getModuleContent(modulePath: string): Promise<string> {
+        return this._mlModuleGetter.provideTextDocumentContent(modulePath)
+    }
+
     //---- helpers
 
     private _sendMLdebugRequestPOST(module: string, body?: string): Promise<string> {

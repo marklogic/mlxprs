@@ -48,6 +48,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         config.modules = String(wcfg.get('marklogic.modulesDb'))
         config.root = String(wcfg.get('marklogic.modulesRoot'))
         config.ssl = Boolean(wcfg.get('marklogic.ssl'))
+        config.authType = String(wcfg.get('marklogic.authType'))
 
         if (config.ssl) config.pathToCa = String(wcfg.get('marklogic.pathToCa'))
         let ca: Buffer
