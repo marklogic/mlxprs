@@ -82,6 +82,7 @@ export class MarklogicClient {
         this.mldbClient = ml.createDatabaseClient({
             host: this.params.host, port: this.params.port,
             user: this.params.user, password: this.params.pwd,
+            database: this.params.contentDb,
             authType: this.params.authType, ssl: this.params.ssl,
             ca: this.ca
         })

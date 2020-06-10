@@ -11,6 +11,7 @@ declare module 'marklogic' {
     release: () => void;
     xqueryEval: <U>(query: string, variables?: Variables) => ResultProvider<U>;
     eval: <U>(query: string, variables?: Variables) => ResultProvider<U>;
+    read: (uri: string) => ResultProvider<string[]>;
   }
 
   export interface ConnectionParams {
@@ -18,6 +19,7 @@ declare module 'marklogic' {
     port: number;
     user: string;
     password: string;
+    database: string;
     authType: string;
     ssl: boolean;
     ca: string;

@@ -1,42 +1,17 @@
 'use strict'
 
-import { MarklogicClient, sendXQuery } from './marklogicClient'
+import { MarklogicClient, sendXQuery, MlClientParameters } from './marklogicClient'
 
-export const listModulesQuery = `
-        xdmp:invoke-function(
-            function() {cts:uris()},
-            <options xmlns='xdmp:eval'>
-                <database>{xdmp:modules-database()}</database>
-            </options>)`
-
-export const moduleQuery = (modulePath: string): string => {
-    return `
-        xdmp:invoke-function(
-            function() {fn:doc('${modulePath}')},
-            <options xmlns='xdmp:eval'>
-                <database>{xdmp:modules-database()}</database>
-            </options>)`
-}
-
-export function decodeBinaryText(arr: Uint8Array): string {
-    if ((typeof arr[0]) === 'string') {
-        return arr.toString()
-    }
-    let str = ''
-    for (let i = 0; i < arr.length; i++) {
-        str += '%' + ('0' + arr[i].toString(16)).slice(-2)
-    }
-    str = decodeURIComponent(str)
-    return str
-}
-
+export const listModulesQuery = 'cts:uris()'
 
 export class ModuleContentGetter {
     private _cache = new Map<string, string>()
     private _mlClient: MarklogicClient
 
     public constructor(client: MarklogicClient) {
-        this._mlClient = client
+        const moduleGetterParams: MlClientParameters = client.params
+        moduleGetterParams.contentDb = moduleGetterParams.modulesDb
+        this._mlClient = new MarklogicClient(moduleGetterParams)
     }
 
     public host(): string {
@@ -60,11 +35,10 @@ export class ModuleContentGetter {
 
 
     public async cacheModule(modulePath: string): Promise<string> {
-        return sendXQuery(this._mlClient, moduleQuery(modulePath))
+        return this._mlClient.mldbClient.read(modulePath)
             .result(
-                (fulfill: Record<string, any>[]) => {
-                    const moduleBinaryContent: Uint8Array = fulfill[0].value
-                    const moduleContent: string = decodeBinaryText(moduleBinaryContent)
+                (fulfill: string[]) => {
+                    const moduleContent: string = fulfill[0]
                     this._cache.set(modulePath, moduleContent)
                     return modulePath
                 },
