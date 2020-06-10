@@ -81,26 +81,41 @@
                         "properties": {
                             "path": {
                                 "type": "string",
-                                "description": "location of script",
+                                "description": "DEPRECATED: please use 'program'. 'path' will be removed in a future version",
+                                "default": ""
+                            },
+                            "program": {
+                                "type": "string",
+                                "description": "path to main module to launch in debugging mode.",
                                 "default": ""
                             },
                             "txnId": {
                                 "type": "string",
                                 "description": "Transaction ID to use with launch.",
                                 "default": ""
+                            },
+                            "root": {
+                                "type": "string",
+                                "description": "local path corresponding to the root directory for the modules deployed on MarkLogic.",
+                                "default": "${workspaceFolder}/src/main/ml-modules/root"
                             }
                         }
                     },
                     "attach": {
                         "required": [
-                            "path",
+                            "root",
                             "debugServerName"
                         ],
                         "properties": {
                             "path": {
                                 "type": "string",
-                                "description": "local path corresponding to the root directory for the modules deployed on MarkLogic.",
+                                "description": "DEPRECATED: please use 'root'. 'path' will be removed in a future version.",
                                 "default": ""
+                            },
+                            "root": {
+                                "type": "string",
+                                "description": "local path corresponding to the root directory for the modules deployed on MarkLogic.",
+                                "default": "${workspaceFolder}/src/main/ml-modules/root"
                             },
                             "debugServerName": {
                                 "type": "string",
@@ -119,7 +134,8 @@
                     {
                         "type": "ml-jsdebugger",
                         "request": "launch",
-                        "name": "Evaluate Current JavaScript Module"
+                        "name": "Evaluate Current JavaScript Module",
+                        "root": "${workspaceFolder}/src/main/ml-modules/roote"
                     },
                     {
                         "type": "ml-jsdebugger",

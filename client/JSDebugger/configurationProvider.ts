@@ -27,11 +27,11 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
                 config.type = 'ml-jsdebugger'
                 config.name = 'Launch Debug Reques'
                 config.request = 'launch'
-                config.path = '${file}'
+                config.program = '${file}'
             }
         }
-        if (config.request === 'launch' && !config.path) {
-            config.path = '${file}'
+        if (config.request === 'launch' && !config.program) {
+            config.program = config.path || '${file}'
         }
 
         return this.resolveRemainingDebugConfiguration(folder, config)
@@ -46,7 +46,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         config.password = String(wcfg.get('marklogic.password'))
         config.database = String(wcfg.get('marklogic.documentsDb'))
         config.modules = String(wcfg.get('marklogic.modulesDb'))
-        config.root = String(wcfg.get('marklogic.modulesRoot'))
+        config.mlModulesRoot = String(wcfg.get('marklogic.modulesRoot'))
         config.ssl = Boolean(wcfg.get('marklogic.ssl'))
         config.authType = String(wcfg.get('marklogic.authType'))
 

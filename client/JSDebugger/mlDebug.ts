@@ -15,7 +15,7 @@ import {Subject} from 'await-notify'
 import { existsSync } from 'fs'
 
 interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
-    path: string;
+    program: string;
     hostname: string;
     username: string;
     password: string;
@@ -24,12 +24,13 @@ interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
     txnId?: string;
     modules?: string;
     root?: string;
+    mlModulesRoot?: string;
     ssl?: boolean;
     pathToCa?: Buffer;
 }
 
 interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
-    path: string;
+    root: string;
     hostname: string;
     debugServerName: string;
     username: string;
@@ -51,6 +52,7 @@ export class MLDebugSession extends LoggingDebugSession {
     private _frameHandles = new Handles<V8Frame>();
     private _bpCache: Record<string, Set<string>> = {};
     private _stackRespString = '';
+    private _queryPath = '';
     private _workDir = '';
 
     // private _traceLevel: "none" | "info" | "detailed" | "all" = "all"
@@ -125,11 +127,12 @@ export class MLDebugSession extends LoggingDebugSession {
         this._runtime.initialize(args)
         try {
             const result = await this._runtime.launchWithDebugEval(
-                args.path, args.database, args.txnId, args.modules, args.root)
+                args.program, args.database, args.txnId, args.modules, args.mlModulesRoot)
             const rid = JSON.parse(result).requestId
             this._runtime.setRid(rid)
             // runtime set up
-            this._workDir = args.path
+            this._queryPath = args.program
+            this._workDir = args.root
             this._runtime.setRunTimeState('launched')
             this._stackRespString = await this._runtime.waitTillPaused()
             await this._setBufferedBreakPoints()
@@ -150,7 +153,7 @@ export class MLDebugSession extends LoggingDebugSession {
         await this._configurationDone.wait(1000)
         this._runtime.initialize(args)
         this._runtime.setRid(args.rid)
-        this._workDir = args.path
+        this._workDir = args.root
         this._runtime.setRunTimeState('attached')
         try {
             this._stackRespString = await this._runtime.waitTillPaused()
@@ -495,11 +498,18 @@ export class MLDebugSession extends LoggingDebugSession {
     }
 
     private _mapUrlToLocalFile(url: string): string {
-        return this._workDir + url
+        if (!url) {
+            return this._queryPath
+        } else {
+            return (this._workDir + url).replace(/\/+/, '/')
+        }
     }
 
-    private _mapLocalFiletoUrl(path: string): string {
-        return path.replace(this._workDir, '')
+    private _mapLocalFiletoUrl(localPath: string): string {
+        if (this._queryPath === localPath) {
+            return ''
+        }
+        return localPath.replace(this._workDir, '')
     }
 
     private _setBufferedBreakPoints(): void {
