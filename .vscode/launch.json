@@ -110,14 +110,14 @@
         {
             "name": "Extension + SJS Server",
             "configurations": [
-                "Launch Extension",
+                "Launch Extension (preprod)",
                 "Launch SJS Debug Adapter Server"
             ]
         },
         {
             "name": "Extension + XQY Server",
             "configurations": [
-                "Launch Extension",
+                "Launch Extension (preprod)",
                 "Launch XQY Debug Adapter Server"
             ]
         }
