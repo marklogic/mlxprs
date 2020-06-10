@@ -191,18 +191,20 @@ export class MLDebugSession extends LoggingDebugSession {
             if (this._runtime.getRunTimeState() !== 'shutdown') {
                 toDelete.forEach(bp => {
                     const breakpoint = JSON.parse(String(bp))
+                    const url = this._mapLocalFiletoUrl(path)
                     mlrequests.push(this._runtime.removeBreakPoint({
-                        url: this._mapLocalFiletoUrl(path),
-                        line: this.convertClientLineToDebugger(breakpoint.line),
+                        url: url,
+                        line: this.lineOnMl(breakpoint.line, url),
                         column: this.convertClientLineToDebugger(breakpoint.column),
                     } as MLbreakPoint))
                 })
 
                 toAdd.forEach(bp => {
                     const breakpoint = JSON.parse(String(bp))
+                    const url = this._mapLocalFiletoUrl(path)
                     mlrequests.push(this._runtime.setBreakPoint({
-                        url: this._mapLocalFiletoUrl(path),
-                        line: this.convertClientLineToDebugger(breakpoint.line),
+                        url: url,
+                        line: this.lineOnMl(breakpoint.line, url),
                         column: this.convertClientLineToDebugger(breakpoint.column),
                         condition: breakpoint.condition
                     } as MLbreakPoint))
@@ -246,7 +248,7 @@ export class MLDebugSession extends LoggingDebugSession {
             const frames: StackFrame[] = []
             for (let i = 0; i < stacks.length; i++) {
                 const stk = stacks[i]
-                const url = stacks[i].url
+                const url = stk.url
                 frames.push(new StackFrame(
                     this._frameHandles.create(stk),
                     (stk.functionName) ? stk.functionName : '<anonymous>',
@@ -508,7 +510,7 @@ export class MLDebugSession extends LoggingDebugSession {
                 const breakpoint = JSON.parse(String(bp))
                 mlrequests.push(this._runtime.setBreakPoint({
                     url: this._mapLocalFiletoUrl(path),
-                    line: this.convertClientLineToDebugger(breakpoint.line),
+                    line: this.lineOnMl(breakpoint.line, this._mapLocalFiletoUrl(path)),
                     column: this.convertClientLineToDebugger(breakpoint.column),
                     condition: breakpoint.condition
                 } as MLbreakPoint))
@@ -544,6 +546,23 @@ export class MLDebugSession extends LoggingDebugSession {
                 this._trace(msg)
             }
         }
+    }
+
+    /**
+     * For mapping a debugger line from local source to its
+     * corresponding MarkLogic module. Modules include an extra
+     * 'cache-buster' line. To account for that, add 1 if the
+     * module exists in ML.
+     *
+     * @param localLine line number in local XQY source code
+     * @param uri URI of module in MarkLogic, or `''` for ad-hoc query
+     * @returns predicted line number in MarkLogic module
+     */
+    private lineOnMl(localLine: number, uri: string): number {
+        const localPath = this._mapUrlToLocalFile(uri)
+        const locallyPresent: boolean = existsSync(localPath)
+        if (uri && locallyPresent) return localLine + 1
+        return localLine
     }
 }
 
