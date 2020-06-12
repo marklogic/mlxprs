@@ -98,6 +98,7 @@
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/client/JSDebugger/mlDebug.ts",
+            "preLaunchTask": "npm: compile",
             "args": [
                 "--server=4711"
             ],

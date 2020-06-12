@@ -33,6 +33,13 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         if (config.request === 'launch' && !config.program) {
             config.program = config.path || '${file}'
         }
+        if (config.path && config.request === 'launch') {
+            vscode.window.showWarningMessage('Use of \'path\' is deprecated in launch configurations. Please use \'program\'')
+        }
+        if (config.path && config.request === 'attach') {
+            vscode.window.showWarningMessage('Use of \'path\' is deprecated in launch configurations. Please use \'root\'')
+            config.root = config.root || config.path
+        }
 
         return this.resolveRemainingDebugConfiguration(folder, config)
     }

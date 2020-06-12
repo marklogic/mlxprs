@@ -34,7 +34,7 @@ export class MlClientParameters {
         this.modulesDb = rawParams.modulesDb
         this.authType = rawParams.authType
         this.ssl = Boolean(rawParams.ssl)
-        this.pathToCa = rawParams.pathToCa
+        this.pathToCa = rawParams.pathToCa || ''
     }
 
     toString(): string {
