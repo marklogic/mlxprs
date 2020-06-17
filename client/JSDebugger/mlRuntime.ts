@@ -70,6 +70,9 @@ export class MLRuntime extends EventEmitter {
     private _mlClient: MarklogicClient
     private _mlModuleGetter: ModuleContentGetter
 
+    public getHostString(): string {
+        return `${this._mlClient.params.host}:${this._mlClient.params.port}`
+    }
 
     //Internal
     private _runTimeState: 'shutdown' | 'launched' | 'attached' | 'error' = 'shutdown';
@@ -91,9 +94,8 @@ export class MLRuntime extends EventEmitter {
         this._runTimeState = state
     }
 
-    public launchWithDebugEval(scriptLocation: string, database: string, txnId: string, modules: string, root: string): Promise<string> {
-        const script = fs.readFileSync(scriptLocation).toString()
-        return this._sendMLdebugEvalRequest(script, database, txnId, modules, root)
+    public launchWithDebugEval(queryText: string, database: string, txnId: string, modules: string, root: string): Promise<string> {
+        return this._sendMLdebugEvalRequest(queryText, database, txnId, modules, root)
     }
 
     public initialize(args): void {
@@ -176,8 +178,8 @@ export class MLRuntime extends EventEmitter {
     }
 
     public evaluateOnCallFrame(expr: string, cid?: string): Promise<string> {
-        const qs: object = {expr: expr}
-        if (cid !== '') {qs['call-frame'] = cid}
+        const qs: object = { expr: expr }
+        if (cid !== '') { qs['call-frame'] = cid }
         return this._sendMLdebugRequestGET('eval-on-call-frame', qs)
     }
 
@@ -202,8 +204,8 @@ export class MLRuntime extends EventEmitter {
     public async waitTillPaused(): Promise<string> {
         try {
             const result = await this.wait()
-            if (result === '') {return this.waitTillPaused()}
-            else {return result}
+            if (result === '') { return this.waitTillPaused() }
+            else { return result }
         } catch (e) {
             throw e
         }
@@ -228,8 +230,8 @@ export class MLRuntime extends EventEmitter {
                 'sendImmediately': false
             }
         }
-        if (body) {options['body'] = body}
-        if (this._ca) options['agentOptions'] = {ca: this._ca}
+        if (body) { options['body'] = body }
+        if (this._ca) options['agentOptions'] = { ca: this._ca }
         return request.post(url, options)
     }
 
@@ -245,8 +247,8 @@ export class MLRuntime extends EventEmitter {
                 'sendImmediately': false
             }
         }
-        if (queryString) {options['qs'] = queryString}
-        if (this._ca) options['agentOptions'] = {ca: this._ca}
+        if (queryString) { options['qs'] = queryString }
+        if (this._ca) options['agentOptions'] = { ca: this._ca }
         return request.get(url, options)
     }
 
@@ -264,7 +266,7 @@ export class MLRuntime extends EventEmitter {
             },
             body: `javascript=${querystring.escape(script)}`
         }
-        if (this._ca) options['agentOptions'] = {ca: this._ca}
+        if (this._ca) options['agentOptions'] = { ca: this._ca }
         const evalOptions = {
             database: database,
             modules: modules

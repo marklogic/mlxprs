@@ -11,11 +11,12 @@ import {
 import { DebugProtocol } from 'vscode-debugprotocol'
 import { basename } from 'path'
 import { MLRuntime, MLbreakPoint, V8Frame, ScopeObject, V8PropertyObject, V8PropertyValue } from './mlRuntime'
-import {Subject} from 'await-notify'
+import { Subject } from 'await-notify'
 import { existsSync } from 'fs'
 
 interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
     program: string;
+    queryText: string;
     hostname: string;
     username: string;
     password: string;
@@ -27,6 +28,7 @@ interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
     mlModulesRoot?: string;
     ssl?: boolean;
     pathToCa?: Buffer;
+    scheme?: string;
 }
 
 interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
@@ -54,6 +56,7 @@ export class MLDebugSession extends LoggingDebugSession {
     private _stackRespString = '';
     private _queryPath = '';
     private _workDir = '';
+    private _scheme = '';
 
     // private _traceLevel: "none" | "info" | "detailed" | "all" = "all"
 
@@ -126,13 +129,16 @@ export class MLDebugSession extends LoggingDebugSession {
         await this._configurationDone.wait(1000)
         this._runtime.initialize(args)
         try {
+            this._queryPath = args.program
+            this._workDir = args.root
+            this._scheme = args.scheme
+
             const result = await this._runtime.launchWithDebugEval(
-                args.program, args.database, args.txnId, args.modules, args.mlModulesRoot)
+                args.queryText, args.database, args.txnId, args.modules, args.mlModulesRoot)
             const rid = JSON.parse(result).requestId
             this._runtime.setRid(rid)
             // runtime set up
-            this._queryPath = args.program
-            this._workDir = args.root
+
             this._runtime.setRunTimeState('launched')
             this._stackRespString = await this._runtime.waitTillPaused()
             await this._setBufferedBreakPoints()
@@ -140,6 +146,7 @@ export class MLDebugSession extends LoggingDebugSession {
             this.sendResponse(response)
             this.sendEvent(new StoppedEvent('entry', MLDebugSession.THREAD_ID))
         } catch (err) {
+            this._handleError(err, 'Failed to start JS debugging', true, 'launchRequest')
             this._runtime.setRunTimeState('shutdown')
             this.sendResponse(response)
             //error launching request
@@ -196,7 +203,7 @@ export class MLDebugSession extends LoggingDebugSession {
                     const breakpoint = JSON.parse(String(bp))
                     const url = this._mapLocalFiletoUrl(path)
                     mlrequests.push(this._runtime.removeBreakPoint({
-                        url: url,
+                        url: url.startsWith('untitled') ? '' : url,
                         line: this.lineOnMl(breakpoint.line, url),
                         column: this.convertClientLineToDebugger(breakpoint.column),
                     } as MLbreakPoint))
@@ -206,7 +213,7 @@ export class MLDebugSession extends LoggingDebugSession {
                     const breakpoint = JSON.parse(String(bp))
                     const url = this._mapLocalFiletoUrl(path)
                     mlrequests.push(this._runtime.setBreakPoint({
-                        url: url,
+                        url: url.startsWith('untitled') ? '' : url,
                         line: this.lineOnMl(breakpoint.line, url),
                         column: this.convertClientLineToDebugger(breakpoint.column),
                         condition: breakpoint.condition
@@ -316,9 +323,9 @@ export class MLDebugSession extends LoggingDebugSession {
                     }
                     const type = element.value.hasOwnProperty('type') ? element.value.type : 'undefined'
                     let value
-                    if (element.value.hasOwnProperty('value')) {value = String(element.value.value)}
-                    else if (element.value.hasOwnProperty('description')) {value = String(element.value.description)}
-                    else {value = 'undefined'}
+                    if (element.value.hasOwnProperty('value')) { value = String(element.value.value) }
+                    else if (element.value.hasOwnProperty('description')) { value = String(element.value.description) }
+                    else { value = 'undefined' }
                     variables.push({
                         name: name,
                         type: type,
@@ -343,7 +350,7 @@ export class MLDebugSession extends LoggingDebugSession {
         this._runtime.pause().then(() => {
             this.sendResponse(response)
             //get stackTrace
-            this._runtime.waitTillPaused().then( resp => {
+            this._runtime.waitTillPaused().then(resp => {
                 this._stackRespString = resp
                 this.sendEvent(new StoppedEvent('pause', MLDebugSession.THREAD_ID))
                 this._resetHandles()
@@ -359,7 +366,7 @@ export class MLDebugSession extends LoggingDebugSession {
     protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
         this._runtime.resume().then(() => {
             this.sendResponse(response)
-            this._runtime.waitTillPaused().then( resp => {
+            this._runtime.waitTillPaused().then(resp => {
                 this._stackRespString = resp
                 this.sendEvent(new StoppedEvent('breakpoint', MLDebugSession.THREAD_ID))
                 this._resetHandles()
@@ -375,7 +382,7 @@ export class MLDebugSession extends LoggingDebugSession {
     protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
         this._runtime.stepOver().then(() => {
             this.sendResponse(response)
-            this._runtime.waitTillPaused().then( resp => {
+            this._runtime.waitTillPaused().then(resp => {
                 this._stackRespString = resp
                 this.sendEvent(new StoppedEvent('step', MLDebugSession.THREAD_ID))
                 this._resetHandles()
@@ -407,7 +414,7 @@ export class MLDebugSession extends LoggingDebugSession {
     protected stepOutRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
         this._runtime.stepOut().then(() => {
             this.sendResponse(response)
-            this._runtime.waitTillPaused().then( resp => {
+            this._runtime.waitTillPaused().then(resp => {
                 this._stackRespString = resp
                 this.sendEvent(new StoppedEvent('step', MLDebugSession.THREAD_ID))
                 this._resetHandles()
@@ -474,6 +481,9 @@ export class MLDebugSession extends LoggingDebugSession {
             }
         }).then(() => {
             this.sendResponse(response)
+        }).catch(err => {
+            this._trace(JSON.stringify(err))
+            this.sendResponse(response)
         })
     }
 
@@ -487,14 +497,19 @@ export class MLDebugSession extends LoggingDebugSession {
         let vsCodeUri = filePath
         let origin = 'local file'
         let id = 0
-        if (!existsSync(filePath)) {
+
+        if (filePath.toLowerCase().startsWith('untitled') && !existsSync(filePath)) {
+            vsCodeUri = `untitled:${filePath}`
+            origin = 'untitled'
+        }
+        else if (!existsSync(filePath)) {
             const mlModuleUri = this._mapLocalFiletoUrl(filePath)
             origin = `mldbg:/${mlModuleUri}`
             id = 9
             vsCodeUri = mlModuleUri
         }
         const name = basename(vsCodeUri)
-        return new Source(name, vsCodeUri, id, origin, 'ml-adapter-data')
+        return new Source(name, vsCodeUri, id, origin, vsCodeUri)
     }
 
     private _mapUrlToLocalFile(url: string): string {
@@ -506,8 +521,20 @@ export class MLDebugSession extends LoggingDebugSession {
     }
 
     private _mapLocalFiletoUrl(localPath: string): string {
+        // localPath is the query being run => '' in debug stack
         if (this._queryPath === localPath) {
             return ''
+        }
+        // for querying with an unsaved buffer. Equivalent to '' in the debug
+        // stack IFF the buffer title matches
+        if (this._scheme === 'untitled' && localPath.toLowerCase().startsWith('untitled')) {
+            return localPath
+                .replace(`untitled:${this._queryPath}`, '')
+        }
+        // from module getter via "Show modules". return only path portion of URL
+        if (localPath.startsWith('mlmodule:')) {
+            return localPath
+                .replace(`mlmodule:\/\/${this._runtime.getHostString()}`, '')
         }
         return localPath.replace(this._workDir, '')
     }
@@ -541,14 +568,18 @@ export class MLDebugSession extends LoggingDebugSession {
         this._frameHandles.reset()
     }
 
-    private _handleError(err, msg?: string, terminate?: boolean, func?: string): void {
-        const errResp = JSON.parse(err.error).errorResponse
+    private _handleError(err: any, msg?: string, terminate?: boolean, func?: string): void {
+        const errAsObject = JSON.parse(JSON.stringify(err))
+        const errResp = errAsObject.errorResponse || errAsObject.message
         const messageCode = errResp.messageCode
         if (messageCode === 'JSDBG-REQUESTRECORD' || messageCode === 'XDMP-NOREQUEST') {
             this._runtime.setRunTimeState('shutdown')
             this.sendEvent(new TerminatedEvent())
             this._trace(`Request ${this._runtime.getRid()} has ended`)
         } else {
+            if (!messageCode) {
+                this._trace(errResp)
+            }
             if (terminate === true) {
                 this.sendEvent(new TerminatedEvent())
             }
@@ -570,7 +601,7 @@ export class MLDebugSession extends LoggingDebugSession {
      */
     private lineOnMl(localLine: number, uri: string): number {
         const localPath = this._mapUrlToLocalFile(uri)
-        const locallyPresent: boolean = existsSync(localPath)
+        const locallyPresent: boolean = existsSync(localPath) || !uri
         if (uri && locallyPresent) return localLine + 1
         return localLine
     }

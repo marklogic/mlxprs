@@ -30,9 +30,17 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
                 config.program = '${file}'
             }
         }
-        if (config.request === 'launch' && !config.program) {
-            config.program = config.path || '${file}'
+
+        // use active editor window as ad-hoc query if `program` not defined explicitly
+        config.program = config.program || config.path
+        if (!config.program) {
+            const doc: vscode.TextDocument = vscode.window.activeTextEditor.document
+            config.program = doc.fileName
+            config.scheme = doc.uri.scheme
+            config.queryText = doc.getText()
         }
+
+        // deprecation warnings
         if (config.path && config.request === 'launch') {
             vscode.window.showWarningMessage('Use of \'path\' is deprecated in launch configurations. Please use \'program\'')
         }
