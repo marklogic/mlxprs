@@ -2,6 +2,8 @@ import * as path from 'path'
 import * as Mocha from 'mocha'
 import * as glob from 'glob'
 
+const runSJSDebuggerTest = true
+
 export function run(): Promise<void> {
     // Create the mocha test
     const mocha = new Mocha({
@@ -18,7 +20,10 @@ export function run(): Promise<void> {
             }
 
             // Add files to the test suite
-            files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)))
+            files.forEach(f => {
+                if (f != 'suite/sjsAdapter.test.js' || runSJSDebuggerTest)
+                    mocha.addFile(path.resolve(testsRoot, f))
+            })
 
             try {
                 // Run the mocha test

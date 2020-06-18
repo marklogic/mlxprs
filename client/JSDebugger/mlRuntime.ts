@@ -107,6 +107,8 @@ export class MLRuntime extends EventEmitter {
         this._scheme = this._ssl ? 'https' : 'http'
         if (args.pathToCa) {
             this._ca = fs.readFileSync(args.pathToCa)
+        } else {
+            this._ca = new Buffer('')
         }
         this._mlClient = new MarklogicClient(
             new MlClientParameters({
@@ -118,7 +120,7 @@ export class MLRuntime extends EventEmitter {
                 ssl: this._ssl,
                 authType: args.authType,
                 modulesDb: args.modules,
-                pathToCa: args.pathToCa
+                pathToCa: this._ca
             })
         )
         this._mlModuleGetter = new ModuleContentGetter(this._mlClient)

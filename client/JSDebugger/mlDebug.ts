@@ -204,7 +204,7 @@ export class MLDebugSession extends LoggingDebugSession {
                     const url = this._mapLocalFiletoUrl(path)
                     mlrequests.push(this._runtime.removeBreakPoint({
                         url: url.startsWith('untitled') ? '' : url,
-                        line: this.lineOnMl(breakpoint.line, url),
+                        line: this.convertClientLineToDebugger(breakpoint.line),
                         column: this.convertClientLineToDebugger(breakpoint.column),
                     } as MLbreakPoint))
                 })
@@ -214,7 +214,7 @@ export class MLDebugSession extends LoggingDebugSession {
                     const url = this._mapLocalFiletoUrl(path)
                     mlrequests.push(this._runtime.setBreakPoint({
                         url: url.startsWith('untitled') ? '' : url,
-                        line: this.lineOnMl(breakpoint.line, url),
+                        line: this.convertClientLineToDebugger(breakpoint.line),
                         column: this.convertClientLineToDebugger(breakpoint.column),
                         condition: breakpoint.condition
                     } as MLbreakPoint))
@@ -547,7 +547,7 @@ export class MLDebugSession extends LoggingDebugSession {
                 const breakpoint = JSON.parse(String(bp))
                 mlrequests.push(this._runtime.setBreakPoint({
                     url: this._mapLocalFiletoUrl(path),
-                    line: this.lineOnMl(breakpoint.line, this._mapLocalFiletoUrl(path)),
+                    line: this.convertClientLineToDebugger(breakpoint.line),
                     column: this.convertClientLineToDebugger(breakpoint.column),
                     condition: breakpoint.condition
                 } as MLbreakPoint))
