@@ -1,10 +1,12 @@
 import * as assert from 'assert'
 import { after, before } from 'mocha'
 import { MarklogicClient, MlClientParameters, sendJSQuery } from '../../marklogicClient'
+import {_connectServer, _disonnectServer} from '../../JSDebugger/configurationProvider'
 import * as vscode from 'vscode'
 import * as Path from 'path'
 import {DebugClient} from 'vscode-debugadapter-testsupport'
 import * as CP from 'child_process'
+import * as fs from 'fs'
 
 
 
@@ -49,6 +51,7 @@ suite('JavaScript Debug Test Suite', () => {
 
     before(async() => {
         // load test data
+        await _connectServer('JSdebugTestServer')
         const requests = []    
         debugServerModules.forEach( async(module) => {
             const fname = Path.basename(module)
@@ -63,8 +66,9 @@ suite('JavaScript Debug Test Suite', () => {
         Promise.all(requests)
     })
     
-    after(() => {
+    after(async() => {
         // delete test data
+        await _disonnectServer('JSdebugTestServer')
         const requests = []    
         debugServerModules.forEach( async(module) => {
             const fname = Path.basename(module)
@@ -93,7 +97,8 @@ suite('JavaScript Debug Test Suite', () => {
     suite('Basic', () => {
         test('launch a script and it should stop at entry', async() => {
             const path = Path.join(scriptFolder, 'helloWorld.sjs')
-            const config = {program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
+            const text = fs.readFileSync(path).toString()
+            const config = {queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
             return Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config),
@@ -103,7 +108,8 @@ suite('JavaScript Debug Test Suite', () => {
     
         test('check stepOver', async() => {
             const path = Path.join(scriptFolder, 'helloWorld.sjs')
-            const config = {program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
+            const text = fs.readFileSync(path).toString()
+            const config = {queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
@@ -116,7 +122,8 @@ suite('JavaScript Debug Test Suite', () => {
     
         test('set breakpoint', async() => {
             const path = Path.join(scriptFolder, 'helloWorld.sjs')
-            const config = {program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
+            const text = fs.readFileSync(path).toString()
+            const config = {queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
@@ -128,7 +135,8 @@ suite('JavaScript Debug Test Suite', () => {
 
         test('check stepInto', async() => {
             const path = Path.join(scriptFolder, 'helloWorld.sjs')
-            const config = {program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
+            const text = fs.readFileSync(path).toString()
+            const config = {queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
@@ -141,7 +149,8 @@ suite('JavaScript Debug Test Suite', () => {
 
         test('check stepOut', async() => {
             const path = Path.join(scriptFolder, 'helloWorld.sjs')
-            const config = {program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
+            const text = fs.readFileSync(path).toString()
+            const config = {queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
@@ -154,7 +163,8 @@ suite('JavaScript Debug Test Suite', () => {
 
         test('check stack trace', async() => {
             const path = Path.join(scriptFolder, 'helloWorld.sjs')
-            const config = {program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
+            const text = fs.readFileSync(path).toString()
+            const config = {queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
@@ -170,7 +180,8 @@ suite('JavaScript Debug Test Suite', () => {
 
         test('check variable', async() => {
             const path = Path.join(scriptFolder, 'helloWorld.sjs')
-            const config = {program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
+            const text = fs.readFileSync(path).toString()
+            const config = {queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
@@ -187,7 +198,8 @@ suite('JavaScript Debug Test Suite', () => {
 
         test('check evaluate', async() => {
             const path = Path.join(scriptFolder, 'helloWorld.sjs')
-            const config = {program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
+            const text = fs.readFileSync(path).toString()
+            const config = {queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
@@ -201,7 +213,8 @@ suite('JavaScript Debug Test Suite', () => {
 
         test('check conditional breakpoint', async() => {
             const path = Path.join(scriptFolder, 'helloWorld.sjs')
-            const config = {program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
+            const text = fs.readFileSync(path).toString()
+            const config = {queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
@@ -241,7 +254,7 @@ suite('JavaScript Debug Test Suite', () => {
             const resp = await getRid(mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server("JSdebugTestServer")).toObject()[0].requestStatuses[0].requestId')
             const rid = resp[0]
             const path = Path.join(scriptFolder, 'MarkLogic/test')
-            const config = {rid: rid, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
+            const config = {rid: rid, root: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
             await Promise.all([
                 dc.initializeRequest(),
                 dc.configurationSequence(),
@@ -263,7 +276,8 @@ suite('JavaScript Debug Test Suite', () => {
     suite('Testing sjs/xqy boundary in eval/invoke', () => {
         test('sjs calling xdmp.eval()', async() => {
             const path = Path.join(scriptFolder, 'eval1.sjs')
-            const config = {program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
+            const text = fs.readFileSync(path).toString()
+            const config = {queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
@@ -277,7 +291,8 @@ suite('JavaScript Debug Test Suite', () => {
 
         test('sjs calling xdmp.invoke()', async() => {
             const path = Path.join(scriptFolder, 'invoke1.sjs')
-            const config = {program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
+            const text = fs.readFileSync(path).toString()
+            const config = {queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
@@ -291,7 +306,8 @@ suite('JavaScript Debug Test Suite', () => {
 
         test('sjs calling xdmp:eval()', async() => {
             const path = Path.join(scriptFolder, 'eval2.sjs')
-            const config = {program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
+            const text = fs.readFileSync(path).toString()
+            const config = {queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
@@ -305,7 +321,8 @@ suite('JavaScript Debug Test Suite', () => {
 
         test('sjs calling xdmp:invoke()', async() => {
             const path = Path.join(scriptFolder, 'invoke2.sjs')
-            const config = {program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
+            const text = fs.readFileSync(path).toString()
+            const config = {queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
@@ -338,7 +355,8 @@ suite('JavaScript Debug Test Suite', () => {
 
         test('sjs importing xqy', async() => {
             const path = Path.join(scriptFolder, 'eval3.sjs')
-            const config = {program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
+            const text = fs.readFileSync(path).toString()
+            const config = {queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
@@ -353,7 +371,8 @@ suite('JavaScript Debug Test Suite', () => {
         // test for nested call
         test('xqy invoking sjs invoking xqy', async() => {
             const path = Path.join(scriptFolder, 'nestedInvoke1.sjs')
-            const config = {program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
+            const text = fs.readFileSync(path).toString()
+            const config = {queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
