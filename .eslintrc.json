@@ -60,6 +60,14 @@
                 "asyncArrow": "always"
             }
         ],
+        "space-in-parens": [
+            "error",
+            "never"
+        ],
+        "object-curly-spacing": [
+            "error",
+            "always"
+        ],
         "keyword-spacing": [
             "error",
             {

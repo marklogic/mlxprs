@@ -3,7 +3,7 @@
  */
 
 import * as vscode from 'vscode'
-import {DebugConfiguration, WorkspaceFolder, CancellationToken, ProviderResult} from 'vscode'
+import { DebugConfiguration, WorkspaceFolder, CancellationToken, ProviderResult } from 'vscode'
 import * as request from 'request-promise'
 import * as querystring from 'querystring'
 import * as fs from 'fs'
@@ -137,7 +137,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
                     })
                 }
             }
-            const item = await vscode.window.showQuickPick(items, {placeHolder: 'Select the request to attach to' })
+            const item = await vscode.window.showQuickPick(items, { placeHolder: 'Select the request to attach to' })
             if (!item) {
                 return vscode.window.showErrorMessage('Request not selected').then(() => {
                     return undefined	// abort
@@ -150,7 +150,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
     }
 
     private async getAvailableRequests(username: string, password: string, debugServerName: string,
-        hostname: string, ssl?: boolean, ca?: Buffer ): Promise<string> {
+        hostname: string, ssl?: boolean, ca?: Buffer): Promise<string> {
         const url = buildUrl(hostname, `/jsdbg/v1/paused-requests/${debugServerName}`, ssl)
         const options = {
             headers: {
@@ -162,7 +162,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
                 'sendImmediately': false
             }
         }
-        if (ca) options['agentOptions'] = {ca: ca}
+        if (ca) options['agentOptions'] = { ca: ca }
         return request.get(url, options)
     }
 
@@ -183,7 +183,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
             },
             body: `javascript=${querystring.escape(script)}`
         }
-        if (ca) options['agentOptions'] = {ca: ca}
+        if (ca) options['agentOptions'] = { ca: ca }
         return request.post(url, options)
     }
 
@@ -204,7 +204,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
             },
             body: `javascript=${querystring.escape(script)}`
         }
-        if (ca) options['agentOptions'] = {ca: ca}
+        if (ca) options['agentOptions'] = { ca: ca }
         return request.post(url, options)
     }
 }
@@ -215,7 +215,7 @@ export class DebugAdapterExecutableFactory implements vscode.DebugAdapterDescrip
     }
 }
 
-export function _connectServer(servername: string ): void {
+export function _connectServer(servername: string): void {
     const cfg = vscode.workspace.getConfiguration()
     const username: string = cfg.get('marklogic.username')
     const password: string = cfg.get('marklogic.password')
@@ -248,7 +248,7 @@ export function _connectServer(servername: string ): void {
         }
     }
     if (pathToCa !== '')
-        options['agentOptions'] = {ca: fs.readFileSync(pathToCa)}
+        options['agentOptions'] = { ca: fs.readFileSync(pathToCa) }
 
     request.post(url, options).then(() => {
         vscode.window.showInformationMessage('Debug server connected')
@@ -257,7 +257,7 @@ export function _connectServer(servername: string ): void {
     })
 }
 
-export function _disonnectServer(servername: string ): void {
+export function _disconnectServer(servername: string): void {
     const cfg = vscode.workspace.getConfiguration()
     const username: string = cfg.get('marklogic.username')
     const password: string = cfg.get('marklogic.password')
@@ -290,7 +290,7 @@ export function _disonnectServer(servername: string ): void {
         }
     }
     if (pathToCa !== '')
-        options['agentOptions'] = {ca: fs.readFileSync(pathToCa)}
+        options['agentOptions'] = { ca: fs.readFileSync(pathToCa) }
 
     request.post(url, options).then(() => {
         vscode.window.showInformationMessage('Debug server disconnected')

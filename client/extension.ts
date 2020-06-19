@@ -9,7 +9,7 @@ import { QueryResultsContentProvider } from './queryResultsContentProvider'
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting'
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient'
 import { XqyDebugConfigurationProvider, XqyDebugAdapterDescriptorFactory } from './XQDebugger/xqyDebugConfigProvider'
-import { MLConfigurationProvider, DebugAdapterExecutableFactory, _connectServer, _disonnectServer } from './JSDebugger/configurationProvider'
+import { MLConfigurationProvider, DebugAdapterExecutableFactory, _connectServer, _disconnectServer } from './JSDebugger/configurationProvider'
 import { ModuleContentProvider, pickAndShowModule } from './vscModuleContentProvider'
 
 const MLDBCLIENT = 'mldbClient'
@@ -55,7 +55,7 @@ export function activate(context: vscode.ExtensionContext): void {
             placeHolder: 'Please enter server you want to disconnect',
             value: ''
         }).then(servername => {
-            _disonnectServer(servername)
+            _disconnectServer(servername)
         })
     })
     const connectXqyServer = vscode.commands.registerCommand('extension.connectXqyServer', () => {

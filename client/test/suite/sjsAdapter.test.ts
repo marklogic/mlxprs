@@ -1,10 +1,10 @@
 import * as assert from 'assert'
 import { after, before } from 'mocha'
 import { MarklogicClient, MlClientParameters, sendJSQuery } from '../../marklogicClient'
-import {_connectServer, _disonnectServer} from '../../JSDebugger/configurationProvider'
+import { _connectServer, _disconnectServer } from '../../JSDebugger/configurationProvider'
 import * as vscode from 'vscode'
 import * as Path from 'path'
-import {DebugClient} from 'vscode-debugadapter-testsupport'
+import { DebugClient } from 'vscode-debugadapter-testsupport'
 import * as CP from 'child_process'
 import * as fs from 'fs'
 
@@ -24,7 +24,7 @@ suite('JavaScript Debug Test Suite', () => {
     const scriptFolder = Path.join(rootFolder, 'client/test/jsScripts')
 
     let dc: DebugClient
-    const mlClient = new MarklogicClient(
+    const mlClient: MarklogicClient = new MarklogicClient(
         new MlClientParameters({
             host: hostname,
             port: port,
@@ -49,42 +49,52 @@ suite('JavaScript Debug Test Suite', () => {
     const debugServerModules = [module1, module2, module3, module4, module5]
     const taskServerModules = [module5, module6, module7]
 
-    before(async () => {
+    before(() => {
         // load test data
-        await _connectServer('JSdebugTestServer')
-        const requests = []
+        _connectServer('JSdebugTestServer')
+        const docObjects = {}
         debugServerModules.forEach(async (module) => {
             const fname = Path.basename(module)
-            const qry = `declareUpdate(); xdmp.documentLoad('${module}', {'uri':'/MarkLogic/test/${fname}'} )`
-            requests.push(sendJSQuery(mlClient, qry))
+            const moduleText = fs.readFileSync(module)
+            docObjects[`/MarkLogic/test/${fname}`] = moduleText
         })
         taskServerModules.forEach(async (module) => {
             const fname = Path.basename(module)
-            const qry = `declareUpdate(); xdmp.documentLoad('${module}', {'uri':'Apps/MarkLogic/test/${fname}'} )`
-            requests.push(sendJSQuery(mlClient, qry))
+            const moduleText = fs.readFileSync(module)
+            docObjects[`Apps/MarkLogic/test/${fname}`] = moduleText
         })
-        Promise.all(requests)
+        mlClient.mldbClient.writeCollection('VSCODE/SJS-debug-test', docObjects)
+            .result(
+                (responses: any[]) => {
+                    console.debug(`${responses.length} modules loaded before SJS debugger tests: ${JSON.stringify(responses)}`)
+                    return
+                },
+                (err: any) => {
+                    console.error(`Error loading modules before tests: ${JSON.stringify(err)}`)
+                })
+            .then(() => {
+                vscode.window.showInformationMessage('Starting SJS debugger tests...')
+            })
     })
 
-    after(async () => {
+    after(() => {
         // delete test data
-        await _disonnectServer('JSdebugTestServer')
-        const requests = []
-        debugServerModules.forEach(async (module) => {
-            const fname = Path.basename(module)
-            const qry = `declareUpdate(); xdmp.documentDelete('/MarkLogic/test/${fname}',{ifNotExists:"allow"} )`
-            requests.push(sendJSQuery(mlClient, qry))
-        })
-        taskServerModules.forEach(async (module) => {
-            const fname = Path.basename(module)
-            const qry = `declareUpdate(); xdmp.documentDelete('Apps/MarkLogic/test/${fname}',{ifNotExists:"allow"} )`
-            requests.push(sendJSQuery(mlClient, qry))
-        })
-        Promise.all(requests)
-        vscode.window.showInformationMessage('All tests done!')
+        _disconnectServer('JSdebugTestServer')
+        mlClient.mldbClient.removeCollection('VSCODE/SJS-debug-test')
+            .result(
+                (collection: string) => {
+                    console.debug(`Removed ${collection} modules after SJS debugger tests.`)
+                    return
+                },
+                (err: any) => {
+                    console.error(`Error removing modules after tests: ${JSON.stringify(err)}`)
+                })
+            .then(() => {
+                vscode.window.showInformationMessage('SJS Debugger tests done!')
+            })
     })
 
-    setup( () => {
+    setup(() => {
         dc = new DebugClient('node', exec, 'node')
         return dc.start()
     })
@@ -274,7 +284,7 @@ suite('JavaScript Debug Test Suite', () => {
     })
 
     suite('Testing sjs/xqy boundary in eval/invoke', () => {
-        test('sjs calling xdmp.eval()', async () => {
+        test('sjs calling xdmp.eval() A', async () => {
             const path = Path.join(scriptFolder, 'eval1.sjs')
             const text = fs.readFileSync(path).toString()
             const config = {queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
@@ -289,7 +299,7 @@ suite('JavaScript Debug Test Suite', () => {
             return dc.assertStoppedLocation('step', { path: path, line: 9 } )
         })
 
-        test('sjs calling xdmp.invoke()', async () => {
+        test('sjs calling xdmp.invoke() A', async () => {
             const path = Path.join(scriptFolder, 'invoke1.sjs')
             const text = fs.readFileSync(path).toString()
             const config = {queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
@@ -304,7 +314,7 @@ suite('JavaScript Debug Test Suite', () => {
             return dc.assertStoppedLocation('step', { path: path, line: 6 } )
         }).timeout(5000)
 
-        test('sjs calling xdmp:eval()', async () => {
+        test('sjs calling xdmp:eval() B', async () => {
             const path = Path.join(scriptFolder, 'eval2.sjs')
             const text = fs.readFileSync(path).toString()
             const config = {queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}
@@ -319,7 +329,7 @@ suite('JavaScript Debug Test Suite', () => {
             return dc.assertStoppedLocation('step', { path: path, line: 8 } )
         })
 
-        test('sjs calling xdmp:invoke()', async () => {
+        test('sjs calling xdmp:invoke() B', async () => {
             const path = Path.join(scriptFolder, 'invoke2.sjs')
             const text = fs.readFileSync(path).toString()
             const config = {queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST'}

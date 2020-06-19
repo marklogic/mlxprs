@@ -11,7 +11,10 @@ declare module 'marklogic' {
     release: () => void;
     xqueryEval: <U>(query: string, variables?: Variables) => ResultProvider<U>;
     eval: <U>(query: string, variables?: Variables) => ResultProvider<U>;
+    invoke: <U>(path: string, variables?: Variables) => ResultProvider<U>;
     read: (uri: string) => ResultProvider<string[]>;
+    writeCollection: (collection: string, documents: Record<string, any>[]) => ResultProvider<string[]>;
+    removeCollection: (collection: string) => ResultProvider<string>;
   }
 
   export interface ConnectionParams {
