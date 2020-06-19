@@ -9,7 +9,9 @@
         "SharedArrayBuffer": "readonly"
     },
     "parser": "@typescript-eslint/parser",
-    "plugins": ["@typescript-eslint"],
+    "plugins": [
+        "@typescript-eslint"
+    ],
     "parserOptions": {
         "ecmaVersion": 2018,
         "sourceType": "module"
@@ -53,7 +55,10 @@
         ],
         "space-before-function-paren": [
             "error",
-            "never"
+            {
+                "named": "never",
+                "asyncArrow": "always"
+            }
         ],
         "keyword-spacing": [
             "error",
