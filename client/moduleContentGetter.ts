@@ -5,7 +5,6 @@ import { MarklogicClient, sendXQuery, MlClientParameters } from './marklogicClie
 export const listModulesQuery = 'cts:uris()'
 
 export class ModuleContentGetter {
-    private _cache = new Map<string, string>()
     private _mlClient: MarklogicClient
 
     public constructor(client: MarklogicClient) {
@@ -26,21 +25,12 @@ export class ModuleContentGetter {
         this._mlClient = client
     }
 
-    async provideTextDocumentContent(modulePath: string): Promise<string> {
-        if (!this._cache.get(modulePath)) {
-            await this.cacheModule(modulePath)
-        }
-        return this._cache.get(modulePath)
-    }
-
-
-    public async cacheModule(modulePath: string): Promise<string> {
+    public async provideTextDocumentContent(modulePath: string): Promise<string> {
         return this._mlClient.mldbClient.read(modulePath)
             .result(
                 (fulfill: string[]) => {
                     const moduleContent: string = fulfill[0]
-                    this._cache.set(modulePath, moduleContent)
-                    return modulePath
+                    return moduleContent
                 },
                 (err) => {
                     throw err
