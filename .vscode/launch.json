@@ -50,16 +50,16 @@
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
-                "--extensionDevelopmentPath=${workspaceRoot}/client",
-                "--extensionTestsPath=${workspaceRoot}/client/out/test/suite/index"
+                "--extensionDevelopmentPath=${workspaceFolder}/client",
+                "--extensionTestsPath=${workspaceRoot}/dist/test/suite/index"
             ],
             "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": [
-                "${workspaceRoot}/client/out/test/**/*.js"
+                "${workspaceRoot}/dist/**/*.js"
             ],
             "preLaunchTask": "npm: pretest",
-            "cwd": "${workspaceFolder}/client"
+            "cwd": "${workspaceFolder}"
         },
         {
             "name": "Launch Server Tests",
