@@ -252,8 +252,8 @@ export function _connectServer(servername: string): void {
 
     request.post(url, options).then(() => {
         vscode.window.showInformationMessage('Debug server connected')
-    }).catch(() => {
-        vscode.window.showErrorMessage('Debug server connect failed')
+    }).catch(err => {
+        vscode.window.showErrorMessage('Debug server connect failed: ' + JSON.stringify(err))
     })
 }
 
