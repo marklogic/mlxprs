@@ -50,41 +50,45 @@ suite('JavaScript Debug Test Suite', () => {
 
     const debugServerModules = [module1, module2, module3, module4, module5]
     const taskServerModules = [module5, module6, module7]
+    const collection = 'VSCODE/SJS-debug-test'
 
     before(async () => {
         // load test data
         _connectServer('JSdebugTestServer')
-        const docObjects = {} as Record<string, any>[]
-        debugServerModules.forEach(async (module) => {
-            const fname = Path.basename(module)
-            const moduleText = fs.readFileSync(module)
-            docObjects[`/MarkLogic/test/${fname}`] = moduleText
+        const requests = []
+        debugServerModules.forEach(async (fsModulePath) => {
+            const fname = Path.basename(fsModulePath)
+            const module = fs.readFileSync(fsModulePath)
+            const qry = `declareUpdate(); let textNode = new NodeBuilder();
+                textNode.addText(\`${module}\`);
+                const options = {collections: '${collection}'};
+                xdmp.documentInsert("/MarkLogic/test/${fname}", textNode.toNode(), options);`
+            requests.push(sendJSQuery(mlClient, qry))
         })
-        taskServerModules.forEach(async (module) => {
-            const fname = Path.basename(module)
-            const moduleText = fs.readFileSync(module)
-            docObjects[`Apps/MarkLogic/test/${fname}`] = moduleText
+        taskServerModules.forEach(async (fsModulePath) => {
+            const fname = Path.basename(fsModulePath)
+            const module = fs.readFileSync(fsModulePath)
+            const qry = `declareUpdate(); let textNode = new NodeBuilder();
+                textNode.addText(\`${module}\`);
+                const options = {collections: '${collection}'};
+                xdmp.documentInsert("Apps/MarkLogic/test/${fname}", textNode.toNode(), options);`
+            requests.push(sendJSQuery(mlClient, qry))
         })
-        mlClient.mldbClient.writeCollection('VSCODE/SJS-debug-test', docObjects)
-            .result(
-                (responses: any[]) => {
-                    console.debug(`${responses.length} modules loaded before SJS debugger tests: ${JSON.stringify(responses)}`)
-                    return
-                },
-                (err: any) => {
-                    console.error(`Error loading modules before tests: ${JSON.stringify(err)}`)
-                })
-            .then(() => {
-                vscode.window.showInformationMessage('Starting SJS debugger tests...')
-            })
+        return Promise.all(requests).then(resp => {
+            console.debug(`response: ${JSON.stringify(resp)}`)
+        }).catch(err => {
+            console.error(`Error uploading modules: ${JSON.stringify(err)}`)
+        }).finally(() => {
+            vscode.window.showInformationMessage('SJS Debugger Tests starting...')
+        })
     })
 
     after(async () => {
         // delete test data
         _disconnectServer('JSdebugTestServer')
-        mlClient.mldbClient.removeCollection('VSCODE/SJS-debug-test')
+        sendJSQuery(mlClient, `declareUpdate(); xdmp.collectionDelete('${collection}')`)
             .result(
-                (collection: string) => {
+                () => {
                     console.debug(`Removed ${collection} modules after SJS debugger tests.`)
                     return
                 },
@@ -130,7 +134,7 @@ suite('JavaScript Debug Test Suite', () => {
             await dc.nextRequest({ threadId: 1 })
             await dc.nextRequest({ threadId: 1 })
             return dc.assertStoppedLocation('step', { path: path, line: 4 })
-        })
+        }).timeout(5000)
 
         test('set breakpoint', async () => {
             const path = Path.join(scriptFolder, 'helloWorld.sjs')
@@ -143,7 +147,7 @@ suite('JavaScript Debug Test Suite', () => {
             await dc.setBreakpointsRequest({ source: { path: path }, breakpoints: [{ line: 4 }] })
             await dc.continueRequest({ threadId: 1 })
             return dc.assertStoppedLocation('breakpoint', { path: path, line: 4 })
-        })
+        }).timeout(5000)
 
         test('check stepInto', async () => {
             const path = Path.join(scriptFolder, 'helloWorld.sjs')
@@ -157,7 +161,7 @@ suite('JavaScript Debug Test Suite', () => {
             await dc.continueRequest({ threadId: 1 })
             await dc.stepInRequest({ threadId: 1 })
             return dc.assertStoppedLocation('step', { path: path, line: 12 })
-        })
+        }).timeout(5000)
 
         test('check stepOut', async () => {
             const path = Path.join(scriptFolder, 'helloWorld.sjs')
@@ -171,7 +175,7 @@ suite('JavaScript Debug Test Suite', () => {
             await dc.continueRequest({ threadId: 1 })
             await dc.stepOutRequest({ threadId: 1 })
             return dc.assertStoppedLocation('step', { path: path, line: 7 })
-        })
+        }).timeout(5000)
 
         test('check stack trace', async () => {
             const path = Path.join(scriptFolder, 'helloWorld.sjs')
@@ -188,7 +192,7 @@ suite('JavaScript Debug Test Suite', () => {
             assert(frame.name, 'loop')
             assert(frame.line, '12')
             return
-        })
+        }).timeout(5000)
 
         test('check variable', async () => {
             const path = Path.join(scriptFolder, 'helloWorld.sjs')
@@ -206,7 +210,7 @@ suite('JavaScript Debug Test Suite', () => {
             const vars = await dc.variablesRequest({ variablesReference: scope.body.scopes[0].variablesReference })
             return assert.equal(vars.body.variables[0].name, 'ret')
 
-        })
+        }).timeout(5000)
 
         test('check evaluate', async () => {
             const path = Path.join(scriptFolder, 'helloWorld.sjs')
@@ -221,7 +225,7 @@ suite('JavaScript Debug Test Suite', () => {
             const evalResult = await dc.evaluateRequest({ expression: 'str' })
             return assert.equal(evalResult.body.result, 'Hello World SJS')
 
-        })
+        }).timeout(5000)
 
         test('check conditional breakpoint', async () => {
             const path = Path.join(scriptFolder, 'helloWorld.sjs')
@@ -235,7 +239,7 @@ suite('JavaScript Debug Test Suite', () => {
             await dc.continueRequest({ threadId: 1 })
             const evalResult = await dc.evaluateRequest({ expression: 'ret' })
             return assert.equal(evalResult.body.result, '105')
-        })
+        }).timeout(5000)
     })
 
     //helper
@@ -285,7 +289,7 @@ suite('JavaScript Debug Test Suite', () => {
             await dc.continueRequest({ threadId: 1 })
             await dc.continueRequest({ threadId: 1 })
             return dc.assertStoppedLocation('breakpoint', { path: Path.join('/MarkLogic/test', 'test.sjs'), line: 3 })
-        }).timeout(5000)
+        }).timeout(30000)
     })
 
     suite('Testing sjs/xqy boundary in eval/invoke', () => {
@@ -302,7 +306,7 @@ suite('JavaScript Debug Test Suite', () => {
             dc.assertStoppedLocation('breakpoint', { path: path, line: 4 })
             await dc.stepInRequest({ threadId: 1 })
             return dc.assertStoppedLocation('step', { path: path, line: 8 })
-        })
+        }).timeout(25000)
 
         test('sjs calling xdmp:invoke()', async () => {
             const path = Path.join(scriptFolder, 'invoke2.sjs')
@@ -317,7 +321,7 @@ suite('JavaScript Debug Test Suite', () => {
             dc.assertStoppedLocation('breakpoint', { path: path, line: 4 })
             await dc.stepInRequest({ threadId: 1 })
             return dc.assertStoppedLocation('step', { path: path, line: 6 })
-        })
+        }).timeout(5000)
 
         test('xqy calling xdmp.invoke()', async () => {
             CP.exec(`curl --anyauth --user ${username}:${password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
@@ -336,7 +340,7 @@ suite('JavaScript Debug Test Suite', () => {
             await dc.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'jsInvoke-1.sjs') }, breakpoints: [{ line: 3 }] })
             await dc.continueRequest({ threadId: 1 })
             return dc.assertStoppedLocation('breakpoint', { path: Path.join('/MarkLogic/test', 'jsInvoke-1.sjs'), line: 3 })
-        }).timeout(10000)
+        }).timeout(15000)
 
         test('sjs importing xqy', async () => {
             const path = Path.join(scriptFolder, 'eval3.sjs')
@@ -351,7 +355,7 @@ suite('JavaScript Debug Test Suite', () => {
             dc.assertStoppedLocation('breakpoint', { path: path, line: 4 })
             await dc.stepInRequest({ threadId: 1 })
             return dc.assertStoppedLocation('step', { path: path, line: 6 })
-        })
+        }).timeout(15000)
 
     })
 })
