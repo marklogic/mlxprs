@@ -1,16 +1,28 @@
-# Testing
-Testing JavaScript adapter requires a running MarkLogic server, hence testing will not cover adapter by default. 
-To enable, set the flag in `runSJSDebuggerTest` to `true` in [**index.ts**]
+# Debugger Integration Testing
 
-Running JavaScript adapter testing requires following setup:
+Testing the JavaScript adapter requires a running MarkLogic server, so testing will not cover adapter by default.
+To enable, set the flag in `runSJSDebuggerTest` to `true` in [**suite/index.ts**](suite/index.ts).
 
-1. Configure mlxpr setting, ensure user has read/write permission as testing needs to upload testdata
-2. One `Modules` database is available
-3. Create test server on port `8080` with name `JSdebugTestServer` and set modules to your `Modules` database
+## Setup
 
-JavaScript adapter testing will perform following:
-- Upload test scripts/modules to `Modules` database
-- Run tests against the uploaded scripts
+JavaScript debugger integration testing requires a running server where you have full admin rights.
+It is recommended to use a MarkLogic instance where the "Documents" and "Modules" databases are not used for any other application.
+Ideally, you should use a dedicated MarkLogic instance for this purpose altogehter (Docker might be a good idea).
+
+On the MarkLogic instance, create an HTTP server in MarkLogic with the following properties:
+
+- server name: JSdebugTestServer
+- root: `/`
+- port: `8080`
+- modules: "Modules"
+- database: "Documents"
+- error handler: `/MarkLogic/rest-api/error-handler.xqy`
+- url rewriter: `/MarkLogic/rest-api/rewriter.xml`
+- ssl: off (ssl certificate template: off)
+
+
+The test script will perform following:
+
+- Upload test scripts and modules to `Modules` database
+- Run tests against the uploaded scripts, simulating JS debugger interactions
 - Delete scripts from `Modules` databse
-
-To ensure isolation, it is advised to create a seperate modules database and set it correspondingly on mlxpr setting
