@@ -9,7 +9,7 @@ JavaScript debugger integration testing requires a running server where you have
 It is recommended to use a MarkLogic instance where the "Documents" and "Modules" databases are not used for any other application.
 Ideally, you should use a dedicated MarkLogic instance for this purpose altogehter (Docker might be a good idea).
 
-On the MarkLogic instance, create an HTTP server in MarkLogic with the following properties:
+On the MarkLogic instance, create an HTTP server in MarkLogic with the following non-default properties:
 
 - server name: JSdebugTestServer
 - root: `/`
