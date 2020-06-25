@@ -269,7 +269,7 @@ suite('JavaScript Debug Test Suite', () => {
         test('set breakpoints on two files', async () => {
             CP.exec(`curl --anyauth --user ${username}:${password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
                 http://${hostname}:8080/LATEST/invoke --data-urlencode module=/MarkLogic/test/test.sjs`)
-            await wait(100)
+            await wait(1000)
             const resp = await getRid(mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server("JSdebugTestServer")).toObject()[0].requestStatuses[0].requestId')
             const rid = resp[0]
             const path = Path.join(scriptFolder, 'MarkLogic/test')
@@ -289,7 +289,7 @@ suite('JavaScript Debug Test Suite', () => {
             await dc.continueRequest({ threadId: 1 })
             await dc.continueRequest({ threadId: 1 })
             return dc.assertStoppedLocation('breakpoint', { path: Path.join('/MarkLogic/test', 'test.sjs'), line: 3 })
-        }).timeout(30000)
+        }).timeout(40000)
     })
 
     suite('Testing sjs/xqy boundary in eval/invoke', () => {
@@ -326,7 +326,7 @@ suite('JavaScript Debug Test Suite', () => {
         test('xqy calling xdmp.invoke()', async () => {
             CP.exec(`curl --anyauth --user ${username}:${password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
                 http://${hostname}:8080/LATEST/invoke --data-urlencode module=/MarkLogic/test/invoke1.xqy`)
-            await wait(100)
+            await wait(10000)
             const resp = await getRid(mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server("JSdebugTestServer")).toObject()[0].requestStatuses[0].requestId')
             const rid = resp[0]
             const path = Path.join(scriptFolder, 'MarkLogic/test')
@@ -340,7 +340,7 @@ suite('JavaScript Debug Test Suite', () => {
             await dc.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'jsInvoke-1.sjs') }, breakpoints: [{ line: 3 }] })
             await dc.continueRequest({ threadId: 1 })
             return dc.assertStoppedLocation('breakpoint', { path: Path.join('/MarkLogic/test', 'jsInvoke-1.sjs'), line: 3 })
-        }).timeout(15000)
+        }).timeout(25000)
 
         test('sjs importing xqy', async () => {
             const path = Path.join(scriptFolder, 'eval3.sjs')
