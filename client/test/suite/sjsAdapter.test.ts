@@ -43,13 +43,15 @@ suite('JavaScript Debug Test Suite', () => {
     const module2 = Path.join(rootFolder, 'client/test/jsScripts/MarkLogic/test/lib1.sjs')
     const module3 = Path.join(rootFolder, 'client/test/jsScripts/MarkLogic/test/lib2.sjs')
     const module4 = Path.join(rootFolder, 'client/test/jsScripts/MarkLogic/test/invoke1.xqy')
+    const module5 = Path.join(rootFolder, 'client/test/jsScripts/helloWorld.sjs')
 
-    const module5 = Path.join(rootFolder, 'client/test/jsScripts/MarkLogic/test/jsInvoke-1.sjs')
-    const module6 = Path.join(rootFolder, 'client/test/jsScripts/MarkLogic/test/xqyInvoke-1.xqy')
-    const module7 = Path.join(rootFolder, 'client/test/jsScripts/MarkLogic/test/jsInvoke-2.sjs')
+    const module6 = Path.join(rootFolder, 'client/test/jsScripts/MarkLogic/test/jsInvoke-1.sjs')
+    const module7 = Path.join(rootFolder, 'client/test/jsScripts/MarkLogic/test/xqyInvoke-1.xqy')
+    const module8 = Path.join(rootFolder, 'client/test/jsScripts/MarkLogic/test/jsInvoke-2.sjs')
+    
 
-    const debugServerModules = [module1, module2, module3, module4, module5]
-    const taskServerModules = [module5, module6, module7]
+    const debugServerModules = [module1, module2, module3, module4, module5, module6]
+    const taskServerModules = [module6, module7, module8]
     const collection = 'VSCODE/SJS-debug-test'
 
     before(async () => {
@@ -292,7 +294,32 @@ suite('JavaScript Debug Test Suite', () => {
         }).timeout(40000)
     })
 
-    suite('Testing sjs/xqy boundary in eval/invoke', () => {
+    suite('Issue 70', async () => {
+        test('check non-existing modules are loaded', async () => {
+            CP.exec(`curl --anyauth --user ${username}:${password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
+                http://${hostname}:8080/LATEST/invoke --data-urlencode module=/MarkLogic/test/helloWorld.sjs`)
+            await wait(1000)
+            const resp = await getRid(mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server("JSdebugTestServer")).toObject()[0].requestStatuses[0].requestId')
+            const rid = resp[0]
+            const path = Path.join(scriptFolder, 'helloWorld.sjs')
+            const text = fs.readFileSync(path).toString()
+            const root = Path.join(scriptFolder, 'MarkLogic/test')
+            const config = { rid: rid, root: root, username: username, password: password, hostname: hostname,
+                database: 'Modules', modules: 'Modules', authType: 'DIGEST' }
+            await Promise.all([
+                dc.initializeRequest(),
+                dc.configurationSequence(),
+                dc.attachRequest(config as DebugProtocol.AttachRequestArguments)
+            ])
+            const stackResponse = await dc.stackTraceRequest({ threadId: 1 })
+            const src = stackResponse['body']['stackFrames'][0]['source']
+            assert.equal(9, src['sourceReference'], 'confrim stackFrame source id indicates non-existing file')
+            const srcReqResponse = await dc.sourceRequest({ source: src, sourceReference: src.sourceReference })
+            return assert.equal(text, srcReqResponse['body']['content'], 'check if modules is streamed back')
+        }).timeout(5000)
+    })
+
+    suite('Testing sjs/xqy boundary in eval/invoke', async () => {
         test('sjs calling xdmp:eval()', async () => {
             const path = Path.join(scriptFolder, 'eval2.sjs')
             const text = fs.readFileSync(path).toString()
@@ -326,11 +353,12 @@ suite('JavaScript Debug Test Suite', () => {
         test('xqy calling xdmp.invoke()', async () => {
             CP.exec(`curl --anyauth --user ${username}:${password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
                 http://${hostname}:8080/LATEST/invoke --data-urlencode module=/MarkLogic/test/invoke1.xqy`)
-            await wait(10000)
+            await wait(100)
             const resp = await getRid(mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server("JSdebugTestServer")).toObject()[0].requestStatuses[0].requestId')
             const rid = resp[0]
-            const path = Path.join(scriptFolder, 'MarkLogic/test')
-            const config = { rid: rid, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST' }
+            const root = Path.join(scriptFolder, 'MarkLogic/test')
+            const config = { rid: rid, root: root, username: username, password: password, hostname: hostname,
+                database: 'Modules', modules: 'Modules', authType: 'DIGEST' }
             await Promise.all([
                 dc.initializeRequest(),
                 dc.configurationSequence(),
