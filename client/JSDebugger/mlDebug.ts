@@ -348,7 +348,6 @@ export class MLDebugSession extends LoggingDebugSession {
 
     protected pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments): void {
         this._runtime.pause().then(() => {
-            this.sendResponse(response)
             //get stackTrace
             this._runtime.waitTillPaused().then(resp => {
                 this._stackRespString = resp
@@ -361,11 +360,11 @@ export class MLDebugSession extends LoggingDebugSession {
         }).catch(err => {
             this._handleError(err, 'Error in pause command', true, 'pauseRequest')
         })
+        this.sendResponse(response)
     }
 
     protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
         this._runtime.resume().then(() => {
-            this.sendResponse(response)
             this._runtime.waitTillPaused().then(resp => {
                 this._stackRespString = resp
                 this.sendEvent(new StoppedEvent('breakpoint', MLDebugSession.THREAD_ID))
@@ -377,11 +376,11 @@ export class MLDebugSession extends LoggingDebugSession {
         }).catch(err => {
             this._handleError(err, 'Error in continue command', true, 'continueRequest')
         })
+        this.sendResponse(response)
     }
 
     protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
         this._runtime.stepOver().then(() => {
-            this.sendResponse(response)
             this._runtime.waitTillPaused().then(resp => {
                 this._stackRespString = resp
                 this.sendEvent(new StoppedEvent('step', MLDebugSession.THREAD_ID))
@@ -393,11 +392,11 @@ export class MLDebugSession extends LoggingDebugSession {
         }).catch(err => {
             this._handleError(err, 'Error in next command', true, 'nextRequest')
         })
+        this.sendResponse(response)
     }
 
     protected stepInRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
         this._runtime.stepInto().then(() => {
-            this.sendResponse(response)
             this._runtime.waitTillPaused().then(resp => {
                 this._stackRespString = resp
                 this.sendEvent(new StoppedEvent('step', MLDebugSession.THREAD_ID))
@@ -409,11 +408,11 @@ export class MLDebugSession extends LoggingDebugSession {
         }).catch(err => {
             this._handleError(err, 'Error in stepIn command', true, 'stepInRequest')
         })
+        this.sendResponse(response)
     }
 
     protected stepOutRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
         this._runtime.stepOut().then(() => {
-            this.sendResponse(response)
             this._runtime.waitTillPaused().then(resp => {
                 this._stackRespString = resp
                 this.sendEvent(new StoppedEvent('step', MLDebugSession.THREAD_ID))
@@ -425,6 +424,7 @@ export class MLDebugSession extends LoggingDebugSession {
         }).catch(err => {
             this._handleError(err, 'Error in stepOut command', true, 'stepOutRequest')
         })
+        this.sendResponse(response)
     }
 
     protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments): void {
