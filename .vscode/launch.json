@@ -79,6 +79,23 @@
             "cwd": "${workspaceFolder}/server"
         },
         {
+            "name": "Launch JS Debugger Integration Test",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}/client",
+                "--extensionTestsPath=${workspaceRoot}/dist/test/integration/index"
+            ],
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceRoot}/dist/**/*.js"
+            ],
+            "preLaunchTask": "npm: pretest",
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "Launch XQY Debug Adapter Server",
             "type": "node",
             "request": "launch",
