@@ -190,7 +190,7 @@ suite('JavaScript Debug Test Suite', () => {
                 dc.configurationSequence(),
                 dc.launch(config)
             ])
-            await dc.setBreakpointsRequest({ source: { path: path }, breakpoints: [{ line: 11 }] })
+            await dc.setBreakpointsRequest({ source: { path: path }, breakpoints: [{ line: 12 }] })
             await dc.continueRequest({ threadId: 1 })
             const stackTrace = await dc.assertStoppedLocation('breakpoint', { path: path, line: 12 })
             const frame = stackTrace.body.stackFrames[0]
@@ -207,7 +207,7 @@ suite('JavaScript Debug Test Suite', () => {
                 dc.configurationSequence(),
                 dc.launch(config)
             ])
-            await dc.setBreakpointsRequest({ source: { path: path }, breakpoints: [{ line: 11 }] })
+            await dc.setBreakpointsRequest({ source: { path: path }, breakpoints: [{ line: 12 }] })
             await dc.continueRequest({ threadId: 1 })
             const stackTrace = await dc.assertStoppedLocation('breakpoint', { path: path, line: 12 })
             const frameId = stackTrace.body.stackFrames[0].id
@@ -225,7 +225,7 @@ suite('JavaScript Debug Test Suite', () => {
                 dc.configurationSequence(),
                 dc.launch(config)
             ])
-            await dc.setBreakpointsRequest({ source: { path: path }, breakpoints: [{ line: 11 }] })
+            await dc.setBreakpointsRequest({ source: { path: path }, breakpoints: [{ line: 12 }] })
             await dc.continueRequest({ threadId: 1 })
             await dc.waitForEvent('stopped')
             const evalResult = await dc.evaluateRequest({ expression: 'str' })
@@ -299,7 +299,7 @@ suite('JavaScript Debug Test Suite', () => {
             await dc.waitForEvent('stopped')
             await dc.continueRequest({ threadId: 1 })
             return dc.assertStoppedLocation('breakpoint', { path: Path.join('/MarkLogic/test', 'test.sjs'), line: 3 })
-        }).timeout(40000)
+        }).timeout(10000)
     })
 
     suite('Issue 70', async () => {
@@ -323,8 +323,8 @@ suite('JavaScript Debug Test Suite', () => {
             const src = stackResponse['body']['stackFrames'][0]['source']
             assert.equal(9, src['sourceReference'], 'confrim stackFrame source id indicates non-existing file')
             const srcReqResponse = await dc.sourceRequest({ source: src, sourceReference: src.sourceReference })
-            return assert.equal(text, srcReqResponse['body']['content'], 'check if modules is streamed back')
-        }).timeout(5000)
+            return assert.equal(srcReqResponse['body']['content'], text, 'check if modules is streamed back')
+        }).timeout(10000)
     })
 
     suite('Testing sjs/xqy boundary in eval/invoke', async () => {
@@ -376,7 +376,7 @@ suite('JavaScript Debug Test Suite', () => {
             await dc.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'jsInvoke-1.sjs') }, breakpoints: [{ line: 3 }] })
             await dc.continueRequest({ threadId: 1 })
             return dc.assertStoppedLocation('breakpoint', { path: Path.join('/MarkLogic/test', 'jsInvoke-1.sjs'), line: 3 })
-        }).timeout(25000)
+        }).timeout(10000)
 
         test('sjs importing xqy', async () => {
             const path = Path.join(scriptFolder, 'eval3.sjs')
