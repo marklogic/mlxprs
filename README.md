@@ -245,6 +245,10 @@ In XQuery attach-mode debugging, you should not 'connect' to the same server you
 
 Neither debugger can cross from one server-side language mode into another. XQuery debugging cannot step into `xdmp:javascript-eval()` calls, and JavaScript debugging cannot step into `xdmp.xqueryEval()`. The debugger should step over these calls if you try to step into them.
 
+Evaluating variables in module scope may yield reference error. For workaround, you could try:
+- using the variables of interest inside a function and inspect
+- placing an `eval()` statement inside the module
+
 ### Required Privileges for Evaluation and Debugging
 
 To run queries with the MarkLogic JavaScript and XQuery Debugger, a user will need eval priviliges on your MarkLogic server. These include:
