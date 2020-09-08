@@ -48,7 +48,6 @@ suite('JavaScript Debug Test Suite', () => {
     const module6 = Path.join(rootFolder, 'client/test/jsScripts/MarkLogic/test/jsInvoke-1.sjs')
     const module7 = Path.join(rootFolder, 'client/test/jsScripts/MarkLogic/test/xqyInvoke-1.xqy')
     const module8 = Path.join(rootFolder, 'client/test/jsScripts/MarkLogic/test/jsInvoke-2.sjs')
-    
 
     const debugServerModules = [module1, module2, module3, module4, module5, module6]
     const taskServerModules = [module6, module7, module8]
