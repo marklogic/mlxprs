@@ -30,8 +30,8 @@ export class MlClientParameters {
         this.port = Number(rawParams.port)
         this.user = rawParams.user
         this.pwd = rawParams.pwd
-        this.contentDb = rawParams.contentDb || rawParams.documentsDb
-        this.modulesDb = rawParams.modulesDb
+        this.contentDb = rawParams.contentDb || rawParams.documentsDb || ''
+        this.modulesDb = rawParams.modulesDb || ''
         this.authType = rawParams.authType
         this.ssl = Boolean(rawParams.ssl)
         this.pathToCa = rawParams.pathToCa || ''
@@ -131,8 +131,14 @@ export function sendJSQuery(
     db: MarklogicClient,
     actualQuery: string): ml.ResultProvider<Record<string, any>>
 {
-    const query = 'xdmp.eval(actualQuery, {actualQuery: actualQuery},' +
-        '{database: xdmp.database(contentDb), modules: xdmp.database(modulesDb)});'
+    const query = `
+    options = {};
+    if (modulesDb) { options.modules = xdmp.database(modulesDb) };
+    if (contentDb) { options.database = xdmp.database(contentDb) };
+    xdmp.eval(actualQuery,
+        {actualQuery: actualQuery},
+        options
+        );`
 
     const extVars = {
         'actualQuery': actualQuery,
@@ -152,17 +158,17 @@ export function sendXQuery(
     const query =
         'xquery version "1.0-ml";' +
         'declare variable $actualQuery as xs:string external;' +
-        'declare variable $documentsDb as xs:string external;' +
+        'declare variable $contentDb as xs:string external;' +
         'declare variable $modulesDb as xs:string external;' +
         'let $options := ' +
         '<options xmlns="xdmp:eval">' +
-        '   <database>{xdmp:database($documentsDb)}</database>' +
-        '   <modules>{xdmp:database($modulesDb)}</modules>' +
+        (db.params.contentDb ? '<database>{xdmp:database($contentDb)}</database>' : '') +
+        (db.params.modulesDb ? '<modules>{xdmp:database($modulesDb)}</modules>' : '') +
         '</options>' +
         `return ${prefix}:eval($actualQuery, (), $options)`
     const extVars = {
         'actualQuery': actualQuery,
-        'documentsDb': db.params.contentDb,
+        'contentDb': db.params.contentDb,
         'modulesDb': db.params.modulesDb
     } as ml.Variables
 

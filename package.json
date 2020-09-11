@@ -286,13 +286,13 @@
                 },
                 "marklogic.documentsDb": {
                     "type": "string",
-                    "default": "Documents",
-                    "description": "database against which to evaluate queries"
+                    "default": "",
+                    "description": "database against which to evaluate queries; default content database for app server will be used if left unspecified"
                 },
                 "marklogic.modulesDb": {
                     "type": "string",
-                    "default": "Modules",
-                    "description": "modules database used in queries"
+                    "default": "",
+                    "description": "modules database used in queries; default modules database for app server will be used if left unspecified"
                 },
                 "marklogic.modulesRoot": {
                     "type": "string",
