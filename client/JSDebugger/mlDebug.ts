@@ -56,7 +56,6 @@ export class MLDebugSession extends LoggingDebugSession {
     //map breakpoint to id, only unverified breakpoint will have non-zero id
     private _bpMap: Record<string, Record<string, number>> ={};
     private _bpId = 1; //starts from 1, 0 means verified and no need for the id
-    // private _stackRespString = '';
     private _stacks: V8Frame [];
     private _queryPath = '';
     private _workDir = '';
@@ -187,11 +186,6 @@ export class MLDebugSession extends LoggingDebugSession {
         const mlrequests: Promise<string | void>[] = []
         const actualBreakpoints: DebugProtocol.Breakpoint [] = []
         if (args.breakpoints) {
-            //for response only
-            // const actualBreakpoints = args.breakpoints.map(b => {
-            //     const bp = new Breakpoint(false, b.line, b.column) as DebugProtocol.Breakpoint
-            //     return bp
-            // })
 
             const newBp: Set<string> = new Set()
             args.breakpoints.forEach(breakpoint => {
@@ -240,7 +234,7 @@ export class MLDebugSession extends LoggingDebugSession {
                         const location = JSON.parse(resp)['result']['locations'][0]
                         if (location != null) {
                             const line = this.convertDebuggerLineToClient(location['lineNumber'])
-                            const actualBp = actualBreakpoints.find(bp => 
+                            const actualBp = actualBreakpoints.find(bp =>
                                 line === bp.line)
                             if (actualBp != null) actualBp.verified = true
                             this._bpMap[path][String(line)] = 0 //verified
@@ -529,7 +523,7 @@ export class MLDebugSession extends LoggingDebugSession {
                 // set breakpoint to be verified
                 try {
                     const bpServer = v8FrameObject['hitBreakpoints'][0].split(':')
-                    const path = this._mapUrlToLocalFile(bpServer[3]) 
+                    const path = this._mapUrlToLocalFile(bpServer[3])
                     const line = this.convertDebuggerLineToClient(Number(bpServer[1])) //line number
                     const bpId = this._bpMap[path][String(line)]
                     if (bpId != 0) {
@@ -545,7 +539,6 @@ export class MLDebugSession extends LoggingDebugSession {
         } else {
             this._stacks = v8FrameObject
         }
-        
     }
 
     private createSource(filePath: string): Source {
@@ -586,7 +579,7 @@ export class MLDebugSession extends LoggingDebugSession {
             return localPath
                 .replace(`untitled:${this._queryPath}`, '')
         }
-        // from module getter via "Show modules". return only path portion of URL
+        // from module getter: return only path portion of URL
         if (localPath.startsWith('mlmodule:')) {
             return localPath
                 .replace(`mlmodule:\/\/${this._runtime.getHostString()}`, '')
@@ -614,7 +607,7 @@ export class MLDebugSession extends LoggingDebugSession {
                         updatedBp.id = bpId
                         this.sendEvent(new BreakpointEvent('changed', updatedBp))
                         this._bpMap[path][String(line)] = 0 //verified
-                    } 
+                    }
                 }))
             })
         }

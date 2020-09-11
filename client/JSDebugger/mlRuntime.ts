@@ -184,8 +184,6 @@ export class MLRuntime extends EventEmitter {
     }
 
     public getProperties(objectId: string): Promise<string> {
-        //temporary
-        // const obj = JSON.parse(objectId)
         const queryString = {
             'object-id': objectId
         }
