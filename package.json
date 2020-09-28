@@ -235,10 +235,9 @@
                         "label": "MarkLogic: Evaluate Current XQuery Module",
                         "description": "Launch an XQuery request in debug mode",
                         "body": {
-                            "type": "ml-debug",
+                            "type": "xquery-ml",
                             "request": "launch",
                             "name": "Launch XQuery Debug Request",
-                            "stopOnEntry": true,
                             "root": "${workspaceFolder}/src/main/ml-modules/root"
                         }
                     },
@@ -246,10 +245,9 @@
                         "label": "MarkLogic: Attach to Remote XQuery Request",
                         "description": "Attach to a request to debug on a connected app server",
                         "body": {
-                            "type": "ml-debug",
+                            "type": "xquery-ml",
                             "request": "attach",
                             "name": "Attach XQuery Debug Request",
-                            "stopOnEntry": true,
                             "root": "${workspaceFolder}/src/main/ml-modules/root"
                         }
                     }
