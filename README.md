@@ -239,9 +239,9 @@ In order to step through modules that get imported in your code, you need to tel
 
 ### Debugging Limitations
 
-Both debuggers assume you have a local copy of the modules you are debugging. Streaming source files from MarkLogic is not yet implemented. If you import project-external modules into your script, you won't be able to inspect or set breakpoints in those files.
-
 In XQuery attach-mode debugging, you should not 'connect' to the same server you use for queries. Since connecting stops all requests on that app server, you'd lock yourself out. For this reason, the extension will not offer to connect to your configured query client's port. Admin, Manage, HealthCheck, and App-Services are also excluded from debugging.
+
+'Launch' debugging initiated from an unsaved ('Untitled') buffer in VS Code will not work. If you want to launch and debug an ad-hoc query, save it somewhere on disk beforehand.
 
 Neither debugger can cross from one server-side language mode into another. XQuery debugging cannot step into `xdmp:javascript-eval()` calls, and JavaScript debugging cannot step into `xdmp.xqueryEval()`. The debugger should step over these calls if you try to step into them.
 
