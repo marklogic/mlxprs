@@ -24,12 +24,12 @@ The MarkLogic extension exposes several configuration options from the standard 
 
 ```json
 {
-    "marklogic.host": "marklogic-instance.geocities.com",
-    "marklogic.port": 8040,
-    "marklogic.username": "username",
-    "marklogic.password": "****************",
-    "marklogic.documentsDb": "myproject-content",
-    "marklogic.modulesDb": "myproject-modules"
+  "marklogic.host": "marklogic-instance.geocities.com",
+  "marklogic.port": 8040,
+  "marklogic.username": "username",
+  "marklogic.password": "****************",
+  "marklogic.documentsDb": "myproject-content",
+  "marklogic.modulesDb": "myproject-modules"
 }
 ```
 
@@ -65,8 +65,8 @@ The configuration will look something like this:
 
 ```json
 {
-    "marklogic.ssl": true,
-    "marklogic.pathToCa": "/Users/myself/certs/my.own.ca.crt"
+  "marklogic.ssl": true,
+  "marklogic.pathToCa": "/Users/myself/certs/my.own.ca.crt"
 }
 ```
 
@@ -245,9 +245,10 @@ In XQuery attach-mode debugging, you should not 'connect' to the same server you
 
 Neither debugger can cross from one server-side language mode into another. XQuery debugging cannot step into `xdmp:javascript-eval()` calls, and JavaScript debugging cannot step into `xdmp.xqueryEval()`. The debugger should step over these calls if you try to step into them.
 
-Evaluating variables in module scope may yield reference error. For workaround, you could try:
-- using the variables of interest inside a function and inspect
-- placing an `eval()` statement inside the module
+Evaluating variables in module scope may throw reference error. Possible workarounds:
+
+- use the variables of interest inside a function, and inspect
+- place an `eval()` statement inside the affected module
 
 ### Required Privileges for Evaluation and Debugging
 
