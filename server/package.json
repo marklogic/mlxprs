@@ -11,11 +11,11 @@
   },
   "devDependencies": {
     "@types/glob": "^7.1.1",
-    "@types/mocha": "^5.2.7",
+    "@types/mocha": "^8.0.3",
     "@types/vscode": "^1.39.0",
     "copyfiles": "^2.1.1",
     "mem": "^5.1.1",
-    "mocha": "^6.2.2",
+    "mocha": "^8.2.0",
     "os-locale": "^4.0.0",
     "vscode-languageserver": "^5.2.1",
     "vscode-test": "^1.2.0"
