@@ -132,7 +132,7 @@ export function sendJSQuery(
     actualQuery: string): ml.ResultProvider<Record<string, any>>
 {
     const query = `
-    options = {};
+    const options = {};
     if (modulesDb) { options.modules = xdmp.database(modulesDb) };
     if (contentDb) { options.database = xdmp.database(contentDb) };
     xdmp.eval(actualQuery,
