@@ -19,7 +19,7 @@ suite('JavaScript Debug Test Suite', () => {
     const username = String(wcfg.get('marklogic.username'))
     const password = String(wcfg.get('marklogic.password'))
     const modulesDB = String(wcfg.get('marklogic.modulesDb'))
-    const pathToCa = String(wcfg.get('marklogic.pathToCa'))
+    const pathToCa = String(wcfg.get('marklogic.pathToCa') || '')
 
     const rootFolder = Path.join(__dirname, '../../../')
     const exec = Path.join(rootFolder, 'dist/mlDebug.js')

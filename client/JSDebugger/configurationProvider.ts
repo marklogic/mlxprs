@@ -170,7 +170,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         ssl?: boolean, ca?: Buffer): Promise<string> {
         const url = buildUrl(hostname, '/v1/eval', ssl)
         const script = `xdmp.database("${database}")`
-        const options: object = {
+        const options: Record<string, unknown> = {
             headers: {
                 'Content-type': 'application/x-www-form-urlencoded',
                 'Accept': 'multipart/mixed',
@@ -191,7 +191,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         ssl?: boolean, ca?: Buffer): Promise<string> {
         const url = buildUrl(hostname, '/v1/eval', ssl)
         const script = `xdmp.requestStatus(xdmp.host(),xdmp.server("${debugServerName}"),"${requestId}")`
-        const options: object = {
+        const options: Record<string, unknown> = {
             headers: {
                 'Content-type': 'application/x-www-form-urlencoded',
                 'Accept': 'multipart/mixed',
@@ -221,7 +221,7 @@ export function _connectServer(servername: string): void {
     const password: string = cfg.get('marklogic.password')
     const hostname: string = cfg.get('marklogic.host')
     const ssl = Boolean(cfg.get('marklogic.ssl'))
-    const pathToCa = String(cfg.get('marklogic.pathToCa'))
+    const pathToCa = String(cfg.get('marklogic.pathToCa') || '')
 
     if (!hostname) {
         vscode.window.showErrorMessage('Hostname is not provided')
@@ -263,7 +263,7 @@ export function _disconnectServer(servername: string): void {
     const password: string = cfg.get('marklogic.password')
     const hostname: string = cfg.get('marklogic.host')
     const ssl = Boolean(cfg.get('marklogic.ssl'))
-    const pathToCa = String(cfg.get('marklogic.pathToCa'))
+    const pathToCa = String(cfg.get('marklogic.pathToCa') || '')
 
     if (!hostname) {
         vscode.window.showErrorMessage('Hostname is not provided')
