@@ -1,3 +1,8 @@
+## [3.1.0](https://github.com/mikrovvelle/mlxprs/tree/v3.1.0)
+
+- fixes: #70. SJS debugging now streams modules if they're not available locally
+- other SJS debugging improvements
+
 ## [3.0.4](https://github.com/mikrovvelle/mlxprs/tree/v3.0.4)
 
 - bugfix: #69
