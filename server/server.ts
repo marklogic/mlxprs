@@ -4,9 +4,11 @@ import {
     IPCMessageReader, IPCMessageWriter,
     createConnection, IConnection,
     TextDocuments,
-    InitializeResult, TextDocumentPositionParams,
-    CompletionItem, CompletionItemKind, TextDocument
+    TextDocumentPositionParams,
+    CompletionItem, CompletionItemKind, InitializeParams, InitializeResult,
+    TextDocumentSyncKind
 } from 'vscode-languageserver'
+import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import {
     allMlSjsFunctions, allMlSjsNamespaces
@@ -17,17 +19,14 @@ import {
 
 const connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process))
 
-const documents: TextDocuments = new TextDocuments()
+const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument)
 documents.listen(connection)
 
-let workspaceRoot: string
-
-connection.onInitialize((params): InitializeResult => {
-    workspaceRoot = params.rootPath
+connection.onInitialize((): InitializeResult => {
     return {
         capabilities: {
             // Tell the client that the server works in FULL text document sync mode
-            textDocumentSync: documents.syncKind,
+            textDocumentSync: TextDocumentSyncKind.Full,
             // Tell the client that the server supports code complete
             completionProvider: {
                 resolveProvider: true,
