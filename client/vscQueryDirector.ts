@@ -53,14 +53,14 @@ export function editorJSQuery(
     editor: TextEditor,
     provider: QueryResultsContentProvider): void
 {
-
-    sendJSQuery(db, actualQuery).result(
-        (response: Record<string, any>[]) => {
-            return provider.writeResponseToUri(uri, response)
-        },
-        (error: Record<string, any>[]) => {
-            return provider.handleError(uri, error)
-        })
+    sendJSQuery(db, actualQuery)
+        .result(
+            (fulfill: Record<string, any>[]) => {
+                return provider.writeResponseToUri(uri, fulfill)
+            },
+            (error: Record<string, any>[]) => {
+                return provider.handleError(uri, error)
+            })
         .then(responseUri => showFormattedResults(responseUri, editor))
 }
 
