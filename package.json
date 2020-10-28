@@ -352,6 +352,7 @@
         "vscode:prepublish": "./node_modules/.bin/webpack --mode production && ./node_modules/.bin/webpack --mode production --config ./server/webpack.config.js",
         "compile": "npm run clean && ./node_modules/webpack/bin/webpack.js --mode none && ./node_modules/webpack/bin/webpack.js --mode none --config ./server/webpack.config.js",
         "pretest": "rm -rf dist && tsc -p tsconfig.json && ./node_modules/webpack/bin/webpack.js --mode development --config webpack.test.js",
+        "pretest-server": "tsc -p server/tsconfig.json && npm run copy-files",
         "predebug": "npm run clean && npm run copy-files --prefix server && tsc -b server && tsc -b -w .",
         "test": "node client/out/test/runTest.js --full-trace",
         "watch": "./node_modules/webpack/bin/webpack.js --mode none --watch & ./node_modules/webpack/bin/webpack.js --mode none --watch --config ./server/webpack.config.js"

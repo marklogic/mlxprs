@@ -68,14 +68,14 @@
             "runtimeExecutable": "${execPath}",
             "args": [
                 "--extensionDevelopmentPath=${workspaceRoot}/server",
-                "--extensionTestsPath=${workspaceRoot}/server/out/test/suite/index"
+                "--extensionTestsPath=${workspaceRoot}/server/dist/test/suite/index"
             ],
             "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": [
                 "${workspaceRoot}/server/out/test/**/*.js"
             ],
-            "preLaunchTask": "npm: copy-files",
+            "preLaunchTask": "npm: pretest-server",
             "cwd": "${workspaceFolder}/server"
         },
         {
