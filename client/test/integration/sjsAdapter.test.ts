@@ -20,6 +20,8 @@ suite('JavaScript Debug Test Suite', () => {
     const password = String(wcfg.get('marklogic.password'))
     const modulesDB = String(wcfg.get('marklogic.modulesDb'))
     const pathToCa = String(wcfg.get('marklogic.pathToCa') || '')
+    const ssl = Boolean(wcfg.get('marklogic.ssl'))
+    const rejectUnauthorized = Boolean(wcfg.get('marklogic.rejectUnauthorized'))
 
     const rootFolder = Path.join(__dirname, '../../../')
     const exec = Path.join(rootFolder, 'dist/mlDebug.js')
@@ -35,7 +37,9 @@ suite('JavaScript Debug Test Suite', () => {
             authType: 'DIGEST',
             contentDb: modulesDB,
             modulesDb: modulesDB,
-            pathToCa: pathToCa
+            pathToCa: pathToCa,
+            ssl: ssl,
+            rejectUnauthorized: rejectUnauthorized
         })
     )
 
@@ -52,6 +56,14 @@ suite('JavaScript Debug Test Suite', () => {
     const debugServerModules = [module1, module2, module3, module4, module5, module6]
     const taskServerModules = [module6, module7, module8]
     const collection = 'VSCODE/SJS-debug-test'
+
+    const hwPath = Path.join(scriptFolder, 'helloWorld.sjs')
+    const config = {
+        program: hwPath,
+        queryText: fs.readFileSync(hwPath).toString(),
+        username: username, password: password,
+        hostname: hostname, authType: 'DIGEST',
+        ssl: ssl, pathToCa: pathToCa, rejectUnauthorized: rejectUnauthorized }
 
     before(async () => {
         // load test data
@@ -113,20 +125,14 @@ suite('JavaScript Debug Test Suite', () => {
     // testing commands
     suite('Basic', () => {
         test('launch a script and it should stop at entry', async () => {
-            const path = Path.join(scriptFolder, 'helloWorld.sjs')
-            const text = fs.readFileSync(path).toString()
-            const config = { queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST' }
             return Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config),
-                dc.assertStoppedLocation('entry', { path: path, line: 1 })
+                dc.assertStoppedLocation('entry', { path: config.program, line: 1 })
             ])
         }).timeout(5000)
 
         test('check stepOver', async () => {
-            const path = Path.join(scriptFolder, 'helloWorld.sjs')
-            const text = fs.readFileSync(path).toString()
-            const config = { queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST' }
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
@@ -135,63 +141,51 @@ suite('JavaScript Debug Test Suite', () => {
             await dc.nextRequest({ threadId: 1 })
             await dc.waitForEvent('stopped')
             await dc.nextRequest({ threadId: 1 })
-            return dc.assertStoppedLocation('step', { path: path, line: 4 })
+            return dc.assertStoppedLocation('step', { path: config.program, line: 4 })
         }).timeout(5000)
 
         test('set breakpoint', async () => {
-            const path = Path.join(scriptFolder, 'helloWorld.sjs')
-            const text = fs.readFileSync(path).toString()
-            const config = { queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST' }
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
             ])
-            await dc.setBreakpointsRequest({ source: { path: path }, breakpoints: [{ line: 4 }] })
+            await dc.setBreakpointsRequest({ source: { path: config.program }, breakpoints: [{ line: 4 }] })
             await dc.continueRequest({ threadId: 1 })
-            return dc.assertStoppedLocation('breakpoint', { path: path, line: 4 })
+            return dc.assertStoppedLocation('breakpoint', { path: config.program, line: 4 })
         }).timeout(5000)
 
         test('check stepInto', async () => {
-            const path = Path.join(scriptFolder, 'helloWorld.sjs')
-            const text = fs.readFileSync(path).toString()
-            const config = { queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST' }
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
             ])
-            await dc.setBreakpointsRequest({ source: { path: path }, breakpoints: [{ line: 6 }] })
+            await dc.setBreakpointsRequest({ source: { path: config.program }, breakpoints: [{ line: 6 }] })
             await dc.continueRequest({ threadId: 1 })
             await dc.waitForEvent('stopped')
             await dc.stepInRequest({ threadId: 1 })
-            return dc.assertStoppedLocation('step', { path: path, line: 12 })
+            return dc.assertStoppedLocation('step', { path: config.program, line: 12 })
         }).timeout(5000)
 
         test('check stepOut', async () => {
-            const path = Path.join(scriptFolder, 'helloWorld.sjs')
-            const text = fs.readFileSync(path).toString()
-            const config = { queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST' }
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
             ])
-            await dc.setBreakpointsRequest({ source: { path: path }, breakpoints: [{ line: 12 }] })
+            await dc.setBreakpointsRequest({ source: { path: config.program }, breakpoints: [{ line: 12 }] })
             await dc.continueRequest({ threadId: 1 })
             await dc.waitForEvent('stopped')
             await dc.stepOutRequest({ threadId: 1 })
-            return dc.assertStoppedLocation('step', { path: path, line: 7 })
+            return dc.assertStoppedLocation('step', { path: config.program, line: 7 })
         }).timeout(5000)
 
         test('check stack trace', async () => {
-            const path = Path.join(scriptFolder, 'helloWorld.sjs')
-            const text = fs.readFileSync(path).toString()
-            const config = { queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST' }
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
             ])
-            await dc.setBreakpointsRequest({ source: { path: path }, breakpoints: [{ line: 12 }] })
+            await dc.setBreakpointsRequest({ source: { path: config.program }, breakpoints: [{ line: 12 }] })
             await dc.continueRequest({ threadId: 1 })
-            const stackTrace = await dc.assertStoppedLocation('breakpoint', { path: path, line: 12 })
+            const stackTrace = await dc.assertStoppedLocation('breakpoint', { path: config.program, line: 12 })
             const frame = stackTrace.body.stackFrames[0]
             assert(frame.name, 'loop')
             assert(frame.line, '12')
@@ -199,16 +193,13 @@ suite('JavaScript Debug Test Suite', () => {
         }).timeout(5000)
 
         test('check variable', async () => {
-            const path = Path.join(scriptFolder, 'helloWorld.sjs')
-            const text = fs.readFileSync(path).toString()
-            const config = { queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST' }
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
             ])
-            await dc.setBreakpointsRequest({ source: { path: path }, breakpoints: [{ line: 12 }] })
+            await dc.setBreakpointsRequest({ source: { path: config.program }, breakpoints: [{ line: 12 }] })
             await dc.continueRequest({ threadId: 1 })
-            const stackTrace = await dc.assertStoppedLocation('breakpoint', { path: path, line: 12 })
+            const stackTrace = await dc.assertStoppedLocation('breakpoint', { path: config.program, line: 12 })
             const frameId = stackTrace.body.stackFrames[0].id
             const scope = await dc.scopesRequest({ frameId: frameId })
             const vars = await dc.variablesRequest({ variablesReference: scope.body.scopes[0].variablesReference })
@@ -217,14 +208,11 @@ suite('JavaScript Debug Test Suite', () => {
         }).timeout(5000)
 
         test('check evaluate', async () => {
-            const path = Path.join(scriptFolder, 'helloWorld.sjs')
-            const text = fs.readFileSync(path).toString()
-            const config = { queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST' }
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
             ])
-            await dc.setBreakpointsRequest({ source: { path: path }, breakpoints: [{ line: 12 }] })
+            await dc.setBreakpointsRequest({ source: { path: config.program }, breakpoints: [{ line: 12 }] })
             await dc.continueRequest({ threadId: 1 })
             await dc.waitForEvent('stopped')
             const evalResult = await dc.evaluateRequest({ expression: 'str' })
@@ -233,14 +221,11 @@ suite('JavaScript Debug Test Suite', () => {
         }).timeout(5000)
 
         test('check conditional breakpoint', async () => {
-            const path = Path.join(scriptFolder, 'helloWorld.sjs')
-            const text = fs.readFileSync(path).toString()
-            const config = { queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST' }
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
             ])
-            await dc.setBreakpointsRequest({ source: { path: path }, breakpoints: [{ line: 14, condition: 'i==15' }] })
+            await dc.setBreakpointsRequest({ source: { path: config.program }, breakpoints: [{ line: 14, condition: 'i==15' }] })
             await dc.continueRequest({ threadId: 1 })
             await dc.waitForEvent('stopped')
             const evalResult = await dc.evaluateRequest({ expression: 'ret' })
@@ -273,13 +258,18 @@ suite('JavaScript Debug Test Suite', () => {
 
     suite('Issue 69', async () => {
         test('set breakpoints on two files', async () => {
-            CP.exec(`curl --anyauth --user ${username}:${password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
-                http://${hostname}:8080/LATEST/invoke --data-urlencode module=/MarkLogic/test/test.sjs`)
+            CP.exec(`curl --anyauth -k --user ${username}:${password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
+                http${ssl ? 's' : ''}://${hostname}:8080/LATEST/invoke --data-urlencode module=/MarkLogic/test/test.sjs`)
             await wait(1000)
             const resp = await getRid(mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server("JSdebugTestServer")).toObject()[0].requestStatuses[0].requestId')
             const rid = resp[0]
-            const path = Path.join(scriptFolder, 'MarkLogic/test')
-            const config = { rid: rid, root: path, username: username, password: password, hostname: hostname, authType: 'DIGEST' }
+            const root = Path.join(scriptFolder, 'MarkLogic/test')
+            const config = {
+                rid: rid, root: root,
+                username: username, password: password,
+                hostname: hostname, authType: 'DIGEST',
+                ssl: ssl, pathToCa: pathToCa, rejectUnauthorized: rejectUnauthorized
+            }
             await Promise.all([
                 dc.initializeRequest(),
                 dc.configurationSequence(),
@@ -303,16 +293,20 @@ suite('JavaScript Debug Test Suite', () => {
 
     suite('Issue 70', async () => {
         test('check non-existing modules are loaded', async () => {
-            CP.exec(`curl --anyauth --user ${username}:${password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
-                http://${hostname}:8080/LATEST/invoke --data-urlencode module=/MarkLogic/test/helloWorld.sjs`)
+            CP.exec(`curl --anyauth -k --user ${username}:${password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
+                http${ssl ? 's' : ''}://${hostname}:8080/LATEST/invoke --data-urlencode module=/MarkLogic/test/helloWorld.sjs`)
             await wait(1000)
             const resp = await getRid(mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server("JSdebugTestServer")).toObject()[0].requestStatuses[0].requestId')
             const rid = resp[0]
             const path = Path.join(scriptFolder, 'helloWorld.sjs')
             const text = fs.readFileSync(path).toString()
             const root = Path.join(scriptFolder, 'MarkLogic/test')
-            const config = { rid: rid, root: root, username: username, password: password, hostname: hostname,
-                database: 'Modules', modules: 'Modules', authType: 'DIGEST' }
+            const config = {
+                rid: rid, root: root,
+                username: username, password: password,
+                hostname: hostname, database: 'Modules', modules: 'Modules', authType: 'DIGEST',
+                ssl: ssl, pathToCa: pathToCa, rejectUnauthorized: rejectUnauthorized
+            }
             await Promise.all([
                 dc.initializeRequest(),
                 dc.configurationSequence(),
@@ -328,44 +322,48 @@ suite('JavaScript Debug Test Suite', () => {
 
     suite('Testing sjs/xqy boundary in eval/invoke', async () => {
         test('sjs calling xdmp:eval()', async () => {
-            const path = Path.join(scriptFolder, 'eval2.sjs')
-            const text = fs.readFileSync(path).toString()
-            const config = { queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST' }
+            config.program = Path.join(scriptFolder, 'eval2.sjs')
+            config.queryText = fs.readFileSync(config.program).toString()
+
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
             ])
-            await dc.setBreakpointsRequest({ source: { path: path }, breakpoints: [{ line: 4 }] })
+            await dc.setBreakpointsRequest({ source: { path: config.program }, breakpoints: [{ line: 4 }] })
             await dc.continueRequest({ threadId: 1 })
-            await dc.assertStoppedLocation('breakpoint', { path: path, line: 4 })
+            await dc.assertStoppedLocation('breakpoint', { path: config.program, line: 4 })
             await dc.stepInRequest({ threadId: 1 })
-            return dc.assertStoppedLocation('step', { path: path, line: 8 })
+            return dc.assertStoppedLocation('step', { path: config.program, line: 8 })
         }).timeout(25000)
 
         test('sjs calling xdmp:invoke()', async () => {
-            const path = Path.join(scriptFolder, 'invoke2.sjs')
-            const text = fs.readFileSync(path).toString()
-            const config = { queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST' }
+            config.program = Path.join(scriptFolder, 'invoke2.sjs')
+            config.queryText = fs.readFileSync(config.program).toString()
+
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
             ])
-            await dc.setBreakpointsRequest({ source: { path: path }, breakpoints: [{ line: 4 }] })
+            await dc.setBreakpointsRequest({ source: { path: config.program }, breakpoints: [{ line: 4 }] })
             await dc.continueRequest({ threadId: 1 })
-            await dc.assertStoppedLocation('breakpoint', { path: path, line: 4 })
+            await dc.assertStoppedLocation('breakpoint', { path: config.program, line: 4 })
             await dc.stepInRequest({ threadId: 1 })
-            return dc.assertStoppedLocation('step', { path: path, line: 6 })
+            return dc.assertStoppedLocation('step', { path: config.program, line: 6 })
         }).timeout(5000)
 
         test('xqy calling xdmp.invoke()', async () => {
-            CP.exec(`curl --anyauth --user ${username}:${password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
-                http://${hostname}:8080/LATEST/invoke --data-urlencode module=/MarkLogic/test/invoke1.xqy`)
+            CP.exec(`curl --anyauth -k --user ${username}:${password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
+                http${ssl ? 's' : ''}://${hostname}:8080/LATEST/invoke --data-urlencode module=/MarkLogic/test/invoke1.xqy`)
             await wait(100)
             const resp = await getRid(mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server("JSdebugTestServer")).toObject()[0].requestStatuses[0].requestId')
             const rid = resp[0]
             const root = Path.join(scriptFolder, 'MarkLogic/test')
-            const config = { rid: rid, root: root, username: username, password: password, hostname: hostname,
-                database: 'Modules', modules: 'Modules', authType: 'DIGEST' }
+            const config = {
+                rid: rid, root: root,
+                username: username, password: password,
+                hostname: hostname, database: 'Modules', modules: 'Modules', authType: 'DIGEST',
+                ssl: ssl, pathToCa: pathToCa, rejectUnauthorized: rejectUnauthorized
+            }
             await Promise.all([
                 dc.initializeRequest(),
                 dc.configurationSequence(),
@@ -378,18 +376,18 @@ suite('JavaScript Debug Test Suite', () => {
         }).timeout(10000)
 
         test('sjs importing xqy', async () => {
-            const path = Path.join(scriptFolder, 'eval3.sjs')
-            const text = fs.readFileSync(path).toString()
-            const config = { queryText: text, program: path, username: username, password: password, hostname: hostname, authType: 'DIGEST' }
+            config.program = Path.join(scriptFolder, 'eval3.sjs')
+            config.queryText = fs.readFileSync(config.program).toString()
+
             await Promise.all([
                 dc.configurationSequence(),
                 dc.launch(config)
             ])
-            await dc.setBreakpointsRequest({ source: { path: path }, breakpoints: [{ line: 4 }] })
+            await dc.setBreakpointsRequest({ source: { path: config.program }, breakpoints: [{ line: 4 }] })
             await dc.continueRequest({ threadId: 1 })
-            await dc.assertStoppedLocation('breakpoint', { path: path, line: 4 })
+            await dc.assertStoppedLocation('breakpoint', { path: config.program, line: 4 })
             await dc.stepInRequest({ threadId: 1 })
-            return dc.assertStoppedLocation('step', { path: path, line: 6 })
+            return dc.assertStoppedLocation('step', { path: config.program, line: 6 })
         }).timeout(15000)
 
     })

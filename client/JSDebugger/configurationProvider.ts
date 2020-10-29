@@ -188,8 +188,6 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         }
         if (ca) options['agentOptions'] = { ca: ca }
         options['rejectUnauthorized'] = rejectUnauthorized
-        options['strictSSL'] = rejectUnauthorized
-        options['insecure'] = !rejectUnauthorized
         return request.post(url, options)
     }
 
@@ -212,8 +210,6 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         }
         if (ca) options['agentOptions'] = { ca: ca }
         options['rejectUnauthorized'] = rejectUnauthorized
-        options['strictSSL'] = rejectUnauthorized
-        options['insecure'] = !rejectUnauthorized
         return request.post(url, options)
     }
 }
@@ -260,8 +256,6 @@ export function _connectServer(servername: string): void {
     if (pathToCa !== '')
         options['agentOptions'] = { ca: fs.readFileSync(pathToCa) }
     options['rejectUnauthorized'] = rejectUnauthorized
-    options['strictSSL'] = rejectUnauthorized
-    options['insecure'] = !rejectUnauthorized
 
     request.post(url, options).then(() => {
         vscode.window.showInformationMessage('Debug server connected')
@@ -306,8 +300,6 @@ export function _disconnectServer(servername: string): void {
     if (pathToCa !== '')
         options['agentOptions'] = { ca: fs.readFileSync(pathToCa) }
     options['rejectUnauthorized'] = rejectUnauthorized
-    options['strictSSL'] = rejectUnauthorized
-    options['insecure'] = !rejectUnauthorized
 
     request.post(url, options).then(() => {
         vscode.window.showInformationMessage('Debug server disconnected')
