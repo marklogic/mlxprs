@@ -14,7 +14,7 @@ import * as querystring from 'querystring'
 export interface V8Frame {
     callFrameId: string;
     functionName?: string;
-    functionLocation?: object;
+    functionLocation?: Record<string, unknown>;
     location: {
         scriptId: string;
         lineNumber: number;
@@ -67,6 +67,7 @@ export class MLRuntime extends EventEmitter {
     private _dbgPort = 8002;
     private _endpointRoot = '/jsdbg/v1'
     private _ca: undefined | Buffer;
+    private _rejectUnauthorized = true
     private _mlClient: MarklogicClient
     private _mlModuleGetter: ModuleContentGetter
 
@@ -105,9 +106,11 @@ export class MLRuntime extends EventEmitter {
         this._password = args.password
         this._ssl = args.ssl
         this._scheme = this._ssl ? 'https' : 'http'
+        this._rejectUnauthorized = args.rejectUnauthorized
         if (args.pathToCa) {
             this._ca = fs.readFileSync(args.pathToCa)
         }
+
         this._mlClient = new MarklogicClient(
             new MlClientParameters({
                 host: this._hostName,
@@ -118,7 +121,8 @@ export class MLRuntime extends EventEmitter {
                 ssl: this._ssl,
                 authType: args.authType,
                 modulesDb: args.modules,
-                pathToCa: args.pathToCa ? args.pathToCa : ''
+                pathToCa: args.pathToCa ? args.pathToCa : '',
+                rejectUnauthorized: args.rejectUnauthorized
             })
         )
         this._mlModuleGetter = new ModuleContentGetter(this._mlClient)
@@ -178,7 +182,7 @@ export class MLRuntime extends EventEmitter {
     }
 
     public evaluateOnCallFrame(expr: string, cid?: string): Promise<string> {
-        const qs: object = { expr: expr }
+        const qs: Record<string, unknown> = { expr: expr }
         if (cid !== '') { qs['call-frame'] = cid }
         return this._sendMLdebugRequestGET('eval-on-call-frame', qs)
     }
@@ -217,7 +221,7 @@ export class MLRuntime extends EventEmitter {
 
     private _sendMLdebugRequestPOST(module: string, body?: string): Promise<string> {
         const url = this.buildUrl(`/${module}/${this._rid}`)
-        const options: object = {
+        const options: Record<string, unknown> = {
             headers: {
                 'Content-type': 'application/x-www-form-urlencoded',
                 'X-Error-Accept': 'application/json'
@@ -230,12 +234,13 @@ export class MLRuntime extends EventEmitter {
         }
         if (body) { options['body'] = body }
         if (this._ca) options['agentOptions'] = { ca: this._ca }
+        options['rejectUnauthorized'] = this._rejectUnauthorized
         return request.post(url, options)
     }
 
-    private _sendMLdebugRequestGET(module: string, queryString?: object): Promise<string> {
+    private _sendMLdebugRequestGET(module: string, queryString?: Record<string, unknown>): Promise<string> {
         const url = this.buildUrl(`/${module}/${this._rid}`)
-        const options: object = {
+        const options: Record<string, unknown> = {
             headers: {
                 'X-Error-Accept': 'application/json'
             },
@@ -247,10 +252,12 @@ export class MLRuntime extends EventEmitter {
         }
         if (queryString) { options['qs'] = queryString }
         if (this._ca) options['agentOptions'] = { ca: this._ca }
+        options['rejectUnauthorized'] = this._rejectUnauthorized
         return request.get(url, options)
     }
 
-    private _sendMLdebugEvalRequest(script: string, database: string, txnId: string, modules: string, root: string): Promise<string> {
+    private _sendMLdebugEvalRequest(script: string, database: string,
+        txnId: string, modules: string, root: string): Promise<string> {
         const url = this.buildUrl('/eval')
         const options = {
             headers: {
@@ -265,6 +272,7 @@ export class MLRuntime extends EventEmitter {
             body: `javascript=${querystring.escape(script)}`
         }
         if (this._ca) options['agentOptions'] = { ca: this._ca }
+        options['rejectUnauthorized'] = this._rejectUnauthorized
         const evalOptions = {
             database: database,
             modules: modules

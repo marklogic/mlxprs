@@ -64,6 +64,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         config.mlModulesRoot = String(wcfg.get('marklogic.modulesRoot'))
         config.ssl = Boolean(wcfg.get('marklogic.ssl'))
         config.authType = String(wcfg.get('marklogic.authType'))
+        config.rejectUnauthorized = Boolean(wcfg.get('marklogic.rejectUnauthorized'))
 
         if (config.ssl) config.pathToCa = String(wcfg.get('marklogic.pathToCa'))
         let ca: Buffer
@@ -92,7 +93,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         }
         if (config.request == 'launch' && !config.database.match(/^\d+$/)) {
             await this.resolveDatabasetoId(config.username, config.password, config.database, config.hostname,
-                config.ssl, ca).then(resp => {
+                config.ssl, ca, config.rejectUnauthorized).then(resp => {
                 config.database = resp.match('\r\n\r\n(.*[0-9])\r\n')[1] //better way of parsing?
             }).catch(e => {
                 return vscode.window.showErrorMessage('Error getting database setting').then(() => {
@@ -102,7 +103,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         }
         if (config.request == 'launch' && !config.modules.match(/^\d+$/)) {
             await this.resolveDatabasetoId(config.username, config.password, config.modules, config.hostname,
-                config.ssl, ca).then(resp => {
+                config.ssl, ca, config.rejectUnauthorized).then(resp => {
                 config.modules = resp.match('\r\n\r\n(.*[0-9])\r\n')[1] //better way of parsing?
             }).catch(() => {
                 return vscode.window.showErrorMessage('Error getting modules database setting').then(() => {
@@ -114,7 +115,8 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         //query for paused requests
         if (config.request === 'attach' && config.username && config.password) {
             const resp = await this.getAvailableRequests(config.username,
-                config.password, config.debugServerName, config.hostname, config.ssl, ca)
+                config.password, config.debugServerName, config.hostname, config.ssl, ca,
+                config.rejectUnauthorized)
             const requests: string[] = JSON.parse(resp).requestIds
             const items = []
             for (let i = 0; i < requests.length; i++) {
@@ -150,7 +152,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
     }
 
     private async getAvailableRequests(username: string, password: string, debugServerName: string,
-        hostname: string, ssl?: boolean, ca?: Buffer): Promise<string> {
+        hostname: string, ssl?: boolean, ca?: Buffer, rejectUnauthorized = true): Promise<string> {
         const url = buildUrl(hostname, `/jsdbg/v1/paused-requests/${debugServerName}`, ssl)
         const options = {
             headers: {
@@ -163,11 +165,12 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
             }
         }
         if (ca) options['agentOptions'] = { ca: ca }
+        options['rejectUnauthorized'] = rejectUnauthorized
         return request.get(url, options)
     }
 
     private async resolveDatabasetoId(username: string, password: string, database: string, hostname: string,
-        ssl?: boolean, ca?: Buffer): Promise<string> {
+        ssl?: boolean, ca?: Buffer, rejectUnauthorized = true): Promise<string> {
         const url = buildUrl(hostname, '/v1/eval', ssl)
         const script = `xdmp.database("${database}")`
         const options: Record<string, unknown> = {
@@ -184,11 +187,14 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
             body: `javascript=${querystring.escape(script)}`
         }
         if (ca) options['agentOptions'] = { ca: ca }
+        options['rejectUnauthorized'] = rejectUnauthorized
+        options['strictSSL'] = rejectUnauthorized
+        options['insecure'] = !rejectUnauthorized
         return request.post(url, options)
     }
 
     private async getRequestInfo(username: string, password: string, requestId: string, debugServerName: string, hostname: string,
-        ssl?: boolean, ca?: Buffer): Promise<string> {
+        ssl?: boolean, ca?: Buffer, rejectUnauthorized = true): Promise<string> {
         const url = buildUrl(hostname, '/v1/eval', ssl)
         const script = `xdmp.requestStatus(xdmp.host(),xdmp.server("${debugServerName}"),"${requestId}")`
         const options: Record<string, unknown> = {
@@ -205,6 +211,9 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
             body: `javascript=${querystring.escape(script)}`
         }
         if (ca) options['agentOptions'] = { ca: ca }
+        options['rejectUnauthorized'] = rejectUnauthorized
+        options['strictSSL'] = rejectUnauthorized
+        options['insecure'] = !rejectUnauthorized
         return request.post(url, options)
     }
 }
@@ -222,6 +231,7 @@ export function _connectServer(servername: string): void {
     const hostname: string = cfg.get('marklogic.host')
     const ssl = Boolean(cfg.get('marklogic.ssl'))
     const pathToCa = String(cfg.get('marklogic.pathToCa') || '')
+    const rejectUnauthorized = Boolean(cfg.get('marklogic.rejectUnauthorized'))
 
     if (!hostname) {
         vscode.window.showErrorMessage('Hostname is not provided')
@@ -249,6 +259,9 @@ export function _connectServer(servername: string): void {
     }
     if (pathToCa !== '')
         options['agentOptions'] = { ca: fs.readFileSync(pathToCa) }
+    options['rejectUnauthorized'] = rejectUnauthorized
+    options['strictSSL'] = rejectUnauthorized
+    options['insecure'] = !rejectUnauthorized
 
     request.post(url, options).then(() => {
         vscode.window.showInformationMessage('Debug server connected')
@@ -264,6 +277,7 @@ export function _disconnectServer(servername: string): void {
     const hostname: string = cfg.get('marklogic.host')
     const ssl = Boolean(cfg.get('marklogic.ssl'))
     const pathToCa = String(cfg.get('marklogic.pathToCa') || '')
+    const rejectUnauthorized = Boolean(cfg.get('marklogic.rejectUnauthorized'))
 
     if (!hostname) {
         vscode.window.showErrorMessage('Hostname is not provided')
@@ -291,6 +305,9 @@ export function _disconnectServer(servername: string): void {
     }
     if (pathToCa !== '')
         options['agentOptions'] = { ca: fs.readFileSync(pathToCa) }
+    options['rejectUnauthorized'] = rejectUnauthorized
+    options['strictSSL'] = rejectUnauthorized
+    options['insecure'] = !rejectUnauthorized
 
     request.post(url, options).then(() => {
         vscode.window.showInformationMessage('Debug server disconnected')

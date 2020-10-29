@@ -28,6 +28,7 @@ interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
     mlModulesRoot?: string;
     ssl?: boolean;
     pathToCa?: Buffer;
+    rejectUnauthorized: boolean;
     scheme?: string;
 }
 
@@ -40,6 +41,7 @@ interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
     rid: string;
     ssl?: boolean;
     pathToCa?: Buffer;
+    rejectUnauthorized: boolean;
 }
 
 export class MLDebugSession extends LoggingDebugSession {
