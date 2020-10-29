@@ -75,6 +75,11 @@ going to 'Security' -> 'Certificate Templates' -> (cert host name), and then
 selecting the "Status" tab. There is an "download" button in the "certificate template status"
 section. Click the "download" button to download a copy of your root CA.
 
+Alternatively, you can turn off client certificate checks altogether.
+Set `marklogic.rejectUnauthorized` to `false` in your VS Code configuration.
+This is less secure, but may be useful for situations where you can't obtain or use a your own CA,
+such as when connecting to a IP address rather than a hostname.
+
 ### Per-query configuration override
 
 You can override your VS Code configured settings by using a block comment as the first language token
@@ -147,7 +152,7 @@ Below is an example of a `launch.json` file, with JavaScript and XQuery configur
       "request": "attach",
       "type": "ml-jsdebugger",
       "name": "Attach to Debug Request",
-      "path": "${workspaceFolder}/src/main/ml-modules/root",
+      "root": "${workspaceFolder}/src/main/ml-modules/root",
       "debugServerName": "Enter debug server name"
     },
     {
