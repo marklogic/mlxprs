@@ -26,6 +26,7 @@ declare module 'marklogic' {
     authType: string;
     ssl: boolean;
     ca: string;
+    rejectUnauthorized: boolean;
   }
 
   export interface Variables {

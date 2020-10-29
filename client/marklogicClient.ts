@@ -19,6 +19,7 @@ export class MlClientParameters {
     authType: string;
     ssl: boolean;
     pathToCa: string;
+    rejectUnauthorized: boolean;
 
     /**
      * note: defaults not applied here. Properties can remain undefined so that
@@ -35,14 +36,22 @@ export class MlClientParameters {
         this.authType = rawParams.authType
         this.ssl = Boolean(rawParams.ssl)
         this.pathToCa = rawParams.pathToCa || ''
+        this.rejectUnauthorized = rawParams.rejectUnauthorized || true
     }
 
     toString(): string {
-        return [this.host, this.port, this.user,
+        const paramsArray = [this.host, this.port, this.user,
             this.pwd.replace(/./g, '*'),
             this.authType,
-            this.contentDb, this.modulesDb,
-            this.ssl, this.pathToCa].join(':')
+            this.contentDb, this.modulesDb]
+        if (this.ssl) {
+            paramsArray.push('ssl')
+            if (!this.rejectUnauthorized) paramsArray.push('insecure')
+            if (this.pathToCa) paramsArray.push('pathToCa:' || this.pathToCa)
+        } else {
+            paramsArray.push('plaintext')
+        }
+        return paramsArray.join(':')
     }
 
     sameAs(other: MlClientParameters): boolean {
@@ -55,7 +64,8 @@ export class MlClientParameters {
             this.pwd === other.pwd &&
             this.authType === other.authType &&
             this.ssl === other.ssl &&
-            this.pathToCa === other.pathToCa
+            this.pathToCa === other.pathToCa &&
+            this.rejectUnauthorized === other.rejectUnauthorized
         )
     }
 }
@@ -84,7 +94,7 @@ export class MarklogicClient {
             user: this.params.user, password: this.params.pwd,
             database: this.params.contentDb,
             authType: this.params.authType, ssl: this.params.ssl,
-            ca: this.ca
+            ca: this.ca, rejectUnauthorized: this.params.rejectUnauthorized
         })
     }
 

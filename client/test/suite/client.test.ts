@@ -4,7 +4,8 @@ import { after } from 'mocha'
 import { window, workspace } from 'vscode'
 import { defaultDummyGlobalState } from './dummyGlobalState'
 import { testOverrideQueryWithGoodJSON,  testOverrideQueryWithBadJSON, testQueryWithoutOverrides,
-    testOverrideXQueryWithGoodJSON, testOverrideXQueryWithBadJSON, testXQueryWithoutOverrides
+    testOverrideXQueryWithGoodJSON, testOverrideXQueryWithBadJSON, testXQueryWithoutOverrides,
+    testOverrideSslParams
 } from './testOverrideQuery'
 import { MarklogicClient } from '../../marklogicClient'
 import { getDbClient, parseQueryForOverrides } from '../../vscQueryParameterTools'
@@ -90,6 +91,14 @@ suite('Extension Test Suite', () => {
         const noOQuery: string = testXQueryWithoutOverrides()
         const overrides: Record<string, any> = parseQueryForOverrides(noOQuery, XQY)
         assert.equal(Object.keys(overrides).length, 0)
+    })
+
+    test('overrides in ssl settings are honored', () => {
+        const sslOverrideQuery: string = testOverrideSslParams()
+        const overrides: Record<string, any> = parseQueryForOverrides(sslOverrideQuery, SJS)
+        assert.strictEqual(overrides.ssl, true)
+        assert.strictEqual(overrides.rejectUnauthorized, false)
+        assert.strictEqual(overrides.host, '127.0.0.1')
     })
 
     test('Sample test', () => {

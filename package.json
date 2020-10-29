@@ -312,6 +312,11 @@
                     "type": "string",
                     "default": "",
                     "description": "path to certificate authority (e.g. for self-signed certificates)"
+                },
+                "marklogic.rejectUnauthorized": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "whether the server's SSL certificate should be verified against the list of supplied CAs"
                 }
             }
         },

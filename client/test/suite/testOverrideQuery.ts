@@ -99,3 +99,16 @@ export function testXQueryWithoutOverrides(): string {
 cts.doc(cts.uris().toArray()[12 + 19])
 `
 }
+
+export function testOverrideSslParams(): string {
+    return `
+/* mlxprs:settings
+{
+    "host": "127.0.0.1",
+    "ssl": true,
+    "rejectUnauthorized": false
+}
+*/
+'This is your bank. Please login kthx...'
+`
+}
