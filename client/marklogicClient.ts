@@ -36,7 +36,7 @@ export class MlClientParameters {
         this.authType = rawParams.authType
         this.ssl = Boolean(rawParams.ssl)
         this.pathToCa = rawParams.pathToCa || ''
-        this.rejectUnauthorized = rawParams.rejectUnauthorized || true
+        this.rejectUnauthorized = Boolean(rawParams.rejectUnauthorized)
     }
 
     toString(): string {

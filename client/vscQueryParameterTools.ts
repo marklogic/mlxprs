@@ -67,7 +67,6 @@ export function getDbClient(queryText: string, language: string, cfg: WorkspaceC
     }
     // merge VS Code configuration and overrides
     const newParams = new MlClientParameters({ ...configParams, ...overrides })
-    if (overrides.rejectUnauthorized === false) newParams.rejectUnauthorized = false
     // if settings have changed, release and clear the client
     const mlc = state.get(MLDBCLIENT) as MarklogicClient
     if (mlc !== null && !mlc.hasSameParamsAs(newParams)) {
