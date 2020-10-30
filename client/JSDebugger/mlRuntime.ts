@@ -4,7 +4,7 @@
 
 import { EventEmitter } from 'events'
 import { MarklogicClient, MlClientParameters } from '../marklogicClient'
-import { ModuleContentGetter } from '../moduleContentGetter'
+import { ModuleContentHandler } from '../moduleContentHandler'
 import * as request from 'request-promise'
 import * as fs from 'fs'
 import * as querystring from 'querystring'
@@ -69,7 +69,7 @@ export class MLRuntime extends EventEmitter {
     private _ca: undefined | Buffer;
     private _rejectUnauthorized = true
     private _mlClient: MarklogicClient
-    private _mlModuleGetter: ModuleContentGetter
+    private _mlModuleGetter: ModuleContentHandler
 
     public getHostString(): string {
         return `${this._mlClient.params.host}:${this._mlClient.params.port}`
@@ -125,7 +125,7 @@ export class MLRuntime extends EventEmitter {
                 rejectUnauthorized: args.rejectUnauthorized
             })
         )
-        this._mlModuleGetter = new ModuleContentGetter(this._mlClient)
+        this._mlModuleGetter = new ModuleContentHandler(this._mlClient)
     }
 
     public setRid(rid: string): void {
@@ -214,7 +214,7 @@ export class MLRuntime extends EventEmitter {
     }
 
     public async getModuleContent(modulePath: string): Promise<string> {
-        return this._mlModuleGetter.provideTextDocumentContent(modulePath)
+        return this._mlModuleGetter.readTextDocumentContent(modulePath)
     }
 
     //---- helpers

@@ -3,7 +3,7 @@
 import { Event, EventEmitter, TextDocument, TextDocumentContentProvider, Uri,
     window, workspace } from 'vscode'
 import { MarklogicClient } from './marklogicClient'
-import { ModuleContentGetter } from './moduleContentGetter'
+import { ModuleContentHandler } from './moduleContentHandler'
 
 const scheme = 'mlmodule'
 
@@ -16,14 +16,14 @@ function encodeLocation(host: string, port: number, path: string): Uri {
 export class ModuleContentProvider implements TextDocumentContentProvider {
     static scheme = scheme
     private _onDidChange = new EventEmitter<Uri>()
-    private _mlModuleGetter: ModuleContentGetter
+    private _mlModuleGetter: ModuleContentHandler
 
     public initialize(client: MarklogicClient): void {
-        this._mlModuleGetter = new ModuleContentGetter(client)
+        this._mlModuleGetter = new ModuleContentHandler(client)
     }
 
     async provideTextDocumentContent(uri: Uri): Promise<string> {
-        return this._mlModuleGetter.provideTextDocumentContent(uri.path)
+        return this._mlModuleGetter.readTextDocumentContent(uri.path)
     }
 
     get onDidChange(): Event<Uri> { return this._onDidChange.event }

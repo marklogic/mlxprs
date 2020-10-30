@@ -1,10 +1,11 @@
 'use strict'
 
+import { DocumentDescriptor } from 'marklogic'
 import { MarklogicClient, sendXQuery, MlClientParameters } from './marklogicClient'
 
 export const listModulesQuery = 'cts:uris()'
 
-export class ModuleContentGetter {
+export class ModuleContentHandler {
     private _mlClient: MarklogicClient
 
     public constructor(client: MarklogicClient) {
@@ -25,7 +26,7 @@ export class ModuleContentGetter {
         this._mlClient = client
     }
 
-    public async provideTextDocumentContent(modulePath: string): Promise<string> {
+    public async readTextDocumentContent(modulePath: string): Promise<string> {
         return this._mlClient.mldbClient.read(modulePath)
             .result(
                 (fulfill: string[]) => {
@@ -35,6 +36,18 @@ export class ModuleContentGetter {
                 (err) => {
                     throw err
                 })
+    }
+
+    public async writeTextDocumentContent(
+        modulePath: string, moduleContent: string, collection: string): Promise<string[]> {
+        const docObject: Record<string, unknown> = {}; docObject[modulePath] = moduleContent
+        return this._mlClient.mldbClient.writeCollection(collection, docObject)
+            .result(
+                (fulfill: string[]) => {
+                    return fulfill
+                },
+                (err) => { throw err }
+            )
     }
 
     public async listModules(): Promise<string[]> {

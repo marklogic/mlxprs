@@ -13,7 +13,7 @@ declare module 'marklogic' {
     eval: <U>(query: string, variables?: Variables) => ResultProvider<U>;
     invoke: <U>(path: string, variables?: Variables) => ResultProvider<U>;
     read: (uri: string) => ResultProvider<string[]>;
-    writeCollection: (collection: string, documents: Record<string, any>[]) => ResultProvider<string[]>;
+    writeCollection: (collection: string, documents: Record<string, unknown>) => ResultProvider<string[]>;
     removeCollection: (collection: string) => ResultProvider<string>;
   }
 
@@ -34,4 +34,10 @@ declare module 'marklogic' {
   }
 
   export function createDatabaseClient(connectionParams: ConnectionParams): DatabaseClient
+
+  export interface DocumentDescriptor {
+      uri: string;
+      content?: string | Buffer | Record<string, unknown>;
+      collections?: string[];
+  }
 }
