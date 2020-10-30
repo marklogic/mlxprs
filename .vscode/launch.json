@@ -84,6 +84,7 @@
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
+                "--disable-extensions",
                 "--extensionDevelopmentPath=${workspaceFolder}/client",
                 "--extensionTestsPath=${workspaceRoot}/dist/test/integration/index"
             ],

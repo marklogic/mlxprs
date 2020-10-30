@@ -37,7 +37,7 @@ export class XqyDebugConfiguration implements DebugConfiguration {
     request: string
     rid: string
 
-    path?: string
+    root?: string
     program: string
     query: string
 
@@ -89,7 +89,7 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
             modulesDb: String(cfg.get('marklogic.modulesDb')),
             authType: String(cfg.get('marklogic.authType')),
             ssl: Boolean(cfg.get('marklogic.ssl')),
-            pathToCa: String(cfg.get('marklogic.pathToCa')),
+            pathToCa: String(cfg.get('marklogic.pathToCa') || ''),
             rejectUnauthorized: Boolean(cfg.get('marklogic.rejectUnauthorized'))
         })
         config.clientParams = clientParams
