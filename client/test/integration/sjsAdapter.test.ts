@@ -25,7 +25,7 @@ suite('JavaScript Debug Test Suite', () => {
 
     const rootFolder = Path.join(__dirname, '../../../')
     const exec = Path.join(rootFolder, 'dist/mlDebug.js')
-    const scriptFolder = Path.join(rootFolder, 'client/test/jsScripts')
+    const scriptFolder = Path.join(rootFolder, 'client/test/integration/jsScripts')
 
     let dc: DebugClient
     const mlClient = new MarklogicClient(
@@ -43,15 +43,15 @@ suite('JavaScript Debug Test Suite', () => {
         })
     )
 
-    const module1 = Path.join(rootFolder, 'client/test/jsScripts/MarkLogic/test/test.sjs')
-    const module2 = Path.join(rootFolder, 'client/test/jsScripts/MarkLogic/test/lib1.sjs')
-    const module3 = Path.join(rootFolder, 'client/test/jsScripts/MarkLogic/test/lib2.sjs')
-    const module4 = Path.join(rootFolder, 'client/test/jsScripts/MarkLogic/test/invoke1.xqy')
-    const module5 = Path.join(rootFolder, 'client/test/jsScripts/helloWorld.sjs')
+    const module1 = Path.join(rootFolder, 'client/test/integration/jsScripts/MarkLogic/test/test.sjs')
+    const module2 = Path.join(rootFolder, 'client/test/integration/jsScripts/MarkLogic/test/lib1.sjs')
+    const module3 = Path.join(rootFolder, 'client/test/integration/jsScripts/MarkLogic/test/lib2.sjs')
+    const module4 = Path.join(rootFolder, 'client/test/integration/jsScripts/MarkLogic/test/invoke1.xqy')
+    const module5 = Path.join(rootFolder, 'client/test/integration/jsScripts/helloWorld.sjs')
 
-    const module6 = Path.join(rootFolder, 'client/test/jsScripts/MarkLogic/test/jsInvoke-1.sjs')
-    const module7 = Path.join(rootFolder, 'client/test/jsScripts/MarkLogic/test/xqyInvoke-1.xqy')
-    const module8 = Path.join(rootFolder, 'client/test/jsScripts/MarkLogic/test/jsInvoke-2.sjs')
+    const module6 = Path.join(rootFolder, 'client/test/integration/jsScripts/MarkLogic/test/jsInvoke-1.sjs')
+    const module7 = Path.join(rootFolder, 'client/test/integration/jsScripts/MarkLogic/test/xqyInvoke-1.xqy')
+    const module8 = Path.join(rootFolder, 'client/test/integration/jsScripts/MarkLogic/test/jsInvoke-2.sjs')
 
     const debugServerModules = [module1, module2, module3, module4, module5, module6]
     const taskServerModules = [module6, module7, module8]
