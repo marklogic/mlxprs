@@ -66,8 +66,10 @@ suite('JavaScript Debug Test Suite', () => {
         ssl: ssl, pathToCa: pathToCa, rejectUnauthorized: rejectUnauthorized }
 
     before(async () => {
-        // load test data
+        // connect server for attach-type debugging
         _connectServer('JSdebugTestServer')
+
+        // load test data
         const requests = []
         debugServerModules.forEach(async (fsModulePath) => {
             const fname = Path.basename(fsModulePath)
