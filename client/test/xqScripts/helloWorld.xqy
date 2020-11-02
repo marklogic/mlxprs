@@ -9,7 +9,7 @@ declare function hw:loop() {
   return fn:sum($j)
 };
 
-let $str := 'Hello World XQY'
+let $str := 'Hello World XQY' (: <-- debugger will start here :)
 let $str2 := 'line 2'
 let $str3 := 'line 3'
 let $num := hw:loop()

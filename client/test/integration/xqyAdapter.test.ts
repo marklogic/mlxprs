@@ -60,21 +60,21 @@ suite('XQuery Debug Test Suite', () => {
     }
 
 
-    // before(async () => {
-    // modHandler.writeTextDocumentContent(`/MarkLogic/test/${Path.basename(hwPath)}`, hwScript, COLLECTION)
-    //     .then(fulfill => console.debug(`inserted module at ${hwPath}: ${JSON.stringify(fulfill)}`))
-    //     .catch(err => console.error(`Error uploading ${hwPath}: ${JSON.stringify(err)}`))
-    //     .finally(() => window.showInformationMessage('XQY debugger tests starting...'))
-
-    // })
+    before(async () => {
+        modHandler.writeTextDocumentContent(`/MarkLogic/test/${Path.basename(hwPath)}`, hwScript, COLLECTION)
+            .then(fulfill => console.debug(`inserted module at ${hwPath}: ${JSON.stringify(fulfill)}`))
+            .catch(err => console.error(`Error uploading ${hwPath}: ${JSON.stringify(err)}`))
+            .finally(() => window.showInformationMessage('XQY debugger tests starting...'))
+    })
 
     suite('Basic', () => {
         test('launch a script and it shuold stop at entry', async () => {
             return Promise.all([
                 dc.configurationSequence(),
                 dc.launch(hwConfig),
-                dc.assertStoppedLocation('entry', {})
-            ])
-        })
+            ]).then(() => {
+                dc.assertStoppedLocation('entry', { path: hwPath, line: 12 })
+            })
+        }).timeout(600000)
     })
 })
