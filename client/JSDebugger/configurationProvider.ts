@@ -66,7 +66,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         config.authType = String(wcfg.get('marklogic.authType'))
         config.rejectUnauthorized = Boolean(wcfg.get('marklogic.rejectUnauthorized'))
 
-        if (config.ssl) config.pathToCa = String(wcfg.get('marklogic.pathToCa'))
+        if (config.ssl) config.pathToCa = String(wcfg.get('marklogic.pathToCa') || '')
         let ca: Buffer
         if (config.pathToCa)
             ca = fs.readFileSync(config.pathToCa)
