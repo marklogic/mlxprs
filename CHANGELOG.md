@@ -1,3 +1,9 @@
+## [3.2.0](https://github.com/mikrovvelle/mlxprs/tree/v3.2.0)
+
+- new feature #85: allow ignoring insecure SSL connection.
+
+  You can disable client certificate checking by setting `marklogic.rejectUnauthorized` to `false` in your VS Code configuration (defaut is `true`).
+
 ## [3.1.0](https://github.com/mikrovvelle/mlxprs/tree/v3.1.0)
 
 - fixes: #70. SJS debugging now streams modules if they're not available locally
