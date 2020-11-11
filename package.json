@@ -306,7 +306,7 @@
                 "marklogic.ssl": {
                     "type": "boolean",
                     "default": false,
-                    "description": "whether to use ssl for the http connection"
+                    "description": "use ssl for the http connection"
                 },
                 "marklogic.pathToCa": {
                     "type": "string",
@@ -316,7 +316,7 @@
                 "marklogic.rejectUnauthorized": {
                     "type": "boolean",
                     "default": true,
-                    "description": "whether the server's SSL certificate should be verified against the list of supplied CAs"
+                    "description": "the server's SSL certificate should be verified against the list of supplied CAs"
                 }
             }
         },
