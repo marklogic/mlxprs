@@ -87,6 +87,22 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
     }
 
     /**
+     * Cache a SPARQL query response so VS Code will show the results in a new editor window
+     * @param uri the URI of the VS Code document that sent the query
+     * @param response the content of what was returned from the MarkLogic query
+     * @returns Promise responseUri where VS Code will retrieve the content to show @async
+     */
+    public async writeSparqlResponseToUri(uri: Uri, response: Record<string, unknown>): Promise<Uri> {
+        const fmt = 'json'
+        const responseUri = Uri.parse(`${QueryResultsContentProvider.scheme}://${uri.authority}${uri.path}.${fmt}?${uri.query}`)
+        console.debug(`${Date.now()} ***** Writing cache for URI: ${uri.toString()}`)
+        this._cache.set(responseUri.toString(), JSON.stringify(response))
+        this.update(responseUri)
+        await new Promise(resolve => setTimeout(resolve, 60))
+        return responseUri
+    }
+
+    /**
      * Cache a query *error* response so VS Code will show the results in a new editor window,
      * This should be caught in the promise reject. It may be
      * - a MarkLogic error (query was received, but couldn't run successfully), or

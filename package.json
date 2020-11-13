@@ -24,6 +24,7 @@
         "onCommand:extension.getQuery",
         "onCommand:extension.sendXQuery",
         "onCommand:extension.sendJSQuery",
+        "onCommand:extension.sendSparqlQuery",
         "onCommand:extension.showModule",
         "onDebug",
         "onLanguage:xquery-ml",
@@ -39,6 +40,10 @@
             {
                 "command": "extension.sendJSQuery",
                 "title": "MarkLogic: Eval JS"
+            },
+            {
+                "command": "extension.sendSparqlQuery",
+                "title": "MarkLogic: Eval SPARQL"
             },
             {
                 "command": "extension.connectServer",

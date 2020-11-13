@@ -184,3 +184,13 @@ export function sendXQuery(
 
     return db.mldbClient.xqueryEval(query, extVars)
 }
+
+export function sendSparql(
+    db: MarklogicClient,
+    sparqlQuery: string): ml.ResultProvider<any>
+{
+    return db.mldbClient.graphs.sparql({
+        contentType: 'application/json',
+        query: sparqlQuery
+    })
+}
