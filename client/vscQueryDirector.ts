@@ -2,6 +2,7 @@
 import { MarklogicClient, sendJSQuery, sendSparql, sendXQuery } from './marklogicClient'
 import { TextDocument, TextEdit, TextEditor, Uri, WorkspaceEdit, commands, window, workspace } from 'vscode'
 import { QueryResultsContentProvider } from './queryResultsContentProvider'
+import { contentType } from 'marklogic'
 
 const FOPTIONS = { tabSize: 2, insertSpaces: true }
 const FCOMMAND = 'vscode.executeFormatDocumentProvider'
@@ -91,7 +92,8 @@ export function editorSparqlQuery(
     editor: TextEditor,
     provider: QueryResultsContentProvider): void
 {
-    sendSparql(db, sparqlQuery)
+    const contentType: contentType = workspace.getConfiguration().get('marklogic.sparqlContentType')
+    sendSparql(db, sparqlQuery, contentType)
         .result(
             (fulfill: Record<string, unknown>) => {
                 return provider.writeSparqlResponseToUri(uri, fulfill)

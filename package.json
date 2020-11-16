@@ -322,6 +322,23 @@
                     "type": "boolean",
                     "default": true,
                     "description": "whether the server's SSL certificate should be verified against the list of supplied CAs"
+                },
+                "marklogic.sparqlContentType": {
+                    "type": "string",
+                    "enum": [
+                        "application/json",
+                        "application/xml",
+                        "text/html",
+                        "text/csv"
+                    ],
+                    "default": "application/json",
+                    "markdownDescription": "How to format SPARQL query results",
+                    "enumDescriptions": [
+                        "",
+                        "",
+                        "",
+                        "note: CSV-formatted results will not work with `describe` queries"
+                    ]
                 }
             }
         },

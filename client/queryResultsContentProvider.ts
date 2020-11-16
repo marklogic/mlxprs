@@ -1,6 +1,7 @@
 'use strict'
 
-import { Event, EventEmitter, TextDocumentContentProvider, Uri, window } from 'vscode'
+import { Event, EventEmitter, TextDocumentContentProvider, Uri, window, workspace } from 'vscode'
+import { contentType } from 'marklogic'
 
 export class QueryResultsContentProvider implements TextDocumentContentProvider {
     private _onDidChange = new EventEmitter<Uri>();
@@ -93,10 +94,12 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
      * @returns Promise responseUri where VS Code will retrieve the content to show @async
      */
     public async writeSparqlResponseToUri(uri: Uri, response: Record<string, unknown>): Promise<Uri> {
-        const fmt = 'json'
+        const contentType: contentType = workspace.getConfiguration().get('marklogic.sparqlContentType')
+        const fmt: string = contentType.toLowerCase().replace(/^\w+\//, '')
         const responseUri = Uri.parse(`${QueryResultsContentProvider.scheme}://${uri.authority}${uri.path}.${fmt}?${uri.query}`)
         console.debug(`${Date.now()} ***** Writing cache for URI: ${uri.toString()}`)
-        this._cache.set(responseUri.toString(), JSON.stringify(response))
+        const readyResponse = fmt === 'json' ? JSON.stringify(response) : response.toString()
+        this._cache.set(responseUri.toString(), readyResponse)
         this.update(responseUri)
         await new Promise(resolve => setTimeout(resolve, 60))
         return responseUri

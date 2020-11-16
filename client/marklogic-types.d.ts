@@ -7,17 +7,10 @@ declare module 'marklogic' {
     result<U>(onFulfilled?: (value: R) => U,          onRejected?: (error: any) => U,          onProgress?: (note: any) => any): Promise<U>;
   }
 
-  type contentType = 'application/json' | 'application/xml' |
-      'application/x-www-form-urlencoded' | 'application/sparql-query' |
-      'application/sparql-update'
+  export type contentType = 'application/json' | 'application/xml' | 'text/html' | 'text/csv'
 
   interface graphs {
-      sparql:
-    //   <U>(contentType: contentType, defaultGraphs?: Array<string>, namedGraphs?: Array<string>, query?: string,
-    //     docQuery?: Record<string, unknown>, start?: number, length?: number, base?: string, txid?: string,
-    //     rulesets?: string | Array<string>, defaultRules?: string, optimizeLevel?: number,
-    //     bindings?: Record<string, number>, timestamp?: Record<string, unknown>) => ResultProvider<U> |
-        <U>(args: Record<string, unknown>) => ResultProvider<U>
+      sparql: <U>(args: Record<string, unknown>) => ResultProvider<U>
   }
 
   export interface DatabaseClient {
