@@ -50,6 +50,16 @@ export class ModuleContentHandler {
             )
     }
 
+    public async deleteModuleCollection(collection: string): Promise<string> {
+        return this._mlClient.mldbClient.removeCollection(collection)
+            .result(
+                (fulfill: string) => {
+                    return fulfill
+                },
+                (err) => { throw err }
+            )
+    }
+
     public async listModules(): Promise<string[]> {
         return sendXQuery(this._mlClient, listModulesQuery)
             .result(

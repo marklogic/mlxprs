@@ -20,8 +20,8 @@ declare module 'marklogic' {
     invoke: <U>(path: string, variables?: Variables) => ResultProvider<U>;
     read: (uri: string) => ResultProvider<string[]>;
     writeCollection: (collection: string, documents: Record<string, unknown>) => ResultProvider<string[]>;
+    removeCollection: (collection: string) => ResultProvider<unknown>;
     graphs: graphs;
-    removeCollection: (collection: string) => ResultProvider<string>;
   }
 
   export interface ConnectionParams {
