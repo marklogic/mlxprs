@@ -79,7 +79,7 @@
             "cwd": "${workspaceFolder}/server"
         },
         {
-            "name": "Launch JS Debugger Integration Test",
+            "name": "Launch Debugger Integration Test",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",

@@ -85,7 +85,7 @@ suite('XQuery Debug Test Suite', () => {
             ]).then(() => {
                 dc.assertStoppedLocation('entry', { path: hwPath, line: 12 })
                     .catch(() => {
-                        console.warn('btw sometimes the xqy-dbebugger stops on \'breakpoint\', not \'entry\'')
+                        console.warn('        btw sometimes the xqy-dbebugger stops on \'breakpoint\', not \'entry\'')
                         dc.assertStoppedLocation('breakpoint', { path: hwPath, line: 12 })
                     })
             })
