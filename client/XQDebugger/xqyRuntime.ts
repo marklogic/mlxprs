@@ -74,7 +74,6 @@ export class XqyRuntime extends EventEmitter {
         return this.sendFreshQuery(query, 'dbg')
             .result(
                 (fulfill: Record<string, any>) => {
-                    console.log('fulfill (dbg): ' + JSON.stringify(fulfill))
                     this._rid = fulfill[0]['value']
                     this.setRunTimeState('launched')
                     return this._rid
