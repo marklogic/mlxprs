@@ -28,7 +28,8 @@
         "onCommand:extension.showModule",
         "onDebug",
         "onLanguage:xquery-ml",
-        "onLanguage:javascript"
+        "onLanguage:javascript",
+        "onLanguage:sparql"
     ],
     "main": "./dist/extension",
     "contributes": {
