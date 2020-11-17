@@ -1,3 +1,7 @@
+## [3.4.0](https://github.com/mikrovvelle/mlxprs/tree/v3.4.0)
+
+- #91: Added "Eval SPARQL" Command.
+
 ## [3.3.0](https://github.com/mikrovvelle/mlxprs/tree/v3.3.0)
 
 Addressed off-by-one error in changelog.
