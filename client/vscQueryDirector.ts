@@ -1,7 +1,8 @@
 'use strict'
-import { MarklogicClient, sendJSQuery, sendXQuery } from './marklogicClient'
+import { MarklogicClient, sendJSQuery, sendSparql, sendXQuery } from './marklogicClient'
 import { TextDocument, TextEdit, TextEditor, Uri, WorkspaceEdit, commands, window, workspace } from 'vscode'
 import { QueryResultsContentProvider } from './queryResultsContentProvider'
+import { contentType } from 'marklogic'
 
 const FOPTIONS = { tabSize: 2, insertSpaces: true }
 const FCOMMAND = 'vscode.executeFormatDocumentProvider'
@@ -82,4 +83,23 @@ export function editorXQuery(
                 return provider.handleError(uri, error)
             })
         .then(responseUri => showFormattedResults(responseUri, editor))
+}
+
+export function editorSparqlQuery(
+    db: MarklogicClient,
+    sparqlQuery: string,
+    uri: Uri,
+    editor: TextEditor,
+    provider: QueryResultsContentProvider): void
+{
+    const contentType: contentType = workspace.getConfiguration().get('marklogic.sparqlContentType')
+    sendSparql(db, sparqlQuery, contentType)
+        .result(
+            (fulfill: Record<string, unknown>) => {
+                return provider.writeSparqlResponseToUri(uri, fulfill)
+            },
+            (error: Record<string, any>[]) => {
+                return provider.handleError(uri, error)
+            })
+        .then((responseUri: Uri) => showFormattedResults(responseUri, editor))
 }

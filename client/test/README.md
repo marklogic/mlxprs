@@ -18,7 +18,7 @@ On the MarkLogic instance, create an HTTP server in MarkLogic with the following
 - database: "Documents"
 - error handler: `/MarkLogic/rest-api/error-handler.xqy`
 - url rewriter: `/MarkLogic/rest-api/rewriter.xml`
-- ssl: off (ssl certificate template: off)
+- ssl: off (ssl certificate template: none)
 
 
 The test script will perform following:

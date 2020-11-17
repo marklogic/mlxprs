@@ -7,8 +7,8 @@ _Develop, run, and debug code for MarkLogic in the popular VS Code IDE_
 ## Features
 
 * Syntax highlighting and IntelliSense for MarkLogic Server-Side JavaScript and XQuery
-* Interactive debugging of JavaScript and XQuery running in Data Hub Service or MarkLogic, including attaching to in-flight requests and inspecting live variables
-* Real-time query evaluation of JavaScript or XQuery against a live Data Hub Service or MarkLogic instance
+* Interactive debugging of JavaScript and XQuery running in MarkLogic, including attaching to in-flight requests and inspecting live variables
+* Real-time query evaluation of JavaScript, XQuery, and SPARQL against a live Data Hub Service or MarkLogic instance
 * View modules (read-only) in the editor
 
 _JavaScript debugging requires version 2.0.0+ of the MarkLogic extension and [MarkLogic 10.0-4+](https://developer.marklogic.com/products/marklogic-server/10.0)._
@@ -45,6 +45,7 @@ To evaluate JavaScript
 3. Select `MarkLogic: Eval JS`
 
 Query results will open in a new document in the current workspace.
+`Eval XQuery` and `Eval SPARQL` work the same way.
 
 ### Inspect a module
 
@@ -83,7 +84,7 @@ such as when connecting to a IP address rather than a hostname.
 ### Per-query configuration override
 
 You can override your VS Code configured settings by using a block comment as the first language token
-in the query. The comment should conform to the following:
+in a JavaScript or XQuery query. The comment should conform to the following:
 
 - First line includes the string `mlxprs:settings`
 - The rest of the comment is valid JSON

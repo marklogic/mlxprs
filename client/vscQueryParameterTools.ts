@@ -62,7 +62,7 @@ export function getDbClient(queryText: string, language: string, cfg: WorkspaceC
         modulesDb: String(cfg.get('marklogic.modulesDb')),
         authType: String(cfg.get('marklogic.authType')).toUpperCase(),
         ssl: Boolean(cfg.get('marklogic.ssl')),
-        pathToCa: String(cfg.get('marklogic.pathToCa')),
+        pathToCa: String(cfg.get('marklogic.pathToCa') || ''),
         rejectUnauthorized: Boolean(cfg.get('marklogic.rejectUnauthorized'))
     }
     // merge VS Code configuration and overrides

@@ -2,7 +2,7 @@
     "name": "mlxprs",
     "displayName": "MarkLogic developer tools",
     "description": "MarkLogic JavaScript and XQuery development tools",
-    "version": "3.1.0",
+    "version": "3.4.0",
     "publisher": "mlxprs",
     "engines": {
         "vscode": "^1.50.0"
@@ -24,10 +24,12 @@
         "onCommand:extension.getQuery",
         "onCommand:extension.sendXQuery",
         "onCommand:extension.sendJSQuery",
+        "onCommand:extension.sendSparqlQuery",
         "onCommand:extension.showModule",
         "onDebug",
         "onLanguage:xquery-ml",
-        "onLanguage:javascript"
+        "onLanguage:javascript",
+        "onLanguage:sparql"
     ],
     "main": "./dist/extension",
     "contributes": {
@@ -39,6 +41,10 @@
             {
                 "command": "extension.sendJSQuery",
                 "title": "MarkLogic: Eval JS"
+            },
+            {
+                "command": "extension.sendSparqlQuery",
+                "title": "MarkLogic: Eval SPARQL"
             },
             {
                 "command": "extension.connectServer",
@@ -316,7 +322,24 @@
                 "marklogic.rejectUnauthorized": {
                     "type": "boolean",
                     "default": true,
-                    "description": "the server's SSL certificate should be verified against the list of supplied CAs"
+                    "description": "whether the server's SSL certificate should be verified against the list of supplied CAs"
+                },
+                "marklogic.sparqlContentType": {
+                    "type": "string",
+                    "enum": [
+                        "application/json",
+                        "application/xml",
+                        "text/html",
+                        "text/csv"
+                    ],
+                    "default": "application/json",
+                    "markdownDescription": "How to format SPARQL query results",
+                    "enumDescriptions": [
+                        "",
+                        "",
+                        "",
+                        "note: CSV-formatted results will not work with `describe` queries"
+                    ]
                 }
             }
         },

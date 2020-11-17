@@ -1,6 +1,7 @@
 'use strict'
 
-import { Event, EventEmitter, TextDocumentContentProvider, Uri, window } from 'vscode'
+import { Event, EventEmitter, TextDocumentContentProvider, Uri, window, workspace } from 'vscode'
+import { contentType } from 'marklogic'
 
 export class QueryResultsContentProvider implements TextDocumentContentProvider {
     private _onDidChange = new EventEmitter<Uri>();
@@ -81,6 +82,24 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
         const responseUri = Uri.parse(`${QueryResultsContentProvider.scheme}://${uri.authority}${uri.path}.${fmt}?${uri.query}`)
         this.updateResultsForUri(responseUri, response)
         console.debug(`${Date.now()} ***** Writing cache for URI: ${uri.toString()}`)
+        this.update(responseUri)
+        await new Promise(resolve => setTimeout(resolve, 60))
+        return responseUri
+    }
+
+    /**
+     * Cache a SPARQL query response so VS Code will show the results in a new editor window
+     * @param uri the URI of the VS Code document that sent the query
+     * @param response the content of what was returned from the MarkLogic query
+     * @returns Promise responseUri where VS Code will retrieve the content to show @async
+     */
+    public async writeSparqlResponseToUri(uri: Uri, response: Record<string, unknown>): Promise<Uri> {
+        const contentType: contentType = workspace.getConfiguration().get('marklogic.sparqlContentType')
+        const fmt: string = contentType.toLowerCase().replace(/^\w+\//, '')
+        const responseUri = Uri.parse(`${QueryResultsContentProvider.scheme}://${uri.authority}${uri.path}.${fmt}?${uri.query}`)
+        console.debug(`${Date.now()} ***** Writing cache for URI: ${uri.toString()}`)
+        const readyResponse = fmt === 'json' ? JSON.stringify(response) : response.toString()
+        this._cache.set(responseUri.toString(), readyResponse)
         this.update(responseUri)
         await new Promise(resolve => setTimeout(resolve, 60))
         return responseUri

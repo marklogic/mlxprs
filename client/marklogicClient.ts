@@ -20,7 +20,6 @@ export class MlClientParameters {
     ssl: boolean;
     pathToCa: string;
     rejectUnauthorized: boolean;
-
     /**
      * note: defaults not applied here. Properties can remain undefined so that
      *       per-query overrides don't clobber the existing config with default values.
@@ -183,4 +182,15 @@ export function sendXQuery(
     } as ml.Variables
 
     return db.mldbClient.xqueryEval(query, extVars)
+}
+
+export function sendSparql(
+    db: MarklogicClient,
+    sparqlQuery: string,
+    contentType: ml.contentType = 'application/json'): ml.ResultProvider<Record<string, unknown>>
+{
+    return db.mldbClient.graphs.sparql({
+        contentType: contentType,
+        query: sparqlQuery
+    })
 }

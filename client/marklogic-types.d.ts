@@ -7,6 +7,12 @@ declare module 'marklogic' {
     result<U>(onFulfilled?: (value: R) => U,          onRejected?: (error: any) => U,          onProgress?: (note: any) => any): Promise<U>;
   }
 
+  export type contentType = 'application/json' | 'application/xml' | 'text/html' | 'text/csv'
+
+  interface graphs {
+      sparql: <U>(args: Record<string, unknown>) => ResultProvider<U>
+  }
+
   export interface DatabaseClient {
     release: () => void;
     xqueryEval: <U>(query: string, variables?: Variables) => ResultProvider<U>;
@@ -14,6 +20,7 @@ declare module 'marklogic' {
     invoke: <U>(path: string, variables?: Variables) => ResultProvider<U>;
     read: (uri: string) => ResultProvider<string[]>;
     writeCollection: (collection: string, documents: Record<string, unknown>) => ResultProvider<string[]>;
+    graphs: graphs;
     removeCollection: (collection: string) => ResultProvider<string>;
   }
 
