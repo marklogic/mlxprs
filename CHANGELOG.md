@@ -1,3 +1,7 @@
+## [3.5.0](https://github.com/mikrovvelle/mlxprs/tree/v3.5.0)
+
+- #91: Added "Eval SQL" Command.
+
 ## [3.4.0](https://github.com/mikrovvelle/mlxprs/tree/v3.4.0)
 
 - #91: Added "Eval SPARQL" Command.
