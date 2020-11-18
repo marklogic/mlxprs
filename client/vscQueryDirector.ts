@@ -100,9 +100,9 @@ export function editorSqlQuery(
     cfg: WorkspaceConfiguration,
     provider: QueryResultsContentProvider): void
 {
-    const options: Array<string> = buildSqlOptions(cfg)
-    const actualQuery = `xdmp.sql(sqlQuery, ${JSON.stringify(options)})`
-    sendJSQuery(db, actualQuery, sqlQuery)
+    const sqlOptions: Array<string> = buildSqlOptions(cfg)
+    const actualQuery = 'xdmp.sql(sqlQuery, sqlOptions)'
+    sendJSQuery(db, actualQuery, sqlQuery, sqlOptions)
         .result(
             (fulfill: Record<string, unknown>[]) => {
                 return provider.writeResponseToUri(uri, [].concat(fulfill))
