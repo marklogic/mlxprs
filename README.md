@@ -8,7 +8,7 @@ _Develop, run, and debug code for MarkLogic in the popular VS Code IDE_
 
 * Syntax highlighting and IntelliSense for MarkLogic Server-Side JavaScript and XQuery
 * Interactive debugging of JavaScript and XQuery running in MarkLogic, including attaching to in-flight requests and inspecting live variables
-* Real-time query evaluation of JavaScript, XQuery, and SPARQL against a live Data Hub Service or MarkLogic instance
+* Real-time query evaluation of JavaScript, XQuery, SQL, and SPARQL against a live Data Hub Service or MarkLogic instance
 * View modules (read-only) in the editor
 
 _JavaScript debugging requires version 2.0.0+ of the MarkLogic extension and [MarkLogic 10.0-4+](https://developer.marklogic.com/products/marklogic-server/10.0)._
@@ -45,7 +45,7 @@ To evaluate JavaScript
 3. Select `MarkLogic: Eval JS`
 
 Query results will open in a new document in the current workspace.
-`Eval XQuery` and `Eval SPARQL` work the same way.
+`Eval XQuery`, `Eval SQL` and `Eval SPARQL` work the same way.
 
 ### Inspect a module
 
