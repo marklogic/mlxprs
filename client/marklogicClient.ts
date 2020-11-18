@@ -138,21 +138,25 @@ export function parseXQueryForOverrides(queryText: string): Record<string, any> 
 
 export function sendJSQuery(
     db: MarklogicClient,
-    actualQuery: string): ml.ResultProvider<Record<string, any>>
+    actualQuery: string,
+    sqlQuery = '',
+    sqlOptions = []): ml.ResultProvider<Record<string, any>>
 {
     const query = `
     const options = {};
     if (modulesDb) { options.modules = xdmp.database(modulesDb) };
     if (contentDb) { options.database = xdmp.database(contentDb) };
     xdmp.eval(actualQuery,
-        {actualQuery: actualQuery},
+        {actualQuery: actualQuery, sqlQuery: sqlQuery, sqlOptions: sqlOptions},
         options
         );`
 
     const extVars = {
         'actualQuery': actualQuery,
         'contentDb': db.params.contentDb,
-        'modulesDb': db.params.modulesDb
+        'modulesDb': db.params.modulesDb,
+        'sqlQuery': sqlQuery,
+        'sqlOptions': sqlOptions
     } as ml.Variables
 
     return db.mldbClient.eval(query, extVars)

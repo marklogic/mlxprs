@@ -37,7 +37,7 @@ declare module 'marklogic' {
   }
 
   export interface Variables {
-    [name: string]: number|string|boolean;
+    [name: string]: number|string|boolean|Array<string>;
   }
 
   export function createDatabaseClient(connectionParams: ConnectionParams): DatabaseClient

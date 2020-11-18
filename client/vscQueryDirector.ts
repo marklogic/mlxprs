@@ -1,6 +1,6 @@
 'use strict'
 import { MarklogicClient, sendJSQuery, sendSparql, sendXQuery } from './marklogicClient'
-import { TextDocument, TextEdit, TextEditor, Uri, WorkspaceEdit, commands, window, workspace } from 'vscode'
+import { TextDocument, TextEdit, TextEditor, Uri, WorkspaceEdit, commands, window, workspace, WorkspaceConfiguration } from 'vscode'
 import { QueryResultsContentProvider } from './queryResultsContentProvider'
 import { contentType } from 'marklogic'
 
@@ -84,6 +84,35 @@ export function editorXQuery(
             })
         .then(responseUri => showFormattedResults(responseUri, editor))
 }
+
+export function buildSqlOptions(cfg: WorkspaceConfiguration): Array<string> {
+    const resultsPref: string = cfg.get('marklogic.sql.results') || 'array'
+    const olevel: 0 | 1 | 2 = cfg.get('marklogic.sql.optimize') || 1
+    const options = [resultsPref, `optimize=${olevel}`]
+    return options
+}
+
+export function editorSqlQuery(
+    db: MarklogicClient,
+    sqlQuery: string,
+    uri: Uri,
+    editor: TextEditor,
+    cfg: WorkspaceConfiguration,
+    provider: QueryResultsContentProvider): void
+{
+    const options: Array<string> = buildSqlOptions(cfg)
+    const actualQuery = `xdmp.sql(sqlQuery, ${JSON.stringify(options)})`
+    sendJSQuery(db, actualQuery, sqlQuery)
+        .result(
+            (fulfill: Record<string, unknown>[]) => {
+                return provider.writeResponseToUri(uri, [].concat(fulfill))
+            },
+            (error: Record<string, unknown>[]) => {
+                return provider.handleError(uri, error)
+            })
+        .then(responseUri => showFormattedResults(responseUri, editor))
+}
+
 
 export function editorSparqlQuery(
     db: MarklogicClient,
