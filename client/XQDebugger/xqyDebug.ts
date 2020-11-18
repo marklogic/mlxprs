@@ -168,7 +168,14 @@ export class XqyDebugSession extends LoggingDebugSession {
             this.sendResponse(response)
             this.sendEvent(new StoppedEvent('entry', XqyDebugSession.THREAD_ID))
         } catch (error) {
-            this._handleError(error, 'Error launching XQY request', true, 'launchRequest')
+            let message = 'Error launching XQY request'
+            if (error.message) {
+                message = error.message
+            }
+            if (error.body?.errorResponse?.message) {
+                message = error.body?.errorResponse?.message
+            }
+            this._handleError(error, message, true, 'launchRequest')
         }
     }
 

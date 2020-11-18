@@ -82,7 +82,7 @@ export class XqyRuntime extends EventEmitter {
                 (error: Record<string, any>) => {
                     XqyRuntime.reportError(error, 'launchWithDebugEval')
                     this._runTimeState = 'error'
-                    return ''
+                    throw error
                 })
     }
 
