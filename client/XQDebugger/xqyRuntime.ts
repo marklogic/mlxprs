@@ -262,9 +262,9 @@ export class XqyRuntime extends EventEmitter {
     }
 
     public static parseScopeXML(frameObj: any): Array<XqyScopeObject> {
-        const globalScope: XqyScopeObject = {type: 'global', variables: []} as XqyScopeObject
-        const externalScope: XqyScopeObject = {type: 'external', variables: []} as XqyScopeObject
-        const localScope: XqyScopeObject = {type: 'local', variables: []} as XqyScopeObject
+        const globalScope: XqyScopeObject = { type: 'global', variables: [] } as XqyScopeObject
+        const externalScope: XqyScopeObject = { type: 'external', variables: [] } as XqyScopeObject
+        const localScope: XqyScopeObject = { type: 'local', variables: [] } as XqyScopeObject
 
         const globalScopeXMLObj = frameObj['global-variables'][0]
         const externalScopeXMLObj = frameObj['external-variables'][0]
