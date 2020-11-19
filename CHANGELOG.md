@@ -1,3 +1,8 @@
+## [3.5.1](https://github.com/mikrovvelle/mlxprs/tree/v3.5.1)
+
+- Fix [#92](https://github.com/mikrovvelle/mlxprs/issues/92), better error handling with XQuery debug launch failures
+- Added VS Code badges to Readme
+
 ## [3.5.0](https://github.com/mikrovvelle/mlxprs/tree/v3.5.0)
 
 - #91: Added "Eval SQL" Command.
