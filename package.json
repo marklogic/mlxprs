@@ -18,7 +18,7 @@
         "Snippets",
         "Other"
     ],
-    "repository": "https://github.com/mikrovvelle/mlxprs",
+    "repository": "https://github.com/marklogic-community/mlxprs",
     "license": "(Apache-2.0 AND MIT)",
     "activationEvents": [
         "onCommand:extension.getQuery",
