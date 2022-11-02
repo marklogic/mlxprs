@@ -191,7 +191,7 @@ export function sendXQuery(
 export function sendSparql(
     db: MarklogicClient,
     sparqlQuery: string,
-    contentType: ml.contentType = 'application/json'): ml.ResultProvider<Record<string, unknown>>
+    contentType: ml.mimeType): ml.ResultProvider<Record<string, unknown>>
 {
     return db.mldbClient.graphs.sparql({
         contentType: contentType,

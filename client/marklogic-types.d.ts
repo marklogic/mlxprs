@@ -7,7 +7,18 @@ declare module 'marklogic' {
     result<U>(onFulfilled?: (value: R) => U,          onRejected?: (error: any) => U,          onProgress?: (note: any) => any): Promise<U>;
   }
 
-  export type contentType = 'application/json' | 'application/xml' | 'text/html' | 'text/csv'
+  export type sparqlResultsType =   'application/sparql-results+json' | 'application/sparql-results+xml' |
+                                    'text/html' | 'text/csv'
+
+  // application/trig should be supported according to the documentation
+  // but there appears to be a bug in the implementation
+  // so I removed it from package.json as an option
+  export type rdfGraphType =    'application/n-triples' | 'application/n-quads' | 'application/rdf+json' |
+                                'application/rdf+xml' | 'text/turtle' | 'text/n3' | 'application/trig'
+
+  export type mimeType = sparqlResultsType | rdfGraphType | 'application/json' | 'application/xml'
+
+  export type sparqlQueryForm = 'SELECT' | 'CONSTRUCT' | 'ASK' | 'DESCRIBE' | 'UNKNOWN'
 
   interface graphs {
       sparql: <U>(args: Record<string, unknown>) => ResultProvider<U>

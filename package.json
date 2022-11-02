@@ -329,21 +329,42 @@
                     "default": true,
                     "description": "whether the server's SSL certificate should be verified against the list of supplied CAs"
                 },
-                "marklogic.sparqlContentType": {
+                "marklogic.sparqlResultsType": {
                     "type": "string",
                     "enum": [
-                        "application/json",
-                        "application/xml",
+                        "application/sparql-results+json",
+                        "application/sparql-results+xml",
                         "text/html",
                         "text/csv"
                     ],
-                    "default": "application/json",
-                    "markdownDescription": "How to format SPARQL query results",
+                    "default": "text/csv",
+                    "markdownDescription": "How to format SPARQL SELECT or ASK query results",
                     "enumDescriptions": [
                         "",
                         "",
                         "",
-                        "note: CSV-formatted results will not work with `describe` queries"
+                        "ASK doesn't support text/csv and will default to JSON"
+                    ]
+                },
+                "marklogic.rdfGraphType": {
+                    "type": "string",
+                    "enum": [
+                        "application/n-triples",
+                        "application/n-quads",
+                        "application/rdf+json",
+                        "application/rdf+xml",
+                        "text/turtle",
+                        "text/n3"
+                    ],
+                    "default": "text/turtle",
+                    "markdownDescription": "How to format SPARQL CONSTRUCT or DESCRIBE query results",
+                    "enumDescriptions": [
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        ""
                     ]
                 },
                 "marklogic.sql.results": {

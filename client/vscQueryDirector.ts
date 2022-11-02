@@ -2,7 +2,7 @@
 import { MarklogicClient, sendJSQuery, sendSparql, sendXQuery } from './marklogicClient'
 import { TextDocument, TextEdit, TextEditor, Uri, WorkspaceEdit, commands, window, workspace, WorkspaceConfiguration } from 'vscode'
 import { QueryResultsContentProvider } from './queryResultsContentProvider'
-import { contentType } from 'marklogic'
+import { getSparqlMimeType, getSparqlQueryForm } from './sparqlTools'
 
 const FOPTIONS = { tabSize: 2, insertSpaces: true }
 const FCOMMAND = 'vscode.executeFormatDocumentProvider'
@@ -121,11 +121,14 @@ export function editorSparqlQuery(
     editor: TextEditor,
     provider: QueryResultsContentProvider): void
 {
-    const contentType: contentType = workspace.getConfiguration().get('marklogic.sparqlContentType')
-    sendSparql(db, sparqlQuery, contentType)
+    const queryForm = getSparqlQueryForm(sparqlQuery)
+    console.debug(`Query is of form ${queryForm}`)
+    const acceptType = getSparqlMimeType(queryForm)
+    console.debug(`Setting Accept header to ${acceptType}`)
+    sendSparql(db, sparqlQuery, acceptType)
         .result(
             (fulfill: Record<string, unknown>) => {
-                return provider.writeSparqlResponseToUri(uri, fulfill)
+                return provider.writeSparqlResponseToUri(uri, fulfill, acceptType)
             },
             (error: Record<string, any>[]) => {
                 return provider.handleError(uri, error)
