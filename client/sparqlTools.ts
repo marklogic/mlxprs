@@ -13,16 +13,16 @@ export function getSparqlMimeType(queryForm: ml.sparqlQueryForm): ml.mimeType {
     switch (queryForm) {
     case 'SELECT':
     {
-        return workspace.getConfiguration().get('marklogic.sparqlResultsType') as ml.sparqlResultsType
+        return workspace.getConfiguration().get('marklogic.sparqlResultsFormat') as ml.sparqlResultsType
     }
     case 'CONSTRUCT':
     case 'DESCRIBE':
     {
-        return workspace.getConfiguration().get('marklogic.rdfGraphType') as ml.rdfGraphType
+        return workspace.getConfiguration().get('marklogic.rdfSerializationFormat') as ml.rdfGraphType
     }
     case 'ASK':
     {
-        const confType: ml.sparqlResultsType = workspace.getConfiguration().get('marklogic.sparqlResultsType')
+        const confType: ml.sparqlResultsType = workspace.getConfiguration().get('marklogic.sparqlResultsFormat')
         //ASK doesn't support text/csv.  Passing nothing instead will default to JSON
         return confType === 'text/csv' ? 'application/json' : confType
     }

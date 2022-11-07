@@ -329,7 +329,7 @@
                     "default": true,
                     "description": "whether the server's SSL certificate should be verified against the list of supplied CAs"
                 },
-                "marklogic.sparqlResultsType": {
+                "marklogic.sparqlResultsFormat": {
                     "type": "string",
                     "enum": [
                         "application/sparql-results+json",
@@ -346,7 +346,7 @@
                         "ASK doesn't support text/csv and will default to JSON"
                     ]
                 },
-                "marklogic.rdfGraphType": {
+                "marklogic.rdfSerializationFormat": {
                     "type": "string",
                     "enum": [
                         "application/n-triples",
