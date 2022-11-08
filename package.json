@@ -297,7 +297,7 @@
                 "marklogic.documentsDb": {
                     "type": "string",
                     "default": "",
-                    "description": "database against which to evaluate queries; default content database for app server will be used if left unspecified"
+                    "description": "database against which to evaluate queries; required"
                 },
                 "marklogic.modulesDb": {
                     "type": "string",
