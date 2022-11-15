@@ -49,7 +49,7 @@ export function parseQueryForOverrides(queryText: string, language: string): Rec
  * @param language: string SJS or XQY
  * @param state most likely the extension's injected `context.globalState`
  *
- * @returns a MarkLogicVSClient based on the contents of `cfg`
+ * @returns a MarklogicClient based on the contents of `cfg`
  */
 export function getDbClient(queryText: string, language: string, cfg: WorkspaceConfiguration, state: Memento): MarklogicClient {
     const overrides: MlClientParameters = parseQueryForOverrides(queryText, language) as MlClientParameters
@@ -68,18 +68,18 @@ export function getDbClient(queryText: string, language: string, cfg: WorkspaceC
     // merge VS Code configuration and overrides
     const newParams = new MlClientParameters({ ...configParams, ...overrides })
     // if settings have changed, release and clear the client
-    const mlc = state.get(MLDBCLIENT) as MarklogicClient
-    if (mlc !== null && !mlc.hasSameParamsAs(newParams)) {
-        mlc.mldbClient.release()
+    const cachedClient = state.get(MLDBCLIENT) as MarklogicClient
+    if (cachedClient !== null && !cachedClient.hasSameParamsAs(newParams)) {
+        cachedClient.mldbClient.release()
         state.update(MLDBCLIENT, null)
-        console.debug('Cleared MarkLogicVSClient for new settings.')
+        console.debug('Removed cached instance of MarklogicClient based on change in params')
     }
     // if there's no existing client in the globalState, instantiate a new one
     if (state.get(MLDBCLIENT) === null) {
         const newClient: MarklogicClient = buildNewClient(newParams)
         try {
             state.update(MLDBCLIENT, newClient)
-            console.debug('New MarkLogicVSClient: ' + state.get(MLDBCLIENT))
+            console.debug(`Created new MarklogicClient: ${state.get(MLDBCLIENT)}`)
         }
         catch (e) {
             console.error('Error: ' + JSON.stringify(e))

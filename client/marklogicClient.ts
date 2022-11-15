@@ -36,6 +36,12 @@ export class MlClientParameters {
         this.ssl = Boolean(rawParams.ssl)
         this.pathToCa = rawParams.pathToCa || ''
         this.rejectUnauthorized = Boolean(rawParams.rejectUnauthorized)
+
+        // This check was previously done in the MarklogicClient constructor, but doing so causes the sameAs
+        // function in this class to not behave properly
+        if (this.authType !== 'DIGEST' && this.authType !== 'BASIC') {
+            this.authType = 'DIGEST'
+        }
     }
 
     toString(): string {
@@ -56,7 +62,7 @@ export class MlClientParameters {
     sameAs(other: MlClientParameters): boolean {
         return (
             this.host === other.host &&
-            this.port === other.port &&
+            ((isNaN(this.port) && isNaN(other.port)) || this.port === other.port) &&
             this.contentDb === other.contentDb &&
             this.modulesDb === other.modulesDb &&
             this.user === other.user &&
@@ -84,9 +90,6 @@ export class MarklogicClient {
             } catch (e) {
                 throw new Error('Error reading CA file: ' + e.message)
             }
-        }
-        if (this.params.authType !== 'DIGEST' && this.params.authType !== 'BASIC') {
-            this.params.authType = 'DIGEST'
         }
         this.mldbClient = ml.createDatabaseClient({
             host: this.params.host, port: this.params.port,
