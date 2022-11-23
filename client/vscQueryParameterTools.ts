@@ -51,7 +51,7 @@ export function parseQueryForOverrides(queryText: string, language: string): Rec
  *
  * @returns a MarkLogicVSClient based on the contents of `cfg`
  */
-export function getDbClient(queryText: string, language: string, cfg: WorkspaceConfiguration, state: Memento): MarklogicClient {
+export function getDbClient(queryText: string, language: string, cfg: WorkspaceConfiguration, state: Memento, explicit?: Record<string, any>): MarklogicClient {
     const overrides: MlClientParameters = parseQueryForOverrides(queryText, language) as MlClientParameters
     const configParams: Record<string, any> = {
         host: String(cfg.get('marklogic.host')),
@@ -66,7 +66,7 @@ export function getDbClient(queryText: string, language: string, cfg: WorkspaceC
         rejectUnauthorized: Boolean(cfg.get('marklogic.rejectUnauthorized'))
     }
     // merge VS Code configuration and overrides
-    const newParams = new MlClientParameters({ ...configParams, ...overrides })
+    const newParams = new MlClientParameters({ ...configParams, ...overrides, ...explicit })
     // if settings have changed, release and clear the client
     const mlc = state.get(MLDBCLIENT) as MarklogicClient
     if (mlc !== null && !mlc.hasSameParamsAs(newParams)) {
@@ -93,10 +93,10 @@ export function getDbClient(queryText: string, language: string, cfg: WorkspaceC
  * overrides, call `getDbClient()` with no overrides, and show the
  * user an error.
  */
-export function cascadeOverrideClient(actualQuery: string, language: string, cfg: WorkspaceConfiguration, state: Memento): MarklogicClient {
+export function cascadeOverrideClient(actualQuery: string, language: string, cfg: WorkspaceConfiguration, state: Memento, overrides?: Record<string, any>): MarklogicClient {
     let client: MarklogicClient = {} as MarklogicClient
     try {
-        client = getDbClient(actualQuery, language, cfg, state)
+        client = getDbClient(actualQuery, language, cfg, state, overrides)
     }
     catch (error) {
         window.showErrorMessage('could not parse JSON for overrides: ' + error.message)

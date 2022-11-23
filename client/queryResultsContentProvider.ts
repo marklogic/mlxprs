@@ -21,22 +21,9 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
      * @param val the results of that query (cache: value)
      */
     public updateResultsForUri(uri: Uri, val: Array<Record<string, any>>): Map<string, string> {
-        const stringResults: string = val.map(o => this.unwrap(o)).join('\n')
+        const stringResults: string = val.map(o => unwrap(o)).join('\n')
         console.debug(`${Date.now()} writing string results for ${uri.toString()} ${stringResults.length}"`)
         return this._cache.set(uri.toString(), stringResults)
-    }
-
-    private unwrap(o: Record<string, any>): string {
-        if (o['format'] === 'xml') {
-            return JSON.parse(JSON.stringify(o['value']))
-        }
-        if (o['format'] === 'text' && o['datatype'] === 'node()') {
-            return QueryResultsContentProvider.decodeBinaryText(o['value'])
-        }
-        if (o['format'] === 'text' && o['datatype'] === 'other') {
-            return o['value']
-        }
-        return JSON.stringify(o['value'])
     }
 
     public static decodeBinaryText(arr: Uint8Array): string {
@@ -132,4 +119,17 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
         await new Promise(resolve => setTimeout(resolve, 60))
         return responseUri
     }
+}
+
+export function unwrap(o: Record<string, any>): string {
+    if (o['format'] === 'xml') {
+        return JSON.parse(JSON.stringify(o['value']))
+    }
+    if (o['format'] === 'text' && o['datatype'] === 'node()') {
+        return QueryResultsContentProvider.decodeBinaryText(o['value'])
+    }
+    if (o['format'] === 'text' && o['datatype'] === 'other') {
+        return o['value']
+    }
+    return JSON.stringify(o['value'])
 }

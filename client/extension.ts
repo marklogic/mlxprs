@@ -11,6 +11,7 @@ import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } f
 import { XqyDebugConfigurationProvider, XqyDebugAdapterDescriptorFactory } from './XQDebugger/xqyDebugConfigProvider'
 import { MLConfigurationProvider, DebugAdapterExecutableFactory, _connectServer, _disconnectServer } from './JSDebugger/configurationProvider'
 import { ModuleContentProvider, pickAndShowModule } from './vscModuleContentProvider'
+import * as logManager from './logViewer/logManager'
 
 const MLDBCLIENT = 'mldbClient'
 const SJS = 'sjs'
@@ -89,6 +90,7 @@ export function activate(context: vscode.ExtensionContext): void {
         const client: MarklogicClient = cascadeOverrideClient('', XQY, cfg, context.globalState)
         pickAndShowModule(mprovider, client)
     })
+
     context.subscriptions.push(showModule)
 
     context.subscriptions.push(connectServer)
@@ -112,6 +114,9 @@ export function activate(context: vscode.ExtensionContext): void {
             new XmlFormattingEditProvider()
         )
     )
+
+    // Register subscriptions for Log Viewer
+    logManager.activate(context)
 
     // XQuery hinting client below
     const serverModule = context.asAbsolutePath(path.join('server', 'dist', 'server.js'))
