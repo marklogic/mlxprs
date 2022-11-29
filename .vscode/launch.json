@@ -7,7 +7,6 @@
             "type": "node",
             "request": "attach",
             "port": 6004,
-            "protocol": "inspector",
             "sourceMaps": true,
             "outFiles": [
                 "${workspaceRoot}/server/**/*.js"
@@ -53,7 +52,6 @@
                 "--extensionDevelopmentPath=${workspaceFolder}/client",
                 "--extensionTestsPath=${workspaceRoot}/dist/test/suite/index"
             ],
-            "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": [
                 "${workspaceRoot}/dist/**/*.js"
@@ -70,7 +68,6 @@
                 "--extensionDevelopmentPath=${workspaceRoot}/server",
                 "--extensionTestsPath=${workspaceRoot}/server/dist/test/suite/index"
             ],
-            "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": [
                 "${workspaceRoot}/server/out/test/**/*.js"
@@ -87,7 +84,6 @@
                 "--extensionDevelopmentPath=${workspaceFolder}/client",
                 "--extensionTestsPath=${workspaceRoot}/dist/test/integration/index"
             ],
-            "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": [
                 "${workspaceRoot}/dist/**/*.js"
