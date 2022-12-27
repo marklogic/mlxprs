@@ -388,6 +388,12 @@
                     ".xquery"
                 ],
                 "configuration": "./xquery-ml.configuration.json"
+            },
+            {
+                "id": "javascript",
+                "extensions": [
+                    ".sjs"
+                ]
             }
         ],
         "grammars": [
