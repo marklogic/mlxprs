@@ -72,7 +72,57 @@ It is recommended to use VSCode as the editor for this package, as it can self-l
 * Press the green play button or F5 to compile and launch the plugin in a test environment
 * Please see the README.md file for information on configuring and working in the test environment
 
+#### Testing from within VSCode
 Unit tests are available from the dropdown menu, as well.  These are very basic at the moment, and need some love.
+There are currently three run configurations for tests in launch.json
+
+* "Launch Client Tests"
+    * Runs the tests under /dist/test/suite
+    * Transpiled from files under /client/test/suite
+        * client.test.js 
+        * xqyRuntime.test.js 
+* "Launch Server Tests"
+    * Runs the tests under /server/dist/test/suite
+    * Transpiled from files under /server/test/suite
+        * server.test.js
+* "Launch Client-Integration Tests"
+    * Requires ML App Server setup first (See "Debugger Integration Testing" below for more information)
+    * Runs the tests under /dist/test/integration
+    * Transpiled from files under /client/test/integration
+        * sjsAdapter.test.js 
+
+
+## Setup
+
+JavaScript debugger integration testing requires a running server where you have full admin rights.
+It is recommended to use a MarkLogic instance where the "Documents" and "Modules" databases are not used for any other application.
+Ideally, you should use a dedicated MarkLogic instance for this purpose altogehter (Docker might be a good idea).
+
+On the MarkLogic instance, create an HTTP server in MarkLogic with the following non-default properties:
+
+- server name: JSdebugTestServer
+- root: `/`
+- port: `8055`
+- modules: "Modules"
+- database: "Documents"
+- error handler: `/MarkLogic/rest-api/error-handler.xqy`
+- url rewriter: `/MarkLogic/rest-api/rewriter.xml`
+- ssl: off (ssl certificate template: none)
+
+
+The test script will perform following:
+
+- Upload test scripts and modules to `Modules` database
+- Run tests against the uploaded scripts, simulating JS debugger interactions
+- Delete scripts from `Modules` databse
+
+
+#### Testing from the command line
+
+* npm test - runs the client tests (not including the integration tests)
+* npm run testServer - runs the server tests
+* There's nothing in place yet for running the integration tests from the command line
+
 
 ### Submitting a Pull Request
 

@@ -12,6 +12,8 @@ export function run(): Promise<void> {
     const testsRoot = path.resolve(__dirname, '..')
 
     return new Promise((c, e) => {
+        // We can change the value below to run specific test files.
+        // glob('integration/sjsAdapter.test.js', { cwd: testsRoot }, (err, files) => {
         glob('integration/**.test.js', { cwd: testsRoot }, (err, files) => {
             if (err) {
                 return e(err)
