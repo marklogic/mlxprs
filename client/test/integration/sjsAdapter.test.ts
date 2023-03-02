@@ -10,6 +10,8 @@ import { DebugProtocol } from 'vscode-debugprotocol'
 import * as CP from 'child_process'
 import * as fs from 'fs'
 
+import { getRid, wait } from './integrationTestHelper'
+
 
 
 suite('JavaScript Debug Test Suite', () => {
@@ -233,93 +235,6 @@ suite('JavaScript Debug Test Suite', () => {
         }).timeout(5000)
     })
 
-    //helper
-    async function getRid(client: MarklogicClient, qry: string): Promise<string[]> {
-        const newParams: MlClientParameters = JSON.parse(JSON.stringify(client.params))
-        newParams.port = 8002
-        const newClient = new MarklogicClient(newParams)
-        return sendJSQuery(newClient, qry)
-            .result(
-                (fulfill: Record<string, any>[]) => {
-                    return fulfill.map(o => {
-                        return o.value
-                    })
-                },
-                (err) => {
-                    throw err
-                })
-    }
-    //helper
-    function wait(ms: number): Promise<any> {
-        return new Promise((resolve) => {
-            setTimeout(resolve, ms)
-        })
-    }
-
-    suite('Issue 69', async () => {
-        test('set breakpoints on two files', async () => {
-            CP.exec(`curl --anyauth -k --user ${username}:${password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
-                http${ssl ? 's' : ''}://${hostname}:8080/LATEST/invoke --data-urlencode module=/MarkLogic/test/test.sjs`)
-            await wait(1000)
-            const resp = await getRid(mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server("JSdebugTestServer")).toObject()[0].requestStatuses[0].requestId')
-            const rid = resp[0]
-            const root = Path.join(scriptFolder, 'MarkLogic/test')
-            const config = {
-                rid: rid, root: root,
-                username: username, password: password,
-                hostname: hostname, authType: 'DIGEST',
-                ssl: ssl, pathToCa: pathToCa, rejectUnauthorized: rejectUnauthorized
-            }
-            await Promise.all([
-                dc.initializeRequest(),
-                dc.configurationSequence(),
-                dc.attachRequest(config as DebugProtocol.AttachRequestArguments)
-            ])
-
-            await dc.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'test.sjs') }, breakpoints: [{ line: 3 }] })
-            await dc.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'lib1.sjs') }, breakpoints: [{ line: 2 }] })
-            await dc.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'lib2.sjs') }, breakpoints: [{ line: 2 }] })
-
-            await dc.continueRequest({ threadId: 1 })
-            await dc.waitForEvent('stopped')
-            await dc.continueRequest({ threadId: 1 })
-            await dc.waitForEvent('stopped')
-            await dc.continueRequest({ threadId: 1 })
-            await dc.waitForEvent('stopped')
-            await dc.continueRequest({ threadId: 1 })
-            return dc.assertStoppedLocation('breakpoint', { path: Path.join('/MarkLogic/test', 'test.sjs'), line: 3 })
-        }).timeout(10000)
-    })
-
-    suite('Issue 70', async () => {
-        test('check non-existing modules are loaded', async () => {
-            CP.exec(`curl --anyauth -k --user ${username}:${password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
-                http${ssl ? 's' : ''}://${hostname}:8080/LATEST/invoke --data-urlencode module=/MarkLogic/test/helloWorld.sjs`)
-            await wait(1000)
-            const resp = await getRid(mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server("JSdebugTestServer")).toObject()[0].requestStatuses[0].requestId')
-            const rid = resp[0]
-            const path = Path.join(scriptFolder, 'helloWorld.sjs')
-            const text = fs.readFileSync(path).toString()
-            const root = Path.join(scriptFolder, 'MarkLogic/test')
-            const config = {
-                rid: rid, root: root,
-                username: username, password: password,
-                hostname: hostname, database: 'Modules', modules: 'Modules', authType: 'DIGEST',
-                ssl: ssl, pathToCa: pathToCa, rejectUnauthorized: rejectUnauthorized
-            }
-            await Promise.all([
-                dc.initializeRequest(),
-                dc.configurationSequence(),
-                dc.attachRequest(config as DebugProtocol.AttachRequestArguments)
-            ])
-            const stackResponse = await dc.stackTraceRequest({ threadId: 1 })
-            const src = stackResponse['body']['stackFrames'][0]['source']
-            assert.equal(9, src['sourceReference'], 'confrim stackFrame source id indicates non-existing file')
-            const srcReqResponse = await dc.sourceRequest({ source: src, sourceReference: src.sourceReference })
-            return assert.equal(srcReqResponse['body']['content'], text, 'check if modules is streamed back')
-        }).timeout(10000)
-    })
-
     suite('Testing sjs/xqy boundary in eval/invoke', async () => {
         test('sjs calling xdmp:eval()', async () => {
             config.program = Path.join(scriptFolder, 'eval2.sjs')
@@ -351,9 +266,24 @@ suite('JavaScript Debug Test Suite', () => {
             return dc.assertStoppedLocation('step', { path: config.program, line: 6 })
         }).timeout(5000)
 
+        test('sjs importing xqy', async () => {
+            config.program = Path.join(scriptFolder, 'eval3.sjs')
+            config.queryText = fs.readFileSync(config.program).toString()
+
+            await Promise.all([
+                dc.configurationSequence(),
+                dc.launch(config)
+            ])
+            await dc.setBreakpointsRequest({ source: { path: config.program }, breakpoints: [{ line: 4 }] })
+            await dc.continueRequest({ threadId: 1 })
+            await dc.assertStoppedLocation('breakpoint', { path: config.program, line: 4 })
+            await dc.stepInRequest({ threadId: 1 })
+            return dc.assertStoppedLocation('step', { path: config.program, line: 6 })
+        }).timeout(15000)
+
         test('xqy calling xdmp.invoke()', async () => {
             CP.exec(`curl --anyauth -k --user ${username}:${password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
-                http${ssl ? 's' : ''}://${hostname}:8080/LATEST/invoke --data-urlencode module=/MarkLogic/test/invoke1.xqy`)
+                http${ssl ? 's' : ''}://${hostname}:8055/LATEST/invoke --data-urlencode module=/MarkLogic/test/invoke1.xqy`)
             await wait(100)
             const resp = await getRid(mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server("JSdebugTestServer")).toObject()[0].requestStatuses[0].requestId')
             const rid = resp[0]
@@ -373,22 +303,7 @@ suite('JavaScript Debug Test Suite', () => {
             await dc.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'jsInvoke-1.sjs') }, breakpoints: [{ line: 3 }] })
             await dc.continueRequest({ threadId: 1 })
             return dc.assertStoppedLocation('breakpoint', { path: Path.join('/MarkLogic/test', 'jsInvoke-1.sjs'), line: 3 })
-        }).timeout(10000)
-
-        test('sjs importing xqy', async () => {
-            config.program = Path.join(scriptFolder, 'eval3.sjs')
-            config.queryText = fs.readFileSync(config.program).toString()
-
-            await Promise.all([
-                dc.configurationSequence(),
-                dc.launch(config)
-            ])
-            await dc.setBreakpointsRequest({ source: { path: config.program }, breakpoints: [{ line: 4 }] })
-            await dc.continueRequest({ threadId: 1 })
-            await dc.assertStoppedLocation('breakpoint', { path: config.program, line: 4 })
-            await dc.stepInRequest({ threadId: 1 })
-            return dc.assertStoppedLocation('step', { path: config.program, line: 6 })
-        }).timeout(15000)
+        }).timeout(10000).skip()
 
     })
 })

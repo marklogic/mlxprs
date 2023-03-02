@@ -60,6 +60,22 @@
             "cwd": "${workspaceFolder}"
         },
         {
+            "name": "Launch Client-Integration Tests",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}/client",
+                "--extensionTestsPath=${workspaceRoot}/dist/test/integration/index"
+            ],
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceRoot}/dist/**/*.js"
+            ],
+            "preLaunchTask": "npm: pretest",
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "Launch Server Tests",
             "type": "extensionHost",
             "request": "launch",
@@ -70,7 +86,7 @@
             ],
             "sourceMaps": true,
             "outFiles": [
-                "${workspaceRoot}/server/out/test/**/*.js"
+                "${workspaceRoot}/server/dist/test/**/*.js"
             ],
             "preLaunchTask": "npm: pretest-server",
             "cwd": "${workspaceFolder}/server"
