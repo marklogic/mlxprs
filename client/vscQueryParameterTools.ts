@@ -67,6 +67,9 @@ export function getDbClient(queryText: string, language: string, cfg: WorkspaceC
     }
     // merge VS Code configuration and overrides
     const newParams = new MlClientParameters({ ...configParams, ...overrides })
+    if ((newParams.contentDb !== null) && (newParams.contentDb.length === 0)) {
+        newParams.contentDb = null;
+    }
     // if settings have changed, release and clear the client
     const cachedClient = state.get(MLDBCLIENT) as MarklogicClient
     if (cachedClient !== null && !cachedClient.hasSameParamsAs(newParams)) {
