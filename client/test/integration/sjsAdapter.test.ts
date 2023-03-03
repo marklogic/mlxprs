@@ -113,6 +113,7 @@ suite('JavaScript Debug Test Suite', () => {
             .then(() => {
                 vscode.window.showInformationMessage('SJS Debugger tests done!')
             })
+        
     })
 
     setup(() => {
@@ -124,7 +125,6 @@ suite('JavaScript Debug Test Suite', () => {
         dc.stop()
     })
 
-    // testing commands
     suite('Basic', () => {
         test('launch a script and it should stop at entry', async () => {
             return Promise.all([
@@ -206,7 +206,6 @@ suite('JavaScript Debug Test Suite', () => {
             const scope = await dc.scopesRequest({ frameId: frameId })
             const vars = await dc.variablesRequest({ variablesReference: scope.body.scopes[0].variablesReference })
             return assert.equal(vars.body.variables[0].name, 'ret')
-
         }).timeout(5000)
 
         test('check evaluate', async () => {
@@ -219,7 +218,6 @@ suite('JavaScript Debug Test Suite', () => {
             await dc.waitForEvent('stopped')
             const evalResult = await dc.evaluateRequest({ expression: 'str' })
             return assert.equal(evalResult.body.result, 'Hello World SJS')
-
         }).timeout(5000)
 
         test('check conditional breakpoint', async () => {
