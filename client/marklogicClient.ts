@@ -91,6 +91,9 @@ export class MarklogicClient {
                 throw new Error('Error reading CA file: ' + e.message)
             }
         }
+        if (!this.params.contentDb) {
+            this.params.contentDb = null;
+        }
         this.mldbClient = ml.createDatabaseClient({
             host: this.params.host, port: this.params.port,
             user: this.params.user, password: this.params.pwd,
