@@ -119,10 +119,14 @@ The test script will perform following:
 
 #### Testing from the command line
 
-* npm test - runs the client tests (not including the integration tests)
-* npm run testServer - runs the server tests
-* There's nothing in place yet for running the integration tests from the command line
+Run these two npm scripts to execute the tests from the command line. Note that VSCode must not be running while you run the tests from the command line in the root directory of the project.
 
+- npm run npmInstallClientAndServer
+- npm run testAll
+
+To ensure a clean build, you may also run this npm script to clean the project first.
+
+- npm run completeClean
 
 ### Submitting a Pull Request
 
