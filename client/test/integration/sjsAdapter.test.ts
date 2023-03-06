@@ -16,11 +16,11 @@ import { getRid, wait } from './integrationTestHelper'
 
 suite('JavaScript Debug Test Suite', () => {
     const wcfg = vscode.workspace.getConfiguration()
-    const hostname = String(wcfg.get('marklogic.host'))
-    const port = Number(wcfg.get('marklogic.port'))
-    const username = String(wcfg.get('marklogic.username'))
-    const password = String(wcfg.get('marklogic.password'))
-    const modulesDB = String(wcfg.get('marklogic.modulesDb'))
+    const hostname = String(wcfg.get('marklogic.host') || 'localhost')
+    const port = Number(wcfg.get('marklogic.port') || '8055')
+    const username = String(wcfg.get('marklogic.username') || 'admin')
+    const password = String(wcfg.get('marklogic.password') || process.env.ML_PASSWORD)
+    const modulesDB = String(wcfg.get('marklogic.modulesDb') || 'Modules')
     const pathToCa = String(wcfg.get('marklogic.pathToCa') || '')
     const ssl = Boolean(wcfg.get('marklogic.ssl'))
     const rejectUnauthorized = Boolean(wcfg.get('marklogic.rejectUnauthorized'))
