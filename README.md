@@ -1,6 +1,6 @@
-[![](https://vsmarketplacebadge.apphb.com/version/mlxprs.mlxprs.svg)](https://marketplace.visualstudio.com/items?itemName=mlxprs.mlxprs)
+<!-- [![](https://vsmarketplacebadge.apphb.com/version/mlxprs.mlxprs.svg)](https://marketplace.visualstudio.com/items?itemName=mlxprs.mlxprs)
 [![](https://vsmarketplacebadge.apphb.com/installs-short/mlxprs.mlxprs.svg)](https://marketplace.visualstudio.com/items?itemName=mlxprs.mlxprs)
-[![](https://vsmarketplacebadge.apphb.com/rating-short/mlxprs.mlxprs.svg)](https://marketplace.visualstudio.com/items?itemName=mlxprs.mlxprs)
+[![](https://vsmarketplacebadge.apphb.com/rating-short/mlxprs.mlxprs.svg)](https://marketplace.visualstudio.com/items?itemName=mlxprs.mlxprs) -->
 
 # MarkLogic Extension for Visual Studio Code
 

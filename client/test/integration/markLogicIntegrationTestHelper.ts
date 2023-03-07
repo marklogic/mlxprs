@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as Path from 'path'
 import * as vscode from 'vscode'
-import { DebugClient } from 'vscode-debugadapter-testsupport'
+import { DebugClient } from '@vscode/debugadapter-testsupport'
 
 import { _connectServer, _disconnectServer } from '../../JSDebugger/configurationProvider'
 import { MarklogicClient, MlClientParameters, sendJSQuery } from '../../marklogicClient'
@@ -15,11 +15,11 @@ export class IntegrationTestHelper {
     private exec = Path.join(this.rootFolder, 'dist/mlDebug.js')
 
     private wcfg = vscode.workspace.getConfiguration()
-    private hostname = String(this.wcfg.get('marklogic.host'))
-    private port = Number(this.wcfg.get('marklogic.port'))
-    private username = String(this.wcfg.get('marklogic.username'))
-    private password = String(this.wcfg.get('marklogic.password'))
-    private modulesDB = String(this.wcfg.get('marklogic.modulesDb'))
+    private hostname = String(this.wcfg.get('marklogic.host') || 'localhost')
+    private port = Number(this.wcfg.get('marklogic.port') || '8055')
+    private username = String(this.wcfg.get('marklogic.username') || 'admin')
+    private password = String(this.wcfg.get('marklogic.password') || process.env.ML_PASSWORD)
+    private modulesDB = String(this.wcfg.get('marklogic.modulesDb') || 'Modules')
     private pathToCa = String(this.wcfg.get('marklogic.pathToCa') || '')
     private ssl = Boolean(this.wcfg.get('marklogic.ssl'))
     private rejectUnauthorized = Boolean(this.wcfg.get('marklogic.rejectUnauthorized'))
