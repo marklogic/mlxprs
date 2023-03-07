@@ -1,13 +1,28 @@
 import * as path from 'path'
 import * as Mocha from 'mocha'
 import * as glob from 'glob'
+import { IntegrationTestHelper } from './markLogicIntegrationTestHelper'
 
 export function run(): Promise<void> {
-    // Create the mocha test
     const mocha = new Mocha({
         ui: 'tdd'
     })
+    globalThis.integrationTestHelper = new IntegrationTestHelper()
     mocha.options.color = true
+    mocha.rootHooks({
+        beforeAll: () => {
+            globalThis.integrationTestHelper.beforeEverything()
+        },
+        beforeEach: () => {
+            globalThis.integrationTestHelper.setupEachTest()
+        },
+        afterAll: () => {
+            globalThis.integrationTestHelper.afterEverything()
+        },
+        afterEach: () => {
+            globalThis.integrationTestHelper.teardownEachTest()
+        }
+    })
 
     const testsRoot = path.resolve(__dirname, '..')
 
