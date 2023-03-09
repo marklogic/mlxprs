@@ -122,7 +122,7 @@ The test script will perform following:
 Run these two npm scripts to execute the tests from the command line. Note that VSCode must not be running while you run the tests from the command line in the root directory of the project.
 
 - npm run npmInstallClientAndServer
-- npm run testAll
+- export ML_PASSWORD=\<password> ;npm run testAll
 
 To ensure a clean build, you may also run this npm script to clean the project first.
 
@@ -146,3 +146,14 @@ Please try to develop, build, and test with the most recent stable releases of t
 - Visual Studio Code
 - node.js, npm (v14 LTS)
 - MarkLogic 9 or 10
+
+### Building the artifact
+
+- Install the vsce tool
+    - npm install -g @vscode/vsce
+- Build the artifact
+    - vsce package
+
+This should produce a file with the name, "mlxprs-<version>.vsix"
+
+See [Publishing Extensions](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) for more information

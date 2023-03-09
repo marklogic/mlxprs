@@ -7,7 +7,7 @@ import { MarklogicClient, MlClientParameters } from '../../marklogicClient'
  *
  */
 export class DummyGlobalState implements Memento {
-    dummyClient: MarklogicClient;
+    dummyClient: MarklogicClient
     get<T>(key: string): T
     get<T>(key: string, defaultValue: T): T
 
@@ -22,6 +22,9 @@ export class DummyGlobalState implements Memento {
 
     constructor(params: MlClientParameters) {
         this.dummyClient = new MarklogicClient(params)
+    }
+    keys(): readonly string[] {
+        throw new Error('Method not implemented.')
     }
 }
 

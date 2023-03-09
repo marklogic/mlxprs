@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import * as assert from 'assert'
 import * as Path from 'path'
-import { DebugProtocol } from 'vscode-debugprotocol'
+import { DebugProtocol } from '@vscode/debugprotocol'
 import * as CP from 'child_process'
 import * as fs from 'fs'
 

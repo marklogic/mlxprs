@@ -7,7 +7,7 @@ import { MarklogicClient } from './marklogicClient'
 import { cascadeOverrideClient } from './vscQueryParameterTools'
 import { QueryResultsContentProvider } from './queryResultsContentProvider'
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting'
-import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient'
+import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node'
 import { XqyDebugConfigurationProvider, XqyDebugAdapterDescriptorFactory } from './XQDebugger/xqyDebugConfigProvider'
 import { MLConfigurationProvider, DebugAdapterExecutableFactory, _connectServer, _disconnectServer } from './JSDebugger/configurationProvider'
 import { ModuleContentProvider, pickAndShowModule } from './vscModuleContentProvider'
@@ -58,7 +58,7 @@ export function activate(context: vscode.ExtensionContext): void {
         const uri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port)
         editorSparqlQuery(client, actualQuery, uri, editor, provider)
     })
-    const connectServer = vscode.commands.registerCommand('extension.connectServer',  () => {
+    const connectServer = vscode.commands.registerCommand('extension.connectServer', () => {
         vscode.window.showInputBox({
             placeHolder: 'Please enter server you want to connect',
             value: ''
@@ -66,7 +66,7 @@ export function activate(context: vscode.ExtensionContext): void {
             _connectServer(servername)
         })
     })
-    const disconnectServer = vscode.commands.registerCommand('extension.disconnectServer',  () => {
+    const disconnectServer = vscode.commands.registerCommand('extension.disconnectServer', () => {
         vscode.window.showInputBox({
             placeHolder: 'Please enter server you want to disconnect',
             value: ''
