@@ -9,5 +9,7 @@
     "editor.formatOnSave": true,
     "[typescript]": {
         "editor.defaultFormatter": "vscode.typescript-language-features"
-    }
+    },
+    "marklogic.port": 8055,
+    "marklogic.rejectUnauthorized": false
 }
