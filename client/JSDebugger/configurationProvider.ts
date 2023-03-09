@@ -53,7 +53,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
     }
 
     /* helper function to resolve config parameters */
-    private async resolveRemainingDebugConfiguration(folder: WorkspaceFolder | undefined, config: DebugConfiguration, _token?: CancellationToken): Promise<DebugConfiguration>  {
+    private async resolveRemainingDebugConfiguration(folder: WorkspaceFolder | undefined, config: DebugConfiguration, _token?: CancellationToken): Promise<DebugConfiguration> {
         // acquire extension settings
         const wcfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration()
         config.hostname = String(wcfg.get('marklogic.host'))
@@ -93,23 +93,25 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         }
         if (config.request == 'launch' && !config.database.match(/^\d+$/)) {
             await this.resolveDatabasetoId(config.username, config.password, config.database, config.hostname,
-                config.ssl, ca, config.rejectUnauthorized).then(resp => {
-                config.database = resp.match('\r\n\r\n(.*[0-9])\r\n')[1] //better way of parsing?
-            }).catch(e => {
-                return vscode.window.showErrorMessage('Error getting database setting').then(() => {
-                    return undefined
+                config.ssl, ca, config.rejectUnauthorized)
+                .then(resp => {
+                    config.database = resp.match('\r\n\r\n(.*[0-9])\r\n')[1] //better way of parsing?
+                }).catch(e => {
+                    return vscode.window.showErrorMessage('Error getting database setting').then(() => {
+                        return undefined
+                    })
                 })
-            })
         }
         if (config.request == 'launch' && !config.modules.match(/^\d+$/)) {
             await this.resolveDatabasetoId(config.username, config.password, config.modules, config.hostname,
-                config.ssl, ca, config.rejectUnauthorized).then(resp => {
-                config.modules = resp.match('\r\n\r\n(.*[0-9])\r\n')[1] //better way of parsing?
-            }).catch(() => {
-                return vscode.window.showErrorMessage('Error getting modules database setting').then(() => {
-                    return undefined
+                config.ssl, ca, config.rejectUnauthorized)
+                .then(resp => {
+                    config.modules = resp.match('\r\n\r\n(.*[0-9])\r\n')[1] //better way of parsing?
+                }).catch(() => {
+                    return vscode.window.showErrorMessage('Error getting modules database setting').then(() => {
+                        return undefined
+                    })
                 })
-            })
         }
 
         //query for paused requests
@@ -118,7 +120,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
                 config.password, config.debugServerName, config.hostname, config.ssl, ca,
                 config.rejectUnauthorized)
             const requests: string[] = JSON.parse(resp).requestIds
-            const items = []
+            const pausedRequests = []
             for (let i = 0; i < requests.length; i++) {
                 try {
                     let resp = await this.getRequestInfo(
@@ -128,24 +130,29 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
                     const requestText = JSON.parse(resp)['requestText']
                     const startTime = JSON.parse(resp)['startTime']
 
-                    items.push({
+                    pausedRequests.push({
                         label: requests[i],
                         description: 'module: ' + String(requestText),
                         detail: 'startTime: ' + String(startTime)
                     } as vscode.QuickPickItem)
                 } catch (e) {
-                    items.push({
+                    pausedRequests.push({
                         label: requests[i]
                     })
                 }
             }
-            const item = await vscode.window.showQuickPick(items, { placeHolder: 'Select the request to attach to' })
-            if (!item) {
-                return vscode.window.showErrorMessage('Request not selected').then(() => {
-                    return undefined	// abort
-                })
+            if (pausedRequests.length > 0) {
+                const item = await vscode.window.showQuickPick(pausedRequests, { placeHolder: 'Select the request to attach to' })
+                if (!item) {
+                    return vscode.window.showErrorMessage('Request not selected').then(() => {
+                        return undefined	// abort
+                    })
+                }
+                config.rid = item.label
+            } else {
+                vscode.window.showErrorMessage('No paused requests found on server')
+                return undefined
             }
-            config.rid = item.label
         }
 
         return config
