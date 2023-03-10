@@ -23,8 +23,8 @@ export class IntegrationTestHelper {
     private pathToCa = String(this.wcfg.get('marklogic.pathToCa') || '')
     private ssl = Boolean(this.wcfg.get('marklogic.ssl'))
     private rejectUnauthorized = Boolean(this.wcfg.get('marklogic.rejectUnauthorized'))
-    public config = null;
-    public debugClient = null;
+    public config = null
+    public debugClient = null
     readonly mlClient = new MarklogicClient(
         new MlClientParameters({
             host: this.hostname,

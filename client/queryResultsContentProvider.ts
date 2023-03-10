@@ -4,10 +4,10 @@ import { Event, EventEmitter, TextDocumentContentProvider, Uri, window, workspac
 import { contentType } from 'marklogic'
 
 export class QueryResultsContentProvider implements TextDocumentContentProvider {
-    private _onDidChange = new EventEmitter<Uri>();
-    public _cache = new Map<string, string>();
+    private _onDidChange = new EventEmitter<Uri>()
+    public _cache = new Map<string, string>()
 
-    static scheme = 'mlquery';
+    static scheme = 'mlquery'
     /**
      * Expose an event to signal changes of _virtual_ documents
      * to the editor
@@ -20,7 +20,7 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
      * @param uri the 'mlquery' uri representing the query (cache: key)
      * @param val the results of that query (cache: value)
      */
-    public updateResultsForUri(uri: Uri, val: Array<Record<string, any>>): Map<string, string> {
+    public updateResultsForUri(uri: Uri, val: Array<Record<string, unknown>>): Map<string, string> {
         const stringResults: string = val.map(o => this.unwrap(o)).join('\n')
         console.debug(`${Date.now()} writing string results for ${uri.toString()} ${stringResults.length}"`)
         return this._cache.set(uri.toString(), stringResults)
@@ -79,7 +79,11 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
         } else {
             window.showInformationMessage(`Query in ${uri.query} got an empty response from ${uri.authority}`)
         }
-        const responseUri = Uri.parse(`${QueryResultsContentProvider.scheme}://${uri.authority}${uri.path}.${fmt}?${uri.query}`)
+        let validUriPath = uri.path
+        if (validUriPath.startsWith('//')) {
+            validUriPath = validUriPath.substring(1)
+        }
+        const responseUri = Uri.parse(`${QueryResultsContentProvider.scheme}://${uri.authority}${validUriPath}.${fmt}?${uri.query}`)
         this.updateResultsForUri(responseUri, response)
         console.debug(`${Date.now()} ***** Writing cache for URI: ${uri.toString()}`)
         this.update(responseUri)

@@ -3,12 +3,16 @@ import { after } from 'mocha'
 
 import { window, workspace } from 'vscode'
 import { defaultDummyGlobalState } from './dummyGlobalState'
-import { testOverrideQueryWithGoodJSON,  testOverrideQueryWithBadJSON, testQueryWithoutOverrides,
+import {
+    testOverrideQueryWithGoodJSON, testOverrideQueryWithBadJSON, testQueryWithoutOverrides,
     testOverrideXQueryWithGoodJSON, testOverrideXQueryWithBadJSON, testXQueryWithoutOverrides,
     testOverrideSslParams
 } from './testOverrideQuery'
 import { MarklogicClient } from '../../marklogicClient'
 import { getDbClient, parseQueryForOverrides } from '../../vscQueryParameterTools'
+
+import { Uri } from 'vscode'
+import { QueryResultsContentProvider } from '../../queryResultsContentProvider'
 
 const SJS = 'sjs'
 const XQY = 'xqy'
@@ -104,4 +108,22 @@ suite('Extension Test Suite', () => {
         assert.strictEqual(-1, [1, 2, 3].indexOf(5))
         assert.strictEqual(-1, [1, 2, 3].indexOf(0))
     })
+
+    test('When a file is evaled and a URI is generated to uniquely identify the results', async () => {
+        const provider = new QueryResultsContentProvider()
+        const fileUri = Uri.from({
+            'scheme': 'scheme',
+            'authority': 'localhost:9876',
+            'path': '//src/fake/script.sjs',
+            'query': 'query',
+            'fragment': 'fragment'
+        })
+        const expectedResponseUri = 'mlquery://localhost:9876/src/fake/script.sjs.nothing?query'
+        await provider.writeResponseToUri(fileUri, [])
+            .then((actualResponseUri) => {
+                assert.strictEqual(actualResponseUri.toString(), expectedResponseUri,
+                    'the URI should not have a double-dash before the filename section')
+            })
+    })
+
 })

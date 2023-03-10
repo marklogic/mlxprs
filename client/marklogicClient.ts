@@ -9,17 +9,17 @@ const SJS = 'sjs'
 export const XQY = 'xqy'
 
 export class MlClientParameters {
-    contentDb: string;
-    modulesDb: string;
+    contentDb: string
+    modulesDb: string
 
-    host: string;
-    port: number;
-    user: string;
-    pwd: string;
-    authType: string;
-    ssl: boolean;
-    pathToCa: string;
-    rejectUnauthorized: boolean;
+    host: string
+    port: number
+    user: string
+    pwd: string
+    authType: string
+    ssl: boolean
+    pathToCa: string
+    rejectUnauthorized: boolean
     /**
      * note: defaults not applied here. Properties can remain undefined so that
      *       per-query overrides don't clobber the existing config with default values.
@@ -45,10 +45,7 @@ export class MlClientParameters {
     }
 
     toString(): string {
-        const paramsArray = [this.host, this.port, this.user,
-            this.pwd.replace(/./g, '*'),
-            this.authType,
-            this.contentDb, this.modulesDb]
+        const paramsArray = [this.host, this.port, this.user, this.pwd.replace(/./g, '*'), this.authType, this.contentDb, this.modulesDb]
         if (this.ssl) {
             paramsArray.push('ssl')
             if (!this.rejectUnauthorized) paramsArray.push('insecure')
@@ -76,10 +73,10 @@ export class MlClientParameters {
 }
 
 export class MarklogicClient {
-    params: MlClientParameters;
-    ca: string;
+    params: MlClientParameters
+    ca: string
 
-    mldbClient: ml.DatabaseClient;
+    mldbClient: ml.DatabaseClient
     constructor(params: MlClientParameters) {
         this.params = params
         this.params.authType = params.authType.toUpperCase()
@@ -92,7 +89,7 @@ export class MarklogicClient {
             }
         }
         if (!this.params.contentDb) {
-            this.params.contentDb = null;
+            this.params.contentDb = null
         }
         this.mldbClient = ml.createDatabaseClient({
             host: this.params.host, port: this.params.port,
@@ -146,8 +143,7 @@ export function sendJSQuery(
     db: MarklogicClient,
     actualQuery: string,
     sqlQuery = '',
-    sqlOptions = []): ml.ResultProvider<Record<string, any>>
-{
+    sqlOptions = []): ml.ResultProvider<Record<string, any>> {
     const query = `
     const options = {};
     if (modulesDb) { options.modules = xdmp.database(modulesDb) };
@@ -172,8 +168,7 @@ export function sendJSQuery(
 export function sendXQuery(
     db: MarklogicClient,
     actualQuery: string,
-    prefix: 'xdmp' | 'dbg' = 'xdmp'): ml.ResultProvider<Record<string, any>>
-{
+    prefix: 'xdmp' | 'dbg' = 'xdmp'): ml.ResultProvider<Record<string, any>> {
     const query =
         'xquery version "1.0-ml";' +
         'declare variable $actualQuery as xs:string external;' +
@@ -197,8 +192,7 @@ export function sendXQuery(
 export function sendSparql(
     db: MarklogicClient,
     sparqlQuery: string,
-    contentType: ml.contentType = 'application/json'): ml.ResultProvider<Record<string, unknown>>
-{
+    contentType: ml.contentType = 'application/json'): ml.ResultProvider<Record<string, unknown>> {
     return db.mldbClient.graphs.sparql({
         contentType: contentType,
         query: sparqlQuery

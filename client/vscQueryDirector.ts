@@ -13,20 +13,22 @@ async function formatResults(uri: Uri, retries = 0): Promise<boolean> {
     }
     await new Promise(resolve => setTimeout(resolve, 60))
     return commands.executeCommand(FCOMMAND, uri, FOPTIONS)
-        .then((edits: TextEdit[]) => {
-            if (edits && edits.length) {
-                console.debug(`${Date.now()} Got ${edits.length} edits...`)
-                const formatEdit = new WorkspaceEdit()
-                formatEdit.set(uri, edits)
-                return workspace.applyEdit(formatEdit)
-            } else if (retries > 100) {
-                console.debug(`${Date.now()} Giving up on formatting.`)
-                return false
-            } else {
-                console.debug(`${Date.now()} No edits yet. Wait a beat (${retries})...`)
-                return formatResults(uri, retries + 1)
+        .then(
+            (edits: TextEdit[]) => {
+                if (edits && edits.length) {
+                    console.debug(`${Date.now()} Got ${edits.length} edits...`)
+                    const formatEdit = new WorkspaceEdit()
+                    formatEdit.set(uri, edits)
+                    return workspace.applyEdit(formatEdit)
+                } else if (retries > 100) {
+                    console.debug(`${Date.now()} Giving up on formatting.`)
+                    return false
+                } else {
+                    console.debug(`${Date.now()} No edits yet. Wait a beat (${retries})...`)
+                    return formatResults(uri, retries + 1)
+                }
             }
-        })
+        )
 }
 
 /**
@@ -52,14 +54,13 @@ export function editorJSQuery(
     actualQuery: string,
     uri: Uri,
     editor: TextEditor,
-    provider: QueryResultsContentProvider): void
-{
+    provider: QueryResultsContentProvider): void {
     sendJSQuery(db, actualQuery)
         .result(
-            (fulfill: Record<string, any>[]) => {
+            (fulfill: Record<string, unknown>[]) => {
                 return provider.writeResponseToUri(uri, fulfill)
             },
-            (error: Record<string, any>[]) => {
+            (error: Record<string, unknown>[]) => {
                 return provider.handleError(uri, error)
             })
         .then(responseUri => showFormattedResults(responseUri, editor))
@@ -72,14 +73,13 @@ export function editorXQuery(
     uri: Uri,
     editor: TextEditor,
     provider: QueryResultsContentProvider,
-    prefix: 'xdmp' | 'dbg' = 'xdmp'): void
-{
+    prefix: 'xdmp' | 'dbg' = 'xdmp'): void {
     sendXQuery(db, actualQuery, prefix)
         .result(
-            (fulfill: Record<string, any>[]) => {
+            (fulfill: Record<string, unknown>[]) => {
                 return provider.writeResponseToUri(uri, fulfill)
             },
-            (error: Record<string, any>[]) => {
+            (error: Record<string, unknown>[]) => {
                 return provider.handleError(uri, error)
             })
         .then(responseUri => showFormattedResults(responseUri, editor))
@@ -98,8 +98,7 @@ export function editorSqlQuery(
     uri: Uri,
     editor: TextEditor,
     cfg: WorkspaceConfiguration,
-    provider: QueryResultsContentProvider): void
-{
+    provider: QueryResultsContentProvider): void {
     const sqlOptions: Array<string> = buildSqlOptions(cfg)
     const actualQuery = 'xdmp.sql(sqlQuery, sqlOptions)'
     sendJSQuery(db, actualQuery, sqlQuery, sqlOptions)
@@ -119,15 +118,14 @@ export function editorSparqlQuery(
     sparqlQuery: string,
     uri: Uri,
     editor: TextEditor,
-    provider: QueryResultsContentProvider): void
-{
+    provider: QueryResultsContentProvider): void {
     const contentType: contentType = workspace.getConfiguration().get('marklogic.sparqlContentType')
     sendSparql(db, sparqlQuery, contentType)
         .result(
             (fulfill: Record<string, unknown>) => {
                 return provider.writeSparqlResponseToUri(uri, fulfill)
             },
-            (error: Record<string, any>[]) => {
+            (error: Record<string, unknown>[]) => {
                 return provider.handleError(uri, error)
             })
         .then((responseUri: Uri) => showFormattedResults(responseUri, editor))
