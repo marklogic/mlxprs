@@ -10,14 +10,14 @@ export function run(): Promise<void> {
     globalThis.integrationTestHelper = new IntegrationTestHelper()
     mocha.options.color = true
     mocha.rootHooks({
-        beforeAll: () => {
-            globalThis.integrationTestHelper.beforeEverything()
+        beforeAll: async () => {
+            await globalThis.integrationTestHelper.beforeEverything()
         },
         beforeEach: () => {
             globalThis.integrationTestHelper.setupEachTest()
         },
-        afterAll: () => {
-            globalThis.integrationTestHelper.afterEverything()
+        afterAll: async () => {
+            await globalThis.integrationTestHelper.afterEverything()
         },
         afterEach: () => {
             globalThis.integrationTestHelper.teardownEachTest()

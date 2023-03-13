@@ -17,7 +17,7 @@ suite('Issue 70', async () => {
         const globalConfig = integrationTestHelper.config
 
         CP.exec(`curl --anyauth -k --user ${globalConfig.username}:${globalConfig.password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
-                    http${globalConfig.ssl ? 's' : ''}://${globalConfig.hostname}:8055/LATEST/invoke --data-urlencode module=/MarkLogic/test/helloWorld.sjs`)
+                    http${globalConfig.ssl ? 's' : ''}://${globalConfig.hostname}:${integrationTestHelper.appServerPort}/LATEST/invoke --data-urlencode module=/MarkLogic/test/helloWorld.sjs`)
         await wait(1000)
         const resp = await integrationTestHelper.getRid(mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server("JSdebugTestServer")).toObject()[0].requestStatuses[0].requestId')
         const rid = resp[0]
@@ -27,7 +27,7 @@ suite('Issue 70', async () => {
         const config = {
             rid: rid, root: root,
             username: globalConfig.username, password: globalConfig.password,
-            hostname: globalConfig.hostname, database: 'Modules', modules: 'Modules', authType: 'DIGEST',
+            hostname: globalConfig.hostname, database: integrationTestHelper.modulesDatabase, modules: integrationTestHelper.modulesDatabase, authType: 'DIGEST',
             ssl: globalConfig.ssl, pathToCa: globalConfig.pathToCa, rejectUnauthorized: globalConfig.rejectUnauthorized
         }
         const debugClient = integrationTestHelper.debugClient
