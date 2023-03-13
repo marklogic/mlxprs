@@ -15,11 +15,12 @@ export class IntegrationTestHelper {
     private exec = Path.join(this.rootFolder, 'dist/mlDebug.js')
 
     private wcfg = vscode.workspace.getConfiguration()
-    private hostname = String(this.wcfg.get('marklogic.host') || 'localhost')
-    private port = Number(this.wcfg.get('marklogic.port') || '8055')
-    private username = String(this.wcfg.get('marklogic.username') || 'admin')
-    private password = String(this.wcfg.get('marklogic.password') || process.env.ML_PASSWORD)
-    private modulesDB = String(this.wcfg.get('marklogic.modulesDb') || 'Modules')
+    private hostname = String(process.env.ML_HOST || this.wcfg.get('marklogic.host') || 'localhost')
+    private port = Number(process.env.ML_PORT || this.wcfg.get('marklogic.port') || '8055')
+    private managePort = Number(process.env.ML_MANAGEPORT || this.wcfg.get('marklogic.managePort') || '8002')
+    private username = String(process.env.ML_USERNAME || this.wcfg.get('marklogic.username') || 'admin')
+    private password = String(process.env.ML_PASSWORD || this.wcfg.get('marklogic.password') || 'admin')
+    private modulesDB = String(process.env.ML_MODULESDB || this.wcfg.get('marklogic.modulesDb') || 'Modules')
     private pathToCa = String(this.wcfg.get('marklogic.pathToCa') || '')
     private ssl = Boolean(this.wcfg.get('marklogic.ssl'))
     private rejectUnauthorized = Boolean(this.wcfg.get('marklogic.rejectUnauthorized'))
@@ -29,6 +30,7 @@ export class IntegrationTestHelper {
         new MlClientParameters({
             host: this.hostname,
             port: this.port,
+            managePort: this.managePort,
             user: this.username,
             pwd: this.password,
             authType: 'DIGEST',
@@ -66,9 +68,14 @@ export class IntegrationTestHelper {
         this.config = {
             program: this.hwPath,
             queryText: fs.readFileSync(this.hwPath).toString(),
-            username: this.username, password: this.password,
-            hostname: this.hostname, authType: 'DIGEST',
-            ssl: this.ssl, pathToCa: this.pathToCa, rejectUnauthorized: this.rejectUnauthorized
+            username: this.username,
+            password: this.password,
+            hostname: this.hostname,
+            authType: 'DIGEST',
+            managePort: this.managePort,
+            ssl: this.ssl,
+            pathToCa: this.pathToCa,
+            rejectUnauthorized: this.rejectUnauthorized
         }
         this.debugClient = new DebugClient('node', this.exec, 'node')
         return this.debugClient.start()
@@ -127,7 +134,7 @@ export class IntegrationTestHelper {
 
     async getRid(client: MarklogicClient, qry: string): Promise<string[]> {
         const newParams: MlClientParameters = JSON.parse(JSON.stringify(client.params))
-        newParams.port = 8002
+        newParams.port = this.managePort
         const newClient = new MarklogicClient(newParams)
         return sendJSQuery(newClient, qry)
             .result(
@@ -143,7 +150,7 @@ export class IntegrationTestHelper {
 
     async getRequestStatuses(client: MarklogicClient, qry: string): Promise<{ requestId: string }[][]> {
         const newParams: MlClientParameters = JSON.parse(JSON.stringify(client.params))
-        newParams.port = 8002
+        newParams.port = this.managePort
         const newClient = new MarklogicClient(newParams)
         return sendJSQuery(newClient, qry)
             .result(
@@ -159,7 +166,7 @@ export class IntegrationTestHelper {
 
     async cancelRequest(client: MarklogicClient, qry: string): Promise<unknown> {
         const newParams: MlClientParameters = JSON.parse(JSON.stringify(client.params))
-        newParams.port = 8002
+        newParams.port = this.managePort
         const newClient = new MarklogicClient(newParams)
         return sendJSQuery(newClient, qry)
             .result(

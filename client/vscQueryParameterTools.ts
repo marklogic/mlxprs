@@ -58,6 +58,7 @@ export function getDbClient(queryText: string, language: string, cfg: WorkspaceC
         user: String(cfg.get('marklogic.username')),
         pwd: String(cfg.get('marklogic.password')),
         port: Number(cfg.get('marklogic.port')),
+        managePort: Number(cfg.get('marklogic.managePort')),
         contentDb: String(cfg.get('marklogic.documentsDb')),
         modulesDb: String(cfg.get('marklogic.modulesDb')),
         authType: String(cfg.get('marklogic.authType')).toUpperCase(),

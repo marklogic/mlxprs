@@ -284,6 +284,11 @@
                     "default": 8000,
                     "description": "port on which to reach the MarkLogic server"
                 },
+                "marklogic.managePort": {
+                    "type": "integer",
+                    "default": 8002,
+                    "description": "MarkLogic Manage AppServer port"
+                },
                 "marklogic.username": {
                     "type": "string",
                     "default": "admin",

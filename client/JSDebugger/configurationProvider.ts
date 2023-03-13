@@ -8,11 +8,11 @@ import * as request from 'request-promise'
 import * as querystring from 'querystring'
 import * as fs from 'fs'
 
+const DEFAULT_MANAGE_PORT = 8002
 
-function buildUrl(hostname: string, endpointPath: string, ssl = true): string {
-    const dbgPort = 8002
+function buildUrl(hostname: string, endpointPath: string, ssl = true, managePort = DEFAULT_MANAGE_PORT): string {
     const scheme: string = ssl ? 'https' : 'http'
-    const url = `${scheme}://${hostname}:${dbgPort}${endpointPath}`
+    const url = `${scheme}://${hostname}:${managePort}${endpointPath}`
     return url
 }
 
@@ -59,6 +59,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         config.hostname = String(wcfg.get('marklogic.host'))
         config.username = String(wcfg.get('marklogic.username'))
         config.password = String(wcfg.get('marklogic.password'))
+        config.managePort = Number(wcfg.get('marklogic.managePort'))
         config.database = String(wcfg.get('marklogic.documentsDb'))
         config.modules = String(wcfg.get('marklogic.modulesDb'))
         config.mlModulesRoot = String(wcfg.get('marklogic.modulesRoot'))
@@ -93,7 +94,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         }
         if (config.request == 'launch' && !config.database.match(/^\d+$/)) {
             await this.resolveDatabasetoId(config.username, config.password, config.database, config.hostname,
-                config.ssl, ca, config.rejectUnauthorized)
+                config.ssl, ca, config.rejectUnauthorized, config.managePort)
                 .then(resp => {
                     config.database = resp.match('\r\n\r\n(.*[0-9])\r\n')[1] //better way of parsing?
                 }).catch(e => {
@@ -104,7 +105,7 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         }
         if (config.request == 'launch' && !config.modules.match(/^\d+$/)) {
             await this.resolveDatabasetoId(config.username, config.password, config.modules, config.hostname,
-                config.ssl, ca, config.rejectUnauthorized)
+                config.ssl, ca, config.rejectUnauthorized, config.managePort)
                 .then(resp => {
                     config.modules = resp.match('\r\n\r\n(.*[0-9])\r\n')[1] //better way of parsing?
                 }).catch(() => {
@@ -116,16 +117,15 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
 
         //query for paused requests
         if (config.request === 'attach' && config.username && config.password) {
-            const resp = await this.getAvailableRequests(config.username,
-                config.password, config.debugServerName, config.hostname, config.ssl, ca,
-                config.rejectUnauthorized)
+            const resp = await this.getAvailableRequests(config.username, config.password, config.debugServerName,
+                config.hostname, config.ssl, ca, config.rejectUnauthorized, config.managePort)
             const requests: string[] = JSON.parse(resp).requestIds
             const pausedRequests = []
             for (let i = 0; i < requests.length; i++) {
                 try {
                     let resp = await this.getRequestInfo(
-                        config.username, config.password, requests[i] as string,
-                        config.debugServerName, config.hostname, config.ssl, ca)
+                        config.username, config.password, requests[i] as string, config.debugServerName,
+                        config.hostname, config.ssl, ca, config.managePort)
                     resp = resp.match('\r\n\r\n(.*)\r\n')[1]
                     const requestText = JSON.parse(resp)['requestText']
                     const startTime = JSON.parse(resp)['startTime']
@@ -158,9 +158,12 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
         return config
     }
 
-    private async getAvailableRequests(username: string, password: string, debugServerName: string,
-        hostname: string, ssl?: boolean, ca?: Buffer, rejectUnauthorized = true): Promise<string> {
-        const url = buildUrl(hostname, `/jsdbg/v1/paused-requests/${debugServerName}`, ssl)
+    private async getAvailableRequests(
+        username: string, password: string, debugServerName: string, hostname: string, ssl?: boolean,
+        ca?: Buffer, rejectUnauthorized = true, managePort = DEFAULT_MANAGE_PORT
+    ): Promise<string> {
+
+        const url = buildUrl(hostname, `/jsdbg/v1/paused-requests/${debugServerName}`, ssl, managePort)
         const options = {
             headers: {
                 'X-Error-Accept': ' application/json'
@@ -177,8 +180,10 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
     }
 
     private async resolveDatabasetoId(username: string, password: string, database: string, hostname: string,
-        ssl?: boolean, ca?: Buffer, rejectUnauthorized = true): Promise<string> {
-        const url = buildUrl(hostname, '/v1/eval', ssl)
+        ssl?: boolean, ca?: Buffer, rejectUnauthorized = true, managePort = DEFAULT_MANAGE_PORT
+    ): Promise<string> {
+
+        const url = buildUrl(hostname, '/v1/eval', ssl, managePort)
         const script = `xdmp.database("${database}")`
         const options: Record<string, unknown> = {
             headers: {
@@ -199,8 +204,10 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
     }
 
     private async getRequestInfo(username: string, password: string, requestId: string, debugServerName: string, hostname: string,
-        ssl?: boolean, ca?: Buffer, rejectUnauthorized = true): Promise<string> {
-        const url = buildUrl(hostname, '/v1/eval', ssl)
+        ssl?: boolean, ca?: Buffer, rejectUnauthorized = true, managePort = DEFAULT_MANAGE_PORT
+    ): Promise<string> {
+
+        const url = buildUrl(hostname, '/v1/eval', ssl, managePort)
         const script = `xdmp.requestStatus(xdmp.host(),xdmp.server("${debugServerName}"),"${requestId}")`
         const options: Record<string, unknown> = {
             headers: {
@@ -232,6 +239,7 @@ export function _connectServer(servername: string): void {
     const username: string = cfg.get('marklogic.username')
     const password: string = cfg.get('marklogic.password')
     const hostname: string = cfg.get('marklogic.host')
+    const managePort: number = cfg.get('marklogic.managePort')
     const ssl = Boolean(cfg.get('marklogic.ssl'))
     const pathToCa = String(cfg.get('marklogic.pathToCa') || '')
     const rejectUnauthorized = Boolean(cfg.get('marklogic.rejectUnauthorized'))
@@ -248,7 +256,7 @@ export function _connectServer(servername: string): void {
         vscode.window.showErrorMessage('Password is not provided')
         return
     }
-    const url = buildUrl(hostname, `/jsdbg/v1/connect/${servername}`, ssl)
+    const url = buildUrl(hostname, `/jsdbg/v1/connect/${servername}`, ssl, managePort)
     const options = {
         headers: {
             'Content-type': 'application/x-www-form-urlencoded',
@@ -276,6 +284,7 @@ export function _disconnectServer(servername: string): void {
     const username: string = cfg.get('marklogic.username')
     const password: string = cfg.get('marklogic.password')
     const hostname: string = cfg.get('marklogic.host')
+    const managePort: number = cfg.get('marklogic.managePort')
     const ssl = Boolean(cfg.get('marklogic.ssl'))
     const pathToCa = String(cfg.get('marklogic.pathToCa') || '')
     const rejectUnauthorized = Boolean(cfg.get('marklogic.rejectUnauthorized'))
@@ -292,7 +301,7 @@ export function _disconnectServer(servername: string): void {
         vscode.window.showErrorMessage('Password is not provided')
         return
     }
-    const url = buildUrl(hostname, `/jsdbg/v1/disconnect/${servername}`, ssl)
+    const url = buildUrl(hostname, `/jsdbg/v1/disconnect/${servername}`, ssl, managePort)
     const options = {
         headers: {
             'Content-type': 'application/x-www-form-urlencoded',

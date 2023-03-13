@@ -1,18 +1,18 @@
 import * as assert from 'assert'
 import { after } from 'mocha'
+import { window, workspace, Uri } from 'vscode'
 
-import { window, workspace } from 'vscode'
 import { defaultDummyGlobalState } from './dummyGlobalState'
 import {
     testOverrideQueryWithGoodJSON, testOverrideQueryWithBadJSON, testQueryWithoutOverrides,
     testOverrideXQueryWithGoodJSON, testOverrideXQueryWithBadJSON, testXQueryWithoutOverrides,
     testOverrideSslParams
 } from './testOverrideQuery'
+import { MLRuntime } from '../../JSDebugger/mlRuntime'
+import { AttachRequestArguments } from '../../JSDebugger/mlDebug'
 import { MarklogicClient } from '../../marklogicClient'
-import { getDbClient, parseQueryForOverrides } from '../../vscQueryParameterTools'
-
-import { Uri } from 'vscode'
 import { QueryResultsContentProvider } from '../../queryResultsContentProvider'
+import { getDbClient, parseQueryForOverrides } from '../../vscQueryParameterTools'
 
 const SJS = 'sjs'
 const XQY = 'xqy'
@@ -20,6 +20,18 @@ const XQY = 'xqy'
 suite('Extension Test Suite', () => {
     after(() => {
         window.showInformationMessage('All tests done!')
+    })
+
+    test('When a RunTime object is initialized with a custom managePort', async () => {
+        const runTime = new MLRuntime()
+        const args: AttachRequestArguments = {
+            rid: '', root: '',
+            username: '', password: '',
+            hostname: '', debugServerName: null, managePort: 11111,
+            ssl: false, pathToCa: null, rejectUnauthorized: false
+        }
+        runTime.initialize(args)
+        assert.strictEqual(runTime.getDbgPort(), 11111, 'the custom managePort should be reflected in the RunTime object')
     })
 
     test('getDbClient should cache its settings in the state passed to it', () => {
