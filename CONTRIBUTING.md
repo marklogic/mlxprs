@@ -12,7 +12,7 @@ Even better, you can submit a Pull Request with a fix for the issue you filed.
 
 If you would like to implement a new feature, please create a new issue with your proposal.
 
-### Submitting an Issue
+## Submitting an Issue
 
 Please check the issue tracker before you submit an issue search, to help avoid duplicates. If your issue appears to be a bug, and hasn't been reported, open a new issue. 
 
@@ -25,9 +25,9 @@ The following information is most helpful:
 * **Pointers** — If you have a hunch or just don't want to bother with a pull request,
 please point me in the right direction (e.g. line numbers) to fix it.
 
-## Development, Builds and Testing
+# Development
 
-### Project Layout
+## Project Layout
 
 * **package.json** — Metadata about the project, including details for the extensions browser, dependencies, build scripts, commands and user configuration
 * **client** — Main extension folder
@@ -38,7 +38,15 @@ please point me in the right direction (e.g. line numbers) to fix it.
     * **package.json** — As the language server is technically a separate package, this defines the dependencies for it
     * **server.ts** — Code insertion point.  Contains initialization code for language server.
 
-### Building and Testing Project
+## Building The Project
+
+It is recommended to use VSCode as the editor for this package, as it can self-load a debug instance.
+
+* Open the project folder in VSCode
+* Select the "Run and Debug" sidebar window (Ctrl+Shift+D)
+* Choose "Launch Extension (debug)" from the RUN AND DEBUG dropdown menu
+* Press the green play button or F5 to compile and launch the plugin in a test environment
+* Please see the README.md file for information on configuring and working in the test environment
 
 Building the project requires [Node.js](https://nodejs.org/) to be installed on your local machine.  Node v14 LTS is recommended.
 
@@ -51,7 +59,7 @@ npm install
 cd ..
 ```
 
-***IMPORTANT NOTE:***
+### Windows environment - IMPORTANT NOTE
 *The shell scripts used to drive node compilation assume a \*nix environment.  If you are on Windows, you have a few options:*
 * Install WSL
 * Install GitBash
@@ -64,32 +72,37 @@ You can choose which environment should be used as the default shell for npm wit
 
 To compile changes, run `npm run-script compile`.  Note that both the client and the language server need to finish compiling before you attempt to run the extension, or you will get an error.  Other script definitions are in `package.json.`
 
-It is recommended to use VSCode as the editor for this package, as it can self-load a debug instance.
 
-* Open the project folder in VSCode
-* Select the "Run and Debug" sidebar window (Ctrl+Shift+D)
-* Choose "Launch Extension (debug)" from the RUN AND DEBUG dropdown menu
-* Press the green play button or F5 to compile and launch the plugin in a test environment
-* Please see the README.md file for information on configuring and working in the test environment
+## Testing
 
-#### Testing from within VSCode
+The project contains three test applications.
+
+* Client Tests - Runs the test files under /client/test/suite, transpiled to /dist/test/suite
+    * client.test.js 
+    * xqyRuntime.test.js 
+* Server Tests - Runs the test files under /server/test/suite, transpiled to /server/dist/test/suite
+    * server.test.js
+* Client-Integration Tests - Runs the test files under /client/test/integration, transpiled to /dist/test/integration
+    * Requires ML App Server setup first (See "Integration Testing Setup" below for more information)
+    * sjsAdapter.test.js 
+
+### Integration Testing Setup
+
+JavaScript debugger integration testing requires a running server where you have full admin rights. Ideally, you should use a dedicated MarkLogic instance for this purpose. The tests assume the existence of a "mlxprs-test" application server running on port 8055 using the "mlxprs-test-content" and "mlxprs-test-modules" databases. That values are set in gradle.properties and the admin password should be set in gradle-local.properties. The you can use the command, "./gradlew -i mlDeploy" to build and configure the databases and application servers.
+
+### Integration Test Overview
+The integration test will perform following:
+* Upload test scripts and modules to `Modules` database
+* Run tests against the uploaded scripts and MarkLogic application server, simulating JS debugger interactions
+* Delete scripts from `Modules` databse
+
+### Testing from within VSCode
 Unit tests are available from the dropdown menu, as well.  These are very basic at the moment, and need some love.
 There are currently three run configurations for tests in launch.json
 
 * "Launch Client Tests"
-    * Runs the tests under /dist/test/suite
-    * Transpiled from files under /client/test/suite
-        * client.test.js 
-        * xqyRuntime.test.js 
 * "Launch Server Tests"
-    * Runs the tests under /server/dist/test/suite
-    * Transpiled from files under /server/test/suite
-        * server.test.js
 * "Launch Client-Integration Tests"
-    * Requires ML App Server setup first (See "Debugger Integration Testing" below for more information)
-    * Runs the tests under /dist/test/integration
-    * Transpiled from files under /client/test/integration
-        * sjsAdapter.test.js 
 
 For the Client-Integration test, if you need to override the default properties, you have 2 options.
 * Edit the values the integration.env file (in ${workspaceFolder}/client/test/integration), and add the following property to the launch configuration for Client-Integration:
@@ -102,61 +115,44 @@ For the Client-Integration test, if you need to override the default properties,
 
 
 ## Setup
-
-JavaScript debugger integration testing requires a running server where you have full admin rights.
-It is recommended to use a MarkLogic instance where the "Documents" and "Modules" databases are not used for any other application.
-Ideally, you should use a dedicated MarkLogic instance for this purpose altogehter (Docker might be a good idea).
-
-On the MarkLogic instance, create an HTTP server in MarkLogic with the following non-default properties:
-
-- server name: JSdebugTestServer
-- root: `/`
-- port: `8055`
-- modules: "Modules"
-- database: "Documents"
-- error handler: `/MarkLogic/rest-api/error-handler.xqy`
-- url rewriter: `/MarkLogic/rest-api/rewriter.xml`
-- ssl: off (ssl certificate template: none)
-
-
-The test script will perform following:
-
-- Upload test scripts and modules to `Modules` database
-- Run tests against the uploaded scripts, simulating JS debugger interactions
-- Delete scripts from `Modules` databse
-
-
-#### Testing from the command line
+### Testing from the command line
 
 Run these two npm scripts to execute the tests from the command line. Note that VSCode must not be running while you run the tests from the command line in the root directory of the project.
-
-- npm run npmInstallClientAndServer
-- export ML_PASSWORD=\<password> ;npm run testAll
-
+```
+npm run npmInstallClientAndServer
+npm run test
+npm run testServer
+export ML_PASSWORD=\<password> ;npm run testIntegration
+```
+All three test sets may also be run with a single command:
+```
+export ML_PASSWORD=\<password> ;npm run testAll
+```
 To ensure a clean build, you may also run this npm script to clean the project first.
+```
+npm run completeClean
+```
 
-- npm run completeClean
-
-### Submitting a Pull Request
+## Submitting a Pull Request
 
 Please refer to [Github's documentation on the matter](https://help.github.com/articles/creating-a-pull-request/).
 
-#### Formatting code
+## Formatting code
 
 Project coding standards for formatting and styling are documented in `.editorconfig` and `.eslintrc.json`. Both of these tools offer VS Code extensions to automatically recommend and/or apply rules while editing:
 
 - [editorconfig VS Code extension](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig) 
 - [eslint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
 
-### Notes on development environment
+## Notes on development environment
 
 Please try to develop, build, and test with the most recent stable releases of the following components:
 
 - Visual Studio Code
 - node.js, npm (v14 LTS)
-- MarkLogic 9 or 10
+- MarkLogic 9, 10, or 11
 
-### Building the artifact
+## Building the artifact
 
 - Install the vsce tool
     - npm install -g @vscode/vsce

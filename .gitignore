@@ -6,3 +6,5 @@ server/node_modules
 dist
 .DS_Store
 .vscode-test
+.gradle
+gradle-local.properties

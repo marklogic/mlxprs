@@ -9,6 +9,10 @@ import { MarklogicClient, MlClientParameters, sendJSQuery } from '../../marklogi
 export class IntegrationTestHelper {
 
     private collection = 'VSCODE/SJS-debug-test'
+    public appServerPort = '8055'
+    public documentsDatabase = 'mlxprs-test-content'
+    public modulesDatabase = 'mlxprs-test-modules'
+    public modulesDatabaseToken = '%%MODULES-DATABASE%%'
     private rootFolder = Path.join(__dirname, '../../../')
     readonly scriptFolder = Path.join(this.rootFolder, 'client/test/integration/jsScripts')
     readonly hwPath = Path.join(this.scriptFolder, 'helloWorld.sjs')
@@ -16,14 +20,15 @@ export class IntegrationTestHelper {
 
     private wcfg = vscode.workspace.getConfiguration()
     private hostname = String(process.env.ML_HOST || this.wcfg.get('marklogic.host') || 'localhost')
-    private port = Number(process.env.ML_PORT || this.wcfg.get('marklogic.port') || '8055')
+    private port = Number(process.env.ML_PORT || this.wcfg.get('marklogic.port') || this.appServerPort)
     private managePort = Number(process.env.ML_MANAGEPORT || this.wcfg.get('marklogic.managePort') || '8002')
     private username = String(process.env.ML_USERNAME || this.wcfg.get('marklogic.username') || 'admin')
     private password = String(process.env.ML_PASSWORD || this.wcfg.get('marklogic.password') || 'admin')
-    private modulesDB = String(process.env.ML_MODULESDB || this.wcfg.get('marklogic.modulesDb') || 'Modules')
+    private modulesDB = String(process.env.ML_MODULESDB || this.wcfg.get('marklogic.modulesDb') || this.modulesDatabase)
     private pathToCa = String(this.wcfg.get('marklogic.pathToCa') || '')
     private ssl = Boolean(this.wcfg.get('marklogic.ssl'))
     private rejectUnauthorized = Boolean(this.wcfg.get('marklogic.rejectUnauthorized'))
+
     public config = null
     public debugClient = null
     readonly mlClient = new MarklogicClient(
@@ -56,12 +61,12 @@ export class IntegrationTestHelper {
 
     async beforeEverything(): Promise<void> {
         _connectServer('JSdebugTestServer')
-        this.loadTestData()
+        await this.loadTestData()
     }
 
     async afterEverything(): Promise<void> {
         _disconnectServer('JSdebugTestServer')
-        this.deleteTestData()
+        await this.deleteTestData()
     }
 
     setupEachTest(): void {
@@ -118,7 +123,7 @@ export class IntegrationTestHelper {
     }
 
     private async deleteTestData(): Promise<void> {
-        sendJSQuery(this.mlClient, `declareUpdate(); xdmp.collectionDelete('${this.collection}')`)
+        await sendJSQuery(this.mlClient, `declareUpdate(); xdmp.collectionDelete('${this.collection}')`)
             .result(
                 () => {
                     console.debug(`Removed ${this.collection} modules after SJS debugger tests.`)
