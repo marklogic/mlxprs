@@ -91,6 +91,15 @@ There are currently three run configurations for tests in launch.json
     * Transpiled from files under /client/test/integration
         * sjsAdapter.test.js 
 
+For the Client-Integration test, if you need to override the default properties, you have 2 options.
+* Edit the values the integration.env file (in ${workspaceFolder}/client/test/integration), and add the following property to the launch configuration for Client-Integration:
+
+`"envFile": "${workspaceFolder}/client/test/integration/integration.env"`
+
+* Export environment variables (with the same names as the examples in integration.env)
+
+`export ML_MANAGEPORT=8002`
+
 
 ## Setup
 

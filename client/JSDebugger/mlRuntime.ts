@@ -9,6 +9,8 @@ import * as request from 'request-promise'
 import * as fs from 'fs'
 import * as querystring from 'querystring'
 
+const DEFAULT_MANAGE_PORT = 8002
+
 /**Interfaces defined for Debugger Response*/
 
 export interface V8Frame {
@@ -64,12 +66,12 @@ export class MLRuntime extends EventEmitter {
     private _timeout = 1;
     private _ssl = false;
     private _scheme = '';
-    private _dbgPort = 8002;
-    private _endpointRoot = '/jsdbg/v1'
+    private _dbgPort = DEFAULT_MANAGE_PORT;
+    private _endpointRoot = '/jsdbg/v1';
     private _ca: undefined | Buffer;
-    private _rejectUnauthorized = true
-    private _mlClient: MarklogicClient
-    private _mlModuleGetter: ModuleContentGetter
+    private _rejectUnauthorized = true;
+    private _mlClient: MarklogicClient;
+    private _mlModuleGetter: ModuleContentGetter;
 
     public getHostString(): string {
         return `${this._mlClient.params.host}:${this._mlClient.params.port}`
@@ -104,6 +106,7 @@ export class MLRuntime extends EventEmitter {
         this._hostName = args.hostname
         this._username = args.username
         this._password = args.password
+        this._dbgPort = args.managePort
         this._ssl = args.ssl
         this._scheme = this._ssl ? 'https' : 'http'
         this._rejectUnauthorized = args.rejectUnauthorized
@@ -134,6 +137,11 @@ export class MLRuntime extends EventEmitter {
 
     public getRid(): string {
         return this._rid
+    }
+
+    // Added for testing purposes
+    public getDbgPort(): number {
+        return this._dbgPort
     }
 
     public pause(): Promise<string> {

@@ -20,6 +20,7 @@ interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
     hostname: string;
     username: string;
     password: string;
+    managePort: number;
     rid: string;
     database?: string;
     txnId?: string;
@@ -32,12 +33,13 @@ interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
     scheme?: string;
 }
 
-interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
+export interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
     root: string;
     hostname: string;
     debugServerName: string;
     username: string;
     password: string;
+    managePort: number;
     rid: string;
     ssl?: boolean;
     pathToCa?: Buffer;

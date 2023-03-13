@@ -30,6 +30,7 @@ The MarkLogic extension exposes several configuration options from the standard 
 {
   "marklogic.host": "marklogic-instance.geocities.com",
   "marklogic.port": 8040,
+  "marklogic.managePort": 8002,
   "marklogic.username": "username",
   "marklogic.password": "****************",
   "marklogic.documentsDb": "myproject-content",

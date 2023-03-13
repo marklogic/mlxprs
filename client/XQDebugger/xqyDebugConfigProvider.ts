@@ -1,10 +1,8 @@
-import { DebugConfiguration, DebugConfigurationProvider, WorkspaceFolder, CancellationToken, ProviderResult,
-    window,
-    DebugAdapterDescriptorFactory,
-    DebugAdapterExecutable,
-    DebugAdapterDescriptor,
-    DebugSession, QuickPickItem, QuickPickOptions,
-    WorkspaceConfiguration, workspace } from 'vscode'
+import {
+    DebugConfiguration, DebugConfigurationProvider, WorkspaceFolder, CancellationToken, ProviderResult,
+    window, DebugAdapterDescriptorFactory, DebugAdapterExecutable, DebugAdapterDescriptor,
+    DebugSession, QuickPickItem, QuickPickOptions, WorkspaceConfiguration, workspace
+} from 'vscode'
 import { MarklogicClient, MlClientParameters, sendXQuery } from '../marklogicClient'
 import { readFileSync } from 'fs'
 
@@ -83,6 +81,7 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
         const clientParams: MlClientParameters = new MlClientParameters({
             host: String(cfg.get('marklogic.host')),
             port: Number(cfg.get('marklogic.port')),
+            managePort: Number(cfg.get('marklogic.managePort')),
             user: String(cfg.get('marklogic.username')),
             pwd: String(cfg.get('marklogic.password')),
             contentDb: String(cfg.get('marklogic.documentsDb')),

@@ -23,6 +23,7 @@ export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArgum
     trace?: boolean;
     rid: string;
     clientParams: MlClientParameters;
+    managePort: number;
     root: string;
 }
 
