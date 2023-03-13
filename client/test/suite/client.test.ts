@@ -26,8 +26,8 @@ suite('Extension Test Suite', () => {
         const runTime = new MLRuntime()
         const args: AttachRequestArguments = {
             rid: '', root: '',
-            username: '', password: '',
-            hostname: '', debugServerName: null, managePort: 11111,
+            username: 'user', password: 'pass',
+            hostname: 'server', debugServerName: null, managePort: 11111,
             ssl: false, pathToCa: null, rejectUnauthorized: false
         }
         runTime.initialize(args)
