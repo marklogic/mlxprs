@@ -58,20 +58,10 @@ cd server
 npm install
 cd ..
 ```
-
-### Windows environment - IMPORTANT NOTE
-*The shell scripts used to drive node compilation assume a \*nix environment.  If you are on Windows, you have a few options:*
-* Install WSL
-* Install GitBash
-* Install PowerShell v7+
-    * Windows Powershell v5.1 is not supported
-    * [Migration Instructions](https://learn.microsoft.com/en-us/powershell/scripting/whats-new/migrating-from-windows-powershell-51-to-powershell-7?view=powershell-7.2)
-    * Note: this is currently broken because of [an open bug in npm](https://github.com/npm/cli/issues/5332).  Use Bash.  :(
-        
-You can choose which environment should be used as the default shell for npm with the command `npm config set script-shell [shell]`.  For instance, to use WSL Bash, you would run `npm config set script-shell bash`.  PowerShell v7+ is `npm config set script-shell pwsh`  You can reset this with `npm config delete script-shell`.  Even if running npm from PowerShell, it will try to use cmd.exe as the default shell if you do not define it.
-
-To compile changes, run `npm run-script compile`.  Note that both the client and the language server need to finish compiling before you attempt to run the extension, or you will get an error.  Other script definitions are in `package.json.`
-
+A shorthand script that does all of that for you is
+```
+npm run npmInstallClientAndServer
+```
 
 ## Testing
 
@@ -86,51 +76,81 @@ The project contains three test applications.
     * Requires ML App Server setup first (See "Integration Testing Setup" below for more information)
     * sjsAdapter.test.js 
 
+
 ### Integration Testing Setup
 
-JavaScript debugger integration testing requires a running server where you have full admin rights. Ideally, you should use a dedicated MarkLogic instance for this purpose. The tests assume the existence of a "mlxprs-test" application server running on port 8055 using the "mlxprs-test-content" and "mlxprs-test-modules" databases. That values are set in gradle.properties and the admin password should be set in gradle-local.properties. The you can use the command, "./gradlew -i mlDeploy" to build and configure the databases and application servers.
+JavaScript debugger integration testing requires a running MarkLogic server where you have full admin rights. Ideally, you should use a dedicated MarkLogic instance for this purpose. The tests assume the existence of a "mlxprs-test" application server running on port 8055 using the "mlxprs-test-content" and "mlxprs-test-modules" databases. Those values are set in gradle.properties and the admin password should be set in gradle-local.properties. Then you can use the command, "./gradlew -i mlDeploy" to build and configure the databases and application servers.
 
 ### Integration Test Overview
-The integration test will perform following:
+The integration test will do the following:
 * Upload test scripts and modules to `Modules` database
 * Run tests against the uploaded scripts and MarkLogic application server, simulating JS debugger interactions
 * Delete scripts from `Modules` databse
 
 ### Testing from within VSCode
-Unit tests are available from the dropdown menu, as well.  These are very basic at the moment, and need some love.
-There are currently three run configurations for tests in launch.json
+Within VSCode, unit tests are available from the dropdown menu in the Run and Debug panel.  There are currently three run configurations for three test sets in launch.json
 
 * "Launch Client Tests"
 * "Launch Server Tests"
 * "Launch Client-Integration Tests"
 
-For the Client-Integration test, if you need to override the default properties, you have 2 options.
-* Edit the values the integration.env file (in ${workspaceFolder}/client/test/integration), and add the following property to the launch configuration for Client-Integration:
 
-`"envFile": "${workspaceFolder}/client/test/integration/integration.env"`
+For the Client-Integration test, the code (test code only) defaults to the same settings as the default values in the gradle.properties file. If you need to override the default properties, you have 3 options.
+1. Edit the values the integration.env file (in ${workspaceFolder}/client/test/integration), and add the following property to the launch configuration for Client-Integration:
+```
+"envFile": "${workspaceFolder}/client/test/integration/integration.env"`
+```
+2. Export environment variables with the same names as the examples in integration.env. For example in a bash shell:
+```
+export ML_PASSWORD=admin
+```
+3. If you are running the tests from within VSCode, you can package and load the MarkLogic extension, and set the values on the extension settings page. If you need to build the artifact so that you can load the version of the extension you are working on, please see the "Building the artifact" section below.
 
-* Export environment variables (with the same names as the examples in integration.env)
+Note that the order of priority for setting the property values in the test code is the following
+1. Environment variables
+2. Extension settings
+3. Default values (hard-coded, but matches gradle.properties)
 
-`export ML_MANAGEPORT=8002`
 
-
-## Setup
 ### Testing from the command line
-
-Run these two npm scripts to execute the tests from the command line. Note that VSCode must not be running while you run the tests from the command line in the root directory of the project.
+Run these two npm scripts from the command line in the root directory of the project to execute the tests. Note that VSCode must not be running while you run the tests.
 ```
 npm run npmInstallClientAndServer
+export ML_PASSWORD=\<password> ;npm run testAll
+```
+Alternatively, each test set may be run individually using the commands below.
+```
 npm run test
 npm run testServer
 export ML_PASSWORD=\<password> ;npm run testIntegration
 ```
-All three test sets may also be run with a single command:
-```
-export ML_PASSWORD=\<password> ;npm run testAll
-```
-To ensure a clean build, you may also run this npm script to clean the project first.
+To ensure a clean build, you may also run this npm script before running the npmInstallClientAndServer script.
 ```
 npm run completeClean
+```
+
+## Building the artifact
+
+- Install the vsce tool
+```
+npm install -g @vscode/vsce
+```
+- Build the artifact
+```
+vsce package
+```
+- If you are running in a Windows environment, you will need to use npx:
+```
+npx vsce package
+```
+This should produce a file with the name, "mlxprs-<version>.vsix"
+
+### Windows environment - IMPORTANT NOTE
+The same NPM scripts should work in Windows, however this is not thoroughly verified. In order to run all the scripts from package.json in a Windows environment, it is recommended that you install the 'rimraf', 'typescript', and 'webpack' node packages globally.
+```
+npm install -g rimraf
+npm install -g typescript
+npm install -g webpack
 ```
 
 ## Submitting a Pull Request
@@ -152,13 +172,5 @@ Please try to develop, build, and test with the most recent stable releases of t
 - node.js, npm (v14 LTS)
 - MarkLogic 9, 10, or 11
 
-## Building the artifact
-
-- Install the vsce tool
-    - npm install -g @vscode/vsce
-- Build the artifact
-    - vsce package
-
-This should produce a file with the name, "mlxprs-<version>.vsix"
-
+## Publishing the artifact
 See [Publishing Extensions](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) for more information

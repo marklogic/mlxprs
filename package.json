@@ -416,20 +416,20 @@
         ]
     },
     "scripts": {
-        "completeClean": "rimraf node_modules/ .vscode-test/ dist/ server/dist/ server/node_modules/ server/out/",
+        "completeClean": "rimraf node_modules/ .vscode-test/ dist/ server/dist/ server/node_modules/ server/out/ mlxprs-${version}.vsix",
         "npmInstallClientAndServer": "npm install && cd server && npm install && cd ..",
         "testAll": "npm run test && npm run testIntegration && npm run testServer",
         "copy-files": "npm run copy-files --prefix server",
-        "clean": "rm -rf dist out server/dist server/out",
-        "vscode:prepublish": "./node_modules/.bin/webpack --mode production && ./node_modules/.bin/webpack --mode production --config ./server/webpack.config.js",
-        "compile": "npm run clean && ./node_modules/webpack/bin/webpack.js --mode none && ./node_modules/webpack/bin/webpack.js --mode none --config ./server/webpack.config.js",
-        "pretest": "rm -rf dist && tsc -p tsconfig.json && ./node_modules/webpack/bin/webpack.js --mode development --config webpack.test.js",
+        "clean": "rimraf dist out server/dist server/out",
+        "vscode:prepublish": "webpack --mode production && webpack --mode production --config ./server/webpack.config.js",
+        "compile": "npm run clean && webpack --mode none && webpack --mode none --config ./server/webpack.config.js",
+        "pretest": "rimraf dist && tsc -p tsconfig.json && webpack --mode development --config webpack.test.js",
         "pretest-server": "tsc -p server/tsconfig.json && npm run copy-files",
         "predebug": "npm run clean && npm run copy-files --prefix server && tsc -b server && tsc -b -w .",
         "test": "node dist/test/runTest.js --full-trace",
         "testIntegration": "node dist/test/runIntegrationTest.js --full-trace",
         "testServer": "npm run pretest-server && node server/dist/test/runTest.js --full-trace",
-        "watch": "./node_modules/webpack/bin/webpack.js --mode none --watch & ./node_modules/webpack/bin/webpack.js --mode none --watch --config ./server/webpack.config.js"
+        "watch": "webpack --mode none --watch & webpack --mode none --watch --config ./server/webpack.config.js"
     },
     "devDependencies": {
         "@types/esprima": "4.0.3",
@@ -446,7 +446,7 @@
         "esprima": "4.0.1",
         "https-proxy-agent": "5.0.1",
         "js-yaml": "4.1.0",
-        "marklogic": "2.9.1",
+        "marklogic": "3.0.0",
         "merge-options": "3.0.4",
         "mocha": "10.2.0",
         "request": "2.88.2",
