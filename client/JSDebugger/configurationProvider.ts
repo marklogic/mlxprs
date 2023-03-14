@@ -98,9 +98,8 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
                 .then(resp => {
                     config.database = resp.match('\r\n\r\n(.*[0-9])\r\n')[1] //better way of parsing?
                 }).catch(e => {
-                    return vscode.window.showErrorMessage('Error getting database setting').then(() => {
-                        return undefined
-                    })
+                    vscode.window.showErrorMessage(`Error getting database id for database name, '${config.database}'`)
+                    return null
                 })
         }
         if (config.request == 'launch' && !config.modules.match(/^\d+$/)) {
