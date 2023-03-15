@@ -86,6 +86,7 @@ The integration test will do the following:
 * Upload test scripts and modules to `Modules` database
 * Run tests against the uploaded scripts and MarkLogic application server, simulating JS debugger interactions
 * Delete scripts from `Modules` databse
+* Results are currently written to "results/integrationTestResults.xml".
 
 ### Testing from within VSCode
 Within VSCode, unit tests are available from the dropdown menu in the Run and Debug panel.  There are currently three run configurations for three test sets in launch.json
@@ -116,14 +117,12 @@ Note that the order of priority for setting the property values in the test code
 Run these two npm scripts from the command line in the root directory of the project to execute the tests. Note that VSCode must not be running while you run the tests.
 ```
 npm run npmInstallClientAndServer
-export ML_PASSWORD=\<password> ;npm run testAll
-```
-Alternatively, each test set may be run individually using the commands below.
-```
 npm run test
 npm run testServer
-export ML_PASSWORD=\<password> ;npm run testIntegration
+code --extensionDevelopmentPath=<mlxprs-project-dir>/client --extensionTestsPath=<mlxprs-project-dir>/dist/test/integration/index
 ```
+<mark>The final test (the integration tests), should not be run while VSCode is open.</mark>
+
 To ensure a clean build, you may also run this npm script before running the npmInstallClientAndServer script.
 ```
 npm run completeClean

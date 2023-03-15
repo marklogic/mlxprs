@@ -5,6 +5,8 @@ server/node_modules
 *.vsix
 dist
 .DS_Store
+.vscode/settings.json
 .vscode-test
 .gradle
 gradle-local.properties
+results/
