@@ -9,5 +9,11 @@
     "editor.formatOnSave": true,
     "[typescript]": {
         "editor.defaultFormatter": "vscode.typescript-language-features"
-    }
+    },
+    "marklogic.host": "localhost",
+    "marklogic.username": "admin",
+    "marklogic.password": "xxxx",
+    "marklogic.port": 8055,
+    "marklogic.documentsDb": "mlxprs-test-content",
+    "marklogic.modulesDb": "mlxprs-test-modules",
 }

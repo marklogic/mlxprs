@@ -65,7 +65,7 @@
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}/client",
+                "--extensionDevelopmentPath=${workspaceFolder}",
                 "--extensionTestsPath=${workspaceRoot}/dist/test/integration/index"
             ],
             "sourceMaps": true,

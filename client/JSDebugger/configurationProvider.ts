@@ -234,14 +234,15 @@ export class DebugAdapterExecutableFactory implements vscode.DebugAdapterDescrip
 }
 
 export function _connectServer(servername: string): void {
-    const cfg = vscode.workspace.getConfiguration()
-    const username: string = cfg.get('marklogic.username')
-    const password: string = cfg.get('marklogic.password')
-    const hostname: string = cfg.get('marklogic.host')
-    const managePort: number = cfg.get('marklogic.managePort')
-    const ssl = Boolean(cfg.get('marklogic.ssl'))
-    const pathToCa = String(cfg.get('marklogic.pathToCa') || '')
-    const rejectUnauthorized = Boolean(cfg.get('marklogic.rejectUnauthorized'))
+    const cfg = vscode.workspace.getConfiguration('marklogic')
+    console.log(JSON.stringify(cfg))
+    const username: string = cfg.get('username')
+    const password: string = cfg.get('password')
+    const hostname: string = cfg.get('host')
+    const managePort: number = cfg.get('managePort')
+    const ssl = Boolean(cfg.get('ssl'))
+    const pathToCa = String(cfg.get('pathToCa') || '')
+    const rejectUnauthorized = Boolean(cfg.get('rejectUnauthorized'))
 
     if (!hostname) {
         vscode.window.showErrorMessage('Hostname is not provided')
@@ -278,15 +279,15 @@ export function _connectServer(servername: string): void {
     })
 }
 
-export function _disconnectServer(servername: string): void {
-    const cfg = vscode.workspace.getConfiguration()
-    const username: string = cfg.get('marklogic.username')
-    const password: string = cfg.get('marklogic.password')
-    const hostname: string = cfg.get('marklogic.host')
-    const managePort: number = cfg.get('marklogic.managePort')
-    const ssl = Boolean(cfg.get('marklogic.ssl'))
-    const pathToCa = String(cfg.get('marklogic.pathToCa') || '')
-    const rejectUnauthorized = Boolean(cfg.get('marklogic.rejectUnauthorized'))
+export function _disconnectServer(servername: string, reportDisconnectError = true): void {
+    const cfg = vscode.workspace.getConfiguration('marklogic')
+    const username: string = cfg.get('username')
+    const password: string = cfg.get('password')
+    const hostname: string = cfg.get('host')
+    const managePort: number = cfg.get('managePort')
+    const ssl = Boolean(cfg.get('ssl'))
+    const pathToCa = String(cfg.get('pathToCa') || '')
+    const rejectUnauthorized = Boolean(cfg.get('rejectUnauthorized'))
 
     if (!hostname) {
         vscode.window.showErrorMessage('Hostname is not provided')
@@ -319,6 +320,8 @@ export function _disconnectServer(servername: string): void {
     request.post(url, options).then(() => {
         vscode.window.showInformationMessage('Debug server disconnected')
     }).catch(() => {
-        vscode.window.showErrorMessage('Debug server disconnect failed')
+        if (reportDisconnectError) {
+            vscode.window.showErrorMessage('Debug server disconnect failed')
+        }
     })
 }
