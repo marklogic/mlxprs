@@ -28,6 +28,7 @@ export class IntegrationTestHelper {
     private pathToCa = String(this.wcfg.get('marklogic.pathToCa') || '')
     private ssl = Boolean(this.wcfg.get('marklogic.ssl'))
     private rejectUnauthorized = Boolean(this.wcfg.get('marklogic.rejectUnauthorized'))
+    public appServerName = String(process.env.ML_APPSERVER || 'mlxprs-test')
 
     public config = null
     public debugClient = null
@@ -60,12 +61,13 @@ export class IntegrationTestHelper {
     private taskServerModules = [this.module6, this.module7, this.module8]
 
     async beforeEverything(): Promise<void> {
-        _connectServer('JSdebugTestServer')
+        _disconnectServer(this.appServerName)
+        _connectServer(this.appServerName)
         await this.loadTestData()
     }
 
     async afterEverything(): Promise<void> {
-        _disconnectServer('JSdebugTestServer')
+        _disconnectServer(this.appServerName)
         await this.deleteTestData()
     }
 
@@ -184,16 +186,16 @@ export class IntegrationTestHelper {
     }
 
     async cancelAllRequests(): Promise<void> {
-        const existingRequestStatuses: { requestId: string }[][] = await this.getRequestStatuses(this.mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server("JSdebugTestServer")).toObject()[0].requestStatuses.toObject()')
+        const existingRequestStatuses: { requestId: string }[][] = await this.getRequestStatuses(this.mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server(this.appServerName)).toObject()[0].requestStatuses.toObject()')
         await existingRequestStatuses[0].forEach(async (requestStatus) => {
             const requestId = requestStatus.requestId
-            const cancelRequestCommand = `declareUpdate(); xdmp.requestCancel(xdmp.host(),xdmp.server("JSdebugTestServer"), \`${requestId}\`)`
+            const cancelRequestCommand = `declareUpdate(); xdmp.requestCancel(xdmp.host(),xdmp.server(this.appServerName), \`${requestId}\`)`
             await this.cancelRequest(this.mlClient, cancelRequestCommand)
         })
     }
 
     async runningRequestsExist(): Promise<boolean> {
-        const existingRequestStatuses: { requestId: string }[][] = await this.getRequestStatuses(this.mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server("JSdebugTestServer")).toObject()[0].requestStatuses.toObject()')
+        const existingRequestStatuses: { requestId: string }[][] = await this.getRequestStatuses(this.mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server(this.appServerName)).toObject()[0].requestStatuses.toObject()')
         return (existingRequestStatuses[0].length > 0)
     }
 
