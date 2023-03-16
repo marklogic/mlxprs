@@ -1,3 +1,12 @@
+## [3.6.0](https://github.com/marklogic-community/mlxprs/releases/tag/v3.6.0)
+
+- [#116](https://github.com/marklogic-community/mlxprs/issues/116) Updated dependencies and fixed all known security vulnerabilities
+- [#119](https://github.com/marklogic-community/mlxprs/issues/119) Added SJS binding to JavaScript language
+- [#97](https://github.com/marklogic-community/mlxprs/issues/97) Added a configuration option for the MarkLogic Manage app server port (used for the SJS debug server port)
+- [#117](https://github.com/marklogic-community/mlxprs/issues/117) Fixed a bug with the first attempt to eval a JavaScript tab
+- [#109](https://github.com/marklogic-community/mlxprs/issues/109) Prevent the database param from being used in REST calls when the database setting is empty
+
+
 ## [3.5.1](https://github.com/mikrovvelle/mlxprs/tree/v3.5.1)
 
 - Fix [#92](https://github.com/mikrovvelle/mlxprs/issues/92), better error handling with XQuery debug launch failures

@@ -37,8 +37,7 @@ The MarkLogic extension exposes several configuration options from the standard 
   "marklogic.modulesDb": "myproject-modules"
 }
 ```
-
-Note that marklogic.documentsDb *must* be declared - see [issue 109](https://github.com/marklogic-community/mlxprs/issues/109).
+Note that marklogic.documentsDb *must* be declared in order to attach to remote JavaScript request.
 
 You can also set `marklogic.authType` to `DIGEST` or `BASIC`. Digest is the default,
 and works even if the server is running basic authentication.
