@@ -38,6 +38,8 @@ please point me in the right direction (e.g. line numbers) to fix it.
     * **package.json** — As the language server is technically a separate package, this defines the dependencies for it
     * **server.ts** — Code insertion point.  Contains initialization code for language server.
 
+* Another important file is .vscode/settings.json. It is recommended that you use settings.json.template to create settings.json, and then customize settings.json to your local environment. Alternatively, these values can also be changed within VSCode when you change settings for this specific workspace.
+
 ## Building The Project
 
 It is recommended to use VSCode as the editor for this package, as it can self-load a debug instance.
