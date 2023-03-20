@@ -121,7 +121,7 @@ suite('Extension Test Suite', () => {
         assert.strictEqual(-1, [1, 2, 3].indexOf(0))
     })
 
-    test('When a file is evaled and a URI is generated to uniquely identify the results', async () => {
+    test('When a JavaScript, XQuery, or SQL tab is evaled and a URI is generated to uniquely identify the results', async () => {
         const provider = new QueryResultsContentProvider()
         const fileUri = Uri.from({
             'scheme': 'scheme',
@@ -132,6 +132,23 @@ suite('Extension Test Suite', () => {
         })
         const expectedResponseUri = 'mlquery://localhost:9876/src/fake/script.sjs.nothing?query'
         await provider.writeResponseToUri(fileUri, [])
+            .then((actualResponseUri) => {
+                assert.strictEqual(actualResponseUri.toString(), expectedResponseUri,
+                    'the URI should not have a double-dash before the filename section')
+            })
+    })
+
+    test('When a SPARQL tab is evaled and a URI is generated to uniquely identify the results', async () => {
+        const provider = new QueryResultsContentProvider()
+        const fileUri = Uri.from({
+            'scheme': 'scheme',
+            'authority': 'localhost:9876',
+            'path': '//src/fake/script.sparql',
+            'query': 'query',
+            'fragment': 'fragment'
+        })
+        const expectedResponseUri = 'mlquery://localhost:9876/src/fake/script.sparql.json?query'
+        await provider.writeSparqlResponseToUri(fileUri, [])
             .then((actualResponseUri) => {
                 assert.strictEqual(actualResponseUri.toString(), expectedResponseUri,
                     'the URI should not have a double-dash before the filename section')
