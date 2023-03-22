@@ -52,6 +52,10 @@
                 "title": "MarkLogic: Eval SPARQL"
             },
             {
+                "command": "extension.sendRowsQuery",
+                "title": "MarkLogic: Submit Optic query"
+            },
+            {
                 "command": "extension.connectServer",
                 "title": "MarkLogic: Connect JavaScript Debug Server"
             },

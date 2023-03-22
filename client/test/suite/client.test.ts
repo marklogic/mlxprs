@@ -10,9 +10,10 @@ import {
 } from './testOverrideQuery'
 import { MLRuntime } from '../../JSDebugger/mlRuntime'
 import { AttachRequestArguments } from '../../JSDebugger/mlDebug'
-import { MarklogicClient } from '../../marklogicClient'
+import { MarklogicClient, sendRows } from '../../marklogicClient'
 import { QueryResultsContentProvider } from '../../queryResultsContentProvider'
 import { getDbClient, parseQueryForOverrides } from '../../vscQueryParameterTools'
+import * as ml from 'marklogic'
 
 const SJS = 'sjs'
 const XQY = 'xqy'
@@ -153,6 +154,49 @@ suite('Extension Test Suite', () => {
                 assert.strictEqual(actualResponseUri.toString(), expectedResponseUri,
                     'the URI should not have a double-dash before the filename section')
             })
+    })
+
+    test('When an Optic DSL query is passed into the sendRows function', async () => {
+        const dslQuery = 'op.fromView()'
+        const expectedOptions = { 'queryType': 'dsl' }
+        let calculatedOptions = null
+        let calculatedQuery = null
+        function dummyRows(): ml.Rows {
+            return {
+                query: (actualQuery: object | string, options: object): Promise<ml.RowsResponse> => {
+                    calculatedQuery = actualQuery
+                    calculatedOptions = options
+                    return null
+                }
+            }
+        }
+        const gstate = defaultDummyGlobalState()
+        gstate.dummyClient.mldbClient.rows = dummyRows()
+        sendRows(gstate.dummyClient, dslQuery)
+        assert.strictEqual(calculatedQuery, dslQuery, 'the query is passed as is to the MarkLogic query function')
+        assert.deepEqual(calculatedOptions, expectedOptions, 'the options passed to the MarkLogic query function specify "DSL"')
+    })
+
+    test('When a serialized Optic query is passed into the sendRows function', async () => {
+        const serializedQueryString = '{ "$optic": { "ns": "op", "fn": "operators", "args": [{ "ns": "op", "fn": "from-view", "args": ["Medical", "Authors"] }] } }'
+        const serializedQueryObject = { '$optic': { 'ns': 'op', 'fn': 'operators', 'args': [{ 'ns': 'op', 'fn': 'from-view', 'args': ['Medical', 'Authors'] }] } }
+        const expectedOptions = { 'queryType': 'json' }
+        let calculatedOptions = null
+        let calculatedQuery = null
+        function dummyRows(): ml.Rows {
+            return {
+                query: (actualQuery: object | string, options: object): Promise<ml.RowsResponse> => {
+                    calculatedQuery = actualQuery
+                    calculatedOptions = options
+                    return null
+                }
+            }
+        }
+        const gstate = defaultDummyGlobalState()
+        gstate.dummyClient.mldbClient.rows = dummyRows()
+        sendRows(gstate.dummyClient, serializedQueryString)
+        assert.deepEqual(calculatedQuery, serializedQueryObject, 'the query is passed as a JSON object to the MarkLogic query function')
+        assert.deepEqual(calculatedOptions, expectedOptions, 'the options passed to the MarkLogic query function specify "JSON"')
     })
 
 })
