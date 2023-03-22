@@ -1,9 +1,14 @@
 'use strict'
 
 import { Event, EventEmitter, TextDocumentContentProvider, Uri, window, workspace } from 'vscode'
-import { contentType } from 'marklogic'
+import { contentType, RowsResponse } from 'marklogic'
 
 export class QueryResultsContentProvider implements TextDocumentContentProvider {
+    // This class provides implementation details for virtual documents that store the responses and errors from the MarkLogic client
+    // so that those the information in the virutal documents can be displayed in an editor tab
+    //
+    // Note the URI used here is intended to provide a unique key to the virtual documents stored in the classes "_cache" field.
+    // It is not related to MarkLogic document URIs.
     private _onDidChange = new EventEmitter<Uri>()
     public _cache = new Map<string, string>()
 
@@ -87,6 +92,16 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
         return responseUri
     }
 
+
+    public async writeRowsResponseToUri(uri: Uri, response: RowsResponse): Promise<Uri> {
+        const responseUri = this.buildResponseUri(uri, 'json')
+        const readyResponse = JSON.stringify(response)
+        this._cache.set(responseUri.toString(), readyResponse)
+        this.update(responseUri)
+        await new Promise(resolve => setTimeout(resolve, 60))
+        return responseUri
+    }
+
     /**
      * Cache a SPARQL query response so VS Code will show the results in a new editor window
      * @param uri the URI of the VS Code document that sent the query
@@ -97,7 +112,7 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
         const contentType: contentType = workspace.getConfiguration().get('marklogic.sparqlContentType')
         const fmt: string = (contentType) ? contentType.toLowerCase().replace(/^\w+\//, '') : 'json'
         const responseUri = this.buildResponseUri(uri, 'json')
-        console.debug(`${Date.now()} ***** Writing cache for URI: ${uri.toString()}`)
+        console.debug(`${Date.now()} ***** Writing cache for URI: ${responseUri.toString()}`)
         const readyResponse = fmt === 'json' ? JSON.stringify(response) : response.toString()
         this._cache.set(responseUri.toString(), readyResponse)
         this.update(responseUri)

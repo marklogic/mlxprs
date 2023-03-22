@@ -5,7 +5,6 @@ import * as fs from 'fs'
 
 export const MLDBCLIENT = 'mldbClient'
 export const MLSETTINGSFLAG = /mlxprs:settings/
-const SJS = 'sjs'
 export const XQY = 'xqy'
 
 export class MlClientParameters {
@@ -168,7 +167,8 @@ export function sendJSQuery(
 export function sendXQuery(
     db: MarklogicClient,
     actualQuery: string,
-    prefix: 'xdmp' | 'dbg' = 'xdmp'): ml.ResultProvider<Record<string, any>> {
+    prefix: 'xdmp' | 'dbg' = 'xdmp')
+    : ml.ResultProvider<Record<string, any>> {
     const query =
         'xquery version "1.0-ml";' +
         'declare variable $actualQuery as xs:string external;' +
@@ -189,12 +189,40 @@ export function sendXQuery(
     return db.mldbClient.xqueryEval(query, extVars)
 }
 
-export function sendSparql(
-    db: MarklogicClient,
-    sparqlQuery: string,
-    contentType: ml.contentType = 'application/json'): ml.ResultProvider<Record<string, unknown>> {
+export function sendSparql(db: MarklogicClient, sparqlQuery: string, contentType: ml.contentType = 'application/json'): ml.ResultProvider<Record<string, unknown>> {
     return db.mldbClient.graphs.sparql({
         contentType: contentType,
         query: sparqlQuery
     })
+}
+
+
+export function sendRows(db: MarklogicClient, actualQuery: string): Promise<ml.RowsResponse> {
+    if (actualQuery.startsWith('{')) {
+        return sendRowsSerialized(db, actualQuery)
+    } else {
+        return db.mldbClient.rows.query(actualQuery, { 'queryType': 'dsl' })
+    }
+}
+
+function sendRowsSerialized(db: MarklogicClient, actualQuery: string): Promise<ml.RowsResponse> {
+    let jsonQuery = null
+    let errObject = null
+    try {
+        jsonQuery = JSON.parse(actualQuery)
+    } catch (err) {
+        errObject = err
+    }
+
+    if (jsonQuery) {
+        return db.mldbClient.rows.query(jsonQuery, { 'queryType': 'json' })
+    } else {
+        return Promise.resolve(
+            {
+                columns: [],
+                rows: [],
+                preRequestError: errObject.message
+            }
+        )
+    }
 }

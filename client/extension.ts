@@ -2,7 +2,7 @@
 import * as path from 'path'
 import * as vscode from 'vscode'
 import * as ml from 'marklogic'
-import { editorJSQuery, editorSparqlQuery, editorSqlQuery, editorXQuery } from './vscQueryDirector'
+import { editorJSQuery, editorSparqlQuery, editorSqlQuery, editorXQuery, editorRowsQuery } from './vscQueryDirector'
 import { MarklogicClient } from './marklogicClient'
 import { cascadeOverrideClient } from './vscQueryParameterTools'
 import { QueryResultsContentProvider } from './queryResultsContentProvider'
@@ -58,6 +58,14 @@ export function activate(context: vscode.ExtensionContext): void {
         const uri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port)
         editorSparqlQuery(client, actualQuery, uri, editor, provider)
     })
+    const sendRowsQuery = vscode.commands.registerTextEditorCommand('extension.sendRowsQuery', editor => {
+        const actualQuery: string = editor.document.getText()
+        const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration()
+        const client: MarklogicClient = cascadeOverrideClient('', SJS, cfg, context.globalState)
+        const host = client.params.host; const port = client.params.port
+        const uri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port)
+        editorRowsQuery(client, actualQuery, uri, editor, provider)
+    })
     const connectServer = vscode.commands.registerCommand('extension.connectServer', () => {
         vscode.window.showInputBox({
             placeHolder: 'Please enter server you want to connect',
@@ -100,6 +108,7 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(sendJSQuery)
     context.subscriptions.push(sendSqlQuery)
     context.subscriptions.push(sendSparqlQuery)
+    context.subscriptions.push(sendRowsQuery)
     context.subscriptions.push(
         vscode.languages.registerDocumentFormattingEditProvider(
             { scheme: 'mlquery', language: 'xml' },
