@@ -26,7 +26,9 @@ export class ModuleContentProvider implements TextDocumentContentProvider {
         return this._mlModuleGetter.provideTextDocumentContent(uri.path);
     }
 
-    get onDidChange(): Event<Uri> { return this._onDidChange.event; }
+    get onDidChange(): Event<Uri> {
+        return this._onDidChange.event;
+    }
 
     public async listModules(): Promise<string[]> {
         return this._mlModuleGetter.listModules();

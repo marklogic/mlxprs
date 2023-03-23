@@ -25,19 +25,35 @@ const allMlXqyNamespaces: CompletionItem[] = Object.keys(xqyHints).map((ns) => {
 });
 
 function buildFunctionCompletion(docObject: MarkLogicFnDocsObject): string {
-    const neededParams: MarkLogicParamsObject[] = docObject.params.filter(p => { return p.optional !== true; });
-    const optionParams: MarkLogicParamsObject[] = docObject.params.filter(p => { return p.optional === true; });
-    const neededParamsString = neededParams.map(p => { return '$' + p.name; }).join(', ');
-    const optionParamsString = optionParams.map(p => { return '[$' + p.name + ']'; }).join(', ');
+    const neededParams: MarkLogicParamsObject[] = docObject.params.filter(p => {
+        return p.optional !== true;
+    });
+    const optionParams: MarkLogicParamsObject[] = docObject.params.filter(p => {
+        return p.optional === true;
+    });
+    const neededParamsString = neededParams.map(p => {
+        return '$' + p.name;
+    }).join(', ');
+    const optionParamsString = optionParams.map(p => {
+        return '[$' + p.name + ']';
+    }).join(', ');
     let middleComma = ''; if (neededParams.length > 0 && optionParams.length > 0) middleComma = ', ';
     return `${docObject.name}(${neededParamsString}${middleComma}${optionParamsString})`;
 }
 
 function buildFullFunctionSignature(docObject: MarkLogicFnDocsObject): string {
-    const neededParams: MarkLogicParamsObject[] = docObject.params.filter(p => { return p.optional !== true; });
-    const optionParams: MarkLogicParamsObject[] = docObject.params.filter(p => { return p.optional === true; });
-    const neededParamsString = neededParams.map(p => { return '$' + p.name + ' as ' + p.type; }).join(',\n\t');
-    const optionParamsString = optionParams.map(p => { return '[$' + p.name + ' as ' + p.type + ']'; }).join(',\n\t');
+    const neededParams: MarkLogicParamsObject[] = docObject.params.filter(p => {
+        return p.optional !== true;
+    });
+    const optionParams: MarkLogicParamsObject[] = docObject.params.filter(p => {
+        return p.optional === true;
+    });
+    const neededParamsString = neededParams.map(p => {
+        return '$' + p.name + ' as ' + p.type;
+    }).join(',\n\t');
+    const optionParamsString = optionParams.map(p => {
+        return '[$' + p.name + ' as ' + p.type + ']';
+    }).join(',\n\t');
     let middleComma = ''; if (neededParams.length > 0 && optionParams.length > 0) middleComma = ',\n\t';
     const nothing: string = docObject.params.length ? '\n\t' : '';
     return `${docObject.prefix}:${docObject.name}(${nothing}${neededParamsString}${middleComma}${optionParamsString})
@@ -68,7 +84,9 @@ function allMlXqyFunctions(namespace: string): CompletionItem[] {
                 return ci;
             } else return { label: 'dep' };
         })
-    ).filter((h: CompletionItem) => { return h.label !== 'dep'; });
+    ).filter((h: CompletionItem) => {
+        return h.label !== 'dep';
+    });
 }
 
 export {
