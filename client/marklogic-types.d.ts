@@ -8,6 +8,8 @@ declare module 'marklogic' {
     }
 
     export type contentType = 'application/json' | 'application/xml' | 'text/html' | 'text/csv'
+    export type RowsResponseFormat = 'json' | 'xml' | 'csv'
+    export type RowsQueryType = 'dsl' | 'json'
 
     interface graphs {
         sparql: <U>(args: Record<string, unknown>) => ResultProvider<U>
@@ -19,8 +21,13 @@ declare module 'marklogic' {
         preRequestError: string
     }
 
+    export type RowsOptions = {
+        queryType: RowsQueryType
+        format: RowsResponseFormat
+    }
+
     interface Rows {
-        query: (actualQuery: object | string, options: object) => Promise<RowsResponse>
+        query: (actualQuery: object | string, options: RowsOptions) => Promise<RowsResponse>
     }
 
     export interface DatabaseClient {

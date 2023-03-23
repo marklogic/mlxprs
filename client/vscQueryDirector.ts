@@ -3,6 +3,7 @@ import { MarklogicClient, sendJSQuery, sendSparql, sendXQuery, sendRows } from '
 import { TextDocument, TextEdit, TextEditor, Uri, WorkspaceEdit, commands, window, workspace, WorkspaceConfiguration } from 'vscode';
 import { QueryResultsContentProvider } from './queryResultsContentProvider';
 import { contentType, RowsResponse } from 'marklogic';
+import * as ml from 'marklogic';
 
 const FOPTIONS = { tabSize: 2, insertSpaces: true };
 const FCOMMAND = 'vscode.executeFormatDocumentProvider';
@@ -133,14 +134,14 @@ export function editorSparqlQuery(
 
 
 export function editorRowsQuery(db: MarklogicClient, actualQuery: string, uri: Uri,
-    editor: TextEditor, provider: QueryResultsContentProvider): void {
-    sendRows(db, actualQuery)
+    editor: TextEditor, provider: QueryResultsContentProvider, resultFormat: ml.RowsResponseFormat): void {
+    sendRows(db, actualQuery, resultFormat)
         .then(
             (response: RowsResponse) => {
                 if (response.preRequestError) {
                     return provider.handleError(uri, response.preRequestError);
                 } else {
-                    return provider.writeRowsResponseToUri(uri, response);
+                    return provider.writeRowsResponseToUri(uri, response, resultFormat);
                 }
             }
         )

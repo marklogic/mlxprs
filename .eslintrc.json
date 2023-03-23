@@ -91,6 +91,7 @@
         ],
         "space-infix-ops": [
             "error"
-        ]
+        ],
+        "no-var": "error"
     }
 }
