@@ -191,7 +191,9 @@ export class MLRuntime extends EventEmitter {
 
     public evaluateOnCallFrame(expr: string, cid?: string): Promise<string> {
         const qs: Record<string, unknown> = { expr: expr };
-        if (cid !== '') { qs['call-frame'] = cid; }
+        if (cid !== '') {
+            qs['call-frame'] = cid;
+        }
         return this._sendMLdebugRequestGET('eval-on-call-frame', qs);
     }
 
@@ -214,8 +216,11 @@ export class MLRuntime extends EventEmitter {
     public async waitTillPaused(): Promise<string> {
         try {
             const result = await this.wait();
-            if (result === '') { return this.waitTillPaused(); }
-            else { return result; }
+            if (result === '') {
+                return this.waitTillPaused();
+            } else {
+                return result;
+            }
         } catch (e) {
             throw e;
         }
@@ -240,7 +245,9 @@ export class MLRuntime extends EventEmitter {
                 'sendImmediately': false
             }
         };
-        if (body) { options['body'] = body; }
+        if (body) {
+            options['body'] = body;
+        }
         if (this._ca) options['agentOptions'] = { ca: this._ca };
         options['rejectUnauthorized'] = this._rejectUnauthorized;
         return request.post(url, options);
@@ -258,7 +265,9 @@ export class MLRuntime extends EventEmitter {
                 'sendImmediately': false
             }
         };
-        if (queryString) { options['qs'] = queryString; }
+        if (queryString) {
+            options['qs'] = queryString;
+        }
         if (this._ca) options['agentOptions'] = { ca: this._ca };
         options['rejectUnauthorized'] = this._rejectUnauthorized;
         return request.get(url, options);

@@ -56,9 +56,9 @@ function completeXQuery(document: TextDocument, offset: number): CompletionItem[
     const theseTokens = getTheseTokens(document, offset);
 
     // shortcircuit: don't complete on dot in XQuery
-    if (theseTokens.slice(-1)[0] === '.') { return allCompletions; }
-
-    else if (theseTokens.slice(-1)[0] === ':' && theseTokens.slice(-2)[0].match(jwv)) {
+    if (theseTokens.slice(-1)[0] === '.') {
+        return allCompletions;
+    } else if (theseTokens.slice(-1)[0] === ':' && theseTokens.slice(-2)[0].match(jwv)) {
         const namespace: string = theseTokens.slice(-2)[0];
         allCompletions = allCompletions.concat(allMlXqyFunctions(namespace));
     } else if (theseTokens.slice(-2)[0].match(xw) && theseTokens.slice(-1)[0] === ':') {
@@ -76,7 +76,9 @@ function completeSJS(document: TextDocument, offset: number): CompletionItem[] {
     const theseTokens = getTheseTokens(document, offset);
 
     // shortcircuit: don't complete on colon in Javascript
-    if (theseTokens.slice(-1)[0] === ':') { return allCompletions; }
+    if (theseTokens.slice(-1)[0] === ':') {
+        return allCompletions;
+    }
 
     if (theseTokens.slice(-1)[0] === '.' && theseTokens.slice(-2)[0].match(jwv)) {
         const namespace: string = theseTokens.slice(-2)[0];

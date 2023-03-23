@@ -17,8 +17,12 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
      * Expose an event to signal changes of _virtual_ documents
      * to the editor
      */
-    get onDidChange(): Event<Uri> { return this._onDidChange.event; }
-    public update(uri: Uri): void { this._onDidChange.fire(uri); }
+    get onDidChange(): Event<Uri> {
+        return this._onDidChange.event;
+    }
+    public update(uri: Uri): void {
+        this._onDidChange.fire(uri);
+    }
 
     /**
      * Set the TextDocumentContentProvider local cache to the query results

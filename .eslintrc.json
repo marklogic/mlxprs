@@ -92,6 +92,21 @@
         "space-infix-ops": [
             "error"
         ],
-        "no-var": "error"
+        "no-var": "error",
+        "array-bracket-spacing": "error",
+        "block-spacing": "error",
+        "brace-style": [
+            "error",
+            "1tbs",
+            {
+                "allowSingleLine": false
+            }
+        ],
+        "curly": [
+            "error",
+            "multi-line"
+        ],
+        "func-call-spacing": "error",
+        "no-trailing-spaces": "error"
     }
 }

@@ -57,7 +57,9 @@ suite('XQyuery Debug Test Suite', () => {
 
     test('parseStackXML uses local variables from first frame when available', () => {
         assert.equal(2, largerStackFrames[0].scopeChain.length);
-        assert.ok(largerStackFrames[0].scopeChain.map(scope => {return scope.type;}).includes('local'));
+        assert.ok(largerStackFrames[0].scopeChain.map(scope => {
+            return scope.type;
+        }).includes('local'));
     });
 
     test('parseExprXML produces XqyExprs', () => {
