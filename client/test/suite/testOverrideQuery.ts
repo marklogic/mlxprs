@@ -12,7 +12,7 @@ export function testOverrideQueryWithGoodJSON(): string {
 // Another comment
 /* another block comment */
 cts.doc(cts.uris().toArray()[12 + 19])
-`
+`;
 }
 
 export function testOverrideQueryWithBadJSON(): string {
@@ -29,7 +29,7 @@ export function testOverrideQueryWithBadJSON(): string {
 // Another comment
 /* another block comment */
 cts.doc(cts.uris().toArray()[12 + 19])
-`
+`;
 }
 
 export function testQueryWithoutOverrides(): string {
@@ -46,7 +46,7 @@ export function testQueryWithoutOverrides(): string {
 // Another comment
 /* another block comment */
 cts.doc(cts.uris().toArray()[12 + 19])
-`
+`;
 }
 
 export function testOverrideXQueryWithGoodJSON(): string {
@@ -62,7 +62,7 @@ export function testOverrideXQueryWithGoodJSON(): string {
 :)
 (: Another comment :)
 cts:doc(cts:uris()[12 + 19])
-`
+`;
 }
 
 export function testOverrideXQueryWithBadJSON(): string {
@@ -80,7 +80,7 @@ export function testOverrideXQueryWithBadJSON(): string {
 (: Another comment :)
 (: another comment :)
 cts:doc(cts:uris()[12 + 19])
-`
+`;
 }
 
 export function testXQueryWithoutOverrides(): string {
@@ -97,7 +97,7 @@ export function testXQueryWithoutOverrides(): string {
 (: Another comment
  another block comment :)
 cts.doc(cts.uris().toArray()[12 + 19])
-`
+`;
 }
 
 export function testOverrideSslParams(): string {
@@ -110,5 +110,5 @@ export function testOverrideSslParams(): string {
 }
 */
 'This is your bank. Please login kthx...'
-`
+`;
 }

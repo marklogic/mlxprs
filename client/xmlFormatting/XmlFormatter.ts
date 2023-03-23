@@ -35,11 +35,11 @@ export class XmlFormatter {
                 .replace(/xmlns\=/g, '~::~xmlns=');
         }
         
-        let parts: string[] = xml.split('~::~');
+        const parts: string[] = xml.split('~::~');
             
-        let inComment: boolean = false;
-        let level: number = 0;
-        let output: string = '';
+        let inComment = false;
+        let level = 0;
+        let output = '';
 
         for (let i = 0; i < parts.length; i++) {
             // <!
@@ -144,14 +144,14 @@ export class XmlFormatter {
     }
     
     private _stripLineBreaks(xml: string): string {
-        let output: string = '';
-        let inTag: boolean = false;
-        let inTagName: boolean = false;
-        let inCdata: boolean = false;
-        let inAttribute: boolean = false;
+        let output = '';
+        const inTag = false;
+        const inTagName = false;
+        let inCdata = false;
+        const inAttribute = false;
         
         for (let i = 0; i < xml.length; i++) {
-            let char: string = xml.charAt(i);
+            const char: string = xml.charAt(i);
             
             if (char == '!' && (xml.substr(i, 8) == '![CDATA[' || xml.substr(i, 3) == '!--')) {
                 inCdata = true;

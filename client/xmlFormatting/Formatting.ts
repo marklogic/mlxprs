@@ -4,12 +4,12 @@ import * as vsc from 'vscode';
 import { RangeUtil } from './RangeUtil';
 import { XmlFormatter, IXmlFormatterOptions } from './XmlFormatter';
 
-const CFG_SECTION: string = 'xmlTools';
-const CFG_SPLIT_NAMESPACES: string = 'splitXmlnsOnFormat';
+const CFG_SECTION = 'xmlTools';
+const CFG_SPLIT_NAMESPACES = 'splitXmlnsOnFormat';
 
 export class XmlFormattingEditProvider implements vsc.DocumentFormattingEditProvider, vsc.DocumentRangeFormattingEditProvider {
     provideDocumentFormattingEdits(document: vsc.TextDocument, options: vsc.FormattingOptions): vsc.TextEdit[] {
-        let range = RangeUtil.getRangeForDocument(document);
+        const range = RangeUtil.getRangeForDocument(document);
         
         return this._provideFormattingEdits(document, range, options);
     }
@@ -19,16 +19,16 @@ export class XmlFormattingEditProvider implements vsc.DocumentFormattingEditProv
     }
     
     private _provideFormattingEdits(document: vsc.TextDocument, range: vsc.Range, options: vsc.FormattingOptions): vsc.TextEdit[] {
-        let splitNamespaces: boolean = vsc.workspace.getConfiguration(CFG_SECTION).get<boolean>(CFG_SPLIT_NAMESPACES, true);
+        const splitNamespaces: boolean = vsc.workspace.getConfiguration(CFG_SECTION).get<boolean>(CFG_SPLIT_NAMESPACES, true);
         
-        let formatterOptions: IXmlFormatterOptions = {
+        const formatterOptions: IXmlFormatterOptions = {
             preferSpaces: options.insertSpaces,
             tabSize: options.tabSize,
             splitNamespaces: splitNamespaces
         };
         
-        let formatter = new XmlFormatter(formatterOptions);
-        let xml = formatter.format(document.getText(range));
+        const formatter = new XmlFormatter(formatterOptions);
+        const xml = formatter.format(document.getText(range));
         
         return [ vsc.TextEdit.replace(range, xml) ];
     }

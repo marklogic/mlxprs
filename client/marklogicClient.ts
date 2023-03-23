@@ -1,58 +1,58 @@
-'use strict'
+'use strict';
 
-import * as ml from 'marklogic'
-import * as fs from 'fs'
+import * as ml from 'marklogic';
+import * as fs from 'fs';
 
-export const MLDBCLIENT = 'mldbClient'
-export const MLSETTINGSFLAG = /mlxprs:settings/
-export const XQY = 'xqy'
+export const MLDBCLIENT = 'mldbClient';
+export const MLSETTINGSFLAG = /mlxprs:settings/;
+export const XQY = 'xqy';
 
 export class MlClientParameters {
-    contentDb: string
-    modulesDb: string
+    contentDb: string;
+    modulesDb: string;
 
-    host: string
-    port: number
-    user: string
-    pwd: string
-    authType: string
-    ssl: boolean
-    pathToCa: string
-    rejectUnauthorized: boolean
+    host: string;
+    port: number;
+    user: string;
+    pwd: string;
+    authType: string;
+    ssl: boolean;
+    pathToCa: string;
+    rejectUnauthorized: boolean;
     /**
      * note: defaults not applied here. Properties can remain undefined so that
      *       per-query overrides don't clobber the existing config with default values.
      *       (using the spread operator in `getDbClient`)
      **/
     constructor(rawParams: Record<string, any>) {
-        this.host = rawParams.host
-        this.port = Number(rawParams.port)
-        this.user = rawParams.user
-        this.pwd = rawParams.pwd
-        this.contentDb = rawParams.contentDb || rawParams.documentsDb || ''
-        this.modulesDb = rawParams.modulesDb || ''
-        this.authType = rawParams.authType
-        this.ssl = Boolean(rawParams.ssl)
-        this.pathToCa = rawParams.pathToCa || ''
-        this.rejectUnauthorized = Boolean(rawParams.rejectUnauthorized)
+        this.host = rawParams.host;
+        this.port = Number(rawParams.port);
+        this.user = rawParams.user;
+        this.pwd = rawParams.pwd;
+        this.contentDb = rawParams.contentDb || rawParams.documentsDb || '';
+        this.modulesDb = rawParams.modulesDb || '';
+        this.authType = rawParams.authType;
+        this.ssl = Boolean(rawParams.ssl);
+        this.pathToCa = rawParams.pathToCa || '';
+        this.rejectUnauthorized = Boolean(rawParams.rejectUnauthorized);
 
         // This check was previously done in the MarklogicClient constructor, but doing so causes the sameAs
         // function in this class to not behave properly
         if (this.authType !== 'DIGEST' && this.authType !== 'BASIC') {
-            this.authType = 'DIGEST'
+            this.authType = 'DIGEST';
         }
     }
 
     toString(): string {
-        const paramsArray = [this.host, this.port, this.user, this.pwd.replace(/./g, '*'), this.authType, this.contentDb, this.modulesDb]
+        const paramsArray = [this.host, this.port, this.user, this.pwd.replace(/./g, '*'), this.authType, this.contentDb, this.modulesDb];
         if (this.ssl) {
-            paramsArray.push('ssl')
-            if (!this.rejectUnauthorized) paramsArray.push('insecure')
-            if (this.pathToCa) paramsArray.push('pathToCa:' || this.pathToCa)
+            paramsArray.push('ssl');
+            if (!this.rejectUnauthorized) paramsArray.push('insecure');
+            if (this.pathToCa) paramsArray.push('pathToCa:' || this.pathToCa);
         } else {
-            paramsArray.push('plaintext')
+            paramsArray.push('plaintext');
         }
-        return paramsArray.join(':')
+        return paramsArray.join(':');
     }
 
     sameAs(other: MlClientParameters): boolean {
@@ -67,28 +67,28 @@ export class MlClientParameters {
             this.ssl === other.ssl &&
             this.pathToCa === other.pathToCa &&
             this.rejectUnauthorized === other.rejectUnauthorized
-        )
+        );
     }
 }
 
 export class MarklogicClient {
-    params: MlClientParameters
-    ca: string
+    params: MlClientParameters;
+    ca: string;
 
-    mldbClient: ml.DatabaseClient
+    mldbClient: ml.DatabaseClient;
     constructor(params: MlClientParameters) {
-        this.params = params
-        this.params.authType = params.authType.toUpperCase()
+        this.params = params;
+        this.params.authType = params.authType.toUpperCase();
 
         if (params.pathToCa !== '') {
             try {
-                this.ca = fs.readFileSync(this.params.pathToCa, 'utf8')
+                this.ca = fs.readFileSync(this.params.pathToCa, 'utf8');
             } catch (e) {
-                throw new Error('Error reading CA file: ' + e.message)
+                throw new Error('Error reading CA file: ' + e.message);
             }
         }
         if (!this.params.contentDb) {
-            this.params.contentDb = null
+            this.params.contentDb = null;
         }
         this.mldbClient = ml.createDatabaseClient({
             host: this.params.host, port: this.params.port,
@@ -96,34 +96,34 @@ export class MarklogicClient {
             database: this.params.contentDb,
             authType: this.params.authType, ssl: this.params.ssl,
             ca: this.ca, rejectUnauthorized: this.params.rejectUnauthorized
-        })
+        });
     }
 
     toString(): string {
-        return this.params.toString()
+        return this.params.toString();
     }
 
     hasSameParamsAs(newParams: MlClientParameters): boolean {
-        return this.params.sameAs(newParams)
+        return this.params.sameAs(newParams);
     }
 }
 
 export function buildNewClient(params: MlClientParameters): MarklogicClient {
-    let newClient: MarklogicClient
+    let newClient: MarklogicClient;
     try {
-        newClient = new MarklogicClient(params)
+        newClient = new MarklogicClient(params);
     } catch (e) {
-        console.error('Error: ' + JSON.stringify(e))
-        throw (e)
+        console.error('Error: ' + JSON.stringify(e));
+        throw (e);
     }
-    return newClient
+    return newClient;
 }
 
 export function parseXQueryForOverrides(queryText: string): Record<string, any> {
-    let overrides: Record<string, any> = {}
-    const firstContentLine: string = queryText.trim().split(/[\r\n]+/)[0]
-    const startsWithComment: RegExpMatchArray = firstContentLine.match(/^\(:[\s\t]*/)
-    const overridesFlagPresent: RegExpMatchArray = firstContentLine.match(MLSETTINGSFLAG)
+    let overrides: Record<string, any> = {};
+    const firstContentLine: string = queryText.trim().split(/[\r\n]+/)[0];
+    const startsWithComment: RegExpMatchArray = firstContentLine.match(/^\(:[\s\t]*/);
+    const overridesFlagPresent: RegExpMatchArray = firstContentLine.match(MLSETTINGSFLAG);
 
     if (startsWithComment && overridesFlagPresent) {
         const overridePayload: string = queryText.trim()
@@ -131,10 +131,10 @@ export function parseXQueryForOverrides(queryText: string): Record<string, any> 
             .split(/:\)/)[0]              // end at the comment close (un-greedy the match)
             .replace(MLSETTINGSFLAG, '')  // get rid of the flag
             .replace(/^\(:/, '')          // get rid of the comment opener
-            .trim()
-        overrides = JSON.parse(overridePayload)
+            .trim();
+        overrides = JSON.parse(overridePayload);
     }
-    return overrides
+    return overrides;
 }
 
 
@@ -150,7 +150,7 @@ export function sendJSQuery(
     xdmp.eval(actualQuery,
         {actualQuery: actualQuery, sqlQuery: sqlQuery, sqlOptions: sqlOptions},
         options
-        );`
+        );`;
 
     const extVars = {
         'actualQuery': actualQuery,
@@ -158,9 +158,9 @@ export function sendJSQuery(
         'modulesDb': db.params.modulesDb,
         'sqlQuery': sqlQuery,
         'sqlOptions': sqlOptions
-    } as ml.Variables
+    } as ml.Variables;
 
-    return db.mldbClient.eval(query, extVars)
+    return db.mldbClient.eval(query, extVars);
 }
 
 
@@ -179,43 +179,43 @@ export function sendXQuery(
         (db.params.contentDb ? '<database>{xdmp:database($contentDb)}</database>' : '') +
         (db.params.modulesDb ? '<modules>{xdmp:database($modulesDb)}</modules>' : '') +
         '</options>' +
-        `return ${prefix}:eval($actualQuery, (), $options)`
+        `return ${prefix}:eval($actualQuery, (), $options)`;
     const extVars = {
         'actualQuery': actualQuery,
         'contentDb': db.params.contentDb,
         'modulesDb': db.params.modulesDb
-    } as ml.Variables
+    } as ml.Variables;
 
-    return db.mldbClient.xqueryEval(query, extVars)
+    return db.mldbClient.xqueryEval(query, extVars);
 }
 
 export function sendSparql(db: MarklogicClient, sparqlQuery: string, contentType: ml.contentType = 'application/json'): ml.ResultProvider<Record<string, unknown>> {
     return db.mldbClient.graphs.sparql({
         contentType: contentType,
         query: sparqlQuery
-    })
+    });
 }
 
 
 export function sendRows(db: MarklogicClient, actualQuery: string): Promise<ml.RowsResponse> {
     if (actualQuery.startsWith('{')) {
-        return sendRowsSerialized(db, actualQuery)
+        return sendRowsSerialized(db, actualQuery);
     } else {
-        return db.mldbClient.rows.query(actualQuery, { 'queryType': 'dsl' })
+        return db.mldbClient.rows.query(actualQuery, { 'queryType': 'dsl' });
     }
 }
 
 function sendRowsSerialized(db: MarklogicClient, actualQuery: string): Promise<ml.RowsResponse> {
-    let jsonQuery = null
-    let errObject = null
+    let jsonQuery = null;
+    let errObject = null;
     try {
-        jsonQuery = JSON.parse(actualQuery)
+        jsonQuery = JSON.parse(actualQuery);
     } catch (err) {
-        errObject = err
+        errObject = err;
     }
 
     if (jsonQuery) {
-        return db.mldbClient.rows.query(jsonQuery, { 'queryType': 'json' })
+        return db.mldbClient.rows.query(jsonQuery, { 'queryType': 'json' });
     } else {
         return Promise.resolve(
             {
@@ -223,6 +223,6 @@ function sendRowsSerialized(db: MarklogicClient, actualQuery: string): Promise<m
                 rows: [],
                 preRequestError: errObject.message
             }
-        )
+        );
     }
 }
