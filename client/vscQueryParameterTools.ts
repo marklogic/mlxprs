@@ -81,8 +81,7 @@ export function getDbClient(queryText: string, language: string, cfg: WorkspaceC
         try {
             state.update(MLDBCLIENT, newClient);
             console.debug(`Created new MarklogicClient: ${state.get(MLDBCLIENT)}`);
-        }
-        catch (e) {
+        } catch (e) {
             console.error('Error: ' + JSON.stringify(e));
             e.message ? console.error(e.message) : null;
         }
@@ -98,8 +97,7 @@ export function cascadeOverrideClient(actualQuery: string, language: string, cfg
     let client: MarklogicClient = {} as MarklogicClient;
     try {
         client = getDbClient(actualQuery, language, cfg, state);
-    }
-    catch (error) {
+    } catch (error) {
         window.showErrorMessage('could not parse JSON for overrides: ' + error.message);
         client = getDbClient('', language, cfg, state);
     }

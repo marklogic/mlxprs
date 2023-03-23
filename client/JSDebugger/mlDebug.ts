@@ -347,9 +347,13 @@ export class MLDebugSession extends LoggingDebugSession {
                     }
                     const type = element.value.hasOwnProperty('type') ? element.value.type : 'undefined';
                     let value;
-                    if (element.value.hasOwnProperty('value')) { value = String(element.value.value); }
-                    else if (element.value.hasOwnProperty('description')) { value = String(element.value.description); }
-                    else { value = 'undefined'; }
+                    if (element.value.hasOwnProperty('value')) {
+                        value = String(element.value.value);
+                    } else if (element.value.hasOwnProperty('description')) {
+                        value = String(element.value.description);
+                    } else {
+                        value = 'undefined';
+                    }
                     variables.push({
                         name: name,
                         type: type,
@@ -553,8 +557,7 @@ export class MLDebugSession extends LoggingDebugSession {
         if (filePath.toLowerCase().startsWith('untitled') && !existsSync(filePath)) {
             vsCodeUri = `untitled:${filePath}`;
             origin = 'untitled';
-        }
-        else if (!existsSync(filePath)) {
+        } else if (!existsSync(filePath)) {
             const mlModuleUri = this._mapLocalFiletoUrl(filePath);
             origin = `mldbg:/${mlModuleUri}`;
             id = 9;

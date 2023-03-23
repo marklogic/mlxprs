@@ -69,8 +69,9 @@ export class MLConfigurationProvider implements vscode.DebugConfigurationProvide
 
         if (config.ssl) config.pathToCa = String(wcfg.get('marklogic.pathToCa') || '');
         let ca: Buffer;
-        if (config.pathToCa)
+        if (config.pathToCa) {
             ca = fs.readFileSync(config.pathToCa);
+        }
 
         if (!config.hostname) {
             return vscode.window.showErrorMessage('Hostname is not provided').then(() => {
@@ -268,8 +269,9 @@ export function _connectServer(servername: string): void {
             'sendImmediately': false
         }
     };
-    if (pathToCa !== '')
+    if (pathToCa !== '') {
         options['agentOptions'] = { ca: fs.readFileSync(pathToCa) };
+    }
     options['rejectUnauthorized'] = rejectUnauthorized;
 
     request.post(url, options).then(() => {
@@ -313,8 +315,9 @@ export function _disconnectServer(servername: string, reportDisconnectError = tr
             'sendImmediately': false
         }
     };
-    if (pathToCa !== '')
+    if (pathToCa !== '') {
         options['agentOptions'] = { ca: fs.readFileSync(pathToCa) };
+    }
     options['rejectUnauthorized'] = rejectUnauthorized;
 
     request.post(url, options).then(() => {

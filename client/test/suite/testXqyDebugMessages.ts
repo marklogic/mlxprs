@@ -62,7 +62,8 @@ export function testStackXml(): string {
     <external-variables></external-variables>
     <variables></variables>
   </frame>
-</stack>`;}
+</stack>`;
+}
 
 export function testLargerStackXml(): string {
     return `
