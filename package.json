@@ -52,8 +52,16 @@
                 "title": "MarkLogic: Eval SPARQL"
             },
             {
-                "command": "extension.sendRowsQuery",
-                "title": "MarkLogic: Submit Optic query"
+                "command": "extension.sendRowsJsonQuery",
+                "title": "MarkLogic: Submit Optic query - return JSON"
+            },
+            {
+                "command": "extension.sendRowsCsvQuery",
+                "title": "MarkLogic: Submit Optic query - return CSV"
+            },
+            {
+                "command": "extension.sendRowsXmlQuery",
+                "title": "MarkLogic: Submit Optic query - return XML"
             },
             {
                 "command": "extension.connectServer",

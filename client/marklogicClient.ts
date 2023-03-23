@@ -197,15 +197,16 @@ export function sendSparql(db: MarklogicClient, sparqlQuery: string, contentType
 }
 
 
-export function sendRows(db: MarklogicClient, actualQuery: string): Promise<ml.RowsResponse> {
+export function sendRows(db: MarklogicClient, actualQuery: string, resultFormat: ml.RowsResponseFormat): Promise<ml.RowsResponse> {
     if (actualQuery.startsWith('{')) {
-        return sendRowsSerialized(db, actualQuery);
+        return sendRowsSerialized(db, actualQuery, resultFormat);
     } else {
-        return db.mldbClient.rows.query(actualQuery, { 'queryType': 'dsl' });
+        const queryOptions: ml.RowsOptions = { 'queryType': 'dsl', 'format': resultFormat };
+        return db.mldbClient.rows.query(actualQuery, queryOptions);
     }
 }
 
-function sendRowsSerialized(db: MarklogicClient, actualQuery: string): Promise<ml.RowsResponse> {
+function sendRowsSerialized(db: MarklogicClient, actualQuery: string, resultFormat: ml.RowsResponseFormat): Promise<ml.RowsResponse> {
     let jsonQuery = null;
     let errObject = null;
     try {
@@ -215,7 +216,8 @@ function sendRowsSerialized(db: MarklogicClient, actualQuery: string): Promise<m
     }
 
     if (jsonQuery) {
-        return db.mldbClient.rows.query(jsonQuery, { 'queryType': 'json' });
+        const queryOptions: ml.RowsOptions = { 'queryType': 'json', 'format': resultFormat };
+        return db.mldbClient.rows.query(jsonQuery, queryOptions);
     } else {
         return Promise.resolve(
             {

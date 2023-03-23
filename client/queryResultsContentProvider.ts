@@ -1,7 +1,7 @@
 'use strict';
 
 import { Event, EventEmitter, TextDocumentContentProvider, Uri, window, workspace } from 'vscode';
-import { contentType, RowsResponse } from 'marklogic';
+import { contentType, RowsResponse, RowsResponseFormat } from 'marklogic';
 
 export class QueryResultsContentProvider implements TextDocumentContentProvider {
     // This class provides implementation details for virtual documents that store the responses and errors from the MarkLogic client
@@ -93,9 +93,14 @@ export class QueryResultsContentProvider implements TextDocumentContentProvider 
     }
 
 
-    public async writeRowsResponseToUri(uri: Uri, response: RowsResponse): Promise<Uri> {
-        const responseUri = this.buildResponseUri(uri, 'json');
-        const readyResponse = JSON.stringify(response);
+    public async writeRowsResponseToUri(uri: Uri, response: RowsResponse, resultFormat: RowsResponseFormat): Promise<Uri> {
+        const responseUri = this.buildResponseUri(uri, resultFormat);
+        let readyResponse: string = null;
+        if (resultFormat === 'json') {
+            readyResponse = JSON.stringify(response);
+        } else {
+            readyResponse = response.toString();
+        }
         this._cache.set(responseUri.toString(), readyResponse);
         this.update(responseUri);
         await new Promise(resolve => setTimeout(resolve, 60));

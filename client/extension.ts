@@ -58,14 +58,22 @@ export function activate(context: vscode.ExtensionContext): void {
         const uri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port);
         editorSparqlQuery(client, actualQuery, uri, editor, provider);
     });
-    const sendRowsQuery = vscode.commands.registerTextEditorCommand('extension.sendRowsQuery', editor => {
+
+    function sendEditorRowsQuery(editor, rowsResponseFormat: ml.RowsResponseFormat) {
         const actualQuery: string = editor.document.getText();
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
         const client: MarklogicClient = cascadeOverrideClient('', SJS, cfg, context.globalState);
         const host = client.params.host; const port = client.params.port;
         const uri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port);
-        editorRowsQuery(client, actualQuery, uri, editor, provider);
-    });
+        editorRowsQuery(client, actualQuery, uri, editor, provider, rowsResponseFormat);
+    }
+    const sendRowsJsonQuery = vscode.commands.registerTextEditorCommand(
+        'extension.sendRowsJsonQuery', editor => sendEditorRowsQuery(editor, 'json'));
+    const sendRowsCsvQuery = vscode.commands.registerTextEditorCommand(
+        'extension.sendRowsCsvQuery', editor => sendEditorRowsQuery(editor, 'csv'));
+    const sendRowsXmlQuery = vscode.commands.registerTextEditorCommand(
+        'extension.sendRowsXmlQuery', editor => sendEditorRowsQuery(editor, 'xml'));
+
     const connectServer = vscode.commands.registerCommand('extension.connectServer', () => {
         vscode.window.showInputBox({
             placeHolder: 'Please enter server you want to connect',
@@ -108,7 +116,9 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(sendJSQuery);
     context.subscriptions.push(sendSqlQuery);
     context.subscriptions.push(sendSparqlQuery);
-    context.subscriptions.push(sendRowsQuery);
+    context.subscriptions.push(sendRowsJsonQuery);
+    context.subscriptions.push(sendRowsCsvQuery);
+    context.subscriptions.push(sendRowsXmlQuery);
     context.subscriptions.push(
         vscode.languages.registerDocumentFormattingEditProvider(
             { scheme: 'mlquery', language: 'xml' },
