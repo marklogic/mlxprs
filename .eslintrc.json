@@ -40,7 +40,7 @@
         ],
         "semi": [
             "error",
-            "never"
+            "always"
         ],
         "arrow-spacing": [
             "error",

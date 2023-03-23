@@ -62,7 +62,7 @@ export function testStackXml(): string {
     <external-variables></external-variables>
     <variables></variables>
   </frame>
-</stack>`}
+</stack>`;}
 
 export function testLargerStackXml(): string {
     return `
@@ -220,7 +220,7 @@ export function testLargerStackXml(): string {
       <external-variables />
       <variables />
     </frame>
-  </stack>`
+  </stack>`;
 }
 
 export function testExprXml(): string {
@@ -241,5 +241,5 @@ export function testExprXml(): string {
     <column>7</column>
     <statements></statements>
   </expr>
-</a>`
+</a>`;
 }

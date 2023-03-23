@@ -432,7 +432,9 @@
         "predebug": "npm run clean && npm run copy-files --prefix server && tsc -b server && tsc -b -w .",
         "test": "node dist/test/runTest.js --full-trace",
         "testServer": "npm run pretest-server && node server/dist/test/runTest.js --full-trace",
-        "watch": "webpack --mode none --watch & webpack --mode none --watch --config ./server/webpack.config.js"
+        "watch": "webpack --mode none --watch & webpack --mode none --watch --config ./server/webpack.config.js",
+        "lint": "eslint client/ server/ --ext .ts --ext .js --ext .sjs",
+        "lintFix": "eslint client/ server/ --ext .ts --ext .js --ext .sjs --fix"
     },
     "devDependencies": {
         "@types/esprima": "4.0.3",
