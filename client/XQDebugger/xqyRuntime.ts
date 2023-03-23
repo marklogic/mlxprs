@@ -1,9 +1,9 @@
-import { EventEmitter } from 'events'
-import { ResultProvider } from 'marklogic'
-import { InitializeRequestArguments } from './xqyDebug'
-import { sendXQuery, MarklogicClient, MlClientParameters } from '../marklogicClient'
-import { parseString } from 'xml2js'
-import { ModuleContentGetter } from '../moduleContentGetter'
+import { EventEmitter } from 'events';
+import { ResultProvider } from 'marklogic';
+import { InitializeRequestArguments } from './xqyDebug';
+import { sendXQuery, MarklogicClient, MlClientParameters } from '../marklogicClient';
+import { parseString } from 'xml2js';
+import { ModuleContentGetter } from '../moduleContentGetter';
 
 export interface XqyBreakPoint {
     uri: string;      // module URI on MarkLogic
@@ -45,24 +45,24 @@ export interface XqyVariable {
 
 export class XqyRuntime extends EventEmitter {
 
-    private _mlClient: MarklogicClient
-    private _mlModuleGetter: ModuleContentGetter
-    private _clientParams: MlClientParameters
-    private _rid = ''
-    private _timeout = 1
+    private _mlClient: MarklogicClient;
+    private _mlModuleGetter: ModuleContentGetter;
+    private _clientParams: MlClientParameters;
+    private _rid = '';
+    private _timeout = 1;
 
     public constructor() {
-        super()
+        super();
     }
 
     private _runTimeState: 'shutdown' | 'launched' | 'attached' | 'error' = 'shutdown';
 
     public getRunTimeState(): 'shutdown' | 'launched' | 'attached' | 'error' {
-	    return this._runTimeState
+	    return this._runTimeState;
     }
 
     public setRunTimeState(state: 'shutdown' | 'launched' | 'attached'): void {
-        this._runTimeState = state
+        this._runTimeState = state;
     }
 
     /**
@@ -74,51 +74,51 @@ export class XqyRuntime extends EventEmitter {
         return this.sendFreshQuery(query, 'dbg')
             .result(
                 (fulfill: Record<string, any>) => {
-                    console.log('fulfill (dbg): ' + JSON.stringify(fulfill))
-                    this._rid = fulfill[0]['value']
-                    this.setRunTimeState('launched')
-                    return this._rid
+                    console.log('fulfill (dbg): ' + JSON.stringify(fulfill));
+                    this._rid = fulfill[0]['value'];
+                    this.setRunTimeState('launched');
+                    return this._rid;
                 },
                 (error: Record<string, any>) => {
-                    XqyRuntime.reportError(error, 'launchWithDebugEval')
-                    this._runTimeState = 'error'
-                    throw error
-                })
+                    XqyRuntime.reportError(error, 'launchWithDebugEval');
+                    this._runTimeState = 'error';
+                    throw error;
+                });
     }
 
     public initialize(args: InitializeRequestArguments): void {
-        this._clientParams = args.clientParams
-        this._mlClient = new MarklogicClient(this._clientParams)
+        this._clientParams = args.clientParams;
+        this._mlClient = new MarklogicClient(this._clientParams);
     }
 
     private sendFreshQuery(query: string, prefix: 'xdmp' | 'dbg' = 'xdmp'): ResultProvider<Record<string, any>> {
-        this._mlClient = new MarklogicClient(this._clientParams)
-        return sendXQuery(this._mlClient, query, prefix)
+        this._mlClient = new MarklogicClient(this._clientParams);
+        return sendXQuery(this._mlClient, query, prefix);
     }
 
     public async getModuleContent(modulePath: string): Promise<string> {
-        this._mlClient = new MarklogicClient(this._clientParams)
-        this._mlModuleGetter = new ModuleContentGetter(this._mlClient)
-        return this._mlModuleGetter.provideTextDocumentContent(modulePath)
+        this._mlClient = new MarklogicClient(this._clientParams);
+        this._mlModuleGetter = new ModuleContentGetter(this._mlClient);
+        return this._mlModuleGetter.provideTextDocumentContent(modulePath);
     }
 
     public setRid(rid: string): void {
-        this._rid = rid
+        this._rid = rid;
     }
 
     public getRid(): string {
-        return this._rid
+        return this._rid;
     }
 
     public dbgControlCall(call: 'continue' | 'next' | 'step' | 'out' | 'detach'): Promise<void> {
         return this.sendFreshQuery(`dbg:${call}(${this._rid})`)
             .result(
                 () => {
-                    console.debug(`called dbg:${call}(${this._rid})`)
+                    console.debug(`called dbg:${call}(${this._rid})`);
                 },
                 (error: Record<string, any>[]) => {
-                    console.error(`error in dbg:${call}(): ${JSON.stringify(error)}`)
-                })
+                    console.error(`error in dbg:${call}(): ${JSON.stringify(error)}`);
+                });
     }
 
     private static setBreakPointsQuery(uri: string, lines: number[], rid: string): string {
@@ -133,7 +133,7 @@ export class XqyRuntime extends EventEmitter {
         return (
             dbg:break($rid, $expr),
             dbg:expr($rid, $expr)/dbg:line/fn:data()
-          )))`
+          )))`;
     }
 
     private static removeBreakPointsQuery(uri: string, rid: string): string {
@@ -144,7 +144,7 @@ export class XqyRuntime extends EventEmitter {
         let $exprs as element(dbg:expr)* := dbg:breakpoints($rid) ! dbg:expr($rid, .)
         for $expr in fn:distinct-values($exprs[dbg:uri/fn:string() = $uri]/dbg:expr-id/fn:data())
 
-        return dbg:clear($rid, $expr)`
+        return dbg:clear($rid, $expr)`;
     }
 
     /**
@@ -155,54 +155,54 @@ export class XqyRuntime extends EventEmitter {
      * @returns array of line numbers for which a breakpoint was successfully set
      */
     public setBreakPointsOnMl(uri: string, lines: number[]): Promise<number[]> {
-        const q = XqyRuntime.setBreakPointsQuery(uri, lines, this._rid)
+        const q = XqyRuntime.setBreakPointsQuery(uri, lines, this._rid);
         return this.removeBreakPointsOnMl(uri).then(() => {
             return this.sendFreshQuery(q)
                 .result(
                     (fulfill: Record<string, number[]>[]) => {
-                        console.debug(`set ${fulfill[0]['value'].length} breakpoints for ${uri} on ${this._rid}`)
-                        return fulfill[0]['value']
+                        console.debug(`set ${fulfill[0]['value'].length} breakpoints for ${uri} on ${this._rid}`);
+                        return fulfill[0]['value'];
                     },
                     (error: Record<string, any>[]) => {
-                        XqyRuntime.reportError(error, 'setBreakPointsOnMl')
-                        return []
-                    })
-        })
+                        XqyRuntime.reportError(error, 'setBreakPointsOnMl');
+                        return [];
+                    });
+        });
     }
 
     private removeBreakPointsOnMl(uri: string): Promise<void> {
-        const q = XqyRuntime.removeBreakPointsQuery(uri, this._rid)
+        const q = XqyRuntime.removeBreakPointsQuery(uri, this._rid);
         return this.sendFreshQuery(q)
             .result(
                 () => {
-                    console.debug(`removed breakpoints for ${uri} on ${this._rid}`)
+                    console.debug(`removed breakpoints for ${uri} on ${this._rid}`);
                 },
                 (error: Record<string, any>[]) => {
-                    XqyRuntime.reportError(error, 'removeBreakPointsOnMl')
-                })
+                    XqyRuntime.reportError(error, 'removeBreakPointsOnMl');
+                });
     }
 
     public removeAllBreakPointsOnMl(): Promise<void> {
         return this.sendFreshQuery(`dbg:breakpoints(${this._rid}) ! dbg:clear(${this._rid}, .)`)
             .result(
                 (fulfill: Record<string, any>[]) => {
-                    console.debug(`cleared breakpoints on ${this._rid}`)
+                    console.debug(`cleared breakpoints on ${this._rid}`);
                 },
                 (error: Record<string, any>[]) => {
-                    XqyRuntime.reportError(error, 'removeAllBreakPointsOnMl')
-                })
+                    XqyRuntime.reportError(error, 'removeAllBreakPointsOnMl');
+                });
     }
 
     public wait(): Promise<string> {
         return this.sendFreshQuery(`dbg:wait(${this._rid}, 5)`)
             .result(
                 (fulfill: Record<string, any>[]) => {
-                    return fulfill[0]['value']
+                    return fulfill[0]['value'];
                 },
                 (error: Record<string, any>[]) => {
-                    console.error('error on dbg:wait(): ' + JSON.stringify(error))
-                    return ''
-                })
+                    console.error('error on dbg:wait(): ' + JSON.stringify(error));
+                    return '';
+                });
     }
 
     /**
@@ -214,32 +214,32 @@ export class XqyRuntime extends EventEmitter {
         return this.sendFreshQuery(`dbg:value(${this._rid}, "${query}")`)
             .result(
                 (fulfill: Record<string, any>[]) => {
-                    return fulfill[0]
+                    return fulfill[0];
                 },
                 (error: Record<string, any>[]) => {
                     console.error(
-                        `error on dbg:value(${this._rid}, "${query}"): ${JSON.stringify(error)}`)
-                    return error
-                })
+                        `error on dbg:value(${this._rid}, "${query}"): ${JSON.stringify(error)}`);
+                    return error;
+                });
     }
 
     public async getProperties(objectId: string): Promise<string> {
-        return 'not yet implemented'
+        return 'not yet implemented';
     }
 
     public disable(): ResultProvider<Record<string, any>> {
-        return sendXQuery(this._mlClient, `dbg:value(${this._rid})`)
+        return sendXQuery(this._mlClient, `dbg:value(${this._rid})`);
     }
 
     public terminate(): ResultProvider<Record<string, any>> {
-        return sendXQuery(this._mlClient, 'dbg:disconnent(xdmp:server())')
+        return sendXQuery(this._mlClient, 'dbg:disconnent(xdmp:server())');
     }
 
     public static parseExprXML(exprXMLString: string): Array<XqyExpr> {
-        let parsed: any
-        const exprArray: Array<XqyExpr> = []
+        let parsed: any;
+        const exprArray: Array<XqyExpr> = [];
         parseString(exprXMLString, (err: Error, result: any) => {
-            parsed = result
+            parsed = result;
             parsed.a.expr.forEach(expr => {
                 exprArray.push({
                     id: expr['expr-id'][0],
@@ -247,10 +247,10 @@ export class XqyRuntime extends EventEmitter {
                     uri: expr.uri[0],
                     line: expr.line[0],
                     statements: [] // TODO: find an example, parse it
-                })
-            })
-        })
-        return exprArray
+                });
+            });
+        });
+        return exprArray;
     }
 
     private static parseVariableXML(v: any): XqyVariable {
@@ -258,49 +258,49 @@ export class XqyRuntime extends EventEmitter {
             name: v.name[0]._,
             prefix: v.prefix ? v.prefix[0] : '',
             value: v.value ? v.value[0] : undefined
-        } as XqyVariable
+        } as XqyVariable;
     }
 
     public static parseScopeXML(frameObj: any): Array<XqyScopeObject> {
-        const globalScope: XqyScopeObject = { type: 'global', variables: [] } as XqyScopeObject
-        const externalScope: XqyScopeObject = { type: 'external', variables: [] } as XqyScopeObject
-        const localScope: XqyScopeObject = { type: 'local', variables: [] } as XqyScopeObject
+        const globalScope: XqyScopeObject = { type: 'global', variables: [] } as XqyScopeObject;
+        const externalScope: XqyScopeObject = { type: 'external', variables: [] } as XqyScopeObject;
+        const localScope: XqyScopeObject = { type: 'local', variables: [] } as XqyScopeObject;
 
-        const globalScopeXMLObj = frameObj['global-variables'][0]
-        const externalScopeXMLObj = frameObj['external-variables'][0]
-        const localScopeXMLObj = frameObj.variables ? frameObj.variables[0] : {}
+        const globalScopeXMLObj = frameObj['global-variables'][0];
+        const externalScopeXMLObj = frameObj['external-variables'][0];
+        const localScopeXMLObj = frameObj.variables ? frameObj.variables[0] : {};
 
-        const scopesToReturn = []
+        const scopesToReturn = [];
         if (globalScopeXMLObj) {
             globalScopeXMLObj['global-variable'].forEach(gv => {
-                globalScope.variables.push(this.parseVariableXML(gv))
-            })
-            scopesToReturn.push(globalScope)
+                globalScope.variables.push(this.parseVariableXML(gv));
+            });
+            scopesToReturn.push(globalScope);
         }
         if (externalScopeXMLObj) {
             externalScopeXMLObj['external-variable'].forEach(ev => {
-                externalScope.variables.push(this.parseVariableXML(ev))
-            })
-            scopesToReturn.push(externalScope)
+                externalScope.variables.push(this.parseVariableXML(ev));
+            });
+            scopesToReturn.push(externalScope);
         }
         if (localScopeXMLObj.variable) {
             localScopeXMLObj.variable.forEach(v => {
-                localScope.variables.push(this.parseVariableXML(v))
-            })
-            scopesToReturn.push(localScope)
+                localScope.variables.push(this.parseVariableXML(v));
+            });
+            scopesToReturn.push(localScope);
         }
-        return scopesToReturn
+        return scopesToReturn;
     }
 
     public static parseStackXML(stackXMLString: string): Array<XqyFrame> {
-        let parsed: any
-        const stackArray: Array<XqyFrame> = []
+        let parsed: any;
+        const stackArray: Array<XqyFrame> = [];
         parseString(stackXMLString, (err: Error, result: any) => {
-            parsed = result
-            const expr: any = parsed.stack.expr[0]
-            const exprId: string = expr['expr-id'][0]
-            const uri: string = expr.uri[0]
-            const operation: string = expr['expr-source'][0]
+            parsed = result;
+            const expr: any = parsed.stack.expr[0];
+            const exprId: string = expr['expr-id'][0];
+            const uri: string = expr.uri[0];
+            const operation: string = expr['expr-source'][0];
 
             stackArray.push({
                 uri: uri,
@@ -309,11 +309,11 @@ export class XqyRuntime extends EventEmitter {
                 operation: operation,
                 xid: exprId,
                 scopeChain: this.parseScopeXML(expr)
-            } as XqyFrame)
+            } as XqyFrame);
 
             for (let i = 0; i < parsed.stack.frame.length; i++) {
-                const frame: any = parsed.stack.frame[i]
-                const scopeChain: XqyScopeObject[] = this.parseScopeXML(frame)
+                const frame: any = parsed.stack.frame[i];
+                const scopeChain: XqyScopeObject[] = this.parseScopeXML(frame);
                 stackArray.push({
                     uri: frame.uri,
                     line: Number(frame.line[0]),
@@ -321,41 +321,41 @@ export class XqyRuntime extends EventEmitter {
                     operation: frame.operation ? frame.operation[0] : '<anonymous>',
                     xid: exprId,
                     scopeChain: scopeChain
-                } as XqyFrame)
+                } as XqyFrame);
                 // include local variables, if present, in the expr scope
                 if (i === 0) {
-                    stackArray[0].scopeChain = scopeChain
+                    stackArray[0].scopeChain = scopeChain;
                 }
             }
-        })
-        return stackArray
+        });
+        return stackArray;
     }
 
     public async getCurrentStack(): Promise<Array<XqyFrame>> {
         // This is usually called immediately after a dbg control call, so the
         // request may not have been stopped by the time we get here. 60ms delay
         // should be enough time to wait, without bothering the user
-        await new Promise(resolve => setTimeout(resolve, 60))
+        await new Promise(resolve => setTimeout(resolve, 60));
 
         return this.sendFreshQuery(`dbg:stack(${this._rid})`).result(
             (fulfill: Record<string, any>) => {
-                console.debug('stack: ' + JSON.stringify(fulfill[0].value))
-                return XqyRuntime.parseStackXML(fulfill[0].value)
+                console.debug('stack: ' + JSON.stringify(fulfill[0].value));
+                return XqyRuntime.parseStackXML(fulfill[0].value);
             },
             (error: Record<string, any>) => {
                 // combined with the 60 ms delay above, retry if the request
                 // hasn't been stopped yet
                 if (error.body.errorResponse.messageCode === 'DBG-NOTSTOPPED') {
-                    console.debug(`Request ${this._rid} not yet stopped`)
-                    return this.getCurrentStack()
+                    console.debug(`Request ${this._rid} not yet stopped`);
+                    return this.getCurrentStack();
                 }
-                console.error('error (stack): ' + JSON.stringify(error))
-                throw error
-            })
+                console.error('error (stack): ' + JSON.stringify(error));
+                throw error;
+            });
     }
 
     private static reportError(error: any, functionName: string): void {
-        const informativeMessage = error.body.errorResponse.message || JSON.stringify(error)
-        console.error(`error (${functionName}): ${informativeMessage}`)
+        const informativeMessage = error.body.errorResponse.message || JSON.stringify(error);
+        console.error(`error (${functionName}): ${informativeMessage}`);
     }
 }

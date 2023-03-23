@@ -2,16 +2,16 @@ import {
     DebugConfiguration, DebugConfigurationProvider, WorkspaceFolder, CancellationToken, ProviderResult,
     window, DebugAdapterDescriptorFactory, DebugAdapterExecutable, DebugAdapterDescriptor,
     DebugSession, QuickPickItem, QuickPickOptions, WorkspaceConfiguration, workspace
-} from 'vscode'
-import { MarklogicClient, MlClientParameters, sendXQuery } from '../marklogicClient'
-import { readFileSync } from 'fs'
+} from 'vscode';
+import { MarklogicClient, MlClientParameters, sendXQuery } from '../marklogicClient';
+import { readFileSync } from 'fs';
 
 const listServersQuery = `
 ! (map:new()
   => map:with("id", .)
   => map:with("name", xdmp:server-name(.))
   => map:with("port", xdmp:server-port(.)))
-=> xdmp:to-json()`
+=> xdmp:to-json()`;
 
 const listStoppedRequests = `
 for $rid in dbg:stopped()
@@ -24,29 +24,29 @@ return (json:object()
   => map:with('serverName', $server)
   => map:with('debugStatus', $dstatus)
   => map:with('requestStatus', $rstatus)
-  )`
+  )`;
 
-const doNotDebugThese = ['Admin', 'Manage', 'HealthCheck', 'App-Services']
+const doNotDebugThese = ['Admin', 'Manage', 'HealthCheck', 'App-Services'];
 
 export class XqyDebugConfiguration implements DebugConfiguration {
     [key: string]: any
-    type: string
-    name: string
-    request: string
-    rid: string
+    type: string;
+    name: string;
+    request: string;
+    rid: string;
 
-    path?: string
-    program: string
-    query: string
+    path?: string;
+    program: string;
+    query: string;
 
-    stopOnEntry: boolean
+    stopOnEntry: boolean;
 
-    clientParams: MlClientParameters
+    clientParams: MlClientParameters;
 }
 
 const placeholder: QuickPickOptions = {
     placeHolder: 'Select the request to attach'
-}
+};
 
 interface ServerQueryResponse {
     name: string;
@@ -63,21 +63,21 @@ interface DebugStatusQueryResponse {
 
 export class XqyDebugConfigurationProvider implements DebugConfigurationProvider {
     private async getAvailableRequests(params: MlClientParameters): Promise<Array<DebugStatusQueryResponse>> {
-        const client: MarklogicClient = new MarklogicClient(params)
+        const client: MarklogicClient = new MarklogicClient(params);
         const resp = await sendXQuery(client, listStoppedRequests)
             .result(
                 (fulfill: Record<string, any>[]) => {
-                    return fulfill.map(f => f.value as DebugStatusQueryResponse)
+                    return fulfill.map(f => f.value as DebugStatusQueryResponse);
                 },
                 (error: Record<string, any>[]) => {
-                    console.error(JSON.stringify(error))
-                    return []
-                })
-        return resp
+                    console.error(JSON.stringify(error));
+                    return [];
+                });
+        return resp;
     }
 
     private async resolveRemainingDebugConfiguration(folder: WorkspaceFolder | undefined, config: XqyDebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration> {
-        const cfg: WorkspaceConfiguration = workspace.getConfiguration()
+        const cfg: WorkspaceConfiguration = workspace.getConfiguration();
         const clientParams: MlClientParameters = new MlClientParameters({
             host: String(cfg.get('marklogic.host')),
             port: Number(cfg.get('marklogic.port')),
@@ -90,8 +90,8 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
             ssl: Boolean(cfg.get('marklogic.ssl')),
             pathToCa: String(cfg.get('marklogic.pathToCa') || ''),
             rejectUnauthorized: Boolean(cfg.get('marklogic.rejectUnauthorized'))
-        })
-        config.clientParams = clientParams
+        });
+        config.clientParams = clientParams;
 
         if (config.request === 'attach' && !config.rid) {
             const rid: string = await this.getAvailableRequests(clientParams)
@@ -102,21 +102,21 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
                                 label: request.rid,
                                 description: `Request ${request.requestStatus} on ${request.serverName}`,
                                 detail: request.debugStatus
-                            } as QuickPickItem
-                        })
+                            } as QuickPickItem;
+                        });
                         return window.showQuickPick(qpRequests, placeholder)
                             .then((pickedRequest: QuickPickItem) => {
-                                config.rid = pickedRequest.label
-                                return config.rid
-                            })
+                                config.rid = pickedRequest.label;
+                                return config.rid;
+                            });
                     } else {
-                        window.showWarningMessage(`No requests found to debug on ${clientParams.host}`)
-                        return ''
+                        window.showWarningMessage(`No requests found to debug on ${clientParams.host}`);
+                        return '';
                     }
-                })
-            config.rid = rid
+                });
+            config.rid = rid;
         }
-        return config
+        return config;
     }
 
     /**
@@ -124,33 +124,33 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
      */
     resolveDebugConfiguration(folder: WorkspaceFolder | undefined, config: XqyDebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
         if (!config.type && !config.request && !config.name) {
-            const editor = window.activeTextEditor
+            const editor = window.activeTextEditor;
             if (editor && editor.document.languageId === 'xquery-ml') {
-                config.type = 'xquery-ml'
-                config.name = 'Launch XQY Debug Request'
-                config.request = 'launch'
-                config.program = '${file}'
-                config.stopOnEntry = true
+                config.type = 'xquery-ml';
+                config.name = 'Launch XQY Debug Request';
+                config.request = 'launch';
+                config.program = '${file}';
+                config.stopOnEntry = true;
             }
         }
 
         if (!config.program) {
-            config.program = window.activeTextEditor.document.fileName
-            config.query = window.activeTextEditor.document.getText()
+            config.program = window.activeTextEditor.document.fileName;
+            config.query = window.activeTextEditor.document.getText();
         } else {
-            config.query = readFileSync(config.program).toString()
+            config.query = readFileSync(config.program).toString();
         }
 
-        return this.resolveRemainingDebugConfiguration(folder, config)
+        return this.resolveRemainingDebugConfiguration(folder, config);
     }
 
 
     public static async chooseXqyServer(mlClient: MarklogicClient, intention: 'connect' | 'disconnect'): Promise<void> {
-        const command = intention === 'connect' ? 'xdmp:servers()' : 'dbg:connected()'
+        const command = intention === 'connect' ? 'xdmp:servers()' : 'dbg:connected()';
         await sendXQuery(mlClient, `${command} ${listServersQuery}`)
             .result(
                 (fulfill: Record<string, ServerQueryResponse>) => {
-                    const servers: ServerQueryResponse[] = [].concat(fulfill[0]['value'] || [])
+                    const servers: ServerQueryResponse[] = [].concat(fulfill[0]['value'] || []);
                     return servers
                         .filter((server: ServerQueryResponse) => ((server.port || 0) !== mlClient.params.port || intention === 'disconnect'))
                         .filter((server: ServerQueryResponse) => (!doNotDebugThese.includes(server.name) || intention === 'disconnect'))
@@ -159,12 +159,12 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
                                 label: server.name,
                                 description: server.id,
                                 detail: `${server.name} on ${mlClient.params.host}:${server.port || '(none)'}`,
-                            } as QuickPickItem
-                        })
+                            } as QuickPickItem;
+                        });
                 },
                 err => {
-                    window.showErrorMessage(`couldn't get a list of servers: ${JSON.stringify(err)}`)
-                    return []
+                    window.showErrorMessage(`couldn't get a list of servers: ${JSON.stringify(err)}`);
+                    return [];
                 })
             .then((choices: QuickPickItem[]) => {
                 if (choices.length) {
@@ -173,22 +173,22 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
                             return sendXQuery(mlClient, `dbg:${intention}(${choice.description})`)
                                 .result(
                                     () => {
-                                        window.showInformationMessage(`Successfully ${intention}ed ${choice.label} on ${mlClient.params.host}`)
+                                        window.showInformationMessage(`Successfully ${intention}ed ${choice.label} on ${mlClient.params.host}`);
                                     },
                                     (err) => {
-                                        window.showErrorMessage(`Failed to connect to ${choice.label}: ${JSON.stringify(err.body.errorResponse.message)}`)
-                                    })
-                        })
+                                        window.showErrorMessage(`Failed to connect to ${choice.label}: ${JSON.stringify(err.body.errorResponse.message)}`);
+                                    });
+                        });
                 }
-                window.showWarningMessage(`No stopped servers found on ${mlClient.params.host}`)
-                return null
-            })
+                window.showWarningMessage(`No stopped servers found on ${mlClient.params.host}`);
+                return null;
+            });
     }
 }
 
 export class XqyDebugAdapterDescriptorFactory implements DebugAdapterDescriptorFactory {
     createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable): ProviderResult<DebugAdapterDescriptor> {
-        return executable
+        return executable;
     }
 }
 

@@ -1,5 +1,5 @@
-import * as assert from 'assert'
-import { MarklogicClient, MlClientParameters } from '../../marklogicClient'
+import * as assert from 'assert';
+import { MarklogicClient, MlClientParameters } from '../../marklogicClient';
 
 suite('Default Documents DB Test Suite', () => {
     test('When MlClientParameters is used and the default contentDb is null', async () => {
@@ -15,9 +15,9 @@ suite('Default Documents DB Test Suite', () => {
                 ssl: 'ssl',
                 rejectUnauthorized: 'rejectUnauthorized'
             })
-        )
-        assert.strictEqual(mlClient.params.contentDb, null, 'ML client contentDb should be null')
-    })
+        );
+        assert.strictEqual(mlClient.params.contentDb, null, 'ML client contentDb should be null');
+    });
 
     test('When MlClientParameters is used and the default contentDb is undefined', async () => {
         const mlClient = new MarklogicClient(
@@ -32,9 +32,9 @@ suite('Default Documents DB Test Suite', () => {
                 ssl: 'ssl',
                 rejectUnauthorized: 'rejectUnauthorized'
             })
-        )
-        assert.strictEqual(mlClient.params.contentDb, null, 'ML client contentDb should be null')
-    })
+        );
+        assert.strictEqual(mlClient.params.contentDb, null, 'ML client contentDb should be null');
+    });
 
     test('When MlClientParameters is used and the default contentDb is \'\'', async () => {
         const mlClient = new MarklogicClient(
@@ -49,9 +49,9 @@ suite('Default Documents DB Test Suite', () => {
                 ssl: 'ssl',
                 rejectUnauthorized: 'rejectUnauthorized'
             })
-        )
-        assert.strictEqual(mlClient.params.contentDb, null, 'ML client contentDb should be null')
-    })
+        );
+        assert.strictEqual(mlClient.params.contentDb, null, 'ML client contentDb should be null');
+    });
 
     test('When MlClientParameters is used and the default contentDb is missing', async () => {
         const mlClient = new MarklogicClient(
@@ -65,9 +65,9 @@ suite('Default Documents DB Test Suite', () => {
                 ssl: 'ssl',
                 rejectUnauthorized: 'rejectUnauthorized'
             })
-        )
-        assert.strictEqual(mlClient.params.contentDb, null, 'ML client contentDb should be null')
-    })
+        );
+        assert.strictEqual(mlClient.params.contentDb, null, 'ML client contentDb should be null');
+    });
 
     test('When MlClientParameters is used and the default contentDb contains a value', async () => {
         const mlClient = new MarklogicClient(
@@ -82,8 +82,8 @@ suite('Default Documents DB Test Suite', () => {
                 ssl: 'ssl',
                 rejectUnauthorized: 'rejectUnauthorized'
             })
-        )
-        assert.strictEqual(mlClient.params.contentDb, 'someDatabase', 'ML client contentDb should match the input value')
-    })
+        );
+        assert.strictEqual(mlClient.params.contentDb, 'someDatabase', 'ML client contentDb should match the input value');
+    });
 
-})
+});

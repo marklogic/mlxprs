@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 class MarkLogicFnDocsObject {
     name: string;
@@ -9,12 +9,12 @@ class MarkLogicFnDocsObject {
     params: MarkLogicParamsObject[] = [];
 
     constructor(o: any) {
-        this.name = o.name
-        this.prefix = o.prefix
-        this.summary = o.summary
-        this.return = o.return
-        this.example = o.example || []
-        this.params = o.params || []
+        this.name = o.name;
+        this.prefix = o.prefix;
+        this.summary = o.summary;
+        this.return = o.return;
+        this.example = o.example || [];
+        this.params = o.params || [];
     }
 }
 
@@ -27,4 +27,4 @@ interface MarkLogicParamsObject {
 
 export {
     MarkLogicFnDocsObject, MarkLogicParamsObject
-}
+};
