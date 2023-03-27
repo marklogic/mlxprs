@@ -11,6 +11,7 @@ import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } f
 import { XqyDebugConfigurationProvider, XqyDebugAdapterDescriptorFactory } from './XQDebugger/xqyDebugConfigProvider';
 import { MLConfigurationProvider, DebugAdapterExecutableFactory, _connectServer, _disconnectServer } from './JSDebugger/configurationProvider';
 import { ModuleContentProvider, pickAndShowModule } from './vscModuleContentProvider';
+import { MlxprsStatus } from './mlxprsStatus';
 
 const MLDBCLIENT = 'mldbClient';
 const SJS = 'sjs';
@@ -105,32 +106,23 @@ export function activate(context: vscode.ExtensionContext): void {
         const client: MarklogicClient = cascadeOverrideClient('', XQY, cfg, context.globalState);
         pickAndShowModule(mprovider, client);
     });
-    context.subscriptions.push(showModule);
 
-    context.subscriptions.push(connectServer);
-    context.subscriptions.push(disconnectServer);
-    context.subscriptions.push(connectXqyServer);
-    context.subscriptions.push(disconnectXqyServer);
-
-    context.subscriptions.push(sendXQuery);
-    context.subscriptions.push(sendJSQuery);
-    context.subscriptions.push(sendSqlQuery);
-    context.subscriptions.push(sendSparqlQuery);
-    context.subscriptions.push(sendRowsJsonQuery);
-    context.subscriptions.push(sendRowsCsvQuery);
-    context.subscriptions.push(sendRowsXmlQuery);
-    context.subscriptions.push(
+    handleUnload(context, [
+        showModule, connectServer, disconnectServer, connectXqyServer, disconnectXqyServer, sendXQuery,
+        sendJSQuery, sendSqlQuery, sendSparqlQuery, sendRowsJsonQuery, sendRowsCsvQuery, sendRowsXmlQuery
+    ]);
+    handleUnload(context, [
         vscode.languages.registerDocumentFormattingEditProvider(
             { scheme: 'mlquery', language: 'xml' },
             new XmlFormattingEditProvider()
         )
-    );
-    context.subscriptions.push(
+    ]);
+    handleUnload(context, [
         vscode.languages.registerDocumentFormattingEditProvider(
             { scheme: 'mlquery', language: 'xsl' },
             new XmlFormattingEditProvider()
         )
-    );
+    ]);
 
     // XQuery hinting client below
     const serverModule = context.asAbsolutePath(path.join('server', 'dist', 'server.js'));
@@ -152,23 +144,45 @@ export function activate(context: vscode.ExtensionContext): void {
         }
     };
     const disposable = new LanguageClient('xQueryLanguageServer', 'XQuery Language Server', serverOptions, clientOptions).start();
-    context.subscriptions.push(disposable);
+    handleUnload(context, [disposable]);
 
     const sjsDebugFactory: DebugAdapterExecutableFactory = new DebugAdapterExecutableFactory();
     const sjsDbgProvider: MLConfigurationProvider = new MLConfigurationProvider();
-    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('ml-jsdebugger', sjsDbgProvider));
-    context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('ml-jsdebugger', sjsDebugFactory));
-    context.subscriptions.push(sjsDebugFactory as never);
+    handleUnload(context, [
+        vscode.debug.registerDebugConfigurationProvider('ml-jsdebugger', sjsDbgProvider),
+        vscode.debug.registerDebugAdapterDescriptorFactory('ml-jsdebugger', sjsDebugFactory),
+        sjsDebugFactory as never
+    ]);
 
     const xqyDebugFactory: DebugAdapterExecutableFactory = new XqyDebugAdapterDescriptorFactory();
     const xqyDbgProvider: XqyDebugConfigurationProvider = new XqyDebugConfigurationProvider();
-    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('xquery-ml', xqyDbgProvider));
-    context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('xquery-ml', xqyDebugFactory));
-    context.subscriptions.push(xqyDebugFactory as never);
+    handleUnload(context, [
+        vscode.debug.registerDebugConfigurationProvider('xquery-ml', xqyDbgProvider),
+        vscode.debug.registerDebugAdapterDescriptorFactory('xquery-ml', xqyDebugFactory),
+        xqyDebugFactory as never
+    ]);
+
+
+    const mlxprsStatus: MlxprsStatus = new MlxprsStatus(context);
+    handleUnload(context, [mlxprsStatus.getStatusBarItem(), mlxprsStatus.getCommand()]);
+    XqyDebugConfigurationProvider.registerMlxprsStatusBarItem(mlxprsStatus);
+    mlxprsStatus.requestUpdate();
 }
 
 // this method is called when your extension is deactivated
 export function deactivate(context: vscode.ExtensionContext): void {
     context.globalState.get<ml.DatabaseClient>(MLDBCLIENT).release();
     context.globalState.update(MLDBCLIENT, null);
+}
+
+/**
+* Per https://stackoverflow.com/questions/55554018/purpose-for-subscribing-a-command-in-vscode-extension , objects
+* that can be unloaded - such as commands - should be associated with the context so that they can be
+* properly deregistered when they are unloaded.
+*
+* @param context
+* @param deregisterableObject
+*/
+function handleUnload(context: vscode.ExtensionContext, arrayOfUnloadableObject: vscode.Disposable[]) {
+    arrayOfUnloadableObject.forEach(unloadableObject => context.subscriptions.push(unloadableObject as vscode.Disposable));
 }
