@@ -11,7 +11,7 @@ import {
 import { MLRuntime } from '../../JSDebugger/mlRuntime';
 import { AttachRequestArguments } from '../../JSDebugger/mlDebug';
 import { MarklogicClient } from '../../marklogicClient';
-import { QueryResultsContentProvider } from '../../queryResultsContentProvider';
+import { ClientResponseProvider } from '../../clientResponseProvider';
 import { getDbClient, parseQueryForOverrides } from '../../vscQueryParameterTools';
 
 const SJS = 'sjs';
@@ -117,7 +117,7 @@ suite('Extension Test Suite', () => {
     });
 
     test('When a JavaScript, XQuery, or SQL tab is evaled and a URI is generated to uniquely identify the results', async () => {
-        const provider = new QueryResultsContentProvider();
+        const provider = new ClientResponseProvider();
         const fileUri = Uri.from({
             'scheme': 'scheme',
             'authority': 'localhost:9876',
@@ -134,7 +134,7 @@ suite('Extension Test Suite', () => {
     });
 
     test('When a SPARQL tab is evaled and a URI is generated to uniquely identify the results', async () => {
-        const provider = new QueryResultsContentProvider();
+        const provider = new ClientResponseProvider();
         const fileUri = Uri.from({
             'scheme': 'scheme',
             'authority': 'localhost:9876',
