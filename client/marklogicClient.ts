@@ -2,6 +2,7 @@
 
 import * as ml from 'marklogic';
 import * as fs from 'fs';
+import { MlxprsStatus } from './mlxprsStatus';
 
 export const MLDBCLIENT = 'mldbClient';
 export const MLSETTINGSFLAG = /mlxprs:settings/;
@@ -106,6 +107,25 @@ export class MarklogicClient {
     hasSameParamsAs(newParams: MlClientParameters): boolean {
         return this.params.sameAs(newParams);
     }
+
+
+    async getConnectedServers(requestingObject: MlxprsStatus, updateCallback: (connectedServers: string[]) => void): Promise<void> {
+        return this.mldbClient.xqueryEval('xquery version "1.0-ml"; dbg:connected()')
+            .result(
+                (items: ml.Item[]) => {
+                    const connectedServers: string[] = [];
+                    items.forEach((item) => {
+                        connectedServers.push(item.value);
+                    });
+                    // requestingObject['updateStatusBarItem'](connectedServers);
+                    // requestingObject[updateCallback](connectedServers);
+                    updateCallback.call(requestingObject, connectedServers);
+                },
+                (err) => {
+                    throw err;
+                });
+    }
+
 }
 
 export function buildNewClient(params: MlClientParameters): MarklogicClient {

@@ -30,7 +30,8 @@
         "onDebug",
         "onLanguage:xquery-ml",
         "onLanguage:javascript",
-        "onLanguage:sparql"
+        "onLanguage:sparql",
+        "mlxprs.showConnectedServers"
     ],
     "main": "./dist/extension",
     "contributes": {

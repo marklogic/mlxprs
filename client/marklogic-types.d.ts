@@ -15,6 +15,12 @@ declare module 'marklogic' {
         sparql: <U>(args: Record<string, unknown>) => ResultProvider<U>
     }
 
+    export type Item = {
+        format: string,
+        datatype: string,
+        value: any
+    }
+
     export type RowsResponse = {
         columns: { name: string }[],
         rows: object[],
