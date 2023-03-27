@@ -5,7 +5,7 @@ import * as ml from 'marklogic';
 import { editorJSQuery, editorSparqlQuery, editorSqlQuery, editorXQuery, editorRowsQuery } from './vscQueryDirector';
 import { MarklogicClient } from './marklogicClient';
 import { cascadeOverrideClient } from './vscQueryParameterTools';
-import { QueryResultsContentProvider } from './queryResultsContentProvider';
+import { ClientResponseProvider } from './clientResponseProvider';
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
 import { XqyDebugConfigurationProvider, XqyDebugAdapterDescriptorFactory } from './XQDebugger/xqyDebugConfigProvider';
@@ -19,11 +19,11 @@ const XQY = 'xqy';
 
 export function activate(context: vscode.ExtensionContext): void {
     context.globalState.update(MLDBCLIENT, null as ml.DatabaseClient);
-    const provider = new QueryResultsContentProvider();
+    const provider = new ClientResponseProvider();
     const mprovider = new ModuleContentProvider();
 
     vscode.workspace.registerTextDocumentContentProvider(
-        QueryResultsContentProvider.scheme, provider);
+        ClientResponseProvider.scheme, provider);
     vscode.workspace.registerTextDocumentContentProvider(
         ModuleContentProvider.scheme, mprovider);
 
@@ -32,7 +32,7 @@ export function activate(context: vscode.ExtensionContext): void {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
         const client: MarklogicClient = cascadeOverrideClient(actualQuery, XQY, cfg, context.globalState);
         const host = client.params.host; const port = client.params.port;
-        const qUri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port);
+        const qUri = ClientResponseProvider.encodeLocation(editor.document.uri, host, port);
         editorXQuery(client, actualQuery, qUri, editor, provider);
     });
     const sendJSQuery = vscode.commands.registerTextEditorCommand('extension.sendJSQuery', editor => {
@@ -40,7 +40,7 @@ export function activate(context: vscode.ExtensionContext): void {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
         const client: MarklogicClient = cascadeOverrideClient(actualQuery, SJS, cfg, context.globalState);
         const host = client.params.host; const port = client.params.port;
-        const uri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port);
+        const uri = ClientResponseProvider.encodeLocation(editor.document.uri, host, port);
         editorJSQuery(client, actualQuery, uri, editor, provider);
     });
     const sendSqlQuery = vscode.commands.registerTextEditorCommand('extension.sendSqlQuery', editor => {
@@ -48,7 +48,7 @@ export function activate(context: vscode.ExtensionContext): void {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
         const client: MarklogicClient = cascadeOverrideClient('', SJS, cfg, context.globalState);
         const host = client.params.host; const port = client.params.port;
-        const uri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port);
+        const uri = ClientResponseProvider.encodeLocation(editor.document.uri, host, port);
         editorSqlQuery(client, actualQuery, uri, editor, cfg, provider);
     });
     const sendSparqlQuery = vscode.commands.registerTextEditorCommand('extension.sendSparqlQuery', editor => {
@@ -56,7 +56,7 @@ export function activate(context: vscode.ExtensionContext): void {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
         const client: MarklogicClient = cascadeOverrideClient('', SJS, cfg, context.globalState);
         const host = client.params.host; const port = client.params.port;
-        const uri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port);
+        const uri = ClientResponseProvider.encodeLocation(editor.document.uri, host, port);
         editorSparqlQuery(client, actualQuery, uri, editor, provider);
     });
 
@@ -65,7 +65,7 @@ export function activate(context: vscode.ExtensionContext): void {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
         const client: MarklogicClient = cascadeOverrideClient('', SJS, cfg, context.globalState);
         const host = client.params.host; const port = client.params.port;
-        const uri = QueryResultsContentProvider.encodeLocation(editor.document.uri, host, port);
+        const uri = ClientResponseProvider.encodeLocation(editor.document.uri, host, port);
         editorRowsQuery(client, actualQuery, uri, editor, provider, rowsResponseFormat);
     }
     const sendRowsJsonQuery = vscode.commands.registerTextEditorCommand(

@@ -1,7 +1,7 @@
 'use strict';
 import { MarklogicClient, sendJSQuery, sendSparql, sendXQuery, sendRows } from './marklogicClient';
 import { TextDocument, TextEdit, TextEditor, Uri, WorkspaceEdit, commands, window, workspace, WorkspaceConfiguration } from 'vscode';
-import { QueryResultsContentProvider } from './queryResultsContentProvider';
+import { ClientResponseProvider } from './clientResponseProvider';
 import { contentType, RowsResponse } from 'marklogic';
 import * as ml from 'marklogic';
 
@@ -55,7 +55,7 @@ export function editorJSQuery(
     actualQuery: string,
     uri: Uri,
     editor: TextEditor,
-    provider: QueryResultsContentProvider): void {
+    provider: ClientResponseProvider): void {
     sendJSQuery(db, actualQuery)
         .result(
             (fulfill: Record<string, unknown>[]) => {
@@ -73,7 +73,7 @@ export function editorXQuery(
     actualQuery: string,
     uri: Uri,
     editor: TextEditor,
-    provider: QueryResultsContentProvider,
+    provider: ClientResponseProvider,
     prefix: 'xdmp' | 'dbg' = 'xdmp'): void {
     sendXQuery(db, actualQuery, prefix)
         .result(
@@ -99,7 +99,7 @@ export function editorSqlQuery(
     uri: Uri,
     editor: TextEditor,
     cfg: WorkspaceConfiguration,
-    provider: QueryResultsContentProvider): void {
+    provider: ClientResponseProvider): void {
     const sqlOptions: Array<string> = buildSqlOptions(cfg);
     const actualQuery = 'xdmp.sql(sqlQuery, sqlOptions)';
     sendJSQuery(db, actualQuery, sqlQuery, sqlOptions)
@@ -119,7 +119,7 @@ export function editorSparqlQuery(
     sparqlQuery: string,
     uri: Uri,
     editor: TextEditor,
-    provider: QueryResultsContentProvider): void {
+    provider: ClientResponseProvider): void {
     const contentType: contentType = workspace.getConfiguration().get('marklogic.sparqlContentType');
     sendSparql(db, sparqlQuery, contentType)
         .result(
@@ -134,7 +134,7 @@ export function editorSparqlQuery(
 
 
 export function editorRowsQuery(db: MarklogicClient, actualQuery: string, uri: Uri,
-    editor: TextEditor, provider: QueryResultsContentProvider, resultFormat: ml.RowsResponseFormat): void {
+    editor: TextEditor, provider: ClientResponseProvider, resultFormat: ml.RowsResponseFormat): void {
     sendRows(db, actualQuery, resultFormat)
         .then(
             (response: RowsResponse) => {
