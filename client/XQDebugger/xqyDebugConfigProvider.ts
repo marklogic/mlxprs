@@ -5,6 +5,7 @@ import {
 } from 'vscode';
 import { MarklogicClient, MlClientParameters, sendXQuery } from '../marklogicClient';
 import { readFileSync } from 'fs';
+import { MlxprsStatus } from '../mlxprsStatus';
 
 const listServersQuery = `
 ! (map:new()
@@ -62,6 +63,8 @@ interface DebugStatusQueryResponse {
 }
 
 export class XqyDebugConfigurationProvider implements DebugConfigurationProvider {
+    static mlxprsStatus: MlxprsStatus = null;
+
     private async getAvailableRequests(params: MlClientParameters): Promise<Array<DebugStatusQueryResponse>> {
         const client: MarklogicClient = new MarklogicClient(params);
         const resp = await sendXQuery(client, listStoppedRequests)
@@ -174,15 +177,28 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
                                 .result(
                                     () => {
                                         window.showInformationMessage(`Successfully ${intention}ed ${choice.label} on ${mlClient.params.host}`);
+                                        this.requestStatusBarItemUpdate();
                                     },
                                     (err) => {
                                         window.showErrorMessage(`Failed to connect to ${choice.label}: ${JSON.stringify(err.body.errorResponse.message)}`);
+                                        this.requestStatusBarItemUpdate();
                                     });
                         });
                 }
                 window.showWarningMessage(`No stopped servers found on ${mlClient.params.host}`);
+                this.requestStatusBarItemUpdate();
                 return null;
             });
+    }
+
+    private static requestStatusBarItemUpdate() {
+        if (XqyDebugConfigurationProvider.mlxprsStatus) {
+            XqyDebugConfigurationProvider.mlxprsStatus.requestUpdate();
+        }
+    }
+
+    public static registerMlxprsStatusBarItem(mlxprsStatus: MlxprsStatus) {
+        XqyDebugConfigurationProvider.mlxprsStatus = mlxprsStatus;
     }
 }
 
