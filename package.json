@@ -2,10 +2,10 @@
     "name": "mlxprs",
     "displayName": "MarkLogic developer tools",
     "description": "MarkLogic JavaScript and XQuery development tools",
-    "version": "3.5.1",
+    "version": "3.6.0",
     "publisher": "mlxprs",
     "engines": {
-        "vscode": "^1.50.0"
+        "vscode": "^1.76.0"
     },
     "icon": "images/mlxprs-vscode.png",
     "galleryBanner": {
@@ -284,6 +284,11 @@
                     "default": 8000,
                     "description": "port on which to reach the MarkLogic server"
                 },
+                "marklogic.managePort": {
+                    "type": "integer",
+                    "default": 8002,
+                    "description": "MarkLogic Manage AppServer port"
+                },
                 "marklogic.username": {
                     "type": "string",
                     "default": "admin",
@@ -297,7 +302,7 @@
                 "marklogic.documentsDb": {
                     "type": "string",
                     "default": "",
-                    "description": "database against which to evaluate queries; default content database for app server will be used if left unspecified"
+                    "description": "database against which to evaluate queries; required for debugging a local script"
                 },
                 "marklogic.modulesDb": {
                     "type": "string",
@@ -388,6 +393,12 @@
                     ".xquery"
                 ],
                 "configuration": "./xquery-ml.configuration.json"
+            },
+            {
+                "id": "javascript",
+                "extensions": [
+                    ".sjs"
+                ]
             }
         ],
         "grammars": [
@@ -405,48 +416,52 @@
         ]
     },
     "scripts": {
+        "completeClean": "rimraf node_modules/ .vscode-test/ dist/ server/dist/ server/node_modules/ server/out/ mlxprs-${version}.vsix",
+        "npmInstallClientAndServer": "npm install && cd server && npm install && cd ..",
+        "testAll": "npm run test && npm run testServer",
         "copy-files": "npm run copy-files --prefix server",
-        "clean": "rm -rf dist out server/dist server/out",
-        "vscode:prepublish": "./node_modules/.bin/webpack --mode production && ./node_modules/.bin/webpack --mode production --config ./server/webpack.config.js",
-        "compile": "npm run clean && ./node_modules/webpack/bin/webpack.js --mode none && ./node_modules/webpack/bin/webpack.js --mode none --config ./server/webpack.config.js",
-        "pretest": "rm -rf dist && tsc -p tsconfig.json && ./node_modules/webpack/bin/webpack.js --mode development --config webpack.test.js",
+        "clean": "rimraf dist out server/dist server/out",
+        "vscode:prepublish": "webpack --mode production && webpack --mode production --config ./server/webpack.config.js",
+        "compile": "npm run clean && webpack --mode none && webpack --mode none --config ./server/webpack.config.js",
+        "pretest": "rimraf dist && tsc -p tsconfig.json && webpack --mode development --config webpack.test.js",
         "pretest-server": "tsc -p server/tsconfig.json && npm run copy-files",
         "predebug": "npm run clean && npm run copy-files --prefix server && tsc -b server && tsc -b -w .",
-        "test": "node client/out/test/runTest.js --full-trace",
-        "watch": "./node_modules/webpack/bin/webpack.js --mode none --watch & ./node_modules/webpack/bin/webpack.js --mode none --watch --config ./server/webpack.config.js"
+        "test": "node dist/test/runTest.js --full-trace",
+        "testServer": "npm run pretest-server && node server/dist/test/runTest.js --full-trace",
+        "watch": "webpack --mode none --watch & webpack --mode none --watch --config ./server/webpack.config.js"
     },
     "devDependencies": {
-        "@types/esprima": "^4.0.2",
-        "@types/estree": "0.0.45",
-        "@types/mocha": "^8.0.3",
-        "@types/node": "^14.14.5",
-        "@types/vscode": "^1.50.0",
-        "@types/webpack": "^4.41.23",
-        "@types/xml2js": "^0.4.5",
-        "@typescript-eslint/eslint-plugin": "^4.6.0",
-        "@typescript-eslint/parser": "^4.6.0",
-        "await-notify": "^1.0.1",
-        "eslint": "^7.12.1",
-        "esprima": "^4.0.1",
-        "https-proxy-agent": "^5.0.0",
-        "js-yaml": "^3.14.0",
-        "marklogic": "^2.5.0",
-        "merge-options": "^3.0.3",
-        "mocha": "^8.2.0",
-        "request": "^2.88.2",
-        "request-promise": "^4.2.6",
-        "ts-loader": "^8.0.7",
-        "typescript": "^4.0.5",
-        "vscode-debugadapter": "^1.42.1",
-        "vscode-debugadapter-testsupport": "^1.42.0",
-        "vscode-test": "^1.4.0",
-        "webpack": "^5.3.0",
-        "webpack-cli": "^4.1.0",
-        "xml2js": "^0.4.23",
-        "yargs-parser": "^20.2.3"
+        "@types/esprima": "4.0.3",
+        "@types/estree": "1.0.0",
+        "@types/mocha": "10.0.1",
+        "@types/node": "16.11.7",
+        "@types/vscode": "1.76.0",
+        "@types/webpack": "5.28.0",
+        "@types/xml2js": "0.4.11",
+        "@typescript-eslint/eslint-plugin": "5.54.1",
+        "@typescript-eslint/parser": "5.54.1",
+        "await-notify": "1.0.1",
+        "eslint": "8.35.0",
+        "esprima": "4.0.1",
+        "https-proxy-agent": "5.0.1",
+        "js-yaml": "4.1.0",
+        "marklogic": "3.0.0",
+        "merge-options": "3.0.4",
+        "mocha": "10.2.0",
+        "request": "2.88.2",
+        "request-promise": "4.2.6",
+        "ts-loader": "9.4.2",
+        "@vscode/debugadapter": "1.59.0",
+        "@vscode/debugadapter-testsupport": "1.59.0",
+        "@vscode/test-electron": "2.3.0",
+        "webpack": "5.76.1",
+        "webpack-cli": "5.0.1",
+        "xml2js": "0.4.23",
+        "yargs-parser": "21.1.1"
     },
     "dependencies": {
-        "vscode-debugprotocol": "^1.42.0",
-        "vscode-languageclient": "^6.1.3"
+        "rimraf": "4.3.1",
+        "@vscode/debugprotocol": "1.59.0",
+        "vscode-languageclient": "7.0.0"
     }
 }

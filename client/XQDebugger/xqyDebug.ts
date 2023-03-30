@@ -1,9 +1,10 @@
-import { DebugProtocol } from 'vscode-debugprotocol'
-import { Handles, InitializedEvent,
+import { DebugProtocol } from '@vscode/debugprotocol'
+import {
+    Handles, InitializedEvent,
     Logger, logger, LoggingDebugSession,
     StoppedEvent, OutputEvent, Source, TerminatedEvent, Breakpoint, Thread,
     StackFrame, Scope, Variable
-} from 'vscode-debugadapter'
+} from '@vscode/debugadapter'
 import { XqyRuntime, XqyBreakPoint, XqyFrame, XqyScopeObject, XqyVariable } from './xqyRuntime'
 import { basename } from 'path'
 import { existsSync } from 'fs'
@@ -22,6 +23,7 @@ export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArgum
     trace?: boolean;
     rid: string;
     clientParams: MlClientParameters;
+    managePort: number;
     root: string;
 }
 
@@ -74,7 +76,7 @@ export class XqyDebugSession extends LoggingDebugSession {
         let origin = 'local file'
         let id = 0
         if (!filePath) vsCodeUri = this._workDir
-        else {vsCodeUri = filePath}
+        else { vsCodeUri = filePath }
         if (!existsSync(filePath)) {
             const mlModuleUri = this._mapLocalFiletoUrl(filePath)
             origin = `mldbg:/${mlModuleUri}`
@@ -107,7 +109,7 @@ export class XqyDebugSession extends LoggingDebugSession {
         response.body.supportsSetVariable = false
         response.body.supportsRestartFrame = false
 
-        response.body.completionTriggerCharacters = [ ':' ]
+        response.body.completionTriggerCharacters = [':']
 
         this.sendResponse(response)
         this.sendEvent(new InitializedEvent())

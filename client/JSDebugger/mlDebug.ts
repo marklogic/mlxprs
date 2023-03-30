@@ -7,8 +7,8 @@ import {
     LoggingDebugSession, Breakpoint, OutputEvent,
     InitializedEvent, TerminatedEvent, StoppedEvent,
     Thread, StackFrame, Scope, Source, Handles, Logger, logger, BreakpointEvent
-} from 'vscode-debugadapter'
-import { DebugProtocol } from 'vscode-debugprotocol'
+} from '@vscode/debugadapter'
+import { DebugProtocol } from '@vscode/debugprotocol'
 import { basename } from 'path'
 import { MLRuntime, MLbreakPoint, V8Frame, ScopeObject, V8PropertyObject, V8PropertyValue } from './mlRuntime'
 import { Subject } from 'await-notify'
@@ -20,6 +20,7 @@ interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
     hostname: string;
     username: string;
     password: string;
+    managePort: number;
     rid: string;
     database?: string;
     txnId?: string;
@@ -32,12 +33,13 @@ interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
     scheme?: string;
 }
 
-interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
+export interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
     root: string;
     hostname: string;
     debugServerName: string;
     username: string;
     password: string;
+    managePort: number;
     rid: string;
     ssl?: boolean;
     pathToCa?: Buffer;
@@ -56,9 +58,9 @@ export class MLDebugSession extends LoggingDebugSession {
     private _frameHandles = new Handles<V8Frame>();
     private _bpCache: Record<string, Set<string>> = {};
     //map breakpoint to id, only unverified breakpoint will have non-zero id
-    private _bpMap: Record<string, Record<string, number>> ={};
+    private _bpMap: Record<string, Record<string, number>> = {};
     private _bpId = 1; //starts from 1, 0 means verified and no need for the id
-    private _stacks: V8Frame [];
+    private _stacks: V8Frame[];
     private _queryPath = '';
     private _workDir = '';
     private _scheme = '';
@@ -186,7 +188,7 @@ export class MLDebugSession extends LoggingDebugSession {
 
         const path = args.source.path as string
         const mlrequests: Promise<string | void>[] = []
-        const actualBreakpoints: DebugProtocol.Breakpoint [] = []
+        const actualBreakpoints: DebugProtocol.Breakpoint[] = []
         if (args.breakpoints) {
 
             const newBp: Set<string> = new Set()

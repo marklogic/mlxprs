@@ -2,12 +2,12 @@
 
 import {
     IPCMessageReader, IPCMessageWriter,
-    createConnection, IConnection,
+    createConnection, Connection,
     TextDocuments,
     TextDocumentPositionParams,
     CompletionItem, CompletionItemKind, InitializeParams, InitializeResult,
     TextDocumentSyncKind
-} from 'vscode-languageserver'
+} from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import {
@@ -17,7 +17,7 @@ import {
     allMlXqyFunctions, allMlXqyNamespaces
 } from './completionsXqy'
 
-const connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process))
+const connection: Connection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process))
 
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument)
 documents.listen(connection)

@@ -7,7 +7,6 @@
             "type": "node",
             "request": "attach",
             "port": 6004,
-            "protocol": "inspector",
             "sourceMaps": true,
             "outFiles": [
                 "${workspaceRoot}/server/**/*.js"
@@ -53,7 +52,22 @@
                 "--extensionDevelopmentPath=${workspaceFolder}/client",
                 "--extensionTestsPath=${workspaceRoot}/dist/test/suite/index"
             ],
-            "stopOnEntry": false,
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceRoot}/dist/**/*.js"
+            ],
+            "preLaunchTask": "npm: pretest",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Launch Client-Integration Tests",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceRoot}/dist/test/integration/index"
+            ],
             "sourceMaps": true,
             "outFiles": [
                 "${workspaceRoot}/dist/**/*.js"
@@ -70,10 +84,9 @@
                 "--extensionDevelopmentPath=${workspaceRoot}/server",
                 "--extensionTestsPath=${workspaceRoot}/server/dist/test/suite/index"
             ],
-            "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": [
-                "${workspaceRoot}/server/out/test/**/*.js"
+                "${workspaceRoot}/server/dist/test/**/*.js"
             ],
             "preLaunchTask": "npm: pretest-server",
             "cwd": "${workspaceFolder}/server"
@@ -87,7 +100,6 @@
                 "--extensionDevelopmentPath=${workspaceFolder}/client",
                 "--extensionTestsPath=${workspaceRoot}/dist/test/integration/index"
             ],
-            "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": [
                 "${workspaceRoot}/dist/**/*.js"

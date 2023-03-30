@@ -1,6 +1,6 @@
-[![](https://vsmarketplacebadge.apphb.com/version/mlxprs.mlxprs.svg)](https://marketplace.visualstudio.com/items?itemName=mlxprs.mlxprs)
-[![](https://vsmarketplacebadge.apphb.com/installs-short/mlxprs.mlxprs.svg)](https://marketplace.visualstudio.com/items?itemName=mlxprs.mlxprs)
-[![](https://vsmarketplacebadge.apphb.com/rating-short/mlxprs.mlxprs.svg)](https://marketplace.visualstudio.com/items?itemName=mlxprs.mlxprs)
+[![](https://vsmarketplacebadges.dev/version/mlxprs.mlxprs.png)](https://marketplace.visualstudio.com/items?itemName=mlxprs.mlxprs)
+[![](https://vsmarketplacebadges.dev/installs-short/mlxprs.mlxprs.png)](https://marketplace.visualstudio.com/items?itemName=mlxprs.mlxprs)
+[![](https://vsmarketplacebadges.dev/rating-short/mlxprs.mlxprs.png)](https://marketplace.visualstudio.com/items?itemName=mlxprs.mlxprs)
 
 # MarkLogic Extension for Visual Studio Code
 
@@ -30,12 +30,14 @@ The MarkLogic extension exposes several configuration options from the standard 
 {
   "marklogic.host": "marklogic-instance.geocities.com",
   "marklogic.port": 8040,
+  "marklogic.managePort": 8002,
   "marklogic.username": "username",
   "marklogic.password": "****************",
   "marklogic.documentsDb": "myproject-content",
   "marklogic.modulesDb": "myproject-modules"
 }
 ```
+Note that marklogic.documentsDb *must* be declared in order to attach to remote JavaScript request.
 
 You can also set `marklogic.authType` to `DIGEST` or `BASIC`. Digest is the default,
 and works even if the server is running basic authentication.
