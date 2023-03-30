@@ -2,7 +2,7 @@
     "name": "mlxprs-languageserver",
     "displayName": "mlxprs-languageserver",
     "description": "Language Server for XQuery and SJS",
-    "version": "0.6.0",
+    "version": "3.6.0",
     "publisher": "mlxprs",
     "repository": "https://github.com/mikrovvelle/mlxprs",
     "license": "Apache-2.0",
