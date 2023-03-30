@@ -1,8 +1,10 @@
 'use strict';
 
-import { Event, EventEmitter, TextDocument, TextDocumentContentProvider, Uri,
-    window, workspace } from 'vscode';
-import { MarklogicClient } from './marklogicClient';
+import {
+    Event, EventEmitter, TextDocument, TextDocumentContentProvider, Uri,
+    window, workspace
+} from 'vscode';
+import { ClientContext } from './marklogicClient';
 import { ModuleContentGetter } from './moduleContentGetter';
 
 const scheme = 'mlmodule';
@@ -18,7 +20,7 @@ export class ModuleContentProvider implements TextDocumentContentProvider {
     private _onDidChange = new EventEmitter<Uri>();
     private _mlModuleGetter: ModuleContentGetter;
 
-    public initialize(client: MarklogicClient): void {
+    public initialize(client: ClientContext): void {
         this._mlModuleGetter = new ModuleContentGetter(client);
     }
 
@@ -35,7 +37,7 @@ export class ModuleContentProvider implements TextDocumentContentProvider {
     }
 }
 
-export async function pickAndShowModule(mprovider: ModuleContentProvider, client: MarklogicClient): Promise<void> {
+export async function pickAndShowModule(mprovider: ModuleContentProvider, client: ClientContext): Promise<void> {
     mprovider.initialize(client);
     mprovider.listModules()
         .then((moduleUris: string[]) => {

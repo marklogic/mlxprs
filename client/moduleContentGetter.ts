@@ -1,16 +1,16 @@
 'use strict';
 
-import { MarklogicClient, sendXQuery, MlClientParameters } from './marklogicClient';
+import { ClientContext, sendXQuery, MlClientParameters } from './marklogicClient';
 
 export const listModulesQuery = 'cts:uris()';
 
 export class ModuleContentGetter {
-    private _mlClient: MarklogicClient;
+    private _mlClient: ClientContext;
 
-    public constructor(client: MarklogicClient) {
+    public constructor(client: ClientContext) {
         const moduleGetterParams: MlClientParameters = client.params;
         moduleGetterParams.contentDb = moduleGetterParams.modulesDb;
-        this._mlClient = new MarklogicClient(moduleGetterParams);
+        this._mlClient = new ClientContext(moduleGetterParams);
     }
 
     public host(): string {
@@ -21,12 +21,12 @@ export class ModuleContentGetter {
         return this._mlClient.params.port;
     }
 
-    public initialize(client: MarklogicClient): void {
+    public initialize(client: ClientContext): void {
         this._mlClient = client;
     }
 
     public async provideTextDocumentContent(modulePath: string): Promise<string> {
-        return this._mlClient.mldbClient.read(modulePath)
+        return this._mlClient.databaseClient.read(modulePath)
             .result(
                 (fulfill: string[]) => {
                     const moduleContent: string = fulfill[0];

@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import * as ml from 'marklogic';
 import { editorJSQuery, editorSparqlQuery, editorSqlQuery, editorXQuery, editorRowsQuery } from './vscQueryDirector';
-import { MarklogicClient } from './marklogicClient';
+import { ClientContext } from './marklogicClient';
 import { cascadeOverrideClient } from './vscQueryParameterTools';
 import { ClientResponseProvider } from './clientResponseProvider';
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting';
@@ -32,7 +32,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const sendXQuery = vscode.commands.registerTextEditorCommand('extension.sendXQuery', editor => {
         const actualQuery: string = editor.document.getText();
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const client: MarklogicClient = cascadeOverrideClient(actualQuery, XQY, cfg, context.globalState);
+        const client: ClientContext = cascadeOverrideClient(actualQuery, XQY, cfg, context.globalState);
         const host = client.params.host; const port = client.params.port;
         const qUri = ClientResponseProvider.encodeLocation(editor.document.uri, host, port);
         editorXQuery(client, actualQuery, qUri, editor, provider);
@@ -40,7 +40,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const sendJSQuery = vscode.commands.registerTextEditorCommand('extension.sendJSQuery', editor => {
         const actualQuery: string = editor.document.getText();
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const client: MarklogicClient = cascadeOverrideClient(actualQuery, SJS, cfg, context.globalState);
+        const client: ClientContext = cascadeOverrideClient(actualQuery, SJS, cfg, context.globalState);
         const host = client.params.host; const port = client.params.port;
         const uri = ClientResponseProvider.encodeLocation(editor.document.uri, host, port);
         editorJSQuery(client, actualQuery, uri, editor, provider);
@@ -48,7 +48,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const sendSqlQuery = vscode.commands.registerTextEditorCommand('extension.sendSqlQuery', editor => {
         const actualQuery: string = editor.document.getText();
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const client: MarklogicClient = cascadeOverrideClient('', SJS, cfg, context.globalState);
+        const client: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
         const host = client.params.host; const port = client.params.port;
         const uri = ClientResponseProvider.encodeLocation(editor.document.uri, host, port);
         editorSqlQuery(client, actualQuery, uri, editor, cfg, provider);
@@ -56,7 +56,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const sendSparqlQuery = vscode.commands.registerTextEditorCommand('extension.sendSparqlQuery', editor => {
         const actualQuery: string = editor.document.getText();
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const client: MarklogicClient = cascadeOverrideClient('', SJS, cfg, context.globalState);
+        const client: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
         const host = client.params.host; const port = client.params.port;
         const uri = ClientResponseProvider.encodeLocation(editor.document.uri, host, port);
         editorSparqlQuery(client, actualQuery, uri, editor, provider);
@@ -65,7 +65,7 @@ export function activate(context: vscode.ExtensionContext): void {
     function sendEditorRowsQuery(editor, rowsResponseFormat: ml.RowsResponseFormat) {
         const actualQuery: string = editor.document.getText();
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const client: MarklogicClient = cascadeOverrideClient('', SJS, cfg, context.globalState);
+        const client: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
         const host = client.params.host; const port = client.params.port;
         const uri = ClientResponseProvider.encodeLocation(editor.document.uri, host, port);
         editorRowsQuery(client, actualQuery, uri, editor, provider, rowsResponseFormat);
@@ -79,27 +79,27 @@ export function activate(context: vscode.ExtensionContext): void {
 
     const connectJsServer = vscode.commands.registerCommand('extension.connectJsServer', () => {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const client: MarklogicClient = cascadeOverrideClient('', SJS, cfg, context.globalState);
+        const client: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
         JsDebugManager.connectToJsDebugServer(client);
     });
     const disconnectJsServer = vscode.commands.registerCommand('extension.disconnectJsServer', () => {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const client: MarklogicClient = cascadeOverrideClient('', SJS, cfg, context.globalState);
+        const client: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
         JsDebugManager.disconnectFromJsDebugServer(client);
     });
     const connectXqyServer = vscode.commands.registerCommand('extension.connectXqyServer', () => {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const client: MarklogicClient = cascadeOverrideClient('', SJS, cfg, context.globalState);
+        const client: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
         XqyDebugManager.connectToXqyDebugServer(client);
     });
     const disconnectXqyServer = vscode.commands.registerCommand('extension.disconnectXqyServer', () => {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const client: MarklogicClient = cascadeOverrideClient('', SJS, cfg, context.globalState);
+        const client: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
         XqyDebugManager.disconnectFromXqyDebugServer(client);
     });
     const showModule = vscode.commands.registerCommand('extension.showModule', () => {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const client: MarklogicClient = cascadeOverrideClient('', XQY, cfg, context.globalState);
+        const client: ClientContext = cascadeOverrideClient('', XQY, cfg, context.globalState);
         pickAndShowModule(mprovider, client);
     });
 

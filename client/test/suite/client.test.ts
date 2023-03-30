@@ -10,7 +10,7 @@ import {
 } from './testOverrideQuery';
 import { MLRuntime } from '../../JSDebugger/mlRuntime';
 import { AttachRequestArguments } from '../../JSDebugger/mlDebug';
-import { MarklogicClient } from '../../marklogicClient';
+import { ClientContext } from '../../marklogicClient';
 import { ClientResponseProvider } from '../../clientResponseProvider';
 import { getDbClient, parseQueryForOverrides } from '../../vscQueryParameterTools';
 
@@ -39,11 +39,11 @@ suite('Extension Test Suite', () => {
         const gstate = defaultDummyGlobalState();
         const newHost: string = Math.random().toString(36);
 
-        const firstClient: MarklogicClient = getDbClient('', SJS, config, gstate);
+        const firstClient: ClientContext = getDbClient('', SJS, config, gstate);
         firstClient.params.host = newHost;
 
         // Verify next client is different since firstClient's params were modified
-        const secondClient: MarklogicClient = getDbClient('', SJS, config, gstate);
+        const secondClient: ClientContext = getDbClient('', SJS, config, gstate);
         assert.notStrictEqual(firstClient, secondClient);
         assert.notDeepStrictEqual(firstClient, secondClient);
 
@@ -67,7 +67,7 @@ suite('Extension Test Suite', () => {
         const queryText: string = testOverrideQueryWithGoodJSON();
         const overrides = parseQueryForOverrides(queryText, SJS);
         const gstate = defaultDummyGlobalState();
-        const mlClient1: MarklogicClient = getDbClient(queryText, SJS, config, gstate);
+        const mlClient1: ClientContext = getDbClient(queryText, SJS, config, gstate);
 
         assert.strictEqual(overrides.host, mlClient1.params.host);
         // The pwd value in mlClient1.params will always be of type string, so have to cast the expected value

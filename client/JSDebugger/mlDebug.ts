@@ -199,7 +199,7 @@ export class MLDebugSession extends LoggingDebugSession {
                     condition: breakpoint.condition
                 });
                 newBp.add(bpString); //construct the set of new breakpoints, better ways?
-                if (path in this._bpMap && this._bpMap[path][String(breakpoint.line)] == 0) {
+                if (path in this._bpMap && this._bpMap[path][String(breakpoint.line)] === 0) {
                     const bp = new Breakpoint(true, breakpoint.line, breakpoint.column) as DebugProtocol.Breakpoint;
                     actualBreakpoints.push(bp);
                 } else {
@@ -236,11 +236,11 @@ export class MLDebugSession extends LoggingDebugSession {
                         condition: breakpoint.condition
                     } as MLbreakPoint).then(resp => {
                         const location = JSON.parse(resp)['result']['locations'][0];
-                        if (location != null) {
+                        if (location !== null) {
                             const line = this.convertDebuggerLineToClient(location['lineNumber']);
                             const actualBp = actualBreakpoints.find(bp =>
                                 line === bp.line);
-                            if (actualBp != null) actualBp.verified = true;
+                            if (actualBp !== null) actualBp.verified = true;
                             this._bpMap[path][String(line)] = 0; //verified
                         }
                     }));
@@ -534,7 +534,7 @@ export class MLDebugSession extends LoggingDebugSession {
                     const path = this._mapUrlToLocalFile(bpServer[3]);
                     const line = this.convertDebuggerLineToClient(Number(bpServer[1])); //line number
                     const bpId = this._bpMap[path][String(line)];
-                    if (bpId != 0) {
+                    if (bpId !== 0) {
                         const breakpoint: DebugProtocol.Breakpoint = new Breakpoint(true);
                         breakpoint.id = bpId;
                         this.sendEvent(new BreakpointEvent('changed', breakpoint));
@@ -606,7 +606,7 @@ export class MLDebugSession extends LoggingDebugSession {
                     condition: breakpoint.condition
                 } as MLbreakPoint).then(resp => {
                     const location = JSON.parse(resp)['result']['locations'][0];
-                    if (location != null) {
+                    if (location !== null) {
                         const line = this.convertDebuggerLineToClient(location['lineNumber']);
                         const bpId = this._bpMap[path][String(line)];
 

@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import { ResultProvider } from 'marklogic';
 import { InitializeRequestArguments } from './xqyDebug';
-import { sendXQuery, MarklogicClient, MlClientParameters } from '../marklogicClient';
+import { sendXQuery, ClientContext, MlClientParameters } from '../marklogicClient';
 import { parseString } from 'xml2js';
 import { ModuleContentGetter } from '../moduleContentGetter';
 
@@ -45,7 +45,7 @@ export interface XqyVariable {
 
 export class XqyRuntime extends EventEmitter {
 
-    private _mlClient: MarklogicClient;
+    private _mlClient: ClientContext;
     private _mlModuleGetter: ModuleContentGetter;
     private _clientParams: MlClientParameters;
     private _rid = '';
@@ -58,7 +58,7 @@ export class XqyRuntime extends EventEmitter {
     private _runTimeState: 'shutdown' | 'launched' | 'attached' | 'error' = 'shutdown';
 
     public getRunTimeState(): 'shutdown' | 'launched' | 'attached' | 'error' {
-	    return this._runTimeState;
+        return this._runTimeState;
     }
 
     public setRunTimeState(state: 'shutdown' | 'launched' | 'attached'): void {
@@ -74,7 +74,7 @@ export class XqyRuntime extends EventEmitter {
         return this.sendFreshQuery(query, 'dbg')
             .result(
                 (fulfill: Record<string, any>) => {
-                    console.log('fulfill (dbg): ' + JSON.stringify(fulfill));
+                    console.debug('fulfill (dbg): ' + JSON.stringify(fulfill));
                     this._rid = fulfill[0]['value'];
                     this.setRunTimeState('launched');
                     return this._rid;
@@ -88,16 +88,16 @@ export class XqyRuntime extends EventEmitter {
 
     public initialize(args: InitializeRequestArguments): void {
         this._clientParams = args.clientParams;
-        this._mlClient = new MarklogicClient(this._clientParams);
+        this._mlClient = new ClientContext(this._clientParams);
     }
 
     private sendFreshQuery(query: string, prefix: 'xdmp' | 'dbg' = 'xdmp'): ResultProvider<Record<string, any>> {
-        this._mlClient = new MarklogicClient(this._clientParams);
+        this._mlClient = new ClientContext(this._clientParams);
         return sendXQuery(this._mlClient, query, prefix);
     }
 
     public async getModuleContent(modulePath: string): Promise<string> {
-        this._mlClient = new MarklogicClient(this._clientParams);
+        this._mlClient = new ClientContext(this._clientParams);
         this._mlModuleGetter = new ModuleContentGetter(this._mlClient);
         return this._mlModuleGetter.provideTextDocumentContent(modulePath);
     }

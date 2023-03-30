@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
-import { MarklogicClient } from './marklogicClient';
+import { ClientContext } from './marklogicClient';
 import { cascadeOverrideClient } from './vscQueryParameterTools';
 
 const SJS = 'sjs';
 
 export class MlxprsStatus {
-    private mlClient: MarklogicClient;
+    private mlClient: ClientContext;
     private statusBarItem: vscode.StatusBarItem;
     private commandId = 'mlxprs.showConnectedServers';
     private command: vscode.Disposable;

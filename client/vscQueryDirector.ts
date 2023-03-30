@@ -1,5 +1,5 @@
 'use strict';
-import { MarklogicClient, sendJSQuery, sendSparql, sendXQuery, sendRows } from './marklogicClient';
+import { ClientContext, sendJSQuery, sendSparql, sendXQuery, sendRows } from './marklogicClient';
 import { TextDocument, TextEdit, TextEditor, Uri, WorkspaceEdit, commands, window, workspace, WorkspaceConfiguration } from 'vscode';
 import { ClientResponseProvider } from './clientResponseProvider';
 import { contentType, RowsResponse } from 'marklogic';
@@ -51,7 +51,7 @@ async function showFormattedResults(uri: Uri, editor: TextEditor): Promise<TextE
 
 
 export function editorJSQuery(
-    db: MarklogicClient,
+    db: ClientContext,
     actualQuery: string,
     uri: Uri,
     editor: TextEditor,
@@ -69,7 +69,7 @@ export function editorJSQuery(
 
 
 export function editorXQuery(
-    db: MarklogicClient,
+    db: ClientContext,
     actualQuery: string,
     uri: Uri,
     editor: TextEditor,
@@ -94,7 +94,7 @@ export function buildSqlOptions(cfg: WorkspaceConfiguration): Array<string> {
 }
 
 export function editorSqlQuery(
-    db: MarklogicClient,
+    db: ClientContext,
     sqlQuery: string,
     uri: Uri,
     editor: TextEditor,
@@ -115,7 +115,7 @@ export function editorSqlQuery(
 
 
 export function editorSparqlQuery(
-    db: MarklogicClient,
+    db: ClientContext,
     sparqlQuery: string,
     uri: Uri,
     editor: TextEditor,
@@ -133,7 +133,7 @@ export function editorSparqlQuery(
 }
 
 
-export function editorRowsQuery(db: MarklogicClient, actualQuery: string, uri: Uri,
+export function editorRowsQuery(db: ClientContext, actualQuery: string, uri: Uri,
     editor: TextEditor, provider: ClientResponseProvider, resultFormat: ml.RowsResponseFormat): void {
     sendRows(db, actualQuery, resultFormat)
         .then(

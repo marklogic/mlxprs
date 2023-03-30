@@ -107,6 +107,17 @@
             "multi-line"
         ],
         "func-call-spacing": "error",
-        "no-trailing-spaces": "error"
+        "no-trailing-spaces": "error",
+        "no-console": [
+            "error",
+            {
+                "allow": [
+                    "warn",
+                    "error",
+                    "debug"
+                ]
+            }
+        ],
+        "eqeqeq": "error"
     }
 }

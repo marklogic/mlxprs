@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { DebugClient } from '@vscode/debugadapter-testsupport';
 
 import { JsDebugManager } from '../../JSDebugger/jsDebugManager';
-import { MarklogicClient, MlClientParameters, sendJSQuery } from '../../marklogicClient';
+import { ClientContext, MlClientParameters, sendJSQuery } from '../../marklogicClient';
 
 export class IntegrationTestHelper {
 
@@ -32,7 +32,7 @@ export class IntegrationTestHelper {
 
     public config = null;
     public debugClient = null;
-    readonly mlClient = new MarklogicClient(
+    readonly mlClient = new ClientContext(
         new MlClientParameters({
             host: this.hostname,
             port: this.port,
@@ -139,10 +139,10 @@ export class IntegrationTestHelper {
             });
     }
 
-    async getRid(client: MarklogicClient, qry: string): Promise<string[]> {
+    async getRid(client: ClientContext, qry: string): Promise<string[]> {
         const newParams: MlClientParameters = JSON.parse(JSON.stringify(client.params));
         newParams.port = this.managePort;
-        const newClient = new MarklogicClient(newParams);
+        const newClient = new ClientContext(newParams);
         return sendJSQuery(newClient, qry)
             .result(
                 (fulfill: Record<string, never>[]) => {
@@ -155,10 +155,10 @@ export class IntegrationTestHelper {
                 });
     }
 
-    async getRequestStatuses(client: MarklogicClient, qry: string): Promise<{ requestId: string }[][]> {
+    async getRequestStatuses(client: ClientContext, qry: string): Promise<{ requestId: string }[][]> {
         const newParams: MlClientParameters = JSON.parse(JSON.stringify(client.params));
         newParams.port = this.managePort;
-        const newClient = new MarklogicClient(newParams);
+        const newClient = new ClientContext(newParams);
         return sendJSQuery(newClient, qry)
             .result(
                 (fulfill) => {
@@ -171,10 +171,10 @@ export class IntegrationTestHelper {
                 });
     }
 
-    async cancelRequest(client: MarklogicClient, qry: string): Promise<unknown> {
+    async cancelRequest(client: ClientContext, qry: string): Promise<unknown> {
         const newParams: MlClientParameters = JSON.parse(JSON.stringify(client.params));
         newParams.port = this.managePort;
-        const newClient = new MarklogicClient(newParams);
+        const newClient = new ClientContext(newParams);
         return sendJSQuery(newClient, qry)
             .result(
                 () => {
