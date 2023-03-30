@@ -2,7 +2,7 @@
     "name": "mlxprs",
     "displayName": "MarkLogic developer tools",
     "description": "MarkLogic JavaScript and XQuery development tools",
-    "version": "3.6.0",
+    "version": "3.7.0-SNAPSHOT",
     "publisher": "mlxprs",
     "engines": {
         "vscode": "^1.76.0"
@@ -65,11 +65,11 @@
                 "title": "MarkLogic: Submit Optic query - return XML"
             },
             {
-                "command": "extension.connectServer",
+                "command": "extension.connectJsServer",
                 "title": "MarkLogic: Connect JavaScript Debug Server"
             },
             {
-                "command": "extension.disconnectServer",
+                "command": "extension.disconnectJsServer",
                 "title": "MarkLogic: Disconnect JavaScript Debug Server"
             },
             {

@@ -3,7 +3,7 @@ import * as Path from 'path';
 import * as vscode from 'vscode';
 import { DebugClient } from '@vscode/debugadapter-testsupport';
 
-import { _connectServer, _disconnectServer } from '../../JSDebugger/configurationProvider';
+import { JsDebugManager } from '../../JSDebugger/jsDebugManager';
 import { MarklogicClient, MlClientParameters, sendJSQuery } from '../../marklogicClient';
 
 export class IntegrationTestHelper {
@@ -61,13 +61,13 @@ export class IntegrationTestHelper {
     private taskServerModules = [this.module6, this.module7, this.module8];
 
     async beforeEverything(): Promise<void> {
-        _disconnectServer(this.appServerName);
-        _connectServer(this.appServerName);
+        JsDebugManager.disconnectFromNamedJsDebugServer(this.appServerName);
+        JsDebugManager.connectToNamedJsDebugServer(this.appServerName);
         await this.loadTestData();
     }
 
     async afterEverything(): Promise<void> {
-        _disconnectServer(this.appServerName);
+        JsDebugManager.disconnectFromNamedJsDebugServer(this.appServerName);
         await this.deleteTestData();
     }
 

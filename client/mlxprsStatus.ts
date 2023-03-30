@@ -10,9 +10,11 @@ export class MlxprsStatus {
     private commandId = 'mlxprs.showConnectedServers';
     private command: vscode.Disposable;
     private connectedServers = null;
+    private managePort: number;
 
     constructor(context: vscode.ExtensionContext) {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
+        this.managePort = Number(cfg.get('marklogic.managePort'));
         this.mlClient = cascadeOverrideClient('', SJS, cfg, context.globalState);
         this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
         this.command = vscode.commands.registerCommand(this.commandId, () => {
@@ -30,7 +32,7 @@ export class MlxprsStatus {
     }
 
     requestUpdate(): void {
-        this.mlClient.getConnectedServers(this, this.updateStatusBarItem);
+        this.mlClient.getConnectedServers(this, this.managePort, this.updateStatusBarItem);
     }
 
     updateStatusBarItem(connectedServers: string[]): void {

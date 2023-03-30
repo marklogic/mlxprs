@@ -42,14 +42,6 @@ please point me in the right direction (e.g. line numbers) to fix it.
 
 ## Building The Project
 
-It is recommended to use VSCode as the editor for this package, as it can self-load a debug instance.
-
-* Open the project folder in VSCode
-* Select the "Run and Debug" sidebar window (Ctrl+Shift+D)
-* Choose "Launch Extension (debug)" from the RUN AND DEBUG dropdown menu
-* Press the green play button or F5 to compile and launch the plugin in a test environment
-* Please see the README.md file for information on configuring and working in the test environment
-
 Building the project requires [Node.js](https://nodejs.org/) to be installed on your local machine.  Node v14 LTS is recommended.
 
 First, dev dependencies must be installed.  Run `npm install` in both this folder, and in the `./server` folder.  For example:
@@ -64,6 +56,15 @@ A shorthand script that does all of that for you is
 ```
 npm run npmInstallClientAndServer
 ```
+
+It is recommended to use VSCode as the editor for this package, as it can self-load a debug instance.
+
+* Open the project folder in VSCode
+* Select the "Run and Debug" sidebar window (Ctrl+Shift+D)
+* Choose "Launch Extension (debug)" from the RUN AND DEBUG dropdown menu
+* Press the green play button or F5 to compile and launch the plugin in a test environment
+    * Note that at this time, the "Attach" commands do not work when debugging the extension from within VSCode. In order to test the "Attach" commands, you will need to build the artifact (.vsix) and use that extension with a different project, and then test manually.
+* Please see the README.md file for information on configuring and working in the test environment
 
 ## Testing
 
@@ -132,6 +133,10 @@ npm run completeClean
 
 ## Building the artifact
 
+- Install the webpack tool
+```
+npm install -g webpack
+```
 - Install the vsce tool
 ```
 npm install -g @vscode/vsce
@@ -151,7 +156,6 @@ The same NPM scripts should work in Windows, however this is not thoroughly veri
 ```
 npm install -g rimraf
 npm install -g typescript
-npm install -g webpack
 ```
 
 ## Submitting a Pull Request

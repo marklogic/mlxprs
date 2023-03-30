@@ -9,7 +9,9 @@ import { ClientResponseProvider } from './clientResponseProvider';
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
 import { XqyDebugConfigurationProvider, XqyDebugAdapterDescriptorFactory } from './XQDebugger/xqyDebugConfigProvider';
-import { MLConfigurationProvider, DebugAdapterExecutableFactory, _connectServer, _disconnectServer } from './JSDebugger/configurationProvider';
+import { XqyDebugManager } from './XQDebugger/xqyDebugManager';
+import { JsDebugConfigurationProvider, DebugAdapterExecutableFactory } from './JSDebugger/jsDebugConfigProvider';
+import { JsDebugManager } from './JSDebugger/jsDebugManager';
 import { ModuleContentProvider, pickAndShowModule } from './vscModuleContentProvider';
 import { MlxprsStatus } from './mlxprsStatus';
 
@@ -75,31 +77,25 @@ export function activate(context: vscode.ExtensionContext): void {
     const sendRowsXmlQuery = vscode.commands.registerTextEditorCommand(
         'extension.sendRowsXmlQuery', editor => sendEditorRowsQuery(editor, 'xml'));
 
-    const connectServer = vscode.commands.registerCommand('extension.connectServer', () => {
-        vscode.window.showInputBox({
-            placeHolder: 'Please enter server you want to connect',
-            value: ''
-        }).then(servername => {
-            _connectServer(servername);
-        });
+    const connectJsServer = vscode.commands.registerCommand('extension.connectJsServer', () => {
+        const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
+        const client: MarklogicClient = cascadeOverrideClient('', SJS, cfg, context.globalState);
+        JsDebugManager.connectToJsDebugServer(client);
     });
-    const disconnectServer = vscode.commands.registerCommand('extension.disconnectServer', () => {
-        vscode.window.showInputBox({
-            placeHolder: 'Please enter server you want to disconnect',
-            value: ''
-        }).then(servername => {
-            _disconnectServer(servername);
-        });
+    const disconnectJsServer = vscode.commands.registerCommand('extension.disconnectJsServer', () => {
+        const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
+        const client: MarklogicClient = cascadeOverrideClient('', SJS, cfg, context.globalState);
+        JsDebugManager.disconnectFromJsDebugServer(client);
     });
     const connectXqyServer = vscode.commands.registerCommand('extension.connectXqyServer', () => {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
         const client: MarklogicClient = cascadeOverrideClient('', SJS, cfg, context.globalState);
-        XqyDebugConfigurationProvider.chooseXqyServer(client, 'connect');
+        XqyDebugManager.connectToXqyDebugServer(client);
     });
     const disconnectXqyServer = vscode.commands.registerCommand('extension.disconnectXqyServer', () => {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
         const client: MarklogicClient = cascadeOverrideClient('', SJS, cfg, context.globalState);
-        XqyDebugConfigurationProvider.chooseXqyServer(client, 'disconnect');
+        XqyDebugManager.disconnectFromXqyDebugServer(client);
     });
     const showModule = vscode.commands.registerCommand('extension.showModule', () => {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
@@ -108,7 +104,7 @@ export function activate(context: vscode.ExtensionContext): void {
     });
 
     handleUnload(context, [
-        showModule, connectServer, disconnectServer, connectXqyServer, disconnectXqyServer, sendXQuery,
+        showModule, connectJsServer, disconnectJsServer, connectXqyServer, disconnectXqyServer, sendXQuery,
         sendJSQuery, sendSqlQuery, sendSparqlQuery, sendRowsJsonQuery, sendRowsCsvQuery, sendRowsXmlQuery
     ]);
     handleUnload(context, [
@@ -147,7 +143,7 @@ export function activate(context: vscode.ExtensionContext): void {
     handleUnload(context, [disposable]);
 
     const sjsDebugFactory: DebugAdapterExecutableFactory = new DebugAdapterExecutableFactory();
-    const sjsDbgProvider: MLConfigurationProvider = new MLConfigurationProvider();
+    const sjsDbgProvider: JsDebugConfigurationProvider = new JsDebugConfigurationProvider();
     handleUnload(context, [
         vscode.debug.registerDebugConfigurationProvider('ml-jsdebugger', sjsDbgProvider),
         vscode.debug.registerDebugAdapterDescriptorFactory('ml-jsdebugger', sjsDebugFactory),
@@ -165,7 +161,8 @@ export function activate(context: vscode.ExtensionContext): void {
 
     const mlxprsStatus: MlxprsStatus = new MlxprsStatus(context);
     handleUnload(context, [mlxprsStatus.getStatusBarItem(), mlxprsStatus.getCommand()]);
-    XqyDebugConfigurationProvider.registerMlxprsStatusBarItem(mlxprsStatus);
+    XqyDebugManager.registerMlxprsStatusBarItem(mlxprsStatus);
+    JsDebugManager.registerMlxprsStatusBarItem(mlxprsStatus);
     mlxprsStatus.requestUpdate();
 }
 
