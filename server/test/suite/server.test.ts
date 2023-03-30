@@ -10,11 +10,11 @@ import * as completionsSjs from '../../completionsSjs';
 suite('Extension Tests', () => {
 
     before(() => {
-        console.log('starting tests!');
+        console.debug('starting server tests!');
     });
 
     after(() => {
-        console.log('All tests done!');
+        console.debug('All server tests done!');
     });
 
     // Defines a Mocha unit test

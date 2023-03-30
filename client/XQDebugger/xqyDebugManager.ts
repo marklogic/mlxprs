@@ -1,5 +1,5 @@
 import { QuickPickItem, window } from 'vscode';
-import { MarklogicClient, MlClientParameters, sendXQuery, ServerQueryResponse } from '../marklogicClient';
+import { ClientContext, MlClientParameters, sendXQuery, ServerQueryResponse } from '../marklogicClient';
 import { MlxprsStatus } from '../mlxprsStatus';
 
 export interface DebugStatusQueryResponse {
@@ -26,7 +26,7 @@ export class XqyDebugManager {
       )`;
 
     public static async getAvailableRequests(params: MlClientParameters): Promise<Array<DebugStatusQueryResponse>> {
-        const client: MarklogicClient = new MarklogicClient(params);
+        const client: ClientContext = new ClientContext(params);
         const resp = await sendXQuery(client, this.listStoppedRequests)
             .result(
                 (fulfill: Record<string, any>[]) => {
@@ -39,7 +39,7 @@ export class XqyDebugManager {
         return resp;
     }
 
-    public static async connectToXqyDebugServer(mlClient: MarklogicClient): Promise<void> {
+    public static async connectToXqyDebugServer(mlClient: ClientContext): Promise<void> {
         const listServersForConnectQuery = mlClient.buildListServersForConnectQuery();
         const choices: QuickPickItem[] = await this.getAppServerListForXqy(mlClient, listServersForConnectQuery);
         if (choices.length) {
@@ -61,7 +61,7 @@ export class XqyDebugManager {
         }
     }
 
-    public static async disconnectFromXqyDebugServer(mlClient: MarklogicClient): Promise<void> {
+    public static async disconnectFromXqyDebugServer(mlClient: ClientContext): Promise<void> {
         const choices: QuickPickItem[] = await this.getAppServerListForXqy(mlClient, mlClient.listServersForDisconnectQuery);
         if (choices.length) {
             return window.showQuickPick(choices)
@@ -94,7 +94,7 @@ export class XqyDebugManager {
         this.mlxprsStatus = mlxprsStatus;
     }
 
-    public static async getAppServerListForXqy(mlClient: MarklogicClient, serverListQuery: string): Promise<QuickPickItem[]> {
+    public static async getAppServerListForXqy(mlClient: ClientContext, serverListQuery: string): Promise<QuickPickItem[]> {
         return sendXQuery(mlClient, serverListQuery)
             .result(
                 (appServers: Record<string, ServerQueryResponse>) => {

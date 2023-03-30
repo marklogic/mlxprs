@@ -89,7 +89,7 @@ export class JsDebugConfigurationProvider implements vscode.DebugConfigurationPr
                 return undefined;
             });
         }
-        if (config.request == 'launch' && !config.database.match(/^\d+$/)) {
+        if (config.request === 'launch' && !config.database.match(/^\d+$/)) {
             await JsDebugManager.resolveDatabasetoId(config.username, config.password, config.database, config.hostname,
                 config.ssl, ca, config.rejectUnauthorized, config.managePort)
                 .then(resp => {
@@ -100,7 +100,7 @@ export class JsDebugConfigurationProvider implements vscode.DebugConfigurationPr
                     return null;
                 });
         }
-        if (config.request == 'launch' && !config.modules.match(/^\d+$/)) {
+        if (config.request === 'launch' && !config.modules.match(/^\d+$/)) {
             await JsDebugManager.resolveDatabasetoId(config.username, config.password, config.modules, config.hostname,
                 config.ssl, ca, config.rejectUnauthorized, config.managePort)
                 .then(resp => {

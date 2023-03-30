@@ -1,3 +1,5 @@
+/* eslint-disable eqeqeq */
+// Need to do some research to determine if it is safe to convert these "==" to "==="
 'use strict';
 
 // Based on pretty-data (https://github.com/vkiryukhin/pretty-data)

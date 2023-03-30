@@ -2,7 +2,7 @@ import { QuickPickItem, window, workspace } from 'vscode';
 import * as request from 'request-promise';
 import * as querystring from 'querystring';
 import * as fs from 'fs';
-import { MarklogicClient, sendXQuery, ServerQueryResponse } from '../marklogicClient';
+import { ClientContext, sendXQuery, ServerQueryResponse } from '../marklogicClient';
 import { MlxprsStatus } from '../mlxprsStatus';
 
 
@@ -11,10 +11,10 @@ export class JsDebugManager {
 
     public static async getAvailableRequests(
         username: string, password: string, debugServerName: string, hostname: string, ssl?: boolean,
-        ca?: Buffer, rejectUnauthorized = true, managePort = MarklogicClient.DEFAULT_MANAGE_PORT
+        ca?: Buffer, rejectUnauthorized = true, managePort = ClientContext.DEFAULT_MANAGE_PORT
     ): Promise<string> {
 
-        const url = MarklogicClient.buildUrl(hostname, `/jsdbg/v1/paused-requests/${debugServerName}`, ssl, managePort);
+        const url = ClientContext.buildUrl(hostname, `/jsdbg/v1/paused-requests/${debugServerName}`, ssl, managePort);
         const options = {
             headers: {
                 'X-Error-Accept': ' application/json'
@@ -30,13 +30,13 @@ export class JsDebugManager {
         return request.get(url, options);
     }
 
-    public static async getFilteredListOfJsAppServers(mlClient: MarklogicClient, requiredResponse: string): Promise<QuickPickItem[]> {
+    public static async getFilteredListOfJsAppServers(mlClient: ClientContext, requiredResponse: string): Promise<QuickPickItem[]> {
         const listServersForConnectQuery = mlClient.buildListServersForConnectQuery();
         const choices: QuickPickItem[] = await this.getAppServerListForJs(mlClient, listServersForConnectQuery) as QuickPickItem[];
         return await this.filterServers(choices, requiredResponse);
     }
 
-    public static async connectToJsDebugServer(mlClient: MarklogicClient): Promise<void> {
+    public static async connectToJsDebugServer(mlClient: ClientContext): Promise<void> {
         const filteredServerItems: QuickPickItem[] = await this.getFilteredListOfJsAppServers(mlClient, 'false');
         if (filteredServerItems.length) {
             return window.showQuickPick(filteredServerItems)
@@ -59,7 +59,7 @@ export class JsDebugManager {
 
     private static async filterServers(choices: QuickPickItem[], requiredResponse: string): Promise<QuickPickItem[]> {
         const cfg = workspace.getConfiguration('marklogic');
-        console.log(JSON.stringify(cfg));
+        console.debug(JSON.stringify(cfg));
         const username: string = cfg.get('username');
         const password: string = cfg.get('password');
         const hostname: string = cfg.get('host');
@@ -70,7 +70,7 @@ export class JsDebugManager {
         const requests = [];
         const filteredChoices: QuickPickItem[] = [];
         choices.forEach(async (choice) => {
-            const url = MarklogicClient.buildUrl(hostname, `/jsdbg/v1/connected/${choice.label}`, ssl, managePort);
+            const url = ClientContext.buildUrl(hostname, `/jsdbg/v1/connected/${choice.label}`, ssl, managePort);
             const options = {
                 headers: {
                     'Content-type': 'application/x-www-form-urlencoded',
@@ -100,7 +100,7 @@ export class JsDebugManager {
         return filteredChoices;
     }
 
-    public static async disconnectFromJsDebugServer(mlClient: MarklogicClient) {
+    public static async disconnectFromJsDebugServer(mlClient: ClientContext) {
         const filteredServerItems: QuickPickItem[] = await this.getFilteredListOfJsAppServers(mlClient, 'true');
         if (filteredServerItems.length) {
             return window.showQuickPick(filteredServerItems)
@@ -125,7 +125,7 @@ export class JsDebugManager {
 
     public static async connectToNamedJsDebugServer(servername: string): Promise<void> {
         const cfg = workspace.getConfiguration('marklogic');
-        console.log(JSON.stringify(cfg));
+        console.debug(JSON.stringify(cfg));
         const username: string = cfg.get('username');
         const password: string = cfg.get('password');
         const hostname: string = cfg.get('host');
@@ -146,7 +146,7 @@ export class JsDebugManager {
             window.showErrorMessage('Password is not provided');
             return;
         }
-        const url = MarklogicClient.buildUrl(hostname, `/jsdbg/v1/connect/${servername}`, ssl, managePort);
+        const url = ClientContext.buildUrl(hostname, `/jsdbg/v1/connect/${servername}`, ssl, managePort);
         const options = {
             headers: {
                 'Content-type': 'application/x-www-form-urlencoded',
@@ -193,7 +193,7 @@ export class JsDebugManager {
             window.showErrorMessage('Password is not provided');
             return;
         }
-        const url = MarklogicClient.buildUrl(hostname, `/jsdbg/v1/disconnect/${servername}`, ssl, managePort);
+        const url = ClientContext.buildUrl(hostname, `/jsdbg/v1/disconnect/${servername}`, ssl, managePort);
         const options = {
             headers: {
                 'Content-type': 'application/x-www-form-urlencoded',
@@ -220,10 +220,10 @@ export class JsDebugManager {
     }
 
     public static async resolveDatabasetoId(username: string, password: string, database: string, hostname: string,
-        ssl?: boolean, ca?: Buffer, rejectUnauthorized = true, managePort = MarklogicClient.DEFAULT_MANAGE_PORT
+        ssl?: boolean, ca?: Buffer, rejectUnauthorized = true, managePort = ClientContext.DEFAULT_MANAGE_PORT
     ): Promise<string> {
 
-        const url = MarklogicClient.buildUrl(hostname, '/v1/eval', ssl, managePort);
+        const url = ClientContext.buildUrl(hostname, '/v1/eval', ssl, managePort);
         const script = `xdmp.database("${database}")`;
         const options: Record<string, unknown> = {
             headers: {
@@ -244,10 +244,10 @@ export class JsDebugManager {
     }
 
     public static async getRequestInfo(username: string, password: string, requestId: string, debugServerName: string, hostname: string,
-        ssl?: boolean, ca?: Buffer, rejectUnauthorized = true, managePort = MarklogicClient.DEFAULT_MANAGE_PORT
+        ssl?: boolean, ca?: Buffer, rejectUnauthorized = true, managePort = ClientContext.DEFAULT_MANAGE_PORT
     ): Promise<string> {
 
-        const url = MarklogicClient.buildUrl(hostname, '/v1/eval', ssl, managePort);
+        const url = ClientContext.buildUrl(hostname, '/v1/eval', ssl, managePort);
         const script = `xdmp.requestStatus(xdmp.host(),xdmp.server("${debugServerName}"),"${requestId}")`;
         const options: Record<string, unknown> = {
             headers: {
@@ -277,7 +277,7 @@ export class JsDebugManager {
         this.mlxprsStatus = mlxprsStatus;
     }
 
-    public static async getAppServerListForJs(mlClient: MarklogicClient, serverListQuery: string): Promise<QuickPickItem[]> {
+    public static async getAppServerListForJs(mlClient: ClientContext, serverListQuery: string): Promise<QuickPickItem[]> {
         return sendXQuery(mlClient, serverListQuery)
             .result(
                 (appServers: Record<string, ServerQueryResponse>) => {

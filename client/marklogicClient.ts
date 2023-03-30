@@ -79,12 +79,12 @@ export class MlClientParameters {
     }
 }
 
-export class MarklogicClient {
+export class ClientContext {
     public static DEFAULT_MANAGE_PORT = 8002;
     params: MlClientParameters;
     ca: string;
 
-    mldbClient: ml.DatabaseClient;
+    databaseClient: ml.DatabaseClient;
     constructor(params: MlClientParameters) {
         this.params = params;
         this.params.authType = params.authType.toUpperCase();
@@ -99,7 +99,7 @@ export class MarklogicClient {
         if (!this.params.contentDb) {
             this.params.contentDb = null;
         }
-        this.mldbClient = ml.createDatabaseClient({
+        this.databaseClient = ml.createDatabaseClient({
             host: this.params.host, port: this.params.port,
             user: this.params.user, password: this.params.pwd,
             database: this.params.contentDb,
@@ -119,7 +119,7 @@ export class MarklogicClient {
 
     async getConnectedServers(requestingObject: MlxprsStatus, managePort: number, updateCallback: (connectedServers: string[]) => void): Promise<void> {
         const connectedJsServers: MlxprsQuickPickItem[] = await getFilteredListOfJsAppServers(this, managePort, 'true');
-        return this.mldbClient.xqueryEval('xquery version "1.0-ml"; dbg:connected()')
+        return this.databaseClient.xqueryEval('xquery version "1.0-ml"; dbg:connected()')
             .result(
                 async (items: ml.Item[]) => {
                     const connectedServers: string[] = [];
@@ -197,7 +197,7 @@ return $json-servers
             });
     }
 
-    public static buildUrl(hostname: string, endpointPath: string, ssl = true, managePort = MarklogicClient.DEFAULT_MANAGE_PORT): string {
+    public static buildUrl(hostname: string, endpointPath: string, ssl = true, managePort = ClientContext.DEFAULT_MANAGE_PORT): string {
         const scheme: string = ssl ? 'https' : 'http';
         const url = `${scheme}://${hostname}:${managePort}${endpointPath}`;
         return url;
@@ -205,10 +205,10 @@ return $json-servers
 
 }
 
-export function buildNewClient(params: MlClientParameters): MarklogicClient {
-    let newClient: MarklogicClient;
+export function buildNewClient(params: MlClientParameters): ClientContext {
+    let newClient: ClientContext;
     try {
-        newClient = new MarklogicClient(params);
+        newClient = new ClientContext(params);
     } catch (e) {
         console.error('Error: ' + JSON.stringify(e));
         throw (e);
@@ -236,7 +236,7 @@ export function parseXQueryForOverrides(queryText: string): Record<string, any> 
 
 
 export function sendJSQuery(
-    db: MarklogicClient,
+    db: ClientContext,
     actualQuery: string,
     sqlQuery = '',
     sqlOptions = []): ml.ResultProvider<Record<string, any>> {
@@ -257,12 +257,12 @@ export function sendJSQuery(
         'sqlOptions': sqlOptions
     } as ml.Variables;
 
-    return db.mldbClient.eval(query, extVars);
+    return db.databaseClient.eval(query, extVars);
 }
 
 
 export function sendXQuery(
-    db: MarklogicClient,
+    db: ClientContext,
     actualQuery: string,
     prefix: 'xdmp' | 'dbg' = 'xdmp')
     : ml.ResultProvider<Record<string, any>> {
@@ -283,27 +283,27 @@ export function sendXQuery(
         'modulesDb': db.params.modulesDb
     } as ml.Variables;
 
-    return db.mldbClient.xqueryEval(query, extVars);
+    return db.databaseClient.xqueryEval(query, extVars);
 }
 
-export function sendSparql(db: MarklogicClient, sparqlQuery: string, contentType: ml.contentType = 'application/json'): ml.ResultProvider<Record<string, unknown>> {
-    return db.mldbClient.graphs.sparql({
+export function sendSparql(db: ClientContext, sparqlQuery: string, contentType: ml.contentType = 'application/json'): ml.ResultProvider<Record<string, unknown>> {
+    return db.databaseClient.graphs.sparql({
         contentType: contentType,
         query: sparqlQuery
     });
 }
 
 
-export function sendRows(db: MarklogicClient, actualQuery: string, resultFormat: ml.RowsResponseFormat): Promise<ml.RowsResponse> {
+export function sendRows(db: ClientContext, actualQuery: string, resultFormat: ml.RowsResponseFormat): Promise<ml.RowsResponse> {
     if (actualQuery.startsWith('{')) {
         return sendRowsSerialized(db, actualQuery, resultFormat);
     } else {
         const queryOptions: ml.RowsOptions = { 'queryType': 'dsl', 'format': resultFormat };
-        return db.mldbClient.rows.query(actualQuery, queryOptions);
+        return db.databaseClient.rows.query(actualQuery, queryOptions);
     }
 }
 
-function sendRowsSerialized(db: MarklogicClient, actualQuery: string, resultFormat: ml.RowsResponseFormat): Promise<ml.RowsResponse> {
+function sendRowsSerialized(db: ClientContext, actualQuery: string, resultFormat: ml.RowsResponseFormat): Promise<ml.RowsResponse> {
     let jsonQuery = null;
     let errObject = null;
     try {
@@ -314,7 +314,7 @@ function sendRowsSerialized(db: MarklogicClient, actualQuery: string, resultForm
 
     if (jsonQuery) {
         const queryOptions: ml.RowsOptions = { 'queryType': 'json', 'format': resultFormat };
-        return db.mldbClient.rows.query(jsonQuery, queryOptions);
+        return db.databaseClient.rows.query(jsonQuery, queryOptions);
     } else {
         return Promise.resolve(
             {
@@ -333,14 +333,14 @@ export interface MlxprsQuickPickItem {
 }
 
 export async function getFilteredListOfJsAppServers(
-    mlClient: MarklogicClient, managePort: number, requiredResponse: string
+    mlClient: ClientContext, managePort: number, requiredResponse: string
 ): Promise<MlxprsQuickPickItem[]> {
     const listServersForConnectQuery = mlClient.buildListServersForConnectQuery();
     const allPossibleJsServers: MlxprsQuickPickItem[] = await getAppServerListForJs(mlClient, listServersForConnectQuery) as MlxprsQuickPickItem[];
     return await filterJsServerByConnectedStatus(mlClient, managePort, allPossibleJsServers, requiredResponse);
 }
 
-export async function getAppServerListForJs(mlClient: MarklogicClient, serverListQuery: string): Promise<MlxprsQuickPickItem[]> {
+export async function getAppServerListForJs(mlClient: ClientContext, serverListQuery: string): Promise<MlxprsQuickPickItem[]> {
     return sendXQuery(mlClient, serverListQuery)
         .result(
             (appServers: Record<string, ServerQueryResponse>) => {
@@ -352,12 +352,12 @@ export async function getAppServerListForJs(mlClient: MarklogicClient, serverLis
 }
 
 export async function filterJsServerByConnectedStatus(
-    mlClient: MarklogicClient, managePort: number, choices: MlxprsQuickPickItem[], requiredResponse: string
+    mlClient: ClientContext, managePort: number, choices: MlxprsQuickPickItem[], requiredResponse: string
 ): Promise<MlxprsQuickPickItem[]> {
     const requests = [];
     const filteredChoices: MlxprsQuickPickItem[] = [];
     choices.forEach(async (choice) => {
-        const url = MarklogicClient.buildUrl(mlClient.params.host, `/jsdbg/v1/connected/${choice.label}`, mlClient.params.ssl, managePort);
+        const url = ClientContext.buildUrl(mlClient.params.host, `/jsdbg/v1/connected/${choice.label}`, mlClient.params.ssl, managePort);
         const options = {
             headers: {
                 'Content-type': 'application/x-www-form-urlencoded',

@@ -3,7 +3,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { MarklogicClient, MlClientParameters } from '../marklogicClient';
+import { ClientContext, MlClientParameters } from '../marklogicClient';
 import { ModuleContentGetter } from '../moduleContentGetter';
 import * as request from 'request-promise';
 import * as fs from 'fs';
@@ -70,7 +70,7 @@ export class MLRuntime extends EventEmitter {
     private _endpointRoot = '/jsdbg/v1';
     private _ca: undefined | Buffer;
     private _rejectUnauthorized = true;
-    private _mlClient: MarklogicClient;
+    private _mlClient: ClientContext;
     private _mlModuleGetter: ModuleContentGetter;
 
     public getHostString(): string {
@@ -114,7 +114,7 @@ export class MLRuntime extends EventEmitter {
             this._ca = fs.readFileSync(args.pathToCa);
         }
 
-        this._mlClient = new MarklogicClient(
+        this._mlClient = new ClientContext(
             new MlClientParameters({
                 host: this._hostName,
                 port: this._dbgPort,

@@ -19,7 +19,7 @@ function dummyRowsQuerier(): ml.Rows {
     };
 }
 const gstate = defaultDummyGlobalState();
-gstate.dummyClient.mldbClient.rows = dummyRowsQuerier();
+gstate.dummyClient.databaseClient.rows = dummyRowsQuerier();
 
 suite('Rows Query Test Suite', () => {
 

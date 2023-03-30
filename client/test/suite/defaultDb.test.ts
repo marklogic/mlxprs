@@ -1,9 +1,9 @@
 import * as assert from 'assert';
-import { MarklogicClient, MlClientParameters } from '../../marklogicClient';
+import { ClientContext, MlClientParameters } from '../../marklogicClient';
 
 suite('Default Documents DB Test Suite', () => {
     test('When MlClientParameters is used and the default contentDb is null', async () => {
-        const mlClient = new MarklogicClient(
+        const mlClient = new ClientContext(
             new MlClientParameters({
                 host: 'host',
                 port: 'port',
@@ -20,7 +20,7 @@ suite('Default Documents DB Test Suite', () => {
     });
 
     test('When MlClientParameters is used and the default contentDb is undefined', async () => {
-        const mlClient = new MarklogicClient(
+        const mlClient = new ClientContext(
             new MlClientParameters({
                 host: 'host',
                 port: 'port',
@@ -37,7 +37,7 @@ suite('Default Documents DB Test Suite', () => {
     });
 
     test('When MlClientParameters is used and the default contentDb is \'\'', async () => {
-        const mlClient = new MarklogicClient(
+        const mlClient = new ClientContext(
             new MlClientParameters({
                 host: 'host',
                 port: 'port',
@@ -54,7 +54,7 @@ suite('Default Documents DB Test Suite', () => {
     });
 
     test('When MlClientParameters is used and the default contentDb is missing', async () => {
-        const mlClient = new MarklogicClient(
+        const mlClient = new ClientContext(
             new MlClientParameters({
                 host: 'host',
                 port: 'port',
@@ -70,7 +70,7 @@ suite('Default Documents DB Test Suite', () => {
     });
 
     test('When MlClientParameters is used and the default contentDb contains a value', async () => {
-        const mlClient = new MarklogicClient(
+        const mlClient = new ClientContext(
             new MlClientParameters({
                 host: 'host',
                 port: 'port',

@@ -1,7 +1,7 @@
 'use strict';
 
 import { Memento, WorkspaceConfiguration, window } from 'vscode';
-import { XQY, parseXQueryForOverrides, MLSETTINGSFLAG, MarklogicClient, MlClientParameters, MLDBCLIENT, buildNewClient } from './marklogicClient';
+import { XQY, parseXQueryForOverrides, MLSETTINGSFLAG, ClientContext, MlClientParameters, MLDBCLIENT, buildNewClient } from './marklogicClient';
 import * as esprima from 'esprima';
 
 /**
@@ -51,7 +51,7 @@ export function parseQueryForOverrides(queryText: string, language: string): Rec
  *
  * @returns a MarklogicClient based on the contents of `cfg`
  */
-export function getDbClient(queryText: string, language: string, cfg: WorkspaceConfiguration, state: Memento): MarklogicClient {
+export function getDbClient(queryText: string, language: string, cfg: WorkspaceConfiguration, state: Memento): ClientContext {
     const overrides: MlClientParameters = parseQueryForOverrides(queryText, language) as MlClientParameters;
     const configParams: Record<string, any> = {
         host: String(cfg.get('marklogic.host')),
@@ -69,15 +69,15 @@ export function getDbClient(queryText: string, language: string, cfg: WorkspaceC
     // merge VS Code configuration and overrides
     const newParams = new MlClientParameters({ ...configParams, ...overrides });
     // if settings have changed, release and clear the client
-    const cachedClient = state.get(MLDBCLIENT) as MarklogicClient;
+    const cachedClient = state.get(MLDBCLIENT) as ClientContext;
     if (cachedClient !== null && !cachedClient.hasSameParamsAs(newParams)) {
-        cachedClient.mldbClient.release();
+        cachedClient.databaseClient.release();
         state.update(MLDBCLIENT, null);
         console.debug('Removed cached instance of MarklogicClient based on change in params');
     }
     // if there's no existing client in the globalState, instantiate a new one
     if (state.get(MLDBCLIENT) === null) {
-        const newClient: MarklogicClient = buildNewClient(newParams);
+        const newClient: ClientContext = buildNewClient(newParams);
         try {
             state.update(MLDBCLIENT, newClient);
             console.debug(`Created new MarklogicClient: ${state.get(MLDBCLIENT)}`);
@@ -86,15 +86,15 @@ export function getDbClient(queryText: string, language: string, cfg: WorkspaceC
             e.message ? console.error(e.message) : null;
         }
     }
-    return state.get(MLDBCLIENT) as MarklogicClient;
+    return state.get(MLDBCLIENT) as ClientContext;
 }
 /**
  * Try to call `getDbClient()` with overrides. If we can't parse the
  * overrides, call `getDbClient()` with no overrides, and show the
  * user an error.
  */
-export function cascadeOverrideClient(actualQuery: string, language: string, cfg: WorkspaceConfiguration, state: Memento): MarklogicClient {
-    let client: MarklogicClient = {} as MarklogicClient;
+export function cascadeOverrideClient(actualQuery: string, language: string, cfg: WorkspaceConfiguration, state: Memento): ClientContext {
+    let client: ClientContext = {} as ClientContext;
     try {
         client = getDbClient(actualQuery, language, cfg, state);
     } catch (error) {
