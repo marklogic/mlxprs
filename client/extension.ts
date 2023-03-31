@@ -2,7 +2,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as ml from 'marklogic';
-import { editorJSQuery, editorSparqlQuery, editorSqlQuery, editorXQuery, editorRowsQuery } from './vscQueryDirector';
+import { EditorQueryType, EditorQueryEvaluator } from './editorQueryEvaluator';
 import { ClientContext } from './marklogicClient';
 import { cascadeOverrideClient } from './vscQueryParameterTools';
 import { ClientResponseProvider } from './clientResponseProvider';
@@ -29,53 +29,34 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.workspace.registerTextDocumentContentProvider(
         ModuleContentProvider.scheme, mprovider);
 
-    const sendXQuery = vscode.commands.registerTextEditorCommand('extension.sendXQuery', editor => {
-        const actualQuery: string = editor.document.getText();
-        const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const client: ClientContext = cascadeOverrideClient(actualQuery, XQY, cfg, context.globalState);
-        const host = client.params.host; const port = client.params.port;
-        const qUri = ClientResponseProvider.encodeLocation(editor.document.uri, host, port);
-        editorXQuery(client, actualQuery, qUri, editor, provider);
-    });
-    const sendJSQuery = vscode.commands.registerTextEditorCommand('extension.sendJSQuery', editor => {
-        const actualQuery: string = editor.document.getText();
-        const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const client: ClientContext = cascadeOverrideClient(actualQuery, SJS, cfg, context.globalState);
-        const host = client.params.host; const port = client.params.port;
-        const uri = ClientResponseProvider.encodeLocation(editor.document.uri, host, port);
-        editorJSQuery(client, actualQuery, uri, editor, provider);
-    });
-    const sendSqlQuery = vscode.commands.registerTextEditorCommand('extension.sendSqlQuery', editor => {
-        const actualQuery: string = editor.document.getText();
-        const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const client: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
-        const host = client.params.host; const port = client.params.port;
-        const uri = ClientResponseProvider.encodeLocation(editor.document.uri, host, port);
-        editorSqlQuery(client, actualQuery, uri, editor, cfg, provider);
-    });
-    const sendSparqlQuery = vscode.commands.registerTextEditorCommand('extension.sendSparqlQuery', editor => {
-        const actualQuery: string = editor.document.getText();
-        const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const client: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
-        const host = client.params.host; const port = client.params.port;
-        const uri = ClientResponseProvider.encodeLocation(editor.document.uri, host, port);
-        editorSparqlQuery(client, actualQuery, uri, editor, provider);
-    });
 
-    function sendEditorRowsQuery(editor, rowsResponseFormat: ml.RowsResponseFormat) {
-        const actualQuery: string = editor.document.getText();
-        const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const client: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
-        const host = client.params.host; const port = client.params.port;
-        const uri = ClientResponseProvider.encodeLocation(editor.document.uri, host, port);
-        editorRowsQuery(client, actualQuery, uri, editor, provider, rowsResponseFormat);
+    const editorQueryEvaluator = new EditorQueryEvaluator(context, provider);
+    const sendXQuery = vscode.commands.registerTextEditorCommand(
+        'extension.sendXQuery',
+        (editor: vscode.TextEditor) => editorQueryEvaluator.editorQuery(EditorQueryType.XQY, editor)
+    );
+    const sendJSQuery = vscode.commands.registerTextEditorCommand(
+        'extension.sendJSQuery',
+        (editor: vscode.TextEditor) => editorQueryEvaluator.editorQuery(EditorQueryType.JS, editor)
+    );
+    const sendSqlQuery = vscode.commands.registerTextEditorCommand(
+        'extension.sendSqlQuery',
+        (editor: vscode.TextEditor) => editorQueryEvaluator.editorQuery(EditorQueryType.SQL, editor)
+    );
+    const sendSparqlQuery = vscode.commands.registerTextEditorCommand(
+        'extension.sendSparqlQuery',
+        (editor: vscode.TextEditor) => editorQueryEvaluator.editorQuery(EditorQueryType.SPARQL, editor)
+    );
+    function sendEditorRowsQuery(editor: vscode.TextEditor, rowsResponseFormat: ml.RowsResponseFormat) {
+        editorQueryEvaluator.editorQuery(EditorQueryType.ROWS, editor, rowsResponseFormat);
     }
     const sendRowsJsonQuery = vscode.commands.registerTextEditorCommand(
-        'extension.sendRowsJsonQuery', editor => sendEditorRowsQuery(editor, 'json'));
+        'extension.sendRowsJsonQuery', (editor: vscode.TextEditor) => sendEditorRowsQuery(editor, 'json'));
     const sendRowsCsvQuery = vscode.commands.registerTextEditorCommand(
-        'extension.sendRowsCsvQuery', editor => sendEditorRowsQuery(editor, 'csv'));
+        'extension.sendRowsCsvQuery', (editor: vscode.TextEditor) => sendEditorRowsQuery(editor, 'csv'));
     const sendRowsXmlQuery = vscode.commands.registerTextEditorCommand(
-        'extension.sendRowsXmlQuery', editor => sendEditorRowsQuery(editor, 'xml'));
+        'extension.sendRowsXmlQuery', (editor: vscode.TextEditor) => sendEditorRowsQuery(editor, 'xml'));
+
 
     const connectJsServer = vscode.commands.registerCommand('extension.connectJsServer', () => {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
@@ -97,6 +78,8 @@ export function activate(context: vscode.ExtensionContext): void {
         const client: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
         XqyDebugManager.disconnectFromXqyDebugServer(client);
     });
+
+
     const showModule = vscode.commands.registerCommand('extension.showModule', () => {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
         const client: ClientContext = cascadeOverrideClient('', XQY, cfg, context.globalState);
