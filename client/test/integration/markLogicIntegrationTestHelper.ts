@@ -139,8 +139,8 @@ export class IntegrationTestHelper {
             });
     }
 
-    async getRid(client: ClientContext, qry: string): Promise<string[]> {
-        const newParams: MlClientParameters = JSON.parse(JSON.stringify(client.params));
+    async getRid(dbClientContext: ClientContext, qry: string): Promise<string[]> {
+        const newParams: MlClientParameters = JSON.parse(JSON.stringify(dbClientContext.params));
         newParams.port = this.managePort;
         const newClient = new ClientContext(newParams);
         return sendJSQuery(newClient, qry)
@@ -155,8 +155,8 @@ export class IntegrationTestHelper {
                 });
     }
 
-    async getRequestStatuses(client: ClientContext, qry: string): Promise<{ requestId: string }[][]> {
-        const newParams: MlClientParameters = JSON.parse(JSON.stringify(client.params));
+    async getRequestStatuses(dbClientContext: ClientContext, qry: string): Promise<{ requestId: string }[][]> {
+        const newParams: MlClientParameters = JSON.parse(JSON.stringify(dbClientContext.params));
         newParams.port = this.managePort;
         const newClient = new ClientContext(newParams);
         return sendJSQuery(newClient, qry)
@@ -171,8 +171,8 @@ export class IntegrationTestHelper {
                 });
     }
 
-    async cancelRequest(client: ClientContext, qry: string): Promise<unknown> {
-        const newParams: MlClientParameters = JSON.parse(JSON.stringify(client.params));
+    async cancelRequest(dbClientContext: ClientContext, qry: string): Promise<unknown> {
+        const newParams: MlClientParameters = JSON.parse(JSON.stringify(dbClientContext.params));
         newParams.port = this.managePort;
         const newClient = new ClientContext(newParams);
         return sendJSQuery(newClient, qry)

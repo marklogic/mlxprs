@@ -60,30 +60,30 @@ export function activate(context: vscode.ExtensionContext): void {
 
     const connectJsServer = vscode.commands.registerCommand('extension.connectJsServer', () => {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const client: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
-        JsDebugManager.connectToJsDebugServer(client);
+        const dbClientContext: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
+        JsDebugManager.connectToJsDebugServer(dbClientContext);
     });
     const disconnectJsServer = vscode.commands.registerCommand('extension.disconnectJsServer', () => {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const client: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
-        JsDebugManager.disconnectFromJsDebugServer(client);
+        const dbClientContext: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
+        JsDebugManager.disconnectFromJsDebugServer(dbClientContext);
     });
     const connectXqyServer = vscode.commands.registerCommand('extension.connectXqyServer', () => {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const client: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
-        XqyDebugManager.connectToXqyDebugServer(client);
+        const dbClientContext: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
+        XqyDebugManager.connectToXqyDebugServer(dbClientContext);
     });
     const disconnectXqyServer = vscode.commands.registerCommand('extension.disconnectXqyServer', () => {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const client: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
-        XqyDebugManager.disconnectFromXqyDebugServer(client);
+        const dbClientContext: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
+        XqyDebugManager.disconnectFromXqyDebugServer(dbClientContext);
     });
 
 
     const showModule = vscode.commands.registerCommand('extension.showModule', () => {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const client: ClientContext = cascadeOverrideClient('', XQY, cfg, context.globalState);
-        pickAndShowModule(mprovider, client);
+        const dbClientContext: ClientContext = cascadeOverrideClient('', XQY, cfg, context.globalState);
+        pickAndShowModule(mprovider, dbClientContext);
     });
 
     handleUnload(context, [

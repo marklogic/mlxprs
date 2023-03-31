@@ -45,7 +45,7 @@ export interface XqyVariable {
 
 export class XqyRuntime extends EventEmitter {
 
-    private _mlClient: ClientContext;
+    private dbClientContext: ClientContext;
     private _mlModuleGetter: ModuleContentGetter;
     private _clientParams: MlClientParameters;
     private _rid = '';
@@ -88,17 +88,17 @@ export class XqyRuntime extends EventEmitter {
 
     public initialize(args: InitializeRequestArguments): void {
         this._clientParams = args.clientParams;
-        this._mlClient = new ClientContext(this._clientParams);
+        this.dbClientContext = new ClientContext(this._clientParams);
     }
 
     private sendFreshQuery(query: string, prefix: 'xdmp' | 'dbg' = 'xdmp'): ResultProvider<Record<string, any>> {
-        this._mlClient = new ClientContext(this._clientParams);
-        return sendXQuery(this._mlClient, query, prefix);
+        this.dbClientContext = new ClientContext(this._clientParams);
+        return sendXQuery(this.dbClientContext, query, prefix);
     }
 
     public async getModuleContent(modulePath: string): Promise<string> {
-        this._mlClient = new ClientContext(this._clientParams);
-        this._mlModuleGetter = new ModuleContentGetter(this._mlClient);
+        this.dbClientContext = new ClientContext(this._clientParams);
+        this._mlModuleGetter = new ModuleContentGetter(this.dbClientContext);
         return this._mlModuleGetter.provideTextDocumentContent(modulePath);
     }
 
@@ -228,11 +228,11 @@ export class XqyRuntime extends EventEmitter {
     }
 
     public disable(): ResultProvider<Record<string, any>> {
-        return sendXQuery(this._mlClient, `dbg:value(${this._rid})`);
+        return sendXQuery(this.dbClientContext, `dbg:value(${this._rid})`);
     }
 
     public terminate(): ResultProvider<Record<string, any>> {
-        return sendXQuery(this._mlClient, 'dbg:disconnent(xdmp:server())');
+        return sendXQuery(this.dbClientContext, 'dbg:disconnent(xdmp:server())');
     }
 
     public static parseExprXML(exprXMLString: string): Array<XqyExpr> {

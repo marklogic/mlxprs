@@ -102,12 +102,12 @@ suite('Extension Test Suite', () => {
         const queryText: string = testOverrideQueryWithGoodJSON();
         const overrides = parseQueryForOverrides(queryText, SJS);
         const gstate = defaultDummyGlobalState();
-        const mlClient1: ClientContext = getDbClient(queryText, SJS, config, gstate);
+        const dbClientContext: ClientContext = getDbClient(queryText, SJS, config, gstate);
 
-        assert.strictEqual(overrides.host, mlClient1.params.host);
+        assert.strictEqual(overrides.host, dbClientContext.params.host);
         // The pwd value in mlClient1.params will always be of type string, so have to cast the expected value
-        assert.strictEqual(mlClient1.params.pwd, String(cfgPwd));
-        assert.strictEqual(mlClient1.params.pathToCa, cfgPca);
+        assert.strictEqual(dbClientContext.params.pwd, String(cfgPwd));
+        assert.strictEqual(dbClientContext.params.pathToCa, cfgPca);
     });
 
     test('override parser should throw if settings are invalid JSON', () => {

@@ -77,9 +77,9 @@ export function getDbClient(queryText: string, language: string, cfg: WorkspaceC
     }
     // if there's no existing client in the globalState, instantiate a new one
     if (state.get(MLDBCLIENT) === null) {
-        const newClient: ClientContext = buildNewClient(newParams);
+        const dbClientContext: ClientContext = buildNewClient(newParams);
         try {
-            state.update(MLDBCLIENT, newClient);
+            state.update(MLDBCLIENT, dbClientContext);
             console.debug(`Created new MarklogicClient: ${state.get(MLDBCLIENT)}`);
         } catch (e) {
             console.error('Error: ' + JSON.stringify(e));
@@ -94,12 +94,12 @@ export function getDbClient(queryText: string, language: string, cfg: WorkspaceC
  * user an error.
  */
 export function cascadeOverrideClient(actualQuery: string, language: string, cfg: WorkspaceConfiguration, state: Memento): ClientContext {
-    let client: ClientContext = {} as ClientContext;
+    let dbClientContext: ClientContext = {} as ClientContext;
     try {
-        client = getDbClient(actualQuery, language, cfg, state);
+        dbClientContext = getDbClient(actualQuery, language, cfg, state);
     } catch (error) {
         window.showErrorMessage('could not parse JSON for overrides: ' + error.message);
-        client = getDbClient('', language, cfg, state);
+        dbClientContext = getDbClient('', language, cfg, state);
     }
-    return client;
+    return dbClientContext;
 }

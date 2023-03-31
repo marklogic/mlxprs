@@ -5,28 +5,28 @@ import { ClientContext, sendXQuery, MlClientParameters } from './marklogicClient
 export const listModulesQuery = 'cts:uris()';
 
 export class ModuleContentGetter {
-    private _mlClient: ClientContext;
+    private dbClientContext: ClientContext;
 
-    public constructor(client: ClientContext) {
-        const moduleGetterParams: MlClientParameters = client.params;
+    public constructor(dbClientContext: ClientContext) {
+        const moduleGetterParams: MlClientParameters = dbClientContext.params;
         moduleGetterParams.contentDb = moduleGetterParams.modulesDb;
-        this._mlClient = new ClientContext(moduleGetterParams);
+        this.dbClientContext = new ClientContext(moduleGetterParams);
     }
 
     public host(): string {
-        return this._mlClient.params.host;
+        return this.dbClientContext.params.host;
     }
 
     public port(): number {
-        return this._mlClient.params.port;
+        return this.dbClientContext.params.port;
     }
 
-    public initialize(client: ClientContext): void {
-        this._mlClient = client;
+    public initialize(dbClientContext: ClientContext): void {
+        this.dbClientContext = dbClientContext;
     }
 
     public async provideTextDocumentContent(modulePath: string): Promise<string> {
-        return this._mlClient.databaseClient.read(modulePath)
+        return this.dbClientContext.databaseClient.read(modulePath)
             .result(
                 (fulfill: string[]) => {
                     const moduleContent: string = fulfill[0];
@@ -38,7 +38,7 @@ export class ModuleContentGetter {
     }
 
     public async listModules(): Promise<string[]> {
-        return sendXQuery(this._mlClient, listModulesQuery)
+        return sendXQuery(this.dbClientContext, listModulesQuery)
             .result(
                 (fulfill: Record<string, any>[]) => {
                     return fulfill.map(o => {
