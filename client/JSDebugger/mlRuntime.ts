@@ -70,11 +70,11 @@ export class MLRuntime extends EventEmitter {
     private _endpointRoot = '/jsdbg/v1';
     private _ca: undefined | Buffer;
     private _rejectUnauthorized = true;
-    private _mlClient: ClientContext;
+    private dbClientContext: ClientContext;
     private _mlModuleGetter: ModuleContentGetter;
 
     public getHostString(): string {
-        return `${this._mlClient.params.host}:${this._mlClient.params.port}`;
+        return `${this.dbClientContext.params.host}:${this.dbClientContext.params.port}`;
     }
 
     //Internal
@@ -114,7 +114,7 @@ export class MLRuntime extends EventEmitter {
             this._ca = fs.readFileSync(args.pathToCa);
         }
 
-        this._mlClient = new ClientContext(
+        this.dbClientContext = new ClientContext(
             new MlClientParameters({
                 host: this._hostName,
                 port: this._dbgPort,
@@ -128,7 +128,7 @@ export class MLRuntime extends EventEmitter {
                 rejectUnauthorized: args.rejectUnauthorized
             })
         );
-        this._mlModuleGetter = new ModuleContentGetter(this._mlClient);
+        this._mlModuleGetter = new ModuleContentGetter(this.dbClientContext);
     }
 
     public setRid(rid: string): void {

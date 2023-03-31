@@ -26,8 +26,8 @@ export class XqyDebugManager {
       )`;
 
     public static async getAvailableRequests(params: MlClientParameters): Promise<Array<DebugStatusQueryResponse>> {
-        const client: ClientContext = new ClientContext(params);
-        const resp = await sendXQuery(client, this.listStoppedRequests)
+        const dbClientContext: ClientContext = new ClientContext(params);
+        const resp = await sendXQuery(dbClientContext, this.listStoppedRequests)
             .result(
                 (fulfill: Record<string, any>[]) => {
                     return fulfill.map(f => f.value as DebugStatusQueryResponse);
@@ -39,16 +39,16 @@ export class XqyDebugManager {
         return resp;
     }
 
-    public static async connectToXqyDebugServer(mlClient: ClientContext): Promise<void> {
-        const listServersForConnectQuery = mlClient.buildListServersForConnectQuery();
-        const choices: QuickPickItem[] = await this.getAppServerListForXqy(mlClient, listServersForConnectQuery);
+    public static async connectToXqyDebugServer(dbClientContext: ClientContext): Promise<void> {
+        const listServersForConnectQuery = dbClientContext.buildListServersForConnectQuery();
+        const choices: QuickPickItem[] = await this.getAppServerListForXqy(dbClientContext, listServersForConnectQuery);
         if (choices.length) {
             return window.showQuickPick(choices)
                 .then((choice: QuickPickItem) => {
-                    return sendXQuery(mlClient, `dbg:connect(${choice.description})`)
+                    return sendXQuery(dbClientContext, `dbg:connect(${choice.description})`)
                         .result(
                             () => {
-                                window.showInformationMessage(`Successfully connected ${choice.label} on ${mlClient.params.host}`);
+                                window.showInformationMessage(`Successfully connected ${choice.label} on ${dbClientContext.params.host}`);
                                 this.requestStatusBarItemUpdate();
                             },
                             (err) => {
@@ -61,15 +61,15 @@ export class XqyDebugManager {
         }
     }
 
-    public static async disconnectFromXqyDebugServer(mlClient: ClientContext): Promise<void> {
-        const choices: QuickPickItem[] = await this.getAppServerListForXqy(mlClient, mlClient.listServersForDisconnectQuery);
+    public static async disconnectFromXqyDebugServer(dbClientContext: ClientContext): Promise<void> {
+        const choices: QuickPickItem[] = await this.getAppServerListForXqy(dbClientContext, dbClientContext.listServersForDisconnectQuery);
         if (choices.length) {
             return window.showQuickPick(choices)
                 .then((choice: QuickPickItem) => {
-                    return sendXQuery(mlClient, `dbg:disconnect(${choice.description})`)
+                    return sendXQuery(dbClientContext, `dbg:disconnect(${choice.description})`)
                         .result(
                             () => {
-                                window.showInformationMessage(`Successfully disconnected ${choice.label} on ${mlClient.params.host}`);
+                                window.showInformationMessage(`Successfully disconnected ${choice.label} on ${dbClientContext.params.host}`);
                                 this.requestStatusBarItemUpdate();
                             },
                             (err) => {
@@ -78,7 +78,7 @@ export class XqyDebugManager {
                             });
                 });
         } else {
-            window.showWarningMessage(`No stopped servers found on ${mlClient.params.host}`);
+            window.showWarningMessage(`No stopped servers found on ${dbClientContext.params.host}`);
             this.requestStatusBarItemUpdate();
             return null;
         }
@@ -94,11 +94,11 @@ export class XqyDebugManager {
         this.mlxprsStatus = mlxprsStatus;
     }
 
-    public static async getAppServerListForXqy(mlClient: ClientContext, serverListQuery: string): Promise<QuickPickItem[]> {
-        return sendXQuery(mlClient, serverListQuery)
+    public static async getAppServerListForXqy(dbClientContext: ClientContext, serverListQuery: string): Promise<QuickPickItem[]> {
+        return sendXQuery(dbClientContext, serverListQuery)
             .result(
                 (appServers: Record<string, ServerQueryResponse>) => {
-                    return mlClient.buildAppServerChoicesFromServerList(appServers);
+                    return dbClientContext.buildAppServerChoicesFromServerList(appServers);
                 },
                 err => {
                     window.showErrorMessage(`couldn't get a list of servers: ${JSON.stringify(err)}`);

@@ -30,21 +30,21 @@ export class JsDebugManager {
         return request.get(url, options);
     }
 
-    public static async getFilteredListOfJsAppServers(mlClient: ClientContext, requiredResponse: string): Promise<QuickPickItem[]> {
-        const listServersForConnectQuery = mlClient.buildListServersForConnectQuery();
-        const choices: QuickPickItem[] = await this.getAppServerListForJs(mlClient, listServersForConnectQuery) as QuickPickItem[];
+    public static async getFilteredListOfJsAppServers(dbClientContext: ClientContext, requiredResponse: string): Promise<QuickPickItem[]> {
+        const listServersForConnectQuery = dbClientContext.buildListServersForConnectQuery();
+        const choices: QuickPickItem[] = await this.getAppServerListForJs(dbClientContext, listServersForConnectQuery) as QuickPickItem[];
         return await this.filterServers(choices, requiredResponse);
     }
 
-    public static async connectToJsDebugServer(mlClient: ClientContext): Promise<void> {
-        const filteredServerItems: QuickPickItem[] = await this.getFilteredListOfJsAppServers(mlClient, 'false');
+    public static async connectToJsDebugServer(dbClientContext: ClientContext): Promise<void> {
+        const filteredServerItems: QuickPickItem[] = await this.getFilteredListOfJsAppServers(dbClientContext, 'false');
         if (filteredServerItems.length) {
             return window.showQuickPick(filteredServerItems)
                 .then((serverChoice: QuickPickItem) => {
                     return this.connectToNamedJsDebugServer(serverChoice.label)
                         .then(
                             () => {
-                                window.showInformationMessage(`Successfully connected ${serverChoice.label} on ${mlClient.params.host}`);
+                                window.showInformationMessage(`Successfully connected ${serverChoice.label} on ${dbClientContext.params.host}`);
                                 this.requestStatusBarItemUpdate();
                             },
                             (err) => {
@@ -100,15 +100,15 @@ export class JsDebugManager {
         return filteredChoices;
     }
 
-    public static async disconnectFromJsDebugServer(mlClient: ClientContext) {
-        const filteredServerItems: QuickPickItem[] = await this.getFilteredListOfJsAppServers(mlClient, 'true');
+    public static async disconnectFromJsDebugServer(dbClientContext: ClientContext) {
+        const filteredServerItems: QuickPickItem[] = await this.getFilteredListOfJsAppServers(dbClientContext, 'true');
         if (filteredServerItems.length) {
             return window.showQuickPick(filteredServerItems)
                 .then((serverChoice: QuickPickItem) => {
                     return this.disconnectFromNamedJsDebugServer(serverChoice.label)
                         .then(
                             () => {
-                                window.showInformationMessage(`Successfully disconnected ${serverChoice.label} on ${mlClient.params.host}`);
+                                window.showInformationMessage(`Successfully disconnected ${serverChoice.label} on ${dbClientContext.params.host}`);
                                 this.requestStatusBarItemUpdate();
                             },
                             (err) => {
@@ -117,7 +117,7 @@ export class JsDebugManager {
                             });
                 });
         } else {
-            window.showWarningMessage(`No stopped servers found on ${mlClient.params.host}`);
+            window.showWarningMessage(`No stopped servers found on ${dbClientContext.params.host}`);
             this.requestStatusBarItemUpdate();
             return null;
         }
@@ -277,11 +277,11 @@ export class JsDebugManager {
         this.mlxprsStatus = mlxprsStatus;
     }
 
-    public static async getAppServerListForJs(mlClient: ClientContext, serverListQuery: string): Promise<QuickPickItem[]> {
-        return sendXQuery(mlClient, serverListQuery)
+    public static async getAppServerListForJs(dbClientContext: ClientContext, serverListQuery: string): Promise<QuickPickItem[]> {
+        return sendXQuery(dbClientContext, serverListQuery)
             .result(
                 (appServers: Record<string, ServerQueryResponse>) => {
-                    return mlClient.buildAppServerChoicesFromServerList(appServers);
+                    return dbClientContext.buildAppServerChoicesFromServerList(appServers);
                 },
                 err => {
                     window.showErrorMessage(`couldn't get a list of servers: ${JSON.stringify(err)}`);

@@ -20,8 +20,8 @@ export class ModuleContentProvider implements TextDocumentContentProvider {
     private _onDidChange = new EventEmitter<Uri>();
     private _mlModuleGetter: ModuleContentGetter;
 
-    public initialize(client: ClientContext): void {
-        this._mlModuleGetter = new ModuleContentGetter(client);
+    public initialize(dbClientContext: ClientContext): void {
+        this._mlModuleGetter = new ModuleContentGetter(dbClientContext);
     }
 
     async provideTextDocumentContent(uri: Uri): Promise<string> {
@@ -37,14 +37,14 @@ export class ModuleContentProvider implements TextDocumentContentProvider {
     }
 }
 
-export async function pickAndShowModule(mprovider: ModuleContentProvider, client: ClientContext): Promise<void> {
-    mprovider.initialize(client);
+export async function pickAndShowModule(mprovider: ModuleContentProvider, dbClientContext: ClientContext): Promise<void> {
+    mprovider.initialize(dbClientContext);
     mprovider.listModules()
         .then((moduleUris: string[]) => {
             return window.showQuickPick(moduleUris);
         })
         .then((URIstring: string) => {
-            const uri: Uri = encodeLocation(client.params.host, client.params.port, URIstring);
+            const uri: Uri = encodeLocation(dbClientContext.params.host, dbClientContext.params.port, URIstring);
             return uri;
         })
         .then((uri: Uri) => {

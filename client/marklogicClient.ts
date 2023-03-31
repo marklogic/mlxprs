@@ -206,14 +206,14 @@ return $json-servers
 }
 
 export function buildNewClient(params: MlClientParameters): ClientContext {
-    let newClient: ClientContext;
+    let dbClientContext: ClientContext;
     try {
-        newClient = new ClientContext(params);
+        dbClientContext = new ClientContext(params);
     } catch (e) {
         console.error('Error: ' + JSON.stringify(e));
         throw (e);
     }
-    return newClient;
+    return dbClientContext;
 }
 
 export function parseXQueryForOverrides(queryText: string): Record<string, any> {
@@ -236,7 +236,7 @@ export function parseXQueryForOverrides(queryText: string): Record<string, any> 
 
 
 export function sendJSQuery(
-    db: ClientContext,
+    dbClientContext: ClientContext,
     actualQuery: string,
     sqlQuery = '',
     sqlOptions = []): ml.ResultProvider<Record<string, any>> {
@@ -251,18 +251,18 @@ export function sendJSQuery(
 
     const extVars = {
         'actualQuery': actualQuery,
-        'contentDb': db.params.contentDb,
-        'modulesDb': db.params.modulesDb,
+        'contentDb': dbClientContext.params.contentDb,
+        'modulesDb': dbClientContext.params.modulesDb,
         'sqlQuery': sqlQuery,
         'sqlOptions': sqlOptions
     } as ml.Variables;
 
-    return db.databaseClient.eval(query, extVars);
+    return dbClientContext.databaseClient.eval(query, extVars);
 }
 
 
 export function sendXQuery(
-    db: ClientContext,
+    dbClientContext: ClientContext,
     actualQuery: string,
     prefix: 'xdmp' | 'dbg' = 'xdmp')
     : ml.ResultProvider<Record<string, any>> {
@@ -273,37 +273,37 @@ export function sendXQuery(
         'declare variable $modulesDb as xs:string external;' +
         'let $options := ' +
         '<options xmlns="xdmp:eval">' +
-        (db.params.contentDb ? '<database>{xdmp:database($contentDb)}</database>' : '') +
-        (db.params.modulesDb ? '<modules>{xdmp:database($modulesDb)}</modules>' : '') +
+        (dbClientContext.params.contentDb ? '<database>{xdmp:database($contentDb)}</database>' : '') +
+        (dbClientContext.params.modulesDb ? '<modules>{xdmp:database($modulesDb)}</modules>' : '') +
         '</options>' +
         `return ${prefix}:eval($actualQuery, (), $options)`;
     const extVars = {
         'actualQuery': actualQuery,
-        'contentDb': db.params.contentDb,
-        'modulesDb': db.params.modulesDb
+        'contentDb': dbClientContext.params.contentDb,
+        'modulesDb': dbClientContext.params.modulesDb
     } as ml.Variables;
 
-    return db.databaseClient.xqueryEval(query, extVars);
+    return dbClientContext.databaseClient.xqueryEval(query, extVars);
 }
 
-export function sendSparql(db: ClientContext, sparqlQuery: string, contentType: ml.contentType = 'application/json'): ml.ResultProvider<Record<string, unknown>> {
-    return db.databaseClient.graphs.sparql({
+export function sendSparql(dbClientContext: ClientContext, sparqlQuery: string, contentType: ml.contentType = 'application/json'): ml.ResultProvider<Record<string, unknown>> {
+    return dbClientContext.databaseClient.graphs.sparql({
         contentType: contentType,
         query: sparqlQuery
     });
 }
 
 
-export function sendRows(db: ClientContext, actualQuery: string, resultFormat: ml.RowsResponseFormat): Promise<ml.RowsResponse> {
+export function sendRows(dbClientContext: ClientContext, actualQuery: string, resultFormat: ml.RowsResponseFormat): Promise<ml.RowsResponse> {
     if (actualQuery.startsWith('{')) {
-        return sendRowsSerialized(db, actualQuery, resultFormat);
+        return sendRowsSerialized(dbClientContext, actualQuery, resultFormat);
     } else {
         const queryOptions: ml.RowsOptions = { 'queryType': 'dsl', 'format': resultFormat };
-        return db.databaseClient.rows.query(actualQuery, queryOptions);
+        return dbClientContext.databaseClient.rows.query(actualQuery, queryOptions);
     }
 }
 
-function sendRowsSerialized(db: ClientContext, actualQuery: string, resultFormat: ml.RowsResponseFormat): Promise<ml.RowsResponse> {
+function sendRowsSerialized(dbClientContext: ClientContext, actualQuery: string, resultFormat: ml.RowsResponseFormat): Promise<ml.RowsResponse> {
     let jsonQuery = null;
     let errObject = null;
     try {
@@ -314,7 +314,7 @@ function sendRowsSerialized(db: ClientContext, actualQuery: string, resultFormat
 
     if (jsonQuery) {
         const queryOptions: ml.RowsOptions = { 'queryType': 'json', 'format': resultFormat };
-        return db.databaseClient.rows.query(jsonQuery, queryOptions);
+        return dbClientContext.databaseClient.rows.query(jsonQuery, queryOptions);
     } else {
         return Promise.resolve(
             {
@@ -333,18 +333,18 @@ export interface MlxprsQuickPickItem {
 }
 
 export async function getFilteredListOfJsAppServers(
-    mlClient: ClientContext, managePort: number, requiredResponse: string
+    dbClientContext: ClientContext, managePort: number, requiredResponse: string
 ): Promise<MlxprsQuickPickItem[]> {
-    const listServersForConnectQuery = mlClient.buildListServersForConnectQuery();
-    const allPossibleJsServers: MlxprsQuickPickItem[] = await getAppServerListForJs(mlClient, listServersForConnectQuery) as MlxprsQuickPickItem[];
-    return await filterJsServerByConnectedStatus(mlClient, managePort, allPossibleJsServers, requiredResponse);
+    const listServersForConnectQuery = dbClientContext.buildListServersForConnectQuery();
+    const allPossibleJsServers: MlxprsQuickPickItem[] = await getAppServerListForJs(dbClientContext, listServersForConnectQuery) as MlxprsQuickPickItem[];
+    return await filterJsServerByConnectedStatus(dbClientContext, managePort, allPossibleJsServers, requiredResponse);
 }
 
-export async function getAppServerListForJs(mlClient: ClientContext, serverListQuery: string): Promise<MlxprsQuickPickItem[]> {
-    return sendXQuery(mlClient, serverListQuery)
+export async function getAppServerListForJs(dbClientContext: ClientContext, serverListQuery: string): Promise<MlxprsQuickPickItem[]> {
+    return sendXQuery(dbClientContext, serverListQuery)
         .result(
             (appServers: Record<string, ServerQueryResponse>) => {
-                return mlClient.buildAppServerChoicesFromServerList(appServers);
+                return dbClientContext.buildAppServerChoicesFromServerList(appServers);
             },
             err => {
                 return [];
@@ -352,27 +352,27 @@ export async function getAppServerListForJs(mlClient: ClientContext, serverListQ
 }
 
 export async function filterJsServerByConnectedStatus(
-    mlClient: ClientContext, managePort: number, choices: MlxprsQuickPickItem[], requiredResponse: string
+    dbClientContext: ClientContext, managePort: number, choices: MlxprsQuickPickItem[], requiredResponse: string
 ): Promise<MlxprsQuickPickItem[]> {
     const requests = [];
     const filteredChoices: MlxprsQuickPickItem[] = [];
     choices.forEach(async (choice) => {
-        const url = ClientContext.buildUrl(mlClient.params.host, `/jsdbg/v1/connected/${choice.label}`, mlClient.params.ssl, managePort);
+        const url = ClientContext.buildUrl(dbClientContext.params.host, `/jsdbg/v1/connected/${choice.label}`, dbClientContext.params.ssl, managePort);
         const options = {
             headers: {
                 'Content-type': 'application/x-www-form-urlencoded',
                 'X-Error-Accept': 'application/json'
             },
             auth: {
-                user: mlClient.params.user,
-                pass: mlClient.params.pwd,
+                user: dbClientContext.params.user,
+                pass: dbClientContext.params.pwd,
                 'sendImmediately': false
             }
         };
-        if (mlClient.params.pathToCa !== '') {
-            options['agentOptions'] = { ca: fs.readFileSync(mlClient.params.pathToCa) };
+        if (dbClientContext.params.pathToCa !== '') {
+            options['agentOptions'] = { ca: fs.readFileSync(dbClientContext.params.pathToCa) };
         }
-        options['rejectUnauthorized'] = mlClient.params.rejectUnauthorized;
+        options['rejectUnauthorized'] = dbClientContext.params.rejectUnauthorized;
         const connectedRequest = request.get(url, options)
             .then((response) => {
                 if (response === requiredResponse) {
