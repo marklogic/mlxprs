@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import { after } from 'mocha';
-import { window, workspace, Uri } from 'vscode';
+import { Selection, TextEditor, window, workspace, Uri } from 'vscode';
 
 import { defaultDummyGlobalState } from './dummyGlobalState';
 import {
@@ -13,6 +13,7 @@ import { AttachRequestArguments } from '../../JSDebugger/mlDebug';
 import { ClientContext } from '../../marklogicClient';
 import { ClientResponseProvider } from '../../clientResponseProvider';
 import { getDbClient, parseQueryForOverrides } from '../../vscQueryParameterTools';
+import { EditorQueryEvaluator } from '../../editorQueryEvaluator';
 
 const SJS = 'sjs';
 const XQY = 'xqy';
@@ -20,6 +21,40 @@ const XQY = 'xqy';
 suite('Extension Test Suite', () => {
     after(() => {
         window.showInformationMessage('All tests done!');
+    });
+
+    test('When the editor has no text selected', async () => {
+        const textDocumentContents = 'Hello, World!\n--xdmp.random()--\nGoodbye, Cruel World';
+        let queryText: string;
+        await workspace.openTextDocument({
+            language: 'javascript',
+            content: textDocumentContents
+        })
+            .then(document => {
+                return window.showTextDocument(document);
+            })
+            .then((editor: TextEditor) => {
+                queryText = EditorQueryEvaluator.getQueryFromEditor(editor);
+            });
+        assert.strictEqual(queryText, textDocumentContents, 'The entire document should be returned');
+    });
+
+    test('When the editor has selected text', async () => {
+        const textDocumentContents = 'Hello, World!\n--xdmp.random()--\nGoodbye, Cruel World';
+        const expectedSelectedText = 'xdmp.random()';
+        let queryText: string;
+        await workspace.openTextDocument({
+            language: 'javascript',
+            content: textDocumentContents
+        })
+            .then(document => {
+                return window.showTextDocument(document);
+            })
+            .then((editor: TextEditor) => {
+                editor.selection = new Selection(1, 2, 1, 15);
+                queryText = EditorQueryEvaluator.getQueryFromEditor(editor);
+            });
+        assert.strictEqual(queryText, expectedSelectedText, 'Then only the selected text should be returned');
     });
 
     test('When a RunTime object is initialized with a custom managePort', async () => {
