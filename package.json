@@ -16,6 +16,7 @@
         "Debuggers",
         "Programming Languages",
         "Snippets",
+        "Formatters",
         "Other"
     ],
     "repository": "https://github.com/marklogic-community/mlxprs",
@@ -538,5 +539,6 @@
         "@vscode/debugprotocol": "1.59.0",
         "vscode-languageclient": "7.0.0",
         "fast-xml-parser": "4.2.0"
+        "@quodatum/xqlint": "0.2.1"
     }
 }

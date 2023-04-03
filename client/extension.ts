@@ -7,6 +7,7 @@ import { ClientContext } from './marklogicClient';
 import { cascadeOverrideClient } from './vscQueryParameterTools';
 import { ClientResponseProvider } from './clientResponseProvider';
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting';
+import { XqyFormattingEditProvider } from './xqyFormatting/XqyFormattingEditProvider';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
 import { XqyDebugConfigurationProvider, XqyDebugAdapterDescriptorFactory } from './XQDebugger/xqyDebugConfigProvider';
 import { XqyDebugManager } from './XQDebugger/xqyDebugManager';
@@ -102,6 +103,12 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.languages.registerDocumentFormattingEditProvider(
             { scheme: 'mlquery', language: 'xsl' },
             new XmlFormattingEditProvider()
+        )
+    ]);
+    handleUnload(context, [
+        vscode.languages.registerDocumentFormattingEditProvider(
+            'xquery-ml',
+            new XqyFormattingEditProvider()
         )
     ]);
 
