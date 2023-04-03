@@ -2,12 +2,12 @@
     "name": "mlxprs",
     "displayName": "MarkLogic developer tools",
     "description": "MarkLogic JavaScript and XQuery development tools",
-    "version": "3.6.0",
+    "version": "3.6.1",
     "publisher": "mlxprs",
     "engines": {
         "vscode": "^1.76.0"
     },
-    "icon": "images/mlxprs-vscode.png",
+    "icon": "images/Progress+MarkLogic_DayOne_Logo_Primary Stacked-square.png",
     "galleryBanner": {
         "color": "#1D252D",
         "theme": "dark"

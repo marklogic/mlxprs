@@ -1,3 +1,7 @@
+## [3.6.1](https://github.com/marklogic-community/mlxprs/releases/tag/v3.6.1)
+
+- Fixed the icon used in the Visual Studio Marketplace 
+
 ## [3.6.0](https://github.com/marklogic-community/mlxprs/releases/tag/v3.6.0)
 
 - [#116](https://github.com/marklogic-community/mlxprs/issues/116) Updated dependencies and fixed all known security vulnerabilities
