@@ -253,6 +253,8 @@ In order to step through modules that get imported in your code, you need to tel
 
 In XQuery attach-mode debugging, you should not 'connect' to the same server you use for queries. Since connecting stops all requests on that app server, you'd lock yourself out. For this reason, the extension will not offer to connect to your configured query client's port. Admin, Manage, HealthCheck, and App-Services are also excluded from debugging.
 
+The XQuery debugger does not have the level of granularity that might be expected. Multiple lines of XQuery may be reported as a single expression by the MarkLogic debugger functions. This means that when using the debugger in VSCode, repeated use of the "Step Over" function may appear to have no effect as MarkLogic steps through the individual parts of the XQuery expression.
+
 'Launch' debugging initiated from an unsaved ('Untitled') buffer in VS Code will not work. If you want to launch and debug an ad-hoc query, save it somewhere on disk beforehand.
 
 Neither debugger can cross from one server-side language mode into another. XQuery debugging cannot step into `xdmp:javascript-eval()` calls, and JavaScript debugging cannot step into `xdmp.xqueryEval()`. The debugger should step over these calls if you try to step into them.

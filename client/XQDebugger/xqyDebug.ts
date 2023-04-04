@@ -48,6 +48,9 @@ const timeout = (ms: number): Promise<any> => {
 
 export class XqyDebugSession extends LoggingDebugSession {
 
+    // convertDebuggerLineToClient(line: number) may be overridden to convert line numbers.
+    // This was done until v3.7.0 of this extension. However, the results seem better without the conversion.
+
     private static THREAD_ID = 1;
     private requestId: string;
 
@@ -252,11 +255,6 @@ export class XqyDebugSession extends LoggingDebugSession {
             ]
         };
         this.sendResponse(response);
-    }
-
-    // VS Code defaults to add 1. Let's not do that.
-    protected convertDebuggerLineToClient(line: number): number {
-        return line;
     }
 
     protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
