@@ -30,10 +30,13 @@ export class JsDebugManager {
         return request.get(url, options);
     }
 
+
     public static async getFilteredListOfJsAppServers(dbClientContext: ClientContext, requiredResponse: string): Promise<QuickPickItem[]> {
         const listServersForConnectQuery = dbClientContext.buildListServersForConnectQuery();
         const choices: QuickPickItem[] = await this.getAppServerListForJs(dbClientContext, listServersForConnectQuery) as QuickPickItem[];
-        return await this.filterServers(choices, requiredResponse);
+        const filteredChoices: QuickPickItem[] = await this.filterServers(choices, requiredResponse);
+        const sortedFilteredChoices: QuickPickItem[] = filteredChoices.sort(appServerSorter);
+        return sortedFilteredChoices;
     }
 
     public static async connectToJsDebugServer(dbClientContext: ClientContext): Promise<void> {
@@ -102,8 +105,9 @@ export class JsDebugManager {
 
     public static async disconnectFromJsDebugServer(dbClientContext: ClientContext) {
         const filteredServerItems: QuickPickItem[] = await this.getFilteredListOfJsAppServers(dbClientContext, 'true');
-        if (filteredServerItems.length) {
-            return window.showQuickPick(filteredServerItems)
+        const sortedFilteredChoices: QuickPickItem[] = filteredServerItems.sort(appServerSorter);
+        if (sortedFilteredChoices.length) {
+            return window.showQuickPick(sortedFilteredChoices)
                 .then((serverChoice: QuickPickItem) => {
                     return this.disconnectFromNamedJsDebugServer(serverChoice.label)
                         .then(
@@ -288,4 +292,8 @@ export class JsDebugManager {
                     return [];
                 });
     }
+}
+
+function appServerSorter(a: QuickPickItem, b: QuickPickItem): number {
+    return (a.label.toUpperCase() > b.label.toUpperCase()) ? 1 : ((b.label.toUpperCase() > a.label.toUpperCase()) ? -1 : 0);
 }
