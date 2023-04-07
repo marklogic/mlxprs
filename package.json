@@ -283,114 +283,149 @@
                 }
             }
         ],
-        "configuration": {
-            "type": "object",
-            "title": "MarkLogic connection configuration",
-            "properties": {
-                "marklogic.host": {
-                    "type": "string",
-                    "default": "localhost",
-                    "description": "hostname for MarkLogic instance"
-                },
-                "marklogic.port": {
-                    "type": "integer",
-                    "default": 8000,
-                    "description": "port on which to reach the MarkLogic server"
-                },
-                "marklogic.managePort": {
-                    "type": "integer",
-                    "default": 8002,
-                    "description": "MarkLogic Manage AppServer port"
-                },
-                "marklogic.username": {
-                    "type": "string",
-                    "default": "admin",
-                    "description": "username for MarkLogic connection"
-                },
-                "marklogic.password": {
-                    "type": "string",
-                    "default": "admin",
-                    "description": "password for MarkLogic connection"
-                },
-                "marklogic.documentsDb": {
-                    "type": "string",
-                    "default": "",
-                    "description": "database against which to evaluate queries; required for debugging a local script"
-                },
-                "marklogic.modulesDb": {
-                    "type": "string",
-                    "default": "",
-                    "description": "modules database used in queries; default modules database for app server will be used if left unspecified"
-                },
-                "marklogic.modulesRoot": {
-                    "type": "string",
-                    "default": "/",
-                    "description": "modules root if using filesystem"
-                },
-                "marklogic.authType": {
-                    "type": "string",
-                    "default": "DIGEST",
-                    "description": "only DIGEST or BASIC for now"
-                },
-                "marklogic.ssl": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "whether to use ssl for the http connection"
-                },
-                "marklogic.pathToCa": {
-                    "type": "string",
-                    "default": "",
-                    "description": "path to certificate authority (e.g. for self-signed certificates)"
-                },
-                "marklogic.rejectUnauthorized": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "whether the server's SSL certificate should be verified against the list of supplied CAs"
-                },
-                "marklogic.sparqlContentType": {
-                    "type": "string",
-                    "enum": [
-                        "application/json",
-                        "application/xml",
-                        "text/html",
-                        "text/csv"
-                    ],
-                    "default": "application/json",
-                    "markdownDescription": "How to format SPARQL query results",
-                    "enumDescriptions": [
-                        "",
-                        "",
-                        "",
-                        "note: CSV-formatted results will not work with `describe` queries"
-                    ]
-                },
-                "marklogic.sql.results": {
-                    "type": "string",
-                    "markdownDescription": "How to present SQL results from 'Eval SQL'",
-                    "enum": [
-                        "array",
-                        "format",
-                        "map"
-                    ],
-                    "markdownEnumDescriptions": [
-                        "Return SQL results as a sequence of array values (`json:array`).",
-                        "Return SQL results as formatted strings.",
-                        "Return SQL result as a sequence of map values, where the key is the column name."
-                    ],
-                    "default": "array"
-                },
-                "marklogic.sql.optimize": {
-                    "type": "number",
-                    "enum": [
-                        0,
-                        1,
-                        2
-                    ],
-                    "default": 1,
-                    "description": "Optimization Levels of 0 (off), 1, and 2 are recognized."
+        "configuration": [
+            {
+                "id": "marklogicGeneral",
+                "order": 1,
+                "type": "object",
+                "title": "MarkLogic General Configuration",
+                "properties": {
+                    "marklogic.host": {
+                        "type": "string",
+                        "order": 1,
+                        "description": "hostname for MarkLogic instance",
+                        "default": "localhost"
+                    },
+                    "marklogic.managePort": {
+                        "order": 2,
+                        "type": "integer",
+                        "default": 8002,
+                        "description": "MarkLogic Manage AppServer port"
+                    },
+                    "marklogic.port": {
+                        "order": 3,
+                        "type": "integer",
+                        "default": 8000,
+                        "description": "The port of a REST API app server to connect to"
+                    },
+                    "marklogic.documentsDb": {
+                        "order": 4,
+                        "type": "string",
+                        "default": "",
+                        "description": "database against which to evaluate queries; required for debugging a local script"
+                    },
+                    "marklogic.modulesDb": {
+                        "order": 5,
+                        "type": "string",
+                        "default": "",
+                        "description": "modules database used in queries; default modules database for app server will be used if left unspecified"
+                    },
+                    "marklogic.modulesRoot": {
+                        "order": 6,
+                        "type": "string",
+                        "default": "/",
+                        "description": "modules root if using filesystem"
+                    }
+                }
+            },
+            {
+                "id": "marklogicSecurity",
+                "order": 2,
+                "type": "object",
+                "title": "MarkLogic Security Configuration",
+                "properties": {
+                        "marklogic.authType": {
+                        "order": 1,
+                        "type": "string",
+                        "default": "DIGEST",
+                        "description": "only DIGEST or BASIC for now"
+                    },
+                    "marklogic.username": {
+                        "order": 2,
+                        "type": "string",
+                        "default": "admin",
+                        "description": "username for MarkLogic connection"
+                    },
+                    "marklogic.password": {
+                        "order": 3,
+                        "type": "string",
+                        "default": "admin",
+                        "description": "password for MarkLogic connection"
+                    },
+                    "marklogic.pathToCa": {
+                        "order": 4,
+                        "type": "string",
+                        "default": "",
+                        "description": "path to certificate authority (e.g. for self-signed certificates)"
+                    },
+                    "marklogic.ssl": {
+                        "order": 5,
+                        "type": "boolean",
+                        "default": false,
+                        "description": "whether to use ssl for the http connection"
+                    },
+                    "marklogic.rejectUnauthorized": {
+                        "order": 6,
+                        "type": "boolean",
+                        "default": true,
+                        "description": "whether the server's SSL certificate should be verified against the list of supplied certificate authories"
+                    }
+                }
+            },
+            {
+                "id": "marklogicMiscellaneous",
+                "order": 3,
+                "type": "object",
+                "title": "MarkLogic Miscellaneous Configuration",
+                "properties": {
+                    "marklogic.sparqlContentType": {
+                        "order": 1,
+                        "type": "string",
+                        "enum": [
+                            "application/json",
+                            "application/xml",
+                            "text/html",
+                            "text/csv"
+                        ],
+                        "default": "application/json",
+                        "markdownDescription": "How to format SPARQL query results",
+                        "enumDescriptions": [
+                            "",
+                            "",
+                            "",
+                            "note: CSV-formatted results will not work with `describe` queries"
+                        ]
+                    },
+                    "marklogic.sql.optimize": {
+                        "order": 2,
+                        "type": "number",
+                        "enum": [
+                            0,
+                            1,
+                            2
+                        ],
+                        "default": 1,
+                        "description": "Optimization Levels of 0 (off), 1, and 2 are recognized."
+                    },
+                    "marklogic.sql.results": {
+                        "order": 3,
+                        "type": "string",
+                        "markdownDescription": "How to present SQL results from 'Eval SQL'",
+                        "enum": [
+                            "array",
+                            "format",
+                            "map"
+                        ],
+                        "markdownEnumDescriptions": [
+                            "Return SQL results as a sequence of array values (`json:array`).",
+                            "Return SQL results as formatted strings.",
+                            "Return SQL result as a sequence of map values, where the key is the column name."
+                        ],
+                        "default": "array"
+                    }
                 }
             }
-        },
+        ],
         "languages": [
             {
                 "id": "xquery-ml",
