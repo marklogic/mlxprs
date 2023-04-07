@@ -42,8 +42,9 @@ export class XqyDebugManager {
     public static async connectToXqyDebugServer(dbClientContext: ClientContext): Promise<void> {
         const listServersForConnectQuery = dbClientContext.buildListServersForConnectQuery();
         const choices: QuickPickItem[] = await this.getAppServerListForXqy(dbClientContext, listServersForConnectQuery);
-        if (choices.length) {
-            return window.showQuickPick(choices)
+        const sortedChoices: QuickPickItem[] = choices.sort(appServerSorter);
+        if (sortedChoices.length) {
+            return window.showQuickPick(sortedChoices)
                 .then((choice: QuickPickItem) => {
                     return sendXQuery(dbClientContext, `dbg:connect(${choice.description})`)
                         .result(
@@ -63,8 +64,9 @@ export class XqyDebugManager {
 
     public static async disconnectFromXqyDebugServer(dbClientContext: ClientContext): Promise<void> {
         const choices: QuickPickItem[] = await this.getAppServerListForXqy(dbClientContext, dbClientContext.listServersForDisconnectQuery);
-        if (choices.length) {
-            return window.showQuickPick(choices)
+        const sortedChoices: QuickPickItem[] = choices.sort(appServerSorter);
+        if (sortedChoices.length) {
+            return window.showQuickPick(sortedChoices)
                 .then((choice: QuickPickItem) => {
                     return sendXQuery(dbClientContext, `dbg:disconnect(${choice.description})`)
                         .result(
@@ -105,4 +107,8 @@ export class XqyDebugManager {
                     return [];
                 });
     }
+}
+
+function appServerSorter(a: QuickPickItem, b: QuickPickItem): number {
+    return (a.label.toUpperCase() > b.label.toUpperCase()) ? 1 : ((b.label.toUpperCase() > a.label.toUpperCase()) ? -1 : 0);
 }
