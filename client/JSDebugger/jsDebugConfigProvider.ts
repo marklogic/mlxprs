@@ -18,19 +18,23 @@ export class JsDebugConfigurationProvider implements vscode.DebugConfigurationPr
             const editor = vscode.window.activeTextEditor;
             if (editor && editor.document.languageId === 'javascript') {
                 config.type = 'ml-jsdebugger';
-                config.name = 'Launch Debug Reques';
+                config.name = 'Launch Debug Request';
                 config.request = 'launch';
                 config.program = '${file}';
             }
         }
 
-        // use active editor window as ad-hoc query if `program` not defined explicitly
-        config.program = config.program || config.path;
-        if (!config.program) {
-            const doc: vscode.TextDocument = vscode.window.activeTextEditor.document;
-            config.program = doc.fileName;
-            config.scheme = doc.uri.scheme;
-            config.queryText = doc.getText();
+        // Need to tell VSCode what parameters to use for "launching" a debug session based on a configuration in launch.json
+        if (config.request === 'launch') {
+            config.program = config.program || config.path;
+            if (!config.program) {
+                // If a program isn't specified by the launch configuration
+                // Then need to set the parameters to values based on the current editor window
+                const doc: vscode.TextDocument = vscode.window.activeTextEditor.document;
+                config.program = doc.fileName;
+                config.scheme = doc.uri.scheme;
+                config.queryText = doc.getText();
+            }
         }
 
         // deprecation warnings
