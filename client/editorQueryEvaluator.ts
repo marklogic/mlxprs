@@ -1,11 +1,14 @@
 'use strict';
-import { ExtensionContext, TextDocument, TextEdit, TextEditor, Uri, WorkspaceEdit,
-    commands, window, workspace, WorkspaceConfiguration } from 'vscode';
-import { cascadeOverrideClient } from './vscQueryParameterTools';
-import { ClientContext, sendJSQuery, sendSparql, sendXQuery, sendRows } from './marklogicClient';
-import { ClientResponseProvider } from './clientResponseProvider';
+import { XMLParser, XMLBuilder } from 'fast-xml-parser';
 import { contentType, RowsResponse } from 'marklogic';
 import * as ml from 'marklogic';
+import { ExtensionContext, TextDocument, TextEdit, TextEditor, Uri, WorkspaceEdit,
+    commands, window, workspace, WorkspaceConfiguration } from 'vscode';
+
+import { ClientResponseProvider, ErrorResultsObject } from './clientResponseProvider';
+import { ClientContext, sendJSQuery, sendSparql, sendXQuery, sendRows } from './marklogicClient';
+import { MlxprsWebViewProvider } from './mlxprsWebViewProvider';
+import { cascadeOverrideClient } from './vscQueryParameterTools';
 
 export enum EditorQueryType {
     JS,
@@ -16,13 +19,21 @@ export enum EditorQueryType {
 }
 
 export class EditorQueryEvaluator {
+    static mlxprsWebViewProvider: MlxprsWebViewProvider = null;
+
     private static FOPTIONS = { tabSize: 2, insertSpaces: true };
     private static FCOMMAND = 'vscode.executeFormatDocumentProvider';
     private static SJS = 'sjs';
     private static XQY = 'xqy';
 
+    public static registerMlxprsResultsViewProvider(mlxprsWebViewProvider: MlxprsWebViewProvider) {
+        this.mlxprsWebViewProvider = mlxprsWebViewProvider;
+    }
+
     private extensionContext: ExtensionContext;
     private provider: ClientResponseProvider;
+    private cfg: WorkspaceConfiguration;
+    private sendResultsToEditorTab: boolean;
 
     public constructor(context: ExtensionContext, provider: ClientResponseProvider) {
         this.extensionContext = context;
@@ -46,12 +57,13 @@ export class EditorQueryEvaluator {
         editorQueryType: EditorQueryType, editor: TextEditor, rowsResponseFormat?: ml.RowsResponseFormat
     ): void {
         const query = EditorQueryEvaluator.getQueryFromEditor(editor);
-        const cfg: WorkspaceConfiguration = workspace.getConfiguration();
+        this.cfg = workspace.getConfiguration();
+        this.sendResultsToEditorTab = Boolean(this.cfg.get('marklogic.resultsInEditorTab'));
         let language = EditorQueryEvaluator.SJS;
         if (editorQueryType === EditorQueryType.XQY) {
             language = EditorQueryEvaluator.XQY;
         }
-        const dbClientContext: ClientContext = cascadeOverrideClient(query, language, cfg, this.extensionContext.globalState);
+        const dbClientContext: ClientContext = cascadeOverrideClient(query, language, this.cfg, this.extensionContext.globalState);
         const host = dbClientContext.params.host;
         const port = dbClientContext.params.port;
         const resultsEditorTabIdentifier = ClientResponseProvider.encodeLocation(editor.document.uri, host, port);
@@ -67,12 +79,37 @@ export class EditorQueryEvaluator {
             this.editorSparqlQuery(dbClientContext, query, resultsEditorTabIdentifier, editor);
             break;
         case EditorQueryType.SQL:
-            this.editorSqlQuery(dbClientContext, query, resultsEditorTabIdentifier, editor, cfg);
+            this.editorSqlQuery(dbClientContext, query, resultsEditorTabIdentifier, editor, this.cfg);
             break;
         case EditorQueryType.ROWS:
             this.editorRowsQuery(dbClientContext, query, resultsEditorTabIdentifier, editor, rowsResponseFormat);
             break;
         }
+    }
+
+    private updateResultsViewWithRecordArray(resultsEditorTabIdentifier: Uri, recordResults: Record<string, unknown>[], isSparql: boolean): Promise<Uri> {
+        let resultsEditorTabIdentifierPromise = null;
+        if (this.sendResultsToEditorTab) {
+            if (isSparql) {
+                resultsEditorTabIdentifierPromise = this.provider.writeSparqlResponseToUri(resultsEditorTabIdentifier, recordResults);
+            } else {
+                resultsEditorTabIdentifierPromise = this.provider.writeResponseToUri(resultsEditorTabIdentifier, recordResults);
+            }
+        } else {
+            EditorQueryEvaluator.requestMlxprsWebviewUpdateWithRecordArray(recordResults);
+        }
+        return resultsEditorTabIdentifierPromise;
+    }
+
+    private updateResultsViewWithError(resultsEditorTabIdentifier: Uri, error: Record<string, unknown>[]): Promise<Uri> {
+        let resultsEditorTabIdentifierPromise = null;
+        if (this.sendResultsToEditorTab) {
+            resultsEditorTabIdentifierPromise = this.provider.handleError(resultsEditorTabIdentifier, error);
+        } else {
+            const errorResultsObject = ClientResponseProvider.buildErrorResultsObject(error);
+            EditorQueryEvaluator.requestMlxprsWebviewUpdateWithErrorResultsObject(errorResultsObject);
+        }
+        return resultsEditorTabIdentifierPromise;
     }
 
     private editorJSQuery(
@@ -83,13 +120,17 @@ export class EditorQueryEvaluator {
     ): void {
         sendJSQuery(dbClientContext, query)
             .result(
-                (fulfill: Record<string, unknown>[]) => {
-                    return this.provider.writeResponseToUri(resultsEditorTabIdentifier, fulfill);
+                (recordResults: Record<string, unknown>[]) => {
+                    return this.updateResultsViewWithRecordArray(resultsEditorTabIdentifier, recordResults, false);
                 },
                 (error: Record<string, unknown>[]) => {
-                    return this.provider.handleError(resultsEditorTabIdentifier, error);
+                    return this.updateResultsViewWithError(resultsEditorTabIdentifier, error);
                 })
-            .then(resultsEditorTabIdentifier => EditorQueryEvaluator.showFormattedResults(resultsEditorTabIdentifier, editor));
+            .then(resultsEditorTabIdentifier => {
+                if (this.sendResultsToEditorTab) {
+                    EditorQueryEvaluator.showFormattedResults(resultsEditorTabIdentifier, editor);
+                }
+            });
     }
 
     private editorXQuery(
@@ -101,13 +142,17 @@ export class EditorQueryEvaluator {
     ): void {
         sendXQuery(dbClientContext, query, prefix)
             .result(
-                (fulfill: Record<string, unknown>[]) => {
-                    return this.provider.writeResponseToUri(resultsEditorTabIdentifier, fulfill);
+                (recordResults: Record<string, unknown>[]) => {
+                    return this.updateResultsViewWithRecordArray(resultsEditorTabIdentifier, recordResults, false);
                 },
                 (error: Record<string, unknown>[]) => {
-                    return this.provider.handleError(resultsEditorTabIdentifier, error);
+                    return this.updateResultsViewWithError(resultsEditorTabIdentifier, error);
                 })
-            .then(resultsEditorTabIdentifier => EditorQueryEvaluator.showFormattedResults(resultsEditorTabIdentifier, editor));
+            .then(resultsEditorTabIdentifier => {
+                if (this.sendResultsToEditorTab) {
+                    EditorQueryEvaluator.showFormattedResults(resultsEditorTabIdentifier, editor);
+                }
+            });
     }
 
     private buildSqlOptions(cfg: WorkspaceConfiguration): Array<string> {
@@ -128,13 +173,17 @@ export class EditorQueryEvaluator {
         const query = 'xdmp.sql(sqlQuery, sqlOptions)';
         sendJSQuery(dbClientContext, query, sqlQuery, sqlOptions)
             .result(
-                (fulfill: Record<string, unknown>[]) => {
-                    return this.provider.writeResponseToUri(resultsEditorTabIdentifier, [].concat(fulfill));
+                (recordResults: Record<string, unknown>[]) => {
+                    return this.updateResultsViewWithRecordArray(resultsEditorTabIdentifier, recordResults, false);
                 },
                 (error: Record<string, unknown>[]) => {
-                    return this.provider.handleError(resultsEditorTabIdentifier, error);
+                    return this.updateResultsViewWithError(resultsEditorTabIdentifier, error);
                 })
-            .then(resultsEditorTabIdentifier => EditorQueryEvaluator.showFormattedResults(resultsEditorTabIdentifier, editor));
+            .then(resultsEditorTabIdentifier => {
+                if (this.sendResultsToEditorTab) {
+                    EditorQueryEvaluator.showFormattedResults(resultsEditorTabIdentifier, editor);
+                }
+            });
     }
 
     private editorSparqlQuery(
@@ -146,13 +195,17 @@ export class EditorQueryEvaluator {
         const contentType: contentType = workspace.getConfiguration().get('marklogic.sparqlContentType');
         sendSparql(dbClientContext, sparqlQuery, contentType)
             .result(
-                (fulfill: Record<string, unknown>) => {
-                    return this.provider.writeSparqlResponseToUri(resultsEditorTabIdentifier, fulfill);
+                (recordResults: Record<string, unknown>) => {
+                    return this.updateResultsViewWithRecordArray(resultsEditorTabIdentifier, [recordResults], true);
                 },
                 (error: Record<string, unknown>[]) => {
-                    return this.provider.handleError(resultsEditorTabIdentifier, error);
+                    return this.updateResultsViewWithError(resultsEditorTabIdentifier, error);
                 })
-            .then((resultsEditorTabIdentifier: Uri) => EditorQueryEvaluator.showFormattedResults(resultsEditorTabIdentifier, editor));
+            .then(resultsEditorTabIdentifier => {
+                if (this.sendResultsToEditorTab) {
+                    EditorQueryEvaluator.showFormattedResults(resultsEditorTabIdentifier, editor);
+                }
+            });
     }
 
     private editorRowsQuery(
@@ -166,16 +219,26 @@ export class EditorQueryEvaluator {
             .then(
                 (response: RowsResponse) => {
                     if (response.preRequestError) {
-                        return this.provider.handleError(resultsEditorTabIdentifier, response.preRequestError);
+                        return this.updateResultsViewWithError(resultsEditorTabIdentifier, response.preRequestError as any);
                     } else {
-                        return this.provider.writeRowsResponseToUri(resultsEditorTabIdentifier, response, resultFormat);
+                        let resultsEditorTabIdentifierPromise = null;
+                        if (this.sendResultsToEditorTab) {
+                            resultsEditorTabIdentifierPromise = this.provider.writeRowsResponseToUri(resultsEditorTabIdentifier, response, resultFormat);
+                        } else {
+                            EditorQueryEvaluator.requestMlxprsWebviewUpdateWithRowsResponse(response, resultFormat);
+                        }
+                        return resultsEditorTabIdentifierPromise;
                     }
                 }
             )
-            .catch(err => {
-                return this.provider.handleError(resultsEditorTabIdentifier, err);
+            .catch(error => {
+                return this.updateResultsViewWithError(resultsEditorTabIdentifier, error);
             })
-            .then((resultsEditorTabIdentifier: Uri) => EditorQueryEvaluator.showFormattedResults(resultsEditorTabIdentifier, editor));
+            .then(resultsEditorTabIdentifier => {
+                if (this.sendResultsToEditorTab) {
+                    EditorQueryEvaluator.showFormattedResults(resultsEditorTabIdentifier, editor);
+                }
+            });
     }
 
     private static async formatResults(resultsEditorTabIdentifier: Uri, retries = 0): Promise<boolean> {
@@ -217,5 +280,79 @@ export class EditorQueryEvaluator {
                 EditorQueryEvaluator.formatResults(resultsEditorTabIdentifier);
                 return editor;
             });
+    }
+
+    private static requestMlxprsWebviewUpdateWithErrorResultsObject(response: ErrorResultsObject): void {
+        if (this.mlxprsWebViewProvider) {
+            const stringResults = this.convertTextResponseToHtml(JSON.stringify(response, null, 2));
+            this.mlxprsWebViewProvider.updateViewContent(stringResults);
+        }
+    }
+
+    private static requestMlxprsWebviewUpdateWithRowsResponse(response: RowsResponse, resultFormat?: ml.RowsResponseFormat): void {
+        if (this.mlxprsWebViewProvider) {
+            let stringResults = '';
+            if (resultFormat === 'json') {
+                stringResults = this.convertTextResponseToHtml(JSON.stringify(response, null, 2));
+            } else if (resultFormat === 'xml') {
+                stringResults = this.convertXmlResponseToHtml(response.toString());
+            } else {
+                stringResults = this.convertTextResponseToHtml(response.toString());
+            }
+            this.mlxprsWebViewProvider.updateViewContent(stringResults);
+        }
+    }
+
+    private static requestMlxprsWebviewUpdateWithRecordArray(response: Record<string, unknown>[], contentType?: string): void {
+        if (this.mlxprsWebViewProvider) {
+            const stringResults =
+                (response as Record<string, unknown>[]).map(record => this.convertRecordToHtml(record, contentType)).join('\n');
+            this.mlxprsWebViewProvider.updateViewContent(stringResults);
+        }
+    }
+
+    private static convertRecordToHtml(record: Record<string, any>, contentType?: string): string {
+        if (record['format'] === 'xml') {
+            return this.convertXmlResponseToHtml(record['value']);
+        }
+        if (record['format'] === 'text' && record['datatype'] === 'node()') {
+            return this.convertTextResponseToHtml(ClientResponseProvider.decodeBinaryText(record['value']));
+        }
+        if (record['format'] === 'text' && record['datatype'] === 'other') {
+            return this.convertTextResponseToHtml(record['value']);
+        }
+        if (record['head']) {
+            return this.convertTextResponseToHtml(JSON.stringify(record, null, 2));
+        }
+        if (record['value']) {
+            return this.convertTextResponseToHtml(JSON.stringify(record['value'], null, 2));
+        }
+        if (contentType === 'application/xml') {
+            let rawXml = record.toString();
+            if (rawXml.endsWith('\n')) {
+                rawXml = rawXml.substring(0, rawXml.length - 1);
+            }
+            return this.convertXmlResponseToHtml(rawXml);
+        }
+        return this.convertTextResponseToHtml(record.toString());
+    }
+
+    private static convertXmlResponseToHtml(rawXml: string): string {
+        const options = {
+            ignoreAttributes: false,
+            attributeNamePrefix: '@_',
+            format: true
+        };
+        const parser = new XMLParser(options);
+        const jObj = parser.parse(rawXml);
+        const builder = new XMLBuilder(options);
+        const formattedXml = builder.build(jObj);
+
+        const lineCount = (formattedXml.match(/\n/g) || []).length + 1;
+        return `<textarea white-space: pre; rows="${lineCount}" cols="40" style="width: 100%; color: #fff;background: transparent;border:none;">` + formattedXml + '</textarea>';
+    }
+
+    private static convertTextResponseToHtml(text: string): string {
+        return '<pre>' + text + '</pre>';
     }
 }

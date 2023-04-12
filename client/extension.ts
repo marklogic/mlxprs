@@ -14,6 +14,8 @@ import { JsDebugConfigurationProvider, DebugAdapterExecutableFactory } from './J
 import { JsDebugManager } from './JSDebugger/jsDebugManager';
 import { ModuleContentProvider, pickAndShowModule } from './vscModuleContentProvider';
 import { MlxprsStatus } from './mlxprsStatus';
+import { MlxprsWebViewProvider } from './mlxprsWebViewProvider';
+
 
 const MLDBCLIENT = 'mldbClient';
 const SJS = 'sjs';
@@ -147,13 +149,22 @@ export function activate(context: vscode.ExtensionContext): void {
     XqyDebugManager.registerMlxprsStatusBarItem(mlxprsStatus);
     JsDebugManager.registerMlxprsStatusBarItem(mlxprsStatus);
     mlxprsStatus.requestUpdate();
+
+
+    const mlxprsWebViewProvider = new MlxprsWebViewProvider(context.extensionUri);
+    const mlxprsWebView = vscode.window.registerWebviewViewProvider(MlxprsWebViewProvider.viewType, mlxprsWebViewProvider);
+    EditorQueryEvaluator.registerMlxprsResultsViewProvider(mlxprsWebViewProvider);
+    context.subscriptions.push(mlxprsWebView);
+    handleUnload(context, [mlxprsWebView]);
 }
+
 
 // this method is called when your extension is deactivated
 export function deactivate(context: vscode.ExtensionContext): void {
     context.globalState.get<ml.DatabaseClient>(MLDBCLIENT).release();
     context.globalState.update(MLDBCLIENT, null);
 }
+
 
 /**
 * Per https://stackoverflow.com/questions/55554018/purpose-for-subscribing-a-command-in-vscode-extension , objects
