@@ -1,7 +1,7 @@
 'use strict';
 
-import { Event, EventEmitter, TextDocumentContentProvider, Uri, window, workspace } from 'vscode';
 import { contentType, RowsResponse, RowsResponseFormat } from 'marklogic';
+import { Event, EventEmitter, TextDocumentContentProvider, Uri, window, workspace } from 'vscode';
 
 export class ClientResponseProvider implements TextDocumentContentProvider {
     // This class provides implementation details for virtual documents that store the responses and errors from the MarkLogic client
@@ -141,18 +141,9 @@ export class ClientResponseProvider implements TextDocumentContentProvider {
      * @returns Promise resultsEditorTabIdentifier where VS Code will retrieve the content to show @async
      */
     public async handleError(editorTabUri: Uri, error: any): Promise<Uri> {
-        let errorMessage = '';
-        const errorResultsObject = { datatype: 'node()', format: 'json', value: error };
-        if (error.body === undefined || error.body.message === undefined) {
-            // problem reaching MarkLogic
-            errorMessage = error.message;
-        } else {
-            // MarkLogic error: useful message in body.errorResponse
-            errorMessage = error.body.errorResponse.message;
-            errorResultsObject.value = error.body;
-        }
+        const errorResultsObject = ClientResponseProvider.buildErrorResultsObject(error);
         const resultsEditorTabIdentifier = this.buildResultsEditorTabIdentifier(editorTabUri, 'json', '-error');
-        window.showErrorMessage(JSON.stringify(errorMessage));
+        window.showErrorMessage(JSON.stringify(errorResultsObject.errorMessage));
         this.updateResultsForUri(resultsEditorTabIdentifier, [errorResultsObject]);
         this.update(resultsEditorTabIdentifier);
         await new Promise(resolve => setTimeout(resolve, 60));
@@ -166,4 +157,24 @@ export class ClientResponseProvider implements TextDocumentContentProvider {
         }
         return Uri.parse(`${ClientResponseProvider.scheme}://${editorTabUri.authority}${validUriPath}.${uriSuffix}?${editorTabUri.query}`);
     }
+
+    public static buildErrorResultsObject(error: any): ErrorResultsObject {
+        const errorResultsObject = { datatype: 'node()', format: 'json', value: error, errorMessage: '' };
+        if (error.body === undefined || error.body.message === undefined) {
+            // problem reaching MarkLogic
+            errorResultsObject.errorMessage = error.message;
+        } else {
+            // MarkLogic error: useful message in body.errorResponse
+            errorResultsObject.errorMessage = error.body.errorResponse.message;
+            errorResultsObject.value = error.body;
+        }
+        return errorResultsObject;
+    }
+}
+
+export type ErrorResultsObject = {
+    datatype: string,
+    format: string,
+    value: any,
+    errorMessage: string
 }

@@ -35,6 +35,24 @@
     ],
     "main": "./dist/extension",
     "contributes": {
+        "viewsContainers": {
+            "panel": [
+              {
+                "id": "mlxprsContainer",
+                "title": "MLXPRS",
+                "icon": "images/Progress_MarkLogic_DayOne_Logo_Primary_Stacked_Alternate_square.png"
+              }
+            ]
+        },
+        "views": {
+            "mlxprsContainer": [
+                {
+                    "type": "webview",
+                    "id": "mlxprs.ResultsView",
+                    "name": "Results"
+                }
+            ]
+        },
         "commands": [
             {
                 "command": "extension.sendXQuery",
@@ -378,8 +396,14 @@
                 "type": "object",
                 "title": "MarkLogic Miscellaneous Configuration",
                 "properties": {
-                    "marklogic.sparqlContentType": {
+                    "marklogic.resultsInEditorTab": {
                         "order": 1,
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Display query results in a separate editor."
+                    },
+                    "marklogic.sparqlContentType": {
+                        "order": 2,
                         "type": "string",
                         "enum": [
                             "application/json",
@@ -397,7 +421,7 @@
                         ]
                     },
                     "marklogic.sql.optimize": {
-                        "order": 2,
+                        "order": 3,
                         "type": "number",
                         "enum": [
                             0,
@@ -408,7 +432,7 @@
                         "description": "Optimization Levels of 0 (off), 1, and 2 are recognized."
                     },
                     "marklogic.sql.results": {
-                        "order": 3,
+                        "order": 4,
                         "type": "string",
                         "markdownDescription": "How to present SQL results from 'Eval SQL'",
                         "enum": [
@@ -512,6 +536,7 @@
     "dependencies": {
         "rimraf": "4.3.1",
         "@vscode/debugprotocol": "1.59.0",
-        "vscode-languageclient": "7.0.0"
+        "vscode-languageclient": "7.0.0",
+        "fast-xml-parser": "4.2.0"
     }
 }
