@@ -54,7 +54,7 @@ cd ..
 ```
 A shorthand script that does all of that for you is
 ```
-npm run npmInstallClientAndServer
+npm run installAll
 ```
 
 ## Using the Extension from the Project (except the debugger)
@@ -151,16 +151,16 @@ Note that the order of priority for setting the property values in the test code
 ### Testing from the command line
 Run these two npm scripts from the command line in the root directory of the project to execute the tests. Note that VSCode must not be running while you run the tests.
 ```
-npm run npmInstallClientAndServer
+npm run installAll
 npm run test
 npm run testServer
 code --extensionDevelopmentPath=<mlxprs-project-dir>/client --extensionTestsPath=<mlxprs-project-dir>/dist/test/integration/index
 ```
 <mark>The final test (the integration tests), should not be run while VSCode is open.</mark>
 
-To ensure a clean build, you may also run this npm script before running the npmInstallClientAndServer script.
+To ensure a clean build, you may also run this npm script before running the `installAll` script.
 ```
-npm run completeClean
+npm run cleanAll
 ```
 
 ## Building the artifact
