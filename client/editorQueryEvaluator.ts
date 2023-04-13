@@ -2,8 +2,10 @@
 import { XMLParser, XMLBuilder } from 'fast-xml-parser';
 import { contentType, RowsResponse } from 'marklogic';
 import * as ml from 'marklogic';
-import { ExtensionContext, TextDocument, TextEdit, TextEditor, Uri, WorkspaceEdit,
-    commands, window, workspace, WorkspaceConfiguration } from 'vscode';
+import {
+    ExtensionContext, TextDocument, TextEdit, TextEditor, Uri,
+    WorkspaceEdit, commands, window, workspace, WorkspaceConfiguration
+} from 'vscode';
 
 import { ClientResponseProvider, ErrorResultsObject } from './clientResponseProvider';
 import { ClientContext, sendJSQuery, sendSparql, sendXQuery, sendRows } from './marklogicClient';
@@ -27,7 +29,7 @@ export class EditorQueryEvaluator {
     private static XQY = 'xqy';
 
     public static registerMlxprsResultsViewProvider(mlxprsWebViewProvider: MlxprsWebViewProvider) {
-        this.mlxprsWebViewProvider = mlxprsWebViewProvider;
+        EditorQueryEvaluator.mlxprsWebViewProvider = mlxprsWebViewProvider;
     }
 
     private extensionContext: ExtensionContext;
@@ -283,58 +285,68 @@ export class EditorQueryEvaluator {
     }
 
     private static requestMlxprsWebviewUpdateWithErrorResultsObject(response: ErrorResultsObject): void {
-        if (this.mlxprsWebViewProvider) {
-            const stringResults = this.convertTextResponseToHtml(JSON.stringify(response, null, 2));
-            this.mlxprsWebViewProvider.updateViewContent(stringResults);
+        if (EditorQueryEvaluator.mlxprsWebViewProvider) {
+            EditorQueryEvaluator.focusOnResultsView();
+            const stringResults = EditorQueryEvaluator.convertTextResponseToHtml(JSON.stringify(response, null, 2));
+            EditorQueryEvaluator.mlxprsWebViewProvider.updateViewContent(stringResults);
         }
     }
 
     private static requestMlxprsWebviewUpdateWithRowsResponse(response: RowsResponse, resultFormat?: ml.RowsResponseFormat): void {
-        if (this.mlxprsWebViewProvider) {
+        if (EditorQueryEvaluator.mlxprsWebViewProvider) {
+            EditorQueryEvaluator.focusOnResultsView();
             let stringResults = '';
             if (resultFormat === 'json') {
-                stringResults = this.convertTextResponseToHtml(JSON.stringify(response, null, 2));
+                stringResults = EditorQueryEvaluator.convertTextResponseToHtml(JSON.stringify(response, null, 2));
             } else if (resultFormat === 'xml') {
-                stringResults = this.convertXmlResponseToHtml(response.toString());
+                stringResults = EditorQueryEvaluator.convertXmlResponseToHtml(response.toString());
             } else {
-                stringResults = this.convertTextResponseToHtml(response.toString());
+                stringResults = EditorQueryEvaluator.convertTextResponseToHtml(response.toString());
             }
-            this.mlxprsWebViewProvider.updateViewContent(stringResults);
+            EditorQueryEvaluator.mlxprsWebViewProvider.updateViewContent(stringResults);
         }
     }
 
     private static requestMlxprsWebviewUpdateWithRecordArray(response: Record<string, unknown>[], contentType?: string): void {
-        if (this.mlxprsWebViewProvider) {
-            const stringResults =
-                (response as Record<string, unknown>[]).map(record => this.convertRecordToHtml(record, contentType)).join('\n');
-            this.mlxprsWebViewProvider.updateViewContent(stringResults);
+        if (EditorQueryEvaluator.mlxprsWebViewProvider) {
+            EditorQueryEvaluator.focusOnResultsView();
+            const stringResults = response.map(record => EditorQueryEvaluator.convertRecordToHtml(record, contentType)).join('\n');
+            EditorQueryEvaluator.mlxprsWebViewProvider.updateViewContent(stringResults);
         }
+    }
+
+    // This function is necessary to ensure that the MLXPRS: RESULTS panel exists and is updated as soon as possible
+    // For more information, see:
+    // https://github.com/microsoft/vscode/issues/175129
+    // https://github.com/microsoft/vscode/issues/146330
+    private static focusOnResultsView() {
+        commands.executeCommand(`${MlxprsWebViewProvider.viewType}.focus`);
     }
 
     private static convertRecordToHtml(record: Record<string, any>, contentType?: string): string {
         if (record['format'] === 'xml') {
-            return this.convertXmlResponseToHtml(record['value']);
+            return EditorQueryEvaluator.convertXmlResponseToHtml(record['value']);
         }
         if (record['format'] === 'text' && record['datatype'] === 'node()') {
-            return this.convertTextResponseToHtml(ClientResponseProvider.decodeBinaryText(record['value']));
+            return EditorQueryEvaluator.convertTextResponseToHtml(ClientResponseProvider.decodeBinaryText(record['value']));
         }
         if (record['format'] === 'text' && record['datatype'] === 'other') {
-            return this.convertTextResponseToHtml(record['value']);
+            return EditorQueryEvaluator.convertTextResponseToHtml(record['value']);
         }
         if (record['head']) {
-            return this.convertTextResponseToHtml(JSON.stringify(record, null, 2));
+            return EditorQueryEvaluator.convertTextResponseToHtml(JSON.stringify(record, null, 2));
         }
         if (record['value']) {
-            return this.convertTextResponseToHtml(JSON.stringify(record['value'], null, 2));
+            return EditorQueryEvaluator.convertTextResponseToHtml(JSON.stringify(record['value'], null, 2));
         }
         if (contentType === 'application/xml') {
             let rawXml = record.toString();
             if (rawXml.endsWith('\n')) {
                 rawXml = rawXml.substring(0, rawXml.length - 1);
             }
-            return this.convertXmlResponseToHtml(rawXml);
+            return EditorQueryEvaluator.convertXmlResponseToHtml(rawXml);
         }
-        return this.convertTextResponseToHtml(record.toString());
+        return EditorQueryEvaluator.convertTextResponseToHtml(record.toString());
     }
 
     private static convertXmlResponseToHtml(rawXml: string): string {

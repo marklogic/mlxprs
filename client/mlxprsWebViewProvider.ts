@@ -5,6 +5,7 @@ export class MlxprsWebViewProvider implements WebviewViewProvider {
     public static readonly viewType = 'mlxprs.ResultsView';
 
     private _view?: WebviewView;
+    private content: string = null;
 
     constructor(
         private readonly _extensionUri: Uri,
@@ -25,7 +26,11 @@ export class MlxprsWebViewProvider implements WebviewViewProvider {
                 this._extensionUri
             ]
         };
-        this.updateViewContent('');
+        if (this.content) {
+            this.updateViewContent(this.content);
+        } else {
+            this.updateViewContent('');
+        }
 
         webviewView.webview.onDidReceiveMessage(data => {
             switch (data.type) {
@@ -39,7 +44,10 @@ export class MlxprsWebViewProvider implements WebviewViewProvider {
     }
 
     public updateViewContent(newContent: string) {
-        this._view.webview.html = this.getWebviewContent(this._view.webview, newContent);
+        this.content = newContent;
+        if (this._view) {
+            this._view.webview.html = this.getWebviewContent(this._view.webview, newContent);
+        }
     }
 
     private getWebviewContent(webview: Webview, content: string) {
