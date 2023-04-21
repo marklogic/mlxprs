@@ -5,7 +5,7 @@
     "version": "3.7.0-SNAPSHOT",
     "publisher": "mlxprs",
     "engines": {
-        "vscode": "^1.76.0"
+        "vscode": "^1.77.0"
     },
     "icon": "images/Progress_MarkLogic_DayOne_Logo_Primary_Stacked_Alternate_square.png",
     "galleryBanner": {
@@ -504,39 +504,51 @@
         "lint": "eslint client/ server/ --ext .ts --ext .js --ext .sjs",
         "lintFix": "eslint client/ server/ --ext .ts --ext .js --ext .sjs --fix"
     },
+    "dependenciesComments" : {
+        "webpack" : "Something with version 5.80.0 is breaking the integration tests (and other things?).",
+        "possiblyUnused" : {
+            "comment": "I'm not sure about these four packages. Without them, there seem to be problems when you attempt to 'attach' or 'launch'.",
+            "@types/estree": "1.0.1",
+            "https-proxy-agent": "5.0.1",
+            "js-yaml": "4.1.0",
+            "yargs-parser": "21.1.1"    
+        }
+    },
     "devDependencies": {
-        "@types/esprima": "4.0.3",
-        "@types/estree": "1.0.0",
-        "@types/mocha": "10.0.1",
-        "@types/node": "16.11.7",
-        "@types/vscode": "1.76.0",
-        "@types/webpack": "5.28.0",
-        "@types/xml2js": "0.4.11",
-        "@typescript-eslint/eslint-plugin": "5.54.1",
-        "@typescript-eslint/parser": "5.54.1",
-        "await-notify": "1.0.1",
-        "eslint": "8.35.0",
-        "esprima": "4.0.1",
+        "@types/estree": "1.0.1",
         "https-proxy-agent": "5.0.1",
         "js-yaml": "4.1.0",
-        "marklogic": "3.0.0",
-        "merge-options": "3.0.4",
+        "yargs-parser": "21.1.1",
+
+        "@types/esprima": "4.0.3",
+        "@types/mocha": "10.0.1",
+        "@types/node": "16.11.7",
+        "@types/vscode": "1.77.0",
+        "@types/webpack": "5.28.1",
+        "@types/xml2js": "0.4.11",
+        "@typescript-eslint/eslint-plugin": "5.59.0",
+        "@typescript-eslint/parser": "5.59.0",
+        "@vscode/debugadapter-testsupport": "1.59.0",
+        "@vscode/debugprotocol": "1.59.0",
+        "@vscode/test-electron": "2.3.0",
+        "eslint": "8.38.0",
         "mocha": "10.2.0",
         "request": "2.88.2",
         "request-promise": "4.2.6",
-        "ts-loader": "9.4.2",
-        "@vscode/debugadapter": "1.59.0",
-        "@vscode/debugadapter-testsupport": "1.59.0",
-        "@vscode/test-electron": "2.3.0",
+        "rimraf": "4.3.1",
         "webpack": "5.76.1",
-        "webpack-cli": "5.0.1",
-        "xml2js": "0.5.0",
-        "yargs-parser": "21.1.1"
+        "webpack-cli": "5.0.1"
     },
     "dependencies": {
-        "rimraf": "4.3.1",
-        "@vscode/debugprotocol": "1.59.0",
+        "@vscode/debugadapter": "1.59.0",
+        "await-notify": "1.0.1",
+        "esprima": "4.0.1",
+        "fast-xml-parser": "4.2.2",
+        "marklogic": "3.0.0",
+        "merge-options": "3.0.4",
+        "needle": "3.2.0",
+        "ts-loader": "9.4.2",
         "vscode-languageclient": "7.0.0",
-        "fast-xml-parser": "4.2.0"
+        "xml2js": "0.5.0"
     }
 }
