@@ -1,9 +1,11 @@
 'use strict';
 
-import * as request from 'request-promise';
-import * as ml from 'marklogic';
 import * as fs from 'fs';
+import * as ml from 'marklogic';
+import needle = require('needle');
+
 import { MlxprsStatus } from './mlxprsStatus';
+
 
 export const MLDBCLIENT = 'mldbClient';
 export const MLSETTINGSFLAG = /mlxprs:settings/;
@@ -32,16 +34,16 @@ export class MlClientParameters {
      *       per-query overrides don't clobber the existing config with default values.
      *       (using the spread operator in `getDbClient`)
      **/
-    constructor(rawParams: Record<string, any>) {
-        this.host = rawParams.host;
+    constructor(rawParams: Record<string, (string|number|boolean)>) {
+        this.host = rawParams.host as string;
         this.port = Number(rawParams.port);
-        this.user = rawParams.user;
-        this.pwd = rawParams.pwd;
-        this.contentDb = rawParams.contentDb || rawParams.documentsDb || '';
-        this.modulesDb = rawParams.modulesDb || '';
-        this.authType = rawParams.authType;
+        this.user = rawParams.user as string;
+        this.pwd = rawParams.pwd as string;
+        this.contentDb = rawParams.contentDb as string || rawParams.documentsDb as string || '';
+        this.modulesDb = rawParams.modulesDb as string || '';
+        this.authType = rawParams.authType as string;
         this.ssl = Boolean(rawParams.ssl);
-        this.pathToCa = rawParams.pathToCa || '';
+        this.pathToCa = rawParams.pathToCa as string || '';
         this.rejectUnauthorized = Boolean(rawParams.rejectUnauthorized);
 
         // This check was previously done in the MarklogicClient constructor, but doing so causes the sameAs
@@ -117,7 +119,9 @@ export class ClientContext {
     }
 
 
-    async getConnectedServers(requestingObject: MlxprsStatus, managePort: number, updateCallback: (connectedServers: string[]) => void): Promise<void> {
+    async getConnectedServers(
+        requestingObject: MlxprsStatus, managePort: number, updateCallback: (connectedServers: string[]) => void
+    ): Promise<void> {
         const connectedJsServers: MlxprsQuickPickItem[] = await getFilteredListOfJsAppServers(this, managePort, 'true');
         return this.databaseClient.xqueryEval('xquery version "1.0-ml"; dbg:connected()')
             .result(
@@ -132,6 +136,7 @@ export class ClientContext {
                                         connectedServers.push('XQY:' + result[0].value);
                                     },
                                     err => {
+                                        console.error('Error: ' + JSON.stringify(err));
                                         return [];
                                     })
                         );
@@ -150,13 +155,13 @@ export class ClientContext {
     }
 
     public listServersForDisconnectQuery = `
-    let $connected-app-servers := dbg:connected()
-    let $json-servers := $connected-app-servers ! (map:new()
-      => map:with("id", .)
-      => map:with("name", xdmp:server-name(.))
-      => map:with("port", xdmp:server-port(.)))
-    => xdmp:to-json()
-    return $json-servers
+        let $connected-app-servers := dbg:connected()
+        let $json-servers := $connected-app-servers ! (map:new()
+            => map:with("id", .)
+            => map:with("name", xdmp:server-name(.))
+            => map:with("port", xdmp:server-port(.)))
+            => xdmp:to-json()
+        return $json-servers
     `;
 
     public buildListServersForConnectQuery() {
@@ -185,7 +190,7 @@ return $json-servers
 `;
     }
 
-    public buildAppServerChoicesFromServerList(appServers: Record<string, ServerQueryResponse>) {
+    public buildAppServerChoicesFromServerList(appServers: Record<string, ServerQueryResponse>): MlxprsQuickPickItem[] {
         const servers: ServerQueryResponse[] = [].concat(appServers[0]['value'] || []);
         return servers
             .map((server: ServerQueryResponse) => {
@@ -193,11 +198,13 @@ return $json-servers
                     label: server.name,
                     description: server.id,
                     detail: `${server.name} on ${this.params.host}:${server.port || '(none)'}`,
-                } as any;
+                } as MlxprsQuickPickItem;
             });
     }
 
-    public static buildUrl(hostname: string, endpointPath: string, ssl = true, managePort = ClientContext.DEFAULT_MANAGE_PORT): string {
+    public static buildUrl(
+        hostname: string, endpointPath: string, ssl = true, managePort = ClientContext.DEFAULT_MANAGE_PORT
+    ): string {
         const scheme: string = ssl ? 'https' : 'http';
         const url = `${scheme}://${hostname}:${managePort}${endpointPath}`;
         return url;
@@ -217,7 +224,7 @@ export function buildNewClient(params: MlClientParameters): ClientContext {
 }
 
 export function parseXQueryForOverrides(queryText: string): Record<string, any> {
-    let overrides: Record<string, any> = {};
+    let overrides: Record<string, unknown> = {};
     const firstContentLine: string = queryText.trim().split(/[\r\n]+/)[0];
     const startsWithComment: RegExpMatchArray = firstContentLine.match(/^\(:[\s\t]*/);
     const overridesFlagPresent: RegExpMatchArray = firstContentLine.match(MLSETTINGSFLAG);
@@ -236,10 +243,8 @@ export function parseXQueryForOverrides(queryText: string): Record<string, any> 
 
 
 export function sendJSQuery(
-    dbClientContext: ClientContext,
-    actualQuery: string,
-    sqlQuery = '',
-    sqlOptions = []): ml.ResultProvider<Record<string, any>> {
+    dbClientContext: ClientContext, actualQuery: string, sqlQuery = '', sqlOptions = []
+): ml.ResultProvider<Record<string, any>> {
     const query = `
     const options = {};
     if (modulesDb) { options.modules = xdmp.database(modulesDb) };
@@ -262,10 +267,8 @@ export function sendJSQuery(
 
 
 export function sendXQuery(
-    dbClientContext: ClientContext,
-    actualQuery: string,
-    prefix: 'xdmp' | 'dbg' = 'xdmp')
-    : ml.ResultProvider<Record<string, any>> {
+    dbClientContext: ClientContext, actualQuery: string, prefix: 'xdmp' | 'dbg' = 'xdmp'
+): ml.ResultProvider<Record<string, any>> {
     const query =
         'xquery version "1.0-ml";' +
         'declare variable $actualQuery as xs:string external;' +
@@ -286,7 +289,9 @@ export function sendXQuery(
     return dbClientContext.databaseClient.xqueryEval(query, extVars);
 }
 
-export function sendSparql(dbClientContext: ClientContext, sparqlQuery: string, contentType: ml.contentType = 'application/json'): ml.ResultProvider<Record<string, unknown>> {
+export function sendSparql(
+    dbClientContext: ClientContext, sparqlQuery: string, contentType: ml.contentType = 'application/json'
+): ml.ResultProvider<Record<string, unknown>> {
     return dbClientContext.databaseClient.graphs.sparql({
         contentType: contentType,
         query: sparqlQuery
@@ -294,7 +299,9 @@ export function sendSparql(dbClientContext: ClientContext, sparqlQuery: string, 
 }
 
 
-export function sendRows(dbClientContext: ClientContext, actualQuery: string, resultFormat: ml.RowsResponseFormat): Promise<ml.RowsResponse> {
+export function sendRows(
+    dbClientContext: ClientContext, actualQuery: string, resultFormat: ml.RowsResponseFormat
+): Promise<ml.RowsResponse> {
     if (actualQuery.startsWith('{')) {
         return sendRowsSerialized(dbClientContext, actualQuery, resultFormat);
     } else {
@@ -303,7 +310,9 @@ export function sendRows(dbClientContext: ClientContext, actualQuery: string, re
     }
 }
 
-function sendRowsSerialized(dbClientContext: ClientContext, actualQuery: string, resultFormat: ml.RowsResponseFormat): Promise<ml.RowsResponse> {
+function sendRowsSerialized(
+    dbClientContext: ClientContext, actualQuery: string, resultFormat: ml.RowsResponseFormat
+): Promise<ml.RowsResponse> {
     let jsonQuery = null;
     let errObject = null;
     try {
@@ -326,7 +335,7 @@ function sendRowsSerialized(dbClientContext: ClientContext, actualQuery: string,
     }
 }
 
-export interface MlxprsQuickPickItem {
+interface MlxprsQuickPickItem {
     label: string;
     description: string;
     detail: string;
@@ -340,13 +349,16 @@ export async function getFilteredListOfJsAppServers(
     return await filterJsServerByConnectedStatus(dbClientContext, managePort, allPossibleJsServers, requiredResponse);
 }
 
-export async function getAppServerListForJs(dbClientContext: ClientContext, serverListQuery: string): Promise<MlxprsQuickPickItem[]> {
+export async function getAppServerListForJs(
+    dbClientContext: ClientContext, serverListQuery: string
+): Promise<MlxprsQuickPickItem[]> {
     return sendXQuery(dbClientContext, serverListQuery)
         .result(
             (appServers: Record<string, ServerQueryResponse>) => {
                 return dbClientContext.buildAppServerChoicesFromServerList(appServers);
             },
             err => {
+                console.error('Error: ' + JSON.stringify(err));
                 return [];
             });
 }
@@ -358,24 +370,26 @@ export async function filterJsServerByConnectedStatus(
     const filteredChoices: MlxprsQuickPickItem[] = [];
     choices.forEach(async (choice) => {
         const url = ClientContext.buildUrl(dbClientContext.params.host, `/jsdbg/v1/connected/${choice.label}`, dbClientContext.params.ssl, managePort);
-        const options = {
+        const headers = {
             headers: {
                 'Content-type': 'application/x-www-form-urlencoded',
                 'X-Error-Accept': 'application/json'
-            },
-            auth: {
-                user: dbClientContext.params.user,
-                pass: dbClientContext.params.pwd,
-                'sendImmediately': false
             }
         };
+        const options = {
+            headers,
+            username: dbClientContext.params.user,
+            password: dbClientContext.params.pwd,
+            auth: dbClientContext.params.authType
+        };
         if (dbClientContext.params.pathToCa !== '') {
-            options['agentOptions'] = { ca: fs.readFileSync(dbClientContext.params.pathToCa) };
+            options['ca'] = fs.readFileSync(dbClientContext.params.pathToCa);
         }
         options['rejectUnauthorized'] = dbClientContext.params.rejectUnauthorized;
-        const connectedRequest = request.get(url, options)
+
+        const connectedRequest = needle('get', url, options)
             .then((response) => {
-                if (response === requiredResponse) {
+                if (response.body === requiredResponse) {
                     filteredChoices.push(choice);
                 }
             }).catch(err => {
