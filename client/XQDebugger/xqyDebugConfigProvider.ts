@@ -106,11 +106,17 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
             }
         }
 
-        if (!config.program) {
-            config.program = window.activeTextEditor.document.fileName;
-            config.query = window.activeTextEditor.document.getText();
-        } else {
-            config.query = readFileSync(config.program).toString();
+        // Need to tell VSCode what parameters to use for "launching" a debug session based on a configuration in launch.json
+        // Note that this information is unnecessary for "attaching" to a remote request for debugging.
+        if (config.request === 'launch') {
+            if (!config.program) {
+                // If a program isn't specified by the launch configuration
+                // Then need to set the parameters to values based on the current editor window
+                config.program = window.activeTextEditor.document.fileName;
+                config.query = window.activeTextEditor.document.getText();
+            } else {
+                config.query = readFileSync(config.program).toString();
+            }
         }
 
         return this.resolveRemainingDebugConfiguration(folder, config);
@@ -122,4 +128,3 @@ export class XqyDebugAdapterDescriptorFactory implements DebugAdapterDescriptorF
         return executable;
     }
 }
-
