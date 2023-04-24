@@ -15,7 +15,7 @@
  */
 
 import * as vscode from 'vscode';
-import * as fs from 'fs';
+import { readFileSync } from 'fs';
 import { JsDebugManager } from './jsDebugManager';
 
 export class JsDebugConfigurationProvider implements vscode.DebugConfigurationProvider {
@@ -47,6 +47,8 @@ export class JsDebugConfigurationProvider implements vscode.DebugConfigurationPr
                 config.program = doc.fileName;
                 config.scheme = doc.uri.scheme;
                 config.queryText = doc.getText();
+            } else {
+                config.queryText = readFileSync(config.program).toString();
             }
         }
 
@@ -83,7 +85,7 @@ export class JsDebugConfigurationProvider implements vscode.DebugConfigurationPr
         if (config.ssl) config.pathToCa = String(wcfg.get('marklogic.pathToCa') || '');
         let ca: Buffer;
         if (config.pathToCa) {
-            ca = fs.readFileSync(config.pathToCa);
+            ca = readFileSync(config.pathToCa);
         }
 
         if (!config.hostname) {
