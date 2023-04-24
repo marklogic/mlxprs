@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { JsDebugManager } from './jsDebugManager';
@@ -37,6 +37,7 @@ export class JsDebugConfigurationProvider implements vscode.DebugConfigurationPr
         }
 
         // Need to tell VSCode what parameters to use for "launching" a debug session based on a configuration in launch.json
+        // Note that this information is unnecessary for "attaching" to a remote request for debugging.
         if (config.request === 'launch') {
             config.program = config.program || config.path;
             if (!config.program) {
