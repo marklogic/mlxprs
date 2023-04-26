@@ -253,7 +253,13 @@ In order to step through modules that get imported in your code, you need to tel
 
 In XQuery attach-mode debugging, you should not 'connect' to the same server you use for queries. Since connecting stops all requests on that app server, you'd lock yourself out. For this reason, the extension will not offer to connect to your configured query client's port. Admin, Manage, HealthCheck, and App-Services are also excluded from debugging.
 
-The XQuery debugger does not have the level of granularity that might be expected. Multiple lines of XQuery may be reported as a single expression by the MarkLogic debugger functions. This means that when using the debugger in VSCode, repeated use of the `Step Over` function may appear to have no effect as MarkLogic steps through the individual parts of the XQuery expression.
+Due to the nature of XQuery, the XQuery debugger functions a bit differently than many developers are accustomed to. Multiple lines of XQuery may be reported as a single expression by the MarkLogic debugger functions.
+Since the three primary stepping functions, `Step Over`, `Step Into`, and `Step Out`, all operate based on XQuery expressions, using those functions does not have the same result as using those functions in the JavaScript debugger.
+- `Step Over` continues evaluation of the request until the beginning or end of an expression that is not a descendant of the current expression.
+- `Step Into` continues evaluation of the request until the beginning or end of an expression. Using this function most closely resembles the expected functionality of a debugger.
+- `Step Out` continues evaluation of the request until the end of the current expression.
+
+Watch expressions do not currently work with the XQuery debugger.
 
 'Launch' debugging initiated from an unsaved ('Untitled') buffer in VS Code will not work. If you want to launch and debug an ad-hoc query, save it somewhere on disk beforehand.
 

@@ -264,6 +264,11 @@ export class XqyDebugSession extends LoggingDebugSession {
         }
     }
 
+    // VS Code defaults to add 1. Let's not do that.
+    protected convertDebuggerLineToClient(line: number): number {
+        return line;
+    }
+
     protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
         response.body = {
             threads: [
