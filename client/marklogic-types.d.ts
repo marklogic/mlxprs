@@ -26,6 +26,14 @@ declare module 'marklogic' {
     export type contentType = 'application/json' | 'application/xml' | 'text/html' | 'text/csv'
     export type RowsResponseFormat = 'json' | 'xml' | 'csv'
     export type RowsQueryType = 'dsl' | 'json'
+    
+    // application/trig should be supported according to the documentation
+    // but there appears to be a bug in the implementation
+    // so I removed it from package.json as an option
+    export type GraphsResponseFormat = 'application/sparql-results+json' | 'application/sparql-results+xml' | 'text/html' | 'text/csv' |
+                                        'application/n-triples' | 'application/n-quads' | 'application/rdf+json' | 'application/rdf+xml' |
+                                        'text/turtle' | 'text/n3' | 'application/trig' | 'application/json'
+    export type GraphsQueryType = 'select' | 'construct' | 'describe' | 'ask' | 'unknown'
 
     interface graphs {
         sparql: <U>(args: Record<string, unknown>) => ResultProvider<U>
