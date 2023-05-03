@@ -24,6 +24,7 @@ import {
 import { ErrorReporter, MlxprsError } from '../errorReporter';
 import { MlClientParameters } from '../marklogicClient';
 import { XqyDebugManager, DebugStatusQueryResponse } from './xqyDebugManager';
+import { ConfigurationManager } from '../configurationManager';
 
 
 export class XqyDebugConfiguration implements DebugConfiguration {
@@ -50,19 +51,18 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     private async resolveRemainingDebugConfiguration(folder: WorkspaceFolder | undefined, config: XqyDebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration> {
-        const cfg: WorkspaceConfiguration = workspace.getConfiguration();
         const clientParams: MlClientParameters = new MlClientParameters({
-            host: String(cfg.get('marklogic.host')),
-            port: Number(cfg.get('marklogic.port')),
-            managePort: Number(cfg.get('marklogic.managePort')),
-            user: String(cfg.get('marklogic.username')),
-            pwd: String(cfg.get('marklogic.password')),
-            contentDb: String(cfg.get('marklogic.documentsDb')),
-            modulesDb: String(cfg.get('marklogic.modulesDb')),
-            authType: String(cfg.get('marklogic.authType')),
-            ssl: Boolean(cfg.get('marklogic.ssl')),
-            pathToCa: String(cfg.get('marklogic.pathToCa') || ''),
-            rejectUnauthorized: Boolean(cfg.get('marklogic.rejectUnauthorized'))
+            host: String(ConfigurationManager.getHost()),
+            port: Number(ConfigurationManager.getPort()),
+            managePort: Number(ConfigurationManager.getManagePort()),
+            user: String(ConfigurationManager.getUsername()),
+            pwd: String(ConfigurationManager.getPassword()),
+            contentDb: String(ConfigurationManager.getDocumentsDb()),
+            modulesDb: String(ConfigurationManager.getModulesDb()),
+            authType: String(ConfigurationManager.getAuthType()),
+            ssl: Boolean(ConfigurationManager.getSsl()),
+            pathToCa: String(ConfigurationManager.getPathToCa() || ''),
+            rejectUnauthorized: Boolean(ConfigurationManager.getRejectUnauthorized())
         });
         config.clientParams = clientParams;
 
