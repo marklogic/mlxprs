@@ -86,7 +86,7 @@ Set `marklogic.rejectUnauthorized` to `false` in your VS Code configuration.
 This is less secure, but may be useful for situations where you can't obtain or use a your own CA,
 such as when connecting to a IP address rather than a hostname.
 
-### Per-query configuration override
+### Query Eval configuration override
 
 You can override your VS Code configured settings by using a block comment as the first language token
 in a JavaScript or XQuery query. The comment should conform to the following:
@@ -131,6 +131,8 @@ fn:doc('/my-testing-doc.json')
 ```
 
 When this query runs, it will use the host, port, and `contentDb` specified in the comment, along with the VS Code configuration parameters for the rest of the MarkLogic client definition. (The `note` will be ignored.) Other queries in other editor tabs will not be affected.
+
+Note: This configuration override is only applied when using one of the "MarkLogic: Eval <language>" commands.
 
 ## Debugging
 
