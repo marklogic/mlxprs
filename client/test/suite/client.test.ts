@@ -24,12 +24,14 @@ import {
     testOverrideXQueryWithGoodJSON, testOverrideXQueryWithBadJSON, testXQueryWithoutOverrides,
     testOverrideSslParams
 } from './testOverrideQuery';
-import { MLRuntime } from '../../JSDebugger/mlRuntime';
-import { AttachRequestArguments } from '../../JSDebugger/mlDebug';
-import { ClientContext } from '../../marklogicClient';
 import { ClientResponseProvider } from '../../clientResponseProvider';
-import { getDbClient, parseQueryForOverrides } from '../../vscQueryParameterTools';
+import { ConfigurationManager } from '../../configurationManager';
 import { EditorQueryEvaluator } from '../../editorQueryEvaluator';
+import { AttachRequestArguments } from '../../JSDebugger/mlDebug';
+import { MLRuntime } from '../../JSDebugger/mlRuntime';
+import { ClientContext } from '../../marklogicClient';
+import { getDbClient, parseQueryForOverrides } from '../../vscQueryParameterTools';
+import { XqyDebugConfigurationProvider, XqyDebugConfiguration } from '../../XQDebugger/xqyDebugConfigProvider';
 
 const SJS = 'sjs';
 const XQY = 'xqy';
@@ -199,6 +201,14 @@ suite('Extension Test Suite', () => {
                 assert.strictEqual(actualResponseUri.toString(), expectedResponseUri,
                     'the URI should not have a double-dash before the filename section');
             });
+    });
+
+    test('When a debug configuration is requested, but the pathToCa setting points to an unreadable file', async () => {
+        ConfigurationManager.setOverride('pathToCa', '/not/an/existing/file');
+
+        const response = await (new XqyDebugConfigurationProvider()).resolveDebugConfiguration(undefined, new XqyDebugConfiguration(), null);
+        assert.strictEqual(response, undefined, 'the request should return <undefined>');
+        ConfigurationManager.setOverride('pathToCa', null);
     });
 
 });

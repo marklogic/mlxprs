@@ -31,6 +31,7 @@ import { JsDebugManager } from './JSDebugger/jsDebugManager';
 import { ModuleContentProvider, pickAndShowModule } from './vscModuleContentProvider';
 import { MlxprsStatus } from './mlxprsStatus';
 import { MlxprsWebViewProvider } from './mlxprsWebViewProvider';
+import { ConfigurationManager } from './configurationManager';
 
 
 const MLDBCLIENT = 'mldbClient';
@@ -47,6 +48,11 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.workspace.registerTextDocumentContentProvider(
         ModuleContentProvider.scheme, mprovider);
 
+    vscode.workspace.onDidChangeConfiguration(event => {
+        if (event.affectsConfiguration('marklogic')) {
+            ConfigurationManager.handleUpdateConfigurationEvent();
+        }
+    });
 
     const editorQueryEvaluator = new EditorQueryEvaluator(context, provider);
     const sendXQuery = vscode.commands.registerTextEditorCommand(
