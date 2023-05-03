@@ -27,7 +27,7 @@ import { ClientResponseProvider, ErrorResultsObject } from './clientResponseProv
 import { ClientContext, sendJSQuery, sendSparql, sendXQuery, sendRows } from './marklogicClient';
 import { MlxprsWebViewProvider } from './mlxprsWebViewProvider';
 import { cascadeOverrideClient } from './vscQueryParameterTools';
-import { getSparqlQueryForm, getSparqlResponseType } from './sparqlTools';
+import { getSparqlQueryForm, getSparqlResponseType } from './sparqlQueryHelper';
 
 export enum EditorQueryType {
     JS,
@@ -211,8 +211,8 @@ export class EditorQueryEvaluator {
         resultsEditorTabIdentifier: Uri,
         editor: TextEditor
     ): void {
-        const queryType: ml.GraphsQueryType = getSparqlQueryForm(sparqlQuery);
-        const contentType: ml.GraphsResponseFormat = getSparqlResponseType(queryType);
+        const queryType: ml.SparqlQueryType = getSparqlQueryForm(sparqlQuery);
+        const contentType: ml.SparqlResponseFormat = getSparqlResponseType(queryType);
         sendSparql(dbClientContext, sparqlQuery, contentType)
             .result(
                 (recordResults: Record<string, unknown>) => {
