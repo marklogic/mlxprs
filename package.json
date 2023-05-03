@@ -177,7 +177,7 @@
                         "type": "ml-jsdebugger",
                         "request": "launch",
                         "name": "Evaluate Current JavaScript Module",
-                        "root": "${workspaceFolder}/src/main/ml-modules/roote"
+                        "root": "${workspaceFolder}/src/main/ml-modules/root"
                     },
                     {
                         "type": "ml-jsdebugger",
