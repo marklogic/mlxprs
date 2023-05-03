@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
+import { readFileSync } from 'fs';
 import {
     DebugConfiguration, DebugConfigurationProvider, WorkspaceFolder, CancellationToken, ProviderResult,
     window, DebugAdapterDescriptorFactory, DebugAdapterExecutable, DebugAdapterDescriptor,
     DebugSession, QuickPickItem, QuickPickOptions, WorkspaceConfiguration, workspace
 } from 'vscode';
-import { readFileSync } from 'fs';
-import { XqyDebugManager, DebugStatusQueryResponse } from './xqyDebugManager';
+
+import { ErrorReporter, MlxprsError } from '../errorReporter';
 import { MlClientParameters } from '../marklogicClient';
+import { XqyDebugManager, DebugStatusQueryResponse } from './xqyDebugManager';
 
 
 export class XqyDebugConfiguration implements DebugConfiguration {
@@ -63,6 +65,23 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
             rejectUnauthorized: Boolean(cfg.get('marklogic.rejectUnauthorized'))
         });
         config.clientParams = clientParams;
+
+        if (clientParams.pathToCa) {
+            try {
+                const caFileContents = await readFileSync(clientParams.pathToCa);
+                if (!caFileContents || caFileContents.length === 0) {
+                    throw new Error('File specified by \'Path to certificate authority\' is empty');
+                }
+            } catch (error) {
+                const mlxprsError: MlxprsError = {
+                    reportedMessage: error.message,
+                    stack: error.stack,
+                    popupMessage: `Path to certificate authority is an unreadable file or the file is empty; path: ${clientParams.pathToCa}`
+                };
+                ErrorReporter.reportError(mlxprsError);
+                return undefined;
+            }
+        }
 
         if (config.request === 'attach' && !config.rid) {
             const rid: string = await XqyDebugManager.getAvailableRequests(clientParams)
