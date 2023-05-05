@@ -10,3 +10,5 @@ dist
 .gradle
 gradle-local.properties
 results/
+test-app/.gradle
+test-app/build

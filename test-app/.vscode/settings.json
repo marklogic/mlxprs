@@ -1,0 +1,8 @@
+{
+    "marklogic.resultsInEditorTab": false,
+    "marklogic.host": "localhost",
+    "marklogic.port": 8055,
+    "marklogic.documentsDb": "mlxprs-test-content",
+    "marklogic.modulesDb": "mlxprs-test-modules",
+    "marklogic.rejectUnauthorized": false
+}

@@ -1,0 +1,16 @@
+{
+    "$optic": {
+        "ns": "op",
+        "fn": "operators",
+        "args": [
+            {
+                "ns": "op",
+                "fn": "from-view",
+                "args": [
+                    "Medical",
+                    "Authors"
+                ]
+            }
+        ]
+    }
+}
