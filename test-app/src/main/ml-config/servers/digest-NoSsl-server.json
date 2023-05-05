@@ -1,0 +1,11 @@
+{
+    "server-type": "http",
+    "server-name": "mlxprsSample",
+    "authentication": "digest",
+    "port": 8056,
+    "modules-database": "mlxprs-test-modules",
+    "content-database": "mlxprs-test-content",
+    "root": "/",
+    "url-rewriter": "/MarkLogic/rest-api/rewriter.xml",
+    "error-handler": "/MarkLogic/rest-api/error-handler.xqy"
+}

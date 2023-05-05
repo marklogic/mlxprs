@@ -114,9 +114,21 @@ The project contains three test applications.
 
 ### Integration Testing Setup
 
-JavaScript debugger integration testing requires a running MarkLogic server where you have full admin rights. Ideally, you should use a dedicated MarkLogic instance for this purpose. The tests assume the existence of a "mlxprs-test" application server running on port 8055 using the "mlxprs-test-content" and "mlxprs-test-modules" databases. Those values are set in gradle.properties and the admin password should be set in gradle-local.properties. Then you can use the command, "./gradlew -i mlDeploy" to build and configure the databases and application servers.
+JavaScript debugger integration testing requires a running MarkLogic server where you have full admin rights. Ideally, you should use a dedicated MarkLogic instance for this purpose. The tests assume the existence of a "mlxprs-test" application server running on port 8055 using the "mlxprs-test-content" and "mlxprs-test-modules" databases. Those values are set in test-app/gradle.properties and the admin password should be set in test-app/gradle-local.properties. Then you can use the following commands to build and configure the databases and application servers.
+```
+cd test-app
+./gradlew mlDeploy
+```
 
-### Integration Test Overview
+### Manual Integration Testing
+* Use the "Launch Extension (debug)" launch configuration in the "RUN AND DEBUG" window to open a new VS Code session.
+* Once the new window is open, use "File -> Open Folder ..." menu to open the "test-app" folder as a separate project.
+* Now you can test out all the functionality using the source files in the project, both locally and by `attaching` to paused requests in the server.
+* It is easiest to leave the `marklogic.port` set to `8055`. This way evals will use that port.
+* Then, you can use the `mlxprsSample` App Server on port `8056` for `attaching` to paused requests.
+
+
+### Automated Integration Test Overview
 The integration test will do the following:
 * Upload test scripts and modules to `Modules` database
 * Run tests against the uploaded scripts and MarkLogic application server, simulating JS debugger interactions

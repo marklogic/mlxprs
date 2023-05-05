@@ -1,0 +1,55 @@
+{
+  "template": {
+    "context": "/Citations/Citation/Article/AuthorList/Author",
+    "rows": [
+      {
+        "schemaName": "Medical",
+        "viewName": "Authors",
+        "columns": [
+          {
+            "name": "ID",
+            "scalarType": "long",
+            "val": "../../../ID"
+          },
+          {
+            "name": "LastName",
+            "scalarType": "string",
+            "val": "LastName"
+          },
+          {
+            "name": "ForeName",
+            "scalarType": "string",
+            "val": "ForeName"
+          },
+          {
+            "name": "Date",
+            "scalarType": "date",
+            "val": "../../Journal/JournalIssue/PubDate/Year || '-' || ../../Journal/JournalIssue/PubDate/Month || '-' || ../../Journal/JournalIssue/PubDate/Day"
+          },
+          {
+            "name": "DateTime",
+            "scalarType": "dateTime",
+            "val": "../../Journal/JournalIssue/PubDate/Year || '-' || ../../Journal/JournalIssue/PubDate/Month || '-' || ../../Journal/JournalIssue/PubDate/Day || 'T' || ../../Journal/JournalIssue/PubDate/Time"
+          }
+        ]
+      }
+    ],
+
+    "vars":[
+      {
+        "name":"prefix1",
+        "val":"\"http://marklogic.com/example/\""
+      }
+    ],
+    "triples":[{
+      "subject":{
+        "val":"sem:iri($prefix1||'person/'||AuthorList/Author[1]/ForeName||'_'||AuthorList/Author[1]/LastName)"},
+      "predicate":{
+        "val":"sem:iri(($prefix1||'authored'))"},
+      "object":{
+        "val":"xs:string(../../Journal/ISSN)"}
+      }
+    ]
+
+  }
+}
