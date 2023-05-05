@@ -37,11 +37,11 @@
     "contributes": {
         "viewsContainers": {
             "panel": [
-              {
-                "id": "mlxprsContainer",
-                "title": "MLXPRS",
-                "icon": "images/Progress_MarkLogic_DayOne_Logo_Primary_Stacked_Alternate_square.png"
-              }
+                {
+                    "id": "mlxprsContainer",
+                    "title": "MLXPRS",
+                    "icon": "images/Progress_MarkLogic_DayOne_Logo_Primary_Stacked_Alternate_square.png"
+                }
             ]
         },
         "views": {
@@ -352,7 +352,7 @@
                 "type": "object",
                 "title": "MarkLogic Security Configuration",
                 "properties": {
-                        "marklogic.authType": {
+                    "marklogic.authType": {
                         "order": 1,
                         "type": "string",
                         "default": "DIGEST",
@@ -402,26 +402,45 @@
                         "default": false,
                         "description": "Display query results in a separate editor."
                     },
-                    "marklogic.sparqlContentType": {
+                    "marklogic.sparqlSelectResponseType": {
                         "order": 2,
                         "type": "string",
                         "enum": [
-                            "application/json",
-                            "application/xml",
+                            "application/sparql-results+json",
+                            "application/sparql-results+xml",
                             "text/html",
                             "text/csv"
                         ],
-                        "default": "application/json",
-                        "markdownDescription": "How to format SPARQL query results",
-                        "enumDescriptions": [
-                            "",
-                            "",
-                            "",
-                            "note: CSV-formatted results will not work with `describe` queries"
-                        ]
+                        "default": "application/sparql-results+json",
+                        "description": "How to format SPARQL SELECT query results"
+                    },
+                    "marklogic.sparqlGraphResponseType": {
+                        "order": 3,
+                        "type": "string",
+                        "enum": [
+                            "text/turtle",
+                            "text/n3",
+                            "application/n-triples",
+                            "application/n-quads",
+                            "application/rdf+json",
+                            "application/rdf+xml"
+                        ],
+                        "default": "text/turtle",
+                        "description": "How to format SPARQL CONSTRUCT and DESCRIBE query results"
+                    },
+                    "marklogic.sparqlAskResponseType": {
+                        "order": 4,
+                        "type": "string",
+                        "enum": [
+                            "application/sparql-results+json",
+                            "application/sparql-results+xml",
+                            "text/html"
+                        ],
+                        "default": "application/sparql-results+json",
+                        "description": "How to format SPARQL ASK query results"
                     },
                     "marklogic.sql.optimize": {
-                        "order": 3,
+                        "order": 5,
                         "type": "number",
                         "enum": [
                             0,
@@ -432,7 +451,7 @@
                         "description": "Optimization Levels of 0 (off), 1, and 2 are recognized."
                     },
                     "marklogic.sql.results": {
-                        "order": 4,
+                        "order": 6,
                         "type": "string",
                         "markdownDescription": "How to present SQL results from 'Eval SQL'",
                         "enum": [
@@ -504,14 +523,14 @@
         "lint": "eslint client/ server/ --ext .ts --ext .js --ext .sjs",
         "lintFix": "eslint client/ server/ --ext .ts --ext .js --ext .sjs --fix"
     },
-    "dependenciesComments" : {
-        "webpack" : "Something with version 5.80.0 is breaking the integration tests (and other things?).",
-        "possiblyUnused" : {
+    "dependenciesComments": {
+        "webpack": "Something with version 5.80.0 is breaking the integration tests (and other things?).",
+        "possiblyUnused": {
             "comment": "I'm not sure about these four packages. Without them, there seem to be problems when you attempt to 'attach' or 'launch'.",
             "@types/estree": "1.0.1",
             "https-proxy-agent": "5.0.1",
             "js-yaml": "4.1.0",
-            "yargs-parser": "21.1.1"    
+            "yargs-parser": "21.1.1"
         }
     },
     "devDependencies": {
@@ -519,7 +538,6 @@
         "https-proxy-agent": "5.0.1",
         "js-yaml": "4.1.0",
         "yargs-parser": "21.1.1",
-
         "@types/esprima": "4.0.3",
         "@types/mocha": "10.0.1",
         "@types/node": "16.11.7",

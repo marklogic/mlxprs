@@ -302,7 +302,7 @@ export function sendXQuery(
     return dbClientContext.databaseClient.xqueryEval(query, extVars);
 }
 
-export function sendSparql(dbClientContext: ClientContext, sparqlQuery: string, contentType: ml.contentType = 'application/json'): ml.ResultProvider<Record<string, unknown>> {
+export function sendSparql(dbClientContext: ClientContext, sparqlQuery: string, contentType: ml.SparqlResponseFormat): ml.ResultProvider<Record<string, unknown>> {
     return dbClientContext.databaseClient.graphs.sparql({
         contentType: contentType,
         query: sparqlQuery
