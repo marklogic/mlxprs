@@ -15,6 +15,8 @@
  */
 
 import { QuickPickItem, window } from 'vscode';
+
+import { ErrorReporter, MlxprsError } from '../errorReporter';
 import { ClientContext, MlClientParameters, sendXQuery, ServerQueryResponse } from '../marklogicClient';
 import { MlxprsStatus } from '../mlxprsStatus';
 
@@ -80,25 +82,27 @@ export class XqyDebugManager {
 
     public static async disconnectFromXqyDebugServer(dbClientContext: ClientContext): Promise<void> {
         const choices: QuickPickItem[] = await this.getAppServerListForXqy(dbClientContext, dbClientContext.listServersForDisconnectQuery);
-        const sortedChoices: QuickPickItem[] = choices.sort(appServerSorter);
-        if (sortedChoices.length) {
-            return window.showQuickPick(sortedChoices)
-                .then((choice: QuickPickItem) => {
-                    return sendXQuery(dbClientContext, `dbg:disconnect(${choice.description})`)
-                        .result(
-                            () => {
-                                window.showInformationMessage(`Successfully disconnected ${choice.label} on ${dbClientContext.params.host}`);
-                                this.requestStatusBarItemUpdate();
-                            },
-                            (err) => {
-                                window.showErrorMessage(`Failed to connect to ${choice.label}: ${JSON.stringify(err.body.errorResponse.message)}`);
-                                this.requestStatusBarItemUpdate();
-                            });
-                });
-        } else {
-            window.showWarningMessage(`No stopped servers found on ${dbClientContext.params.host}`);
-            this.requestStatusBarItemUpdate();
-            return null;
+        if (choices) {
+            const sortedChoices: QuickPickItem[] = choices.sort(appServerSorter);
+            if (sortedChoices.length) {
+                return window.showQuickPick(sortedChoices)
+                    .then((choice: QuickPickItem) => {
+                        return sendXQuery(dbClientContext, `dbg:disconnect(${choice.description})`)
+                            .result(
+                                () => {
+                                    window.showInformationMessage(`Successfully disconnected ${choice.label} on ${dbClientContext.params.host}`);
+                                    this.requestStatusBarItemUpdate();
+                                },
+                                (err) => {
+                                    window.showErrorMessage(`Failed to connect to ${choice.label}: ${JSON.stringify(err.body.errorResponse.message)}`);
+                                    this.requestStatusBarItemUpdate();
+                                });
+                    });
+            } else {
+                window.showWarningMessage(`No stopped servers found on ${dbClientContext.params.host}`);
+                this.requestStatusBarItemUpdate();
+                return null;
+            }
         }
     }
 
@@ -118,9 +122,14 @@ export class XqyDebugManager {
                 (appServers: Record<string, ServerQueryResponse>) => {
                     return dbClientContext.buildAppServerChoicesFromServerList(appServers);
                 },
-                err => {
-                    window.showErrorMessage(`couldn't get a list of servers: ${JSON.stringify(err)}`);
-                    return [];
+                error => {
+                    const mlxprsError: MlxprsError = {
+                        reportedMessage: error.message,
+                        stack: error.stack,
+                        popupMessage: `Could not get list of connected servers; ${error}`
+                    };
+                    ErrorReporter.reportError(mlxprsError);
+                    return null;
                 });
     }
 }

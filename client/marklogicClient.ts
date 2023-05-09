@@ -16,14 +16,16 @@
 
 'use strict';
 
-import * as request from 'request-promise';
-import * as ml from 'marklogic';
 import * as fs from 'fs';
+import * as ml from 'marklogic';
+import * as request from 'request-promise';
+
 import { MlxprsStatus } from './mlxprsStatus';
 
 export const MLDBCLIENT = 'mldbClient';
 export const MLSETTINGSFLAG = /mlxprs:settings/;
 export const XQY = 'xqy';
+export const SJS = 'sjs';
 
 export interface ServerQueryResponse {
     name: string;
@@ -219,17 +221,6 @@ return $json-servers
         return url;
     }
 
-}
-
-export function buildNewClient(params: MlClientParameters): ClientContext {
-    let dbClientContext: ClientContext;
-    try {
-        dbClientContext = new ClientContext(params);
-    } catch (e) {
-        console.error('Error: ' + JSON.stringify(e));
-        throw (e);
-    }
-    return dbClientContext;
 }
 
 export function parseXQueryForOverrides(queryText: string): Record<string, any> {

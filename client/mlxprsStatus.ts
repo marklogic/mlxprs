@@ -15,10 +15,9 @@
  */
 
 import * as vscode from 'vscode';
-import { ClientContext } from './marklogicClient';
-import { cascadeOverrideClient } from './vscQueryParameterTools';
 
-const SJS = 'sjs';
+import { ClientContext } from './marklogicClient';
+import { getDbClientWithoutOverrides } from './vscQueryParameterTools';
 
 export class MlxprsStatus {
     private dbClientContext: ClientContext;
@@ -31,7 +30,7 @@ export class MlxprsStatus {
     constructor(context: vscode.ExtensionContext) {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
         this.managePort = Number(cfg.get('marklogic.managePort'));
-        this.dbClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
+        this.dbClientContext = getDbClientWithoutOverrides(cfg, context.globalState);
         this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
         this.command = vscode.commands.registerCommand(this.commandId, () => {
             this.handleStatusBarCommand();

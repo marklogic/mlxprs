@@ -33,9 +33,9 @@ suite('Issue 70', async () => {
         const globalConfig = integrationTestHelper.config;
 
         CP.exec(`curl --anyauth -k --user ${globalConfig.username}:${globalConfig.password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
-                    http${globalConfig.ssl ? 's' : ''}://${globalConfig.hostname}:${integrationTestHelper.appServerPort}/LATEST/invoke --data-urlencode module=/MarkLogic/test/helloWorld.sjs`);
+                    http${globalConfig.ssl ? 's' : ''}://${globalConfig.hostname}:${integrationTestHelper.serverPortForAttaching}/LATEST/invoke --data-urlencode module=/MarkLogic/test/helloWorld.sjs`);
         await wait(1000);
-        const resp = await integrationTestHelper.getRid(mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server(this.appServerName)).toObject()[0].requestStatuses[0].requestId');
+        const resp = await integrationTestHelper.getRid(mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server(this.attachServerName)).toObject()[0].requestStatuses[0].requestId');
         const rid = resp[0];
         const path = Path.join(scriptFolder, 'helloWorld.sjs');
         const text = fs.readFileSync(path).toString();

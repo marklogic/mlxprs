@@ -33,8 +33,9 @@ export async function run(): Promise<void> {
     // https://github.com/mochajs/mocha/pull/1360
     // https://github.com/glenjamin/mocha-multi
     const resultsFileName = __dirname + '/../../../results/integrationTestResults.xml';
-    mocha.reporter('xunit', { output: resultsFileName });
-    // mocha.reporter('spec')
+    mocha.reporter('spec');
+    // Use the 'xunit' reporter when we want file output for automation
+    // mocha.reporter('xunit', { output: resultsFileName });
 
     mocha.options.color = true;
     mocha.rootHooks({

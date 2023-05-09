@@ -15,11 +15,13 @@
  */
 
 /* eslint-disable @typescript-eslint/no-use-before-define */
-import * as Path from 'path';
+import { DebugClient } from '@vscode/debugadapter-testsupport';
 import { DebugProtocol } from '@vscode/debugprotocol';
 import * as CP from 'child_process';
 import * as fs from 'fs';
+import * as Path from 'path';
 
+import { JsDebugManager } from '../../JSDebugger/jsDebugManager';
 import { IntegrationTestHelper, wait } from './markLogicIntegrationTestHelper';
 
 
@@ -80,11 +82,12 @@ suite('Testing sjs/xqy boundary in eval/invoke', async () => {
 
     test('xqy calling xdmp.invoke()', async () => {
         const globalConfig = integrationTestHelper.config;
+        await JsDebugManager.connectToNamedJsDebugServer(integrationTestHelper.attachServerName);
 
         CP.exec(`curl --anyauth -k --user ${globalConfig.username}:${globalConfig.password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
-                http${globalConfig.ssl ? 's' : ''}://${globalConfig.hostname}:${integrationTestHelper.appServerPort}/LATEST/invoke --data-urlencode module=/MarkLogic/test/invoke1.xqy`);
+                http${globalConfig.ssl ? 's' : ''}://${globalConfig.hostname}:${integrationTestHelper.serverPortForAttaching}/LATEST/invoke --data-urlencode module=/MarkLogic/test/invoke1.xqy`);
         await wait(100);
-        const resp = await integrationTestHelper.getRid(integrationTestHelper.mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server(integrationTestHelper.appServerName)).toObject()[0].requestStatuses[0].requestId');
+        const resp = await integrationTestHelper.getRid(integrationTestHelper.mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server(integrationTestHelper.attachServerName)).toObject()[0].requestStatuses[0].requestId');
         const rid = resp[0];
         const root = Path.join(integrationTestHelper.scriptFolder, 'MarkLogic/test');
         const config = {
@@ -93,7 +96,7 @@ suite('Testing sjs/xqy boundary in eval/invoke', async () => {
             hostname: globalConfig.hostname, database: integrationTestHelper.modulesDatabase, modules: integrationTestHelper.modulesDatabase, authType: 'DIGEST',
             ssl: globalConfig.ssl, pathToCa: globalConfig.pathToCa, rejectUnauthorized: globalConfig.rejectUnauthorized
         };
-        const debugClient = integrationTestHelper.debugClient;
+        const debugClient: DebugClient = integrationTestHelper.debugClient;
         await Promise.all([
             debugClient.initializeRequest(),
             debugClient.configurationSequence(),
@@ -102,7 +105,8 @@ suite('Testing sjs/xqy boundary in eval/invoke', async () => {
 
         await debugClient.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'jsInvoke-1.sjs') }, breakpoints: [{ line: 3 }] });
         await debugClient.continueRequest({ threadId: 1 });
-        return debugClient.assertStoppedLocation('breakpoint', { path: Path.join('/MarkLogic/test', 'jsInvoke-1.sjs'), line: 3 });
+        debugClient.assertStoppedLocation('breakpoint', { path: Path.join('/MarkLogic/test', 'jsInvoke-1.sjs'), line: 3 });
+        JsDebugManager.disconnectFromNamedJsDebugServer(integrationTestHelper.attachServerName);
     }).timeout(10000).skip();
 
 });

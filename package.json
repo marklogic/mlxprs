@@ -5,7 +5,7 @@
     "version": "3.7.0-SNAPSHOT",
     "publisher": "mlxprs",
     "engines": {
-        "vscode": "^1.77.0"
+        "vscode": "^1.78.0"
     },
     "icon": "images/Progress_MarkLogic_DayOne_Logo_Primary_Stacked_Alternate_square.png",
     "galleryBanner": {
@@ -541,21 +541,23 @@
         "@types/esprima": "4.0.3",
         "@types/mocha": "10.0.1",
         "@types/node": "16.11.7",
-        "@types/vscode": "1.77.0",
+        "@types/sinon": "10.0.14",
+        "@types/vscode": "1.78.0",
         "@types/webpack": "5.28.1",
         "@types/xml2js": "0.4.11",
-        "@typescript-eslint/eslint-plugin": "5.59.0",
-        "@typescript-eslint/parser": "5.59.0",
+        "@typescript-eslint/eslint-plugin": "5.59.2",
+        "@typescript-eslint/parser": "5.59.2",
         "@vscode/debugadapter-testsupport": "1.59.0",
         "@vscode/debugprotocol": "1.59.0",
         "@vscode/test-electron": "2.3.0",
-        "eslint": "8.38.0",
+        "eslint": "8.40.0",
         "mocha": "10.2.0",
         "request": "2.88.2",
         "request-promise": "4.2.6",
-        "rimraf": "4.3.1",
+        "rimraf": "5.0.0",
+        "sinon": "15.0.4",
         "webpack": "5.76.1",
-        "webpack-cli": "5.0.1"
+        "webpack-cli": "5.0.2"
     },
     "dependencies": {
         "@vscode/debugadapter": "1.59.0",
