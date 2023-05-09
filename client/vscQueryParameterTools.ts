@@ -16,9 +16,11 @@
 
 'use strict';
 
-import { Memento, WorkspaceConfiguration, window } from 'vscode';
-import { XQY, parseXQueryForOverrides, MLSETTINGSFLAG, ClientContext, MlClientParameters, MLDBCLIENT, buildNewClient } from './marklogicClient';
 import * as esprima from 'esprima';
+import { Memento, WorkspaceConfiguration, window } from 'vscode';
+
+import { ErrorReporter, MlxprsError } from './errorReporter';
+import { SJS, XQY, parseXQueryForOverrides, MLSETTINGSFLAG, ClientContext, MlClientParameters, MLDBCLIENT } from './marklogicClient';
 
 /**
  * In SJS/XQuery queries, you can override the VS Code mxprs settings in a comment.
@@ -93,7 +95,7 @@ export function getDbClient(queryText: string, language: string, cfg: WorkspaceC
     }
     // if there's no existing client in the globalState, instantiate a new one
     if (state.get(MLDBCLIENT) === null) {
-        const dbClientContext: ClientContext = buildNewClient(newParams);
+        const dbClientContext: ClientContext = new ClientContext(newParams);
         try {
             state.update(MLDBCLIENT, dbClientContext);
             console.debug(`Created new MarklogicClient: ${state.get(MLDBCLIENT)}`);
@@ -118,4 +120,18 @@ export function cascadeOverrideClient(actualQuery: string, language: string, cfg
         dbClientContext = getDbClient('', language, cfg, state);
     }
     return dbClientContext;
+}
+
+export function getDbClientWithoutOverrides(cfg: WorkspaceConfiguration, state: Memento): ClientContext {
+    try {
+        return getDbClient('', SJS, cfg, state);
+    } catch (error) {
+        const mlxprsError: MlxprsError = {
+            reportedMessage: error.message,
+            stack: error.stack,
+            popupMessage: `Unable to build the MarkLogic database client: ${error.message}`
+        };
+        ErrorReporter.reportError(mlxprsError);
+        return null;
+    }
 }

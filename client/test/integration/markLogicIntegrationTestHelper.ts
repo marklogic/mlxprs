@@ -16,16 +16,19 @@
 
 import * as fs from 'fs';
 import * as Path from 'path';
+import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { DebugClient } from '@vscode/debugadapter-testsupport';
 
-import { JsDebugManager } from '../../JSDebugger/jsDebugManager';
 import { ClientContext, MlClientParameters, sendJSQuery } from '../../marklogicClient';
 
 export class IntegrationTestHelper {
 
     private collection = 'VSCODE/SJS-debug-test';
-    public appServerPort = '8055';
+    public configuredServerPort = '8055';
+    public serverPortForAttaching = '8056';
+    public appServerName = String(process.env.ML_APPSERVER || 'mlxprs-test');
+    public attachServerName = String(process.env.ML_ATTACH_APPSERVER || 'mlxprsSample');
     public documentsDatabase = 'mlxprs-test-content';
     public modulesDatabase = 'mlxprs-test-modules';
     public modulesDatabaseToken = '%%MODULES-DATABASE%%';
@@ -33,21 +36,20 @@ export class IntegrationTestHelper {
     readonly scriptFolder = Path.join(this.rootFolder, 'client/test/integration/jsScripts');
     readonly hwPath = Path.join(this.scriptFolder, 'helloWorld.sjs');
     private exec = Path.join(this.rootFolder, 'dist/mlDebug.js');
+    readonly showErrorPopup = sinon.stub(vscode.window, 'showErrorMessage');
 
-    private wcfg = vscode.workspace.getConfiguration();
-    private hostname = String(process.env.ML_HOST || this.wcfg.get('marklogic.host') || 'localhost');
-    private port = Number(process.env.ML_PORT || this.wcfg.get('marklogic.port') || this.appServerPort);
-    private managePort = Number(process.env.ML_MANAGEPORT || this.wcfg.get('marklogic.managePort') || '8002');
-    private username = String(process.env.ML_USERNAME || this.wcfg.get('marklogic.username') || 'admin');
-    private password = String(process.env.ML_PASSWORD || this.wcfg.get('marklogic.password') || 'admin');
-    private modulesDB = String(process.env.ML_MODULESDB || this.wcfg.get('marklogic.modulesDb') || this.modulesDatabase);
-    private pathToCa = String(this.wcfg.get('marklogic.pathToCa') || '');
-    private ssl = Boolean(this.wcfg.get('marklogic.ssl'));
-    private rejectUnauthorized = Boolean(this.wcfg.get('marklogic.rejectUnauthorized'));
-    public appServerName = String(process.env.ML_APPSERVER || 'mlxprs-test');
+    private hostname = String(process.env.ML_HOST || 'localhost');
+    private port = Number(process.env.ML_PORT || this.configuredServerPort);
+    private managePort = Number(process.env.ML_MANAGEPORT || '8002');
+    private username = String(process.env.ML_USERNAME || 'admin');
+    private password = String(process.env.ML_PASSWORD || 'admin');
+    private modulesDB = String(process.env.ML_MODULESDB || this.modulesDatabase);
+    private pathToCa = null;
+    private ssl = false;
+    private rejectUnauthorized = false;
 
     public config = null;
-    public debugClient = null;
+    public debugClient: DebugClient = null;
     readonly mlClient = new ClientContext(
         new MlClientParameters({
             host: this.hostname,
@@ -60,6 +62,21 @@ export class IntegrationTestHelper {
             modulesDb: this.modulesDB,
             pathToCa: this.pathToCa,
             ssl: this.ssl,
+            rejectUnauthorized: this.rejectUnauthorized
+        })
+    );
+    readonly mlClientWithSsl = new ClientContext(
+        new MlClientParameters({
+            host: this.hostname,
+            port: this.port,
+            managePort: this.managePort,
+            user: this.username,
+            pwd: this.password,
+            authType: 'DIGEST',
+            contentDb: this.modulesDB,
+            modulesDb: this.modulesDB,
+            pathToCa: this.pathToCa,
+            ssl: true,
             rejectUnauthorized: this.rejectUnauthorized
         })
     );
@@ -77,17 +94,15 @@ export class IntegrationTestHelper {
     private taskServerModules = [this.module6, this.module7, this.module8];
 
     async beforeEverything(): Promise<void> {
-        JsDebugManager.disconnectFromNamedJsDebugServer(this.appServerName);
-        JsDebugManager.connectToNamedJsDebugServer(this.appServerName);
         await this.loadTestData();
     }
 
     async afterEverything(): Promise<void> {
-        JsDebugManager.disconnectFromNamedJsDebugServer(this.appServerName);
+        this.showErrorPopup.restore();
         await this.deleteTestData();
     }
 
-    setupEachTest(): void {
+    setupEachTest(): Promise<void> {
         this.config = {
             program: this.hwPath,
             queryText: fs.readFileSync(this.hwPath).toString(),

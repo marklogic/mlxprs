@@ -32,7 +32,7 @@ export interface MarklogicConfigurationSettings {
 
 export class ConfigurationManager {
 
-    private static vscodeConfiguration: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
+    private static vscodeConfiguration: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('marklogic');
     private static overrides: MarklogicConfigurationSettings = {};
 
     static setOverride(key: string, val: unknown): void {

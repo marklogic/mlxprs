@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-import { QuickPickItem, window, workspace } from 'vscode';
-import * as request from 'request-promise';
-import * as querystring from 'querystring';
 import * as fs from 'fs';
+import * as querystring from 'querystring';
+import * as request from 'request-promise';
+import { QuickPickItem, window, workspace } from 'vscode';
+
+import { ErrorReporter, MlxprsError } from '../errorReporter';
 import { ClientContext, sendXQuery, ServerQueryResponse } from '../marklogicClient';
 import { MlxprsStatus } from '../mlxprsStatus';
 
@@ -50,9 +52,13 @@ export class JsDebugManager {
     public static async getFilteredListOfJsAppServers(dbClientContext: ClientContext, requiredResponse: string): Promise<QuickPickItem[]> {
         const listServersForConnectQuery = dbClientContext.buildListServersForConnectQuery();
         const choices: QuickPickItem[] = await this.getAppServerListForJs(dbClientContext, listServersForConnectQuery) as QuickPickItem[];
-        const filteredChoices: QuickPickItem[] = await this.filterServers(choices, requiredResponse);
-        const sortedFilteredChoices: QuickPickItem[] = filteredChoices.sort(appServerSorter);
-        return sortedFilteredChoices;
+        if (choices) {
+            const filteredChoices: QuickPickItem[] = await this.filterServers(choices, requiredResponse);
+            const sortedFilteredChoices: QuickPickItem[] = filteredChoices.sort(appServerSorter);
+            return sortedFilteredChoices;
+        } else {
+            return null;
+        }
     }
 
     public static async connectToJsDebugServer(dbClientContext: ClientContext): Promise<void> {
@@ -78,7 +84,6 @@ export class JsDebugManager {
 
     private static async filterServers(choices: QuickPickItem[], requiredResponse: string): Promise<QuickPickItem[]> {
         const cfg = workspace.getConfiguration('marklogic');
-        console.debug(JSON.stringify(cfg));
         const username: string = cfg.get('username');
         const password: string = cfg.get('password');
         const hostname: string = cfg.get('host');
@@ -121,25 +126,27 @@ export class JsDebugManager {
 
     public static async disconnectFromJsDebugServer(dbClientContext: ClientContext) {
         const filteredServerItems: QuickPickItem[] = await this.getFilteredListOfJsAppServers(dbClientContext, 'true');
-        const sortedFilteredChoices: QuickPickItem[] = filteredServerItems.sort(appServerSorter);
-        if (sortedFilteredChoices.length) {
-            return window.showQuickPick(sortedFilteredChoices)
-                .then((serverChoice: QuickPickItem) => {
-                    return this.disconnectFromNamedJsDebugServer(serverChoice.label)
-                        .then(
-                            () => {
-                                window.showInformationMessage(`Successfully disconnected ${serverChoice.label} on ${dbClientContext.params.host}`);
-                                this.requestStatusBarItemUpdate();
-                            },
-                            (err) => {
-                                window.showErrorMessage(`Failed to connect to ${serverChoice.label}: ${JSON.stringify(err.body.errorResponse.message)}`);
-                                this.requestStatusBarItemUpdate();
-                            });
-                });
-        } else {
-            window.showWarningMessage(`No stopped servers found on ${dbClientContext.params.host}`);
-            this.requestStatusBarItemUpdate();
-            return null;
+        if (filteredServerItems) {
+            const sortedFilteredChoices: QuickPickItem[] = filteredServerItems.sort(appServerSorter);
+            if (sortedFilteredChoices.length) {
+                return window.showQuickPick(sortedFilteredChoices)
+                    .then((serverChoice: QuickPickItem) => {
+                        return this.disconnectFromNamedJsDebugServer(serverChoice.label)
+                            .then(
+                                () => {
+                                    window.showInformationMessage(`Successfully disconnected ${serverChoice.label} on ${dbClientContext.params.host}`);
+                                    this.requestStatusBarItemUpdate();
+                                },
+                                (err) => {
+                                    window.showErrorMessage(`Failed to connect to ${serverChoice.label}: ${JSON.stringify(err.body.errorResponse.message)}`);
+                                    this.requestStatusBarItemUpdate();
+                                });
+                    });
+            } else {
+                window.showWarningMessage(`No stopped servers found on ${dbClientContext.params.host}`);
+                this.requestStatusBarItemUpdate();
+                return null;
+            }
         }
     }
 
@@ -303,9 +310,14 @@ export class JsDebugManager {
                 (appServers: Record<string, ServerQueryResponse>) => {
                     return dbClientContext.buildAppServerChoicesFromServerList(appServers);
                 },
-                err => {
-                    window.showErrorMessage(`couldn't get a list of servers: ${JSON.stringify(err)}`);
-                    return [];
+                error => {
+                    const mlxprsError: MlxprsError = {
+                        reportedMessage: error.message,
+                        stack: error.stack,
+                        popupMessage: `Could not get list of connected servers; ${error}`
+                    };
+                    ErrorReporter.reportError(mlxprsError);
+                    return null;
                 });
     }
 }

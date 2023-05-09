@@ -1,0 +1,18 @@
+<certificate-template-properties xmlns="http://marklogic.com/manage">
+  <template-name>mlxprs-ssl-certificate-template</template-name>
+  <template-description>This template is used for manually test the SSL capabilities of MLXPRS.
+  It is not currently used in automated testing, but that is planned.</template-description>
+  <key-type>rsa</key-type>
+  <key-options />
+  <req>
+    <version>0</version>
+    <subject>
+      <countryName>US</countryName>
+      <stateOrProvinceName>VA</stateOrProvinceName>
+      <localityName>Fredericksburg</localityName>
+      <organizationName>MarkLogic</organizationName>
+      <organizationalUnitName>Engineering</organizationalUnitName>
+      <emailAddress>nobody@marklogic.com</emailAddress>
+    </subject>
+  </req>
+</certificate-template-properties>

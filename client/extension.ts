@@ -15,23 +15,25 @@
  */
 
 'use strict';
+
+import * as ml from 'marklogic';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import * as ml from 'marklogic';
-import { EditorQueryType, EditorQueryEvaluator } from './editorQueryEvaluator';
-import { ClientContext } from './marklogicClient';
-import { cascadeOverrideClient } from './vscQueryParameterTools';
-import { ClientResponseProvider } from './clientResponseProvider';
-import { XmlFormattingEditProvider } from './xmlFormatting/Formatting';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
-import { XqyDebugConfigurationProvider, XqyDebugAdapterDescriptorFactory } from './XQDebugger/xqyDebugConfigProvider';
-import { XqyDebugManager } from './XQDebugger/xqyDebugManager';
+
+import { ClientResponseProvider } from './clientResponseProvider';
+import { ConfigurationManager } from './configurationManager';
+import { EditorQueryType, EditorQueryEvaluator } from './editorQueryEvaluator';
 import { JsDebugConfigurationProvider, DebugAdapterExecutableFactory } from './JSDebugger/jsDebugConfigProvider';
 import { JsDebugManager } from './JSDebugger/jsDebugManager';
-import { ModuleContentProvider, pickAndShowModule } from './vscModuleContentProvider';
+import { ClientContext } from './marklogicClient';
 import { MlxprsStatus } from './mlxprsStatus';
 import { MlxprsWebViewProvider } from './mlxprsWebViewProvider';
-import { ConfigurationManager } from './configurationManager';
+import { ModuleContentProvider, pickAndShowModule } from './vscModuleContentProvider';
+import { getDbClientWithoutOverrides } from './vscQueryParameterTools';
+import { XmlFormattingEditProvider } from './xmlFormatting/Formatting';
+import { XqyDebugConfigurationProvider, XqyDebugAdapterDescriptorFactory } from './XQDebugger/xqyDebugConfigProvider';
+import { XqyDebugManager } from './XQDebugger/xqyDebugManager';
 
 
 const MLDBCLIENT = 'mldbClient';
@@ -84,30 +86,40 @@ export function activate(context: vscode.ExtensionContext): void {
 
     const connectJsServer = vscode.commands.registerCommand('extension.connectJsServer', () => {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const dbClientContext: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
-        JsDebugManager.connectToJsDebugServer(dbClientContext);
+        const dbClientContext: ClientContext = getDbClientWithoutOverrides(cfg, context.globalState);
+        if (dbClientContext) {
+            JsDebugManager.connectToJsDebugServer(dbClientContext);
+        }
     });
     const disconnectJsServer = vscode.commands.registerCommand('extension.disconnectJsServer', () => {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const dbClientContext: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
-        JsDebugManager.disconnectFromJsDebugServer(dbClientContext);
+        const dbClientContext: ClientContext = getDbClientWithoutOverrides(cfg, context.globalState);
+        if (dbClientContext) {
+            JsDebugManager.disconnectFromJsDebugServer(dbClientContext);
+        }
     });
     const connectXqyServer = vscode.commands.registerCommand('extension.connectXqyServer', () => {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const dbClientContext: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
-        XqyDebugManager.connectToXqyDebugServer(dbClientContext);
+        const dbClientContext: ClientContext = getDbClientWithoutOverrides(cfg, context.globalState);
+        if (dbClientContext) {
+            XqyDebugManager.connectToXqyDebugServer(dbClientContext);
+        }
     });
     const disconnectXqyServer = vscode.commands.registerCommand('extension.disconnectXqyServer', () => {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const dbClientContext: ClientContext = cascadeOverrideClient('', SJS, cfg, context.globalState);
-        XqyDebugManager.disconnectFromXqyDebugServer(dbClientContext);
+        const dbClientContext: ClientContext = getDbClientWithoutOverrides(cfg, context.globalState);
+        if (dbClientContext) {
+            XqyDebugManager.disconnectFromXqyDebugServer(dbClientContext);
+        }
     });
 
 
     const showModule = vscode.commands.registerCommand('extension.showModule', () => {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const dbClientContext: ClientContext = cascadeOverrideClient('', XQY, cfg, context.globalState);
-        pickAndShowModule(mprovider, dbClientContext);
+        const dbClientContext: ClientContext = getDbClientWithoutOverrides(cfg, context.globalState);
+        if (dbClientContext) {
+            pickAndShowModule(mprovider, dbClientContext);
+        }
     });
 
     handleUnload(context, [
