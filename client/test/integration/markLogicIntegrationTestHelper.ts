@@ -35,7 +35,8 @@ export class IntegrationTestHelper {
     private rootFolder = Path.join(__dirname, '../../../');
     readonly scriptFolder = Path.join(this.rootFolder, 'client/test/integration/jsScripts');
     readonly hwPath = Path.join(this.scriptFolder, 'helloWorld.sjs');
-    private exec = Path.join(this.rootFolder, 'dist/mlDebug.js');
+    private jsDebugExec = Path.join(this.rootFolder, 'dist/mlDebug.js');
+    private xqyDebugExec = Path.join(this.rootFolder, 'dist/XQDebugger/xqyDebug.js');
     readonly showErrorPopup = sinon.stub(vscode.window, 'showErrorMessage');
 
     private hostname = String(process.env.ML_HOST || 'localhost');
@@ -44,12 +45,13 @@ export class IntegrationTestHelper {
     private username = String(process.env.ML_USERNAME || 'admin');
     private password = String(process.env.ML_PASSWORD || 'admin');
     private modulesDB = String(process.env.ML_MODULESDB || this.modulesDatabase);
-    private pathToCa = null;
+    private pathToCa = '';
     private ssl = false;
     private rejectUnauthorized = false;
 
     public config = null;
-    public debugClient: DebugClient = null;
+    public jsDebugClient: DebugClient = null;
+    public xqyDebugClient: DebugClient = null;
     readonly mlClient = new ClientContext(
         new MlClientParameters({
             host: this.hostname,
@@ -102,25 +104,39 @@ export class IntegrationTestHelper {
         await this.deleteTestData();
     }
 
-    setupEachTest(): Promise<void> {
+    async setupEachTest(): Promise<void[]> {
         this.config = {
             program: this.hwPath,
             queryText: fs.readFileSync(this.hwPath).toString(),
-            username: this.username,
-            password: this.password,
-            hostname: this.hostname,
+            user: this.username,
+            pwd: this.password,
+            host: this.hostname,
+            port: this.port,
             authType: 'DIGEST',
             managePort: this.managePort,
             ssl: this.ssl,
             pathToCa: this.pathToCa,
             rejectUnauthorized: this.rejectUnauthorized
         };
-        this.debugClient = new DebugClient('node', this.exec, 'node');
-        return this.debugClient.start();
+        this.jsDebugClient = new DebugClient('node', this.jsDebugExec, 'node');
+        this.xqyDebugClient = new DebugClient('node', this.xqyDebugExec, 'xquery-ml');
+
+        return Promise.all([
+            this.jsDebugClient.start(),
+            // Include the port parameter when using the debugger with the "Launch ??? Debug Adapter Server" launch configuration in launch.json
+            // This is useful when you want to debug the adapter code while running a test
+            // this.xqyDebugClient.start(4712)
+            // Exclude the port parameter when you want the test to start/stop a Debug Adapter Server on it's own.
+            // This is useful when the tests are automated.
+            this.xqyDebugClient.start()
+        ]);
     }
 
-    teardownEachTest(): void {
-        this.debugClient.stop();
+    async teardownEachTest(): Promise<void[]> {
+        return Promise.all([
+            this.jsDebugClient.stop(),
+            this.xqyDebugClient.stop()
+        ]);
     }
 
     private async loadTestData(): Promise<void> {

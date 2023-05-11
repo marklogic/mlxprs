@@ -33,12 +33,10 @@ import { ModuleContentProvider, pickAndShowModule } from './vscModuleContentProv
 import { getDbClientWithoutOverrides } from './vscQueryParameterTools';
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting';
 import { XqyDebugConfigurationProvider, XqyDebugAdapterDescriptorFactory } from './XQDebugger/xqyDebugConfigProvider';
-import { XqyDebugManager } from './XQDebugger/xqyDebugManager';
+import { XqyDebugManager, handleDebugSessionCustomEvent } from './XQDebugger/xqyDebugManager';
 
 
 const MLDBCLIENT = 'mldbClient';
-const SJS = 'sjs';
-const XQY = 'xqy';
 
 export function activate(context: vscode.ExtensionContext): void {
     context.globalState.update(MLDBCLIENT, null as ml.DatabaseClient);
@@ -174,6 +172,19 @@ export function activate(context: vscode.ExtensionContext): void {
     handleUnload(context, [
         vscode.debug.registerDebugConfigurationProvider('xquery-ml', xqyDbgProvider),
         vscode.debug.registerDebugAdapterDescriptorFactory('xquery-ml', xqyDebugFactory),
+        vscode.debug.registerDebugAdapterTrackerFactory('xquery-ml', {
+            createDebugAdapterTracker() {
+                return {
+                    onWillReceiveMessage: message => {
+                        console.debug(`Receive Message: ${JSON.stringify(message)}`);
+                    },
+                    onDidSendMessage: message => {
+                        console.debug(`Send Message: ${JSON.stringify(message)}`);
+                    }
+                };
+            }
+        }),
+        vscode.debug.onDidReceiveDebugSessionCustomEvent(event => handleDebugSessionCustomEvent(event)),
         xqyDebugFactory as never
     ]);
 
@@ -191,7 +202,6 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(mlxprsWebView);
     handleUnload(context, [mlxprsWebView]);
 }
-
 
 // this method is called when your extension is deactivated
 export function deactivate(context: vscode.ExtensionContext): void {

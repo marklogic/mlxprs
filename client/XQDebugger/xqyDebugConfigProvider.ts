@@ -16,9 +16,9 @@
 
 import { readFileSync } from 'fs';
 import {
-    DebugConfiguration, DebugConfigurationProvider, WorkspaceFolder, CancellationToken, ProviderResult,
-    window, DebugAdapterDescriptorFactory, DebugAdapterExecutable, DebugAdapterDescriptor,
-    DebugSession, QuickPickItem, QuickPickOptions, WorkspaceConfiguration, workspace
+    DebugConfiguration, DebugConfigurationProvider, WorkspaceFolder, CancellationToken,
+    ProviderResult, window, DebugAdapterDescriptorFactory, DebugAdapterExecutable,
+    DebugAdapterDescriptor, DebugSession, QuickPickItem, QuickPickOptions
 } from 'vscode';
 
 import { ErrorReporter, MlxprsError } from '../errorReporter';
