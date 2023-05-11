@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { QuickPickItem, window } from 'vscode';
+import { DebugSessionCustomEvent, QuickPickItem, window } from 'vscode';
 
 import { ErrorReporter, MlxprsError } from '../errorReporter';
 import { ClientContext, MlClientParameters, sendXQuery, ServerQueryResponse } from '../marklogicClient';
@@ -136,4 +136,11 @@ export class XqyDebugManager {
 
 function appServerSorter(a: QuickPickItem, b: QuickPickItem): number {
     return (a.label.toUpperCase() > b.label.toUpperCase()) ? 1 : ((b.label.toUpperCase() > a.label.toUpperCase()) ? -1 : 0);
+}
+
+export function handleDebugSessionCustomEvent(event: DebugSessionCustomEvent) {
+    console.debug(`Received Debug Session Custom Event: ${JSON.stringify(event)}`);
+    if (event.event === 'MlxprsDebugAdapterError') {
+        ErrorReporter.reportError(event.body['mlxprsError'] as MlxprsError);
+    }
 }

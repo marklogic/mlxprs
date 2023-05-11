@@ -67,13 +67,15 @@ It is recommended to use VSCode as the editor for this package, as it can self-l
     * Note that at this time, the "Attach" commands do not work when debugging the extension from within VSCode. In order to test the "Attach" commands, you will need to build the artifact (.vsix) and use that extension with a different project, and then test manually.
 * Please see the README.md file for information on configuring and working in the test environment
 
-## Debugging the Debugger
-This can be just a little tricky. The best way I've found to test/debug the debugger from withing VSCode is to use the
-"Extension + SJS Server" or "Extension + XQY Server" launch configuration. Using one of these configurations, VSCode will start a new VSCode window where you can have a different project open for testing the debugger. When you use one
-of the "attach" configurations from the second window to attach to a process, the second window also connects to the 
-original VSCode window for debugging purposes. At that point, you have 2 VSCode windows, both attached to a process
-for debugging - the first VSCode is attached to the second VSCode, and the second VSCode is attached to the running copy
-of its project.
+## Debugging the Debugger/Evaluate tasks
+This can be just a little tricky. The preferred mechanism to test/debug the debugger from within VSCode is to use the "Extension + SJS Server" or "Extension + XQY Server" launch configuration. Using one of these configurations, VSCode will start a new VSCode window where you can have a different project open for testing the debugger. VSCode also starts an instance of the Debug Adapter. When you use one of the "attach" or "evaluate" launch.json configurations from the second window to attach to a process, the second window connects to the Debug Adapter in the original VSCode window for debugging purposes. At that point, you have effectively have 3 debug sessions going on:
+1. The debug/launch session in the second window. This, presumably, is the debugger you are working on.
+2. The debug session for the debugger you're working on. Shown as "Launch Extension (preprod)" in the Call Stack view.
+    * This will show the code from the mlxprs project, other than the four source files mentioned in #3.
+3. The debug session for the Debug Adapter. Shown as "Launch <XQY|SJS> Debug Adapter Server" in the Call Stack view.
+    * This will show the code from xqyDebug, xqyRuntime, mlDebug, and mlRuntime
+
+* Note that the Debug Adapter runs in a separate process with no direct access to the VSCode UI or most of the MLXPRS extension code. All interaction between the Debug Adapter and the main extension code must be accomplished via event messages. See the use of onDidReceiveDebugSessionCustomEvent in extension.ts for current use of custom events for error handling.
 
 ### Configuration
 These configurations items are already done, but this should help with understanding how things work for making any future changes.

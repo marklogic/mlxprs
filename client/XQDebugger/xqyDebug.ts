@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-import { DebugProtocol } from '@vscode/debugprotocol';
 import {
-    Handles, InitializedEvent,
-    Logger, logger, LoggingDebugSession,
-    StoppedEvent, OutputEvent, Source, TerminatedEvent, Breakpoint, Thread,
-    StackFrame, Scope, Variable
+    Handles, InitializedEvent, Logger, logger, LoggingDebugSession, StoppedEvent,
+    OutputEvent, Source, TerminatedEvent, Breakpoint, Thread, StackFrame, Scope, Variable
 } from '@vscode/debugadapter';
-import { XqyRuntime, XqyBreakPoint, XqyFrame, XqyScopeObject, XqyVariable } from './xqyRuntime';
-import { basename } from 'path';
+import { DebugProtocol } from '@vscode/debugprotocol';
 import { existsSync } from 'fs';
+import { basename } from 'path';
 
 import { MlClientParameters } from '../marklogicClient';
+import { XqyRuntime, XqyBreakPoint, XqyFrame, XqyScopeObject, XqyVariable } from './xqyRuntime';
 
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -115,7 +113,10 @@ export class XqyDebugSession extends LoggingDebugSession {
         this.setDebuggerLinesStartAt1(false);
         this.setDebuggerColumnsStartAt1(false);
 
-        this._runtime = new XqyRuntime();
+        this._runtime = new XqyRuntime(this);
+        this._runtime.on('stopOnException', () => {
+            console.error('Debug session had stopOnException called');
+        });
     }
 
     protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
@@ -177,6 +178,7 @@ export class XqyDebugSession extends LoggingDebugSession {
 
     protected async launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): Promise<void> {
         logger.setup(Logger.LogLevel.Stop, false);
+        logger.setup(Logger.LogLevel.Verbose, false);
         // TODO: are we only doing this because it was in the mock debugger?
         // is there an actual race condition this addresses?
         await this._configurationDone.wait(1000);
@@ -184,8 +186,13 @@ export class XqyDebugSession extends LoggingDebugSession {
         this._queryPath = args.program;
         this._runtime.initialize(args);
 
+        const requestId = await this._runtime.launchWithDebugEval(args.query);
+        if (!requestId) {
+            this.sendEvent(new TerminatedEvent());
+            return null;
+        }
+        this._runtime.setRid(requestId);
         try {
-            this._runtime.setRid(await this._runtime.launchWithDebugEval(args.query));
             this.refreshStack('launchRequest');
             await this._setBufferedBreakPoints();
             this.sendResponse(response);

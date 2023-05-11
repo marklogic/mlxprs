@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
+import { Event } from '@vscode/debugadapter';
 import { EventEmitter } from 'events';
 import { ResultProvider } from 'marklogic';
-import { InitializeRequestArguments } from './xqyDebug';
-import { sendXQuery, ClientContext, MlClientParameters } from '../marklogicClient';
 import { parseString } from 'xml2js';
+
+import { MlxprsError } from '../errorReporter';
+import { sendXQuery, ClientContext, MlClientParameters } from '../marklogicClient';
 import { ModuleContentGetter } from '../moduleContentGetter';
+import { InitializeRequestArguments, XqyDebugSession } from './xqyDebug';
 
 export interface XqyBreakPoint {
     uri: string;      // module URI on MarkLogic
@@ -66,9 +69,11 @@ export class XqyRuntime extends EventEmitter {
     private _clientParams: MlClientParameters;
     private _rid = '';
     private _timeout = 1;
+    private xqyDebugSession: XqyDebugSession;
 
-    public constructor() {
+    public constructor(xqyDebugSession: XqyDebugSession) {
         super();
+        this.xqyDebugSession = xqyDebugSession;
     }
 
     private _runTimeState: 'shutdown' | 'launched' | 'attached' | 'error' = 'shutdown';
@@ -98,12 +103,29 @@ export class XqyRuntime extends EventEmitter {
                 (error: Record<string, any>) => {
                     XqyRuntime.reportError(error, 'launchWithDebugEval');
                     this._runTimeState = 'error';
-                    throw error;
+                    const mlxprsError: MlxprsError = {
+                        reportedMessage: error.message,
+                        stack: error.stack,
+                        popupMessage: `Unable to build the MarkLogic database client: ${error.code}`
+                    };
+                    const customEvent = new Event(
+                        'MlxprsDebugAdapterError',
+                        {
+                            event: 'LaunchWithDebugError',
+                            mlxprsError: mlxprsError
+                        }
+                    );
+                    this.xqyDebugSession.sendEvent(customEvent);
+                    return null;
                 });
     }
 
     public initialize(args: InitializeRequestArguments): void {
-        this._clientParams = args.clientParams;
+        if (args.clientParams) {
+            this._clientParams = args.clientParams;
+        } else {
+            this._clientParams = args as unknown as MlClientParameters;
+        }
         this.dbClientContext = new ClientContext(this._clientParams);
     }
 
@@ -371,7 +393,10 @@ export class XqyRuntime extends EventEmitter {
     }
 
     private static reportError(error: any, functionName: string): void {
-        const informativeMessage = error.body.errorResponse.message || JSON.stringify(error);
-        console.error(`error (${functionName}): ${informativeMessage}`);
+        let errorMessage = JSON.stringify(error);
+        if (error.body && error.body.errorResponse) {
+            errorMessage = error.body.errorResponse.message;
+        }
+        console.error(`error (${functionName}): ${errorMessage}`);
     }
 }

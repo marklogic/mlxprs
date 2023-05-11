@@ -42,7 +42,7 @@ suite('Issue 69', async () => {
             hostname: globalConfig.hostname, authType: 'DIGEST',
             ssl: globalConfig.ssl, pathToCa: globalConfig.pathToCa, rejectUnauthorized: globalConfig.rejectUnauthorized
         };
-        const debugClient = integrationTestHelper.debugClient;
+        const debugClient = integrationTestHelper.jsDebugClient;
         await Promise.all([
             debugClient.initializeRequest(),
             debugClient.configurationSequence(),

@@ -33,16 +33,16 @@ suite('Testing sjs/xqy boundary in eval/invoke', async () => {
         globalConfig.queryText = fs.readFileSync(globalConfig.program).toString();
         globalConfig.queryText = globalConfig.queryText.replace(integrationTestHelper.modulesDatabaseToken, integrationTestHelper.modulesDatabase);
 
-        const debugClient = integrationTestHelper.debugClient;
+        const jsDebugClient = integrationTestHelper.jsDebugClient;
         await Promise.all([
-            debugClient.configurationSequence(),
-            debugClient.launch(globalConfig)
+            jsDebugClient.configurationSequence(),
+            jsDebugClient.launch(globalConfig)
         ]);
-        await debugClient.setBreakpointsRequest({ source: { path: globalConfig.program }, breakpoints: [{ line: 4 }] });
-        await debugClient.continueRequest({ threadId: 1 });
-        await debugClient.assertStoppedLocation('breakpoint', { path: globalConfig.program, line: 4 });
-        await debugClient.stepInRequest({ threadId: 1 });
-        return debugClient.assertStoppedLocation('step', { path: globalConfig.program, line: 6 });
+        await jsDebugClient.setBreakpointsRequest({ source: { path: globalConfig.program }, breakpoints: [{ line: 4 }] });
+        await jsDebugClient.continueRequest({ threadId: 1 });
+        await jsDebugClient.assertStoppedLocation('breakpoint', { path: globalConfig.program, line: 4 });
+        await jsDebugClient.stepInRequest({ threadId: 1 });
+        return jsDebugClient.assertStoppedLocation('step', { path: globalConfig.program, line: 6 });
     }).timeout(5000);
 
     test('sjs calling xdmp:eval()', async () => {
@@ -50,16 +50,16 @@ suite('Testing sjs/xqy boundary in eval/invoke', async () => {
         globalConfig.program = Path.join(integrationTestHelper.scriptFolder, 'eval2.sjs');
         globalConfig.queryText = fs.readFileSync(globalConfig.program).toString();
 
-        const debugClient = integrationTestHelper.debugClient;
+        const jsDebugClient = integrationTestHelper.jsDebugClient;
         await Promise.all([
-            debugClient.configurationSequence(),
-            debugClient.launch(globalConfig)
+            jsDebugClient.configurationSequence(),
+            jsDebugClient.launch(globalConfig)
         ]);
-        await debugClient.setBreakpointsRequest({ source: { path: globalConfig.program }, breakpoints: [{ line: 4 }] });
-        await debugClient.continueRequest({ threadId: 1 });
-        await debugClient.assertStoppedLocation('breakpoint', { path: globalConfig.program, line: 4 });
-        await debugClient.stepInRequest({ threadId: 1 });
-        return debugClient.assertStoppedLocation('step', { path: globalConfig.program, line: 8 });
+        await jsDebugClient.setBreakpointsRequest({ source: { path: globalConfig.program }, breakpoints: [{ line: 4 }] });
+        await jsDebugClient.continueRequest({ threadId: 1 });
+        await jsDebugClient.assertStoppedLocation('breakpoint', { path: globalConfig.program, line: 4 });
+        await jsDebugClient.stepInRequest({ threadId: 1 });
+        return jsDebugClient.assertStoppedLocation('step', { path: globalConfig.program, line: 8 });
     }).timeout(25000);
 
     test('sjs importing xqy', async () => {
@@ -67,16 +67,16 @@ suite('Testing sjs/xqy boundary in eval/invoke', async () => {
         globalConfig.program = Path.join(integrationTestHelper.scriptFolder, 'eval3.sjs');
         globalConfig.queryText = fs.readFileSync(globalConfig.program).toString();
 
-        const debugClient = integrationTestHelper.debugClient;
+        const jsDebugClient = integrationTestHelper.jsDebugClient;
         await Promise.all([
-            debugClient.configurationSequence(),
-            debugClient.launch(globalConfig)
+            jsDebugClient.configurationSequence(),
+            jsDebugClient.launch(globalConfig)
         ]);
-        await debugClient.setBreakpointsRequest({ source: { path: globalConfig.program }, breakpoints: [{ line: 4 }] });
-        await debugClient.continueRequest({ threadId: 1 });
-        await debugClient.assertStoppedLocation('breakpoint', { path: globalConfig.program, line: 4 });
-        await debugClient.stepInRequest({ threadId: 1 });
-        return debugClient.assertStoppedLocation('step', { path: globalConfig.program, line: 6 });
+        await jsDebugClient.setBreakpointsRequest({ source: { path: globalConfig.program }, breakpoints: [{ line: 4 }] });
+        await jsDebugClient.continueRequest({ threadId: 1 });
+        await jsDebugClient.assertStoppedLocation('breakpoint', { path: globalConfig.program, line: 4 });
+        await jsDebugClient.stepInRequest({ threadId: 1 });
+        return jsDebugClient.assertStoppedLocation('step', { path: globalConfig.program, line: 6 });
     }).timeout(15000);
 
 
@@ -96,16 +96,16 @@ suite('Testing sjs/xqy boundary in eval/invoke', async () => {
             hostname: globalConfig.hostname, database: integrationTestHelper.modulesDatabase, modules: integrationTestHelper.modulesDatabase, authType: 'DIGEST',
             ssl: globalConfig.ssl, pathToCa: globalConfig.pathToCa, rejectUnauthorized: globalConfig.rejectUnauthorized
         };
-        const debugClient: DebugClient = integrationTestHelper.debugClient;
+        const jsDebugClient: DebugClient = integrationTestHelper.jsDebugClient;
         await Promise.all([
-            debugClient.initializeRequest(),
-            debugClient.configurationSequence(),
-            debugClient.attachRequest(config as DebugProtocol.AttachRequestArguments)
+            jsDebugClient.initializeRequest(),
+            jsDebugClient.configurationSequence(),
+            jsDebugClient.attachRequest(config as DebugProtocol.AttachRequestArguments)
         ]);
 
-        await debugClient.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'jsInvoke-1.sjs') }, breakpoints: [{ line: 3 }] });
-        await debugClient.continueRequest({ threadId: 1 });
-        debugClient.assertStoppedLocation('breakpoint', { path: Path.join('/MarkLogic/test', 'jsInvoke-1.sjs'), line: 3 });
+        await jsDebugClient.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'jsInvoke-1.sjs') }, breakpoints: [{ line: 3 }] });
+        await jsDebugClient.continueRequest({ threadId: 1 });
+        jsDebugClient.assertStoppedLocation('breakpoint', { path: Path.join('/MarkLogic/test', 'jsInvoke-1.sjs'), line: 3 });
         JsDebugManager.disconnectFromNamedJsDebugServer(integrationTestHelper.attachServerName);
     }).timeout(10000).skip();
 

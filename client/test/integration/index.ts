@@ -39,11 +39,11 @@ export async function run(): Promise<void> {
 
     mocha.options.color = true;
     mocha.rootHooks({
-        beforeEach: () => {
-            globalThis.integrationTestHelper.setupEachTest();
+        beforeEach: async () => {
+            await globalThis.integrationTestHelper.setupEachTest();
         },
-        afterEach: () => {
-            globalThis.integrationTestHelper.teardownEachTest();
+        afterEach: async () => {
+            await globalThis.integrationTestHelper.teardownEachTest();
         }
     });
 

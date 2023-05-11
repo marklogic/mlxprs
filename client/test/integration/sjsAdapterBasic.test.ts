@@ -21,81 +21,81 @@ import { IntegrationTestHelper } from './markLogicIntegrationTestHelper';
 suite('Basic', () => {
     const integrationTestHelper: IntegrationTestHelper = globalThis.integrationTestHelper;
     test('launch a script and it should stop at entry', async () => {
-        const debugClient = integrationTestHelper.debugClient;
+        const jsDebugClient = integrationTestHelper.jsDebugClient;
         return Promise.all([
-            debugClient.configurationSequence(),
-            debugClient.launch(integrationTestHelper.config),
-            debugClient.assertStoppedLocation('entry', { path: integrationTestHelper.hwPath, line: 1 })
+            jsDebugClient.configurationSequence(),
+            jsDebugClient.launch(integrationTestHelper.config),
+            jsDebugClient.assertStoppedLocation('entry', { path: integrationTestHelper.hwPath, line: 1 })
         ]);
     }).timeout(5000);
 
     test('check stepOver', async () => {
-        const debugClient = integrationTestHelper.debugClient;
+        const jsDebugClient = integrationTestHelper.jsDebugClient;
         await Promise.all([
-            debugClient.configurationSequence(),
-            debugClient.launch(integrationTestHelper.config)
+            jsDebugClient.configurationSequence(),
+            jsDebugClient.launch(integrationTestHelper.config)
         ]);
         // 2 steps will actually go to the second line
-        await debugClient.nextRequest({ threadId: 1 });
-        await debugClient.waitForEvent('stopped');
-        await debugClient.nextRequest({ threadId: 1 });
-        return debugClient.assertStoppedLocation('step', { path: integrationTestHelper.hwPath, line: 4 });
+        await jsDebugClient.nextRequest({ threadId: 1 });
+        await jsDebugClient.waitForEvent('stopped');
+        await jsDebugClient.nextRequest({ threadId: 1 });
+        return jsDebugClient.assertStoppedLocation('step', { path: integrationTestHelper.hwPath, line: 4 });
     }).timeout(5000);
 
     test('set breakpoint', async () => {
-        const debugClient = integrationTestHelper.debugClient;
+        const jsDebugClient = integrationTestHelper.jsDebugClient;
         const hwPath = integrationTestHelper.hwPath;
         const config = integrationTestHelper.config;
         await Promise.all([
-            debugClient.configurationSequence(),
-            debugClient.launch(config)
+            jsDebugClient.configurationSequence(),
+            jsDebugClient.launch(config)
         ]);
-        await debugClient.setBreakpointsRequest({ source: { path: hwPath }, breakpoints: [{ line: 4 }] });
-        await debugClient.continueRequest({ threadId: 1 });
-        return debugClient.assertStoppedLocation('breakpoint', { path: hwPath, line: 4 });
+        await jsDebugClient.setBreakpointsRequest({ source: { path: hwPath }, breakpoints: [{ line: 4 }] });
+        await jsDebugClient.continueRequest({ threadId: 1 });
+        return jsDebugClient.assertStoppedLocation('breakpoint', { path: hwPath, line: 4 });
     }).timeout(5000);
 
     test('check stepInto', async () => {
-        const debugClient = integrationTestHelper.debugClient;
+        const jsDebugClient = integrationTestHelper.jsDebugClient;
         const hwPath = integrationTestHelper.hwPath;
         const config = integrationTestHelper.config;
         await Promise.all([
-            debugClient.configurationSequence(),
-            debugClient.launch(config)
+            jsDebugClient.configurationSequence(),
+            jsDebugClient.launch(config)
         ]);
-        await debugClient.setBreakpointsRequest({ source: { path: hwPath }, breakpoints: [{ line: 6 }] });
-        await debugClient.continueRequest({ threadId: 1 });
-        await debugClient.waitForEvent('stopped');
-        await debugClient.stepInRequest({ threadId: 1 });
-        return debugClient.assertStoppedLocation('step', { path: hwPath, line: 12 });
+        await jsDebugClient.setBreakpointsRequest({ source: { path: hwPath }, breakpoints: [{ line: 6 }] });
+        await jsDebugClient.continueRequest({ threadId: 1 });
+        await jsDebugClient.waitForEvent('stopped');
+        await jsDebugClient.stepInRequest({ threadId: 1 });
+        return jsDebugClient.assertStoppedLocation('step', { path: hwPath, line: 12 });
     }).timeout(5000);
 
     test('check stepOut', async () => {
-        const debugClient = integrationTestHelper.debugClient;
+        const jsDebugClient = integrationTestHelper.jsDebugClient;
         const hwPath = integrationTestHelper.hwPath;
         const config = integrationTestHelper.config;
         await Promise.all([
-            debugClient.configurationSequence(),
-            debugClient.launch(config)
+            jsDebugClient.configurationSequence(),
+            jsDebugClient.launch(config)
         ]);
-        await debugClient.setBreakpointsRequest({ source: { path: hwPath }, breakpoints: [{ line: 12 }] });
-        await debugClient.continueRequest({ threadId: 1 });
-        await debugClient.waitForEvent('stopped');
-        await debugClient.stepOutRequest({ threadId: 1 });
-        return debugClient.assertStoppedLocation('step', { path: hwPath, line: 7 });
+        await jsDebugClient.setBreakpointsRequest({ source: { path: hwPath }, breakpoints: [{ line: 12 }] });
+        await jsDebugClient.continueRequest({ threadId: 1 });
+        await jsDebugClient.waitForEvent('stopped');
+        await jsDebugClient.stepOutRequest({ threadId: 1 });
+        return jsDebugClient.assertStoppedLocation('step', { path: hwPath, line: 7 });
     }).timeout(5000);
 
     test('check stack trace', async () => {
-        const debugClient = integrationTestHelper.debugClient;
+        const jsDebugClient = integrationTestHelper.jsDebugClient;
         const hwPath = integrationTestHelper.hwPath;
         const config = integrationTestHelper.config;
         await Promise.all([
-            debugClient.configurationSequence(),
-            debugClient.launch(config)
+            jsDebugClient.configurationSequence(),
+            jsDebugClient.launch(config)
         ]);
-        await debugClient.setBreakpointsRequest({ source: { path: hwPath }, breakpoints: [{ line: 12 }] });
-        await debugClient.continueRequest({ threadId: 1 });
-        const stackTrace = await debugClient.assertStoppedLocation('breakpoint', { path: hwPath, line: 12 });
+        await jsDebugClient.setBreakpointsRequest({ source: { path: hwPath }, breakpoints: [{ line: 12 }] });
+        await jsDebugClient.continueRequest({ threadId: 1 });
+        const stackTrace = await jsDebugClient.assertStoppedLocation('breakpoint', { path: hwPath, line: 12 });
         const frame = stackTrace.body.stackFrames[0];
         assert(frame.name, 'loop');
         assert(frame.line, '12');
@@ -103,49 +103,49 @@ suite('Basic', () => {
     }).timeout(5000);
 
     test('check variable', async () => {
-        const debugClient = integrationTestHelper.debugClient;
+        const jsDebugClient = integrationTestHelper.jsDebugClient;
         const hwPath = integrationTestHelper.hwPath;
         const config = integrationTestHelper.config;
         await Promise.all([
-            debugClient.configurationSequence(),
-            debugClient.launch(config)
+            jsDebugClient.configurationSequence(),
+            jsDebugClient.launch(config)
         ]);
-        await debugClient.setBreakpointsRequest({ source: { path: hwPath }, breakpoints: [{ line: 12 }] });
-        await debugClient.continueRequest({ threadId: 1 });
-        const stackTrace = await debugClient.assertStoppedLocation('breakpoint', { path: hwPath, line: 12 });
+        await jsDebugClient.setBreakpointsRequest({ source: { path: hwPath }, breakpoints: [{ line: 12 }] });
+        await jsDebugClient.continueRequest({ threadId: 1 });
+        const stackTrace = await jsDebugClient.assertStoppedLocation('breakpoint', { path: hwPath, line: 12 });
         const frameId = stackTrace.body.stackFrames[0].id;
-        const scope = await debugClient.scopesRequest({ frameId: frameId });
-        const vars = await debugClient.variablesRequest({ variablesReference: scope.body.scopes[0].variablesReference });
+        const scope = await jsDebugClient.scopesRequest({ frameId: frameId });
+        const vars = await jsDebugClient.variablesRequest({ variablesReference: scope.body.scopes[0].variablesReference });
         return assert.equal(vars.body.variables[0].name, 'ret');
     }).timeout(5000);
 
     test('check evaluate', async () => {
-        const debugClient = integrationTestHelper.debugClient;
+        const jsDebugClient = integrationTestHelper.jsDebugClient;
         const hwPath = integrationTestHelper.hwPath;
         const config = integrationTestHelper.config;
         await Promise.all([
-            debugClient.configurationSequence(),
-            debugClient.launch(config)
+            jsDebugClient.configurationSequence(),
+            jsDebugClient.launch(config)
         ]);
-        await debugClient.setBreakpointsRequest({ source: { path: hwPath }, breakpoints: [{ line: 12 }] });
-        await debugClient.continueRequest({ threadId: 1 });
-        await debugClient.waitForEvent('stopped');
-        const evalResult = await debugClient.evaluateRequest({ expression: 'str' });
+        await jsDebugClient.setBreakpointsRequest({ source: { path: hwPath }, breakpoints: [{ line: 12 }] });
+        await jsDebugClient.continueRequest({ threadId: 1 });
+        await jsDebugClient.waitForEvent('stopped');
+        const evalResult = await jsDebugClient.evaluateRequest({ expression: 'str' });
         return assert.equal(evalResult.body.result, 'Hello World SJS');
     }).timeout(5000);
 
     test('check conditional breakpoint', async () => {
-        const debugClient = integrationTestHelper.debugClient;
+        const jsDebugClient = integrationTestHelper.jsDebugClient;
         const hwPath = integrationTestHelper.hwPath;
         const config = integrationTestHelper.config;
         await Promise.all([
-            debugClient.configurationSequence(),
-            debugClient.launch(config)
+            jsDebugClient.configurationSequence(),
+            jsDebugClient.launch(config)
         ]);
-        await debugClient.setBreakpointsRequest({ source: { path: hwPath }, breakpoints: [{ line: 14, condition: 'i==15' }] });
-        await debugClient.continueRequest({ threadId: 1 });
-        await debugClient.waitForEvent('stopped');
-        const evalResult = await debugClient.evaluateRequest({ expression: 'ret' });
+        await jsDebugClient.setBreakpointsRequest({ source: { path: hwPath }, breakpoints: [{ line: 14, condition: 'i==15' }] });
+        await jsDebugClient.continueRequest({ threadId: 1 });
+        await jsDebugClient.waitForEvent('stopped');
+        const evalResult = await jsDebugClient.evaluateRequest({ expression: 'ret' });
         return assert.equal(evalResult.body.result, '105');
     }).timeout(5000);
 });
