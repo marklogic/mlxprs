@@ -51,7 +51,6 @@ export class IntegrationTestHelper {
 
     public config = null;
     public jsDebugClient: DebugClient = null;
-    public xqyDebugClient: DebugClient = null;
     readonly mlClient = new ClientContext(
         new MlClientParameters({
             host: this.hostname,
@@ -108,10 +107,9 @@ export class IntegrationTestHelper {
         this.config = {
             program: this.hwPath,
             queryText: fs.readFileSync(this.hwPath).toString(),
-            user: this.username,
-            pwd: this.password,
-            host: this.hostname,
-            port: this.port,
+            username: this.username,
+            password: this.password,
+            hostname: this.hostname,
             authType: 'DIGEST',
             managePort: this.managePort,
             ssl: this.ssl,
@@ -119,23 +117,25 @@ export class IntegrationTestHelper {
             rejectUnauthorized: this.rejectUnauthorized
         };
         this.jsDebugClient = new DebugClient('node', this.jsDebugExec, 'node');
-        this.xqyDebugClient = new DebugClient('node', this.xqyDebugExec, 'xquery-ml');
 
         return Promise.all([
             this.jsDebugClient.start(),
+
+            // We have not been successful creating an XQY Debug Client for the automated integration tests.
+            // However, the information below will be useful if we try again in the future.
+            //
             // Include the port parameter when using the debugger with the "Launch ??? Debug Adapter Server" launch configuration in launch.json
             // This is useful when you want to debug the adapter code while running a test
             // this.xqyDebugClient.start(4712)
             // Exclude the port parameter when you want the test to start/stop a Debug Adapter Server on it's own.
             // This is useful when the tests are automated.
-            this.xqyDebugClient.start()
+            // this.xqyDebugClient.start()
         ]);
     }
 
     async teardownEachTest(): Promise<void[]> {
         return Promise.all([
-            this.jsDebugClient.stop(),
-            this.xqyDebugClient.stop()
+            this.jsDebugClient.stop()
         ]);
     }
 
