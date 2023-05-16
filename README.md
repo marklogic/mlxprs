@@ -86,6 +86,8 @@ Set `marklogic.rejectUnauthorized` to `false` in your VS Code configuration.
 This is less secure, but may be useful for situations where you can't obtain or use a your own CA,
 such as when connecting to a IP address rather than a hostname.
 
+Testing with some versions of VS Code has shown that if the project has a file named build.gradle and the VS Code Java Extension is enabled, the `marklogic.rejectUnauthorized` setting may be ignored. If you see this behavior, disabling the Java Extension is recommended to ensure the setting works properly. 
+
 ### Query Eval configuration override
 
 You can override your VS Code configured settings by using a block comment as the first language token

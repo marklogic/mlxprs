@@ -106,7 +106,7 @@ export class XqyRuntime extends EventEmitter {
                     const mlxprsError: MlxprsError = {
                         reportedMessage: error.message,
                         stack: error.stack,
-                        popupMessage: `Unable to build the MarkLogic database client: ${error.code}`
+                        popupMessage: `Unable to connect to MarkLogic: ${error.code}`
                     };
                     const customEvent = new Event(
                         'MlxprsDebugAdapterError',

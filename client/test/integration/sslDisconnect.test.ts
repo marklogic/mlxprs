@@ -16,17 +16,16 @@
 
 import * as assert from 'assert';
 import * as sinon from 'sinon';
-import * as vs from 'vscode';
+import { QuickPickItem } from 'vscode';
 
 import { JsDebugManager } from '../../JSDebugger/jsDebugManager';
 import { ClientContext } from '../../marklogicClient';
 import { IntegrationTestHelper, } from './markLogicIntegrationTestHelper';
-import { QuickPickItem } from 'vscode';
 
 suite('Testing \'disconnect\' functionality with varying scenarios', async () => {
     const integrationTestHelper: IntegrationTestHelper = globalThis.integrationTestHelper;
     const dbClientContext: ClientContext = integrationTestHelper.mlClient;
-    const sslDbClientContext: ClientContext = integrationTestHelper.mlClientWithSsl;
+    const mlClientWithBadSsl: ClientContext = integrationTestHelper.mlClientWithBadSsl;
     const attachServerName: string = integrationTestHelper.attachServerName;
     await JsDebugManager.disconnectFromNamedJsDebugServer(attachServerName);
     const showErrorPopup = integrationTestHelper.showErrorPopup;
@@ -55,12 +54,12 @@ suite('Testing \'disconnect\' functionality with varying scenarios', async () =>
 
     test('When there are no "connected" app-servers, and no SSL settings are configured, but the extension is set to use SSL',
         async () => {
-            const connectedAppServers = await JsDebugManager.getFilteredListOfJsAppServers(sslDbClientContext, 'true');
+            const connectedAppServers = await JsDebugManager.getFilteredListOfJsAppServers(mlClientWithBadSsl, 'true');
             assert.strictEqual(connectedAppServers, null,
                 'Then the response should be <undefined> because the call to MarkLogic should fail.');
 
             showErrorPopup.resetHistory();
-            await JsDebugManager.disconnectFromJsDebugServer(sslDbClientContext);
+            await JsDebugManager.disconnectFromJsDebugServer(mlClientWithBadSsl);
             sinon.assert.calledWith(showErrorPopup, sinon.match('Could not get list of connected servers'));
         }).timeout(5000);
 
