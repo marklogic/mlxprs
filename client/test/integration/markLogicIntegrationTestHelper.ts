@@ -27,8 +27,10 @@ export class IntegrationTestHelper {
     private collection = 'VSCODE/SJS-debug-test';
     public configuredServerPort = '8055';
     public serverPortForAttaching = '8056';
+    public serverSslPort = '8057';
     public appServerName = String(process.env.ML_APPSERVER || 'mlxprs-test');
     public attachServerName = String(process.env.ML_ATTACH_APPSERVER || 'mlxprsSample');
+    public attachSslServerName = String(process.env.ML_ATTACH_SSL_APPSERVER || 'mlxprs-ssl-test');
     public documentsDatabase = 'mlxprs-test-content';
     public modulesDatabase = 'mlxprs-test-modules';
     public modulesDatabaseToken = '%%MODULES-DATABASE%%';
@@ -45,7 +47,7 @@ export class IntegrationTestHelper {
     private username = String(process.env.ML_USERNAME || 'admin');
     private password = String(process.env.ML_PASSWORD || 'admin');
     private modulesDB = String(process.env.ML_MODULESDB || this.modulesDatabase);
-    private pathToCa = '';
+    private pathToCa = null;
     private ssl = false;
     private rejectUnauthorized = false;
 
@@ -66,7 +68,7 @@ export class IntegrationTestHelper {
             rejectUnauthorized: this.rejectUnauthorized
         })
     );
-    readonly mlClientWithSsl = new ClientContext(
+    readonly mlClientWithBadSsl = new ClientContext(
         new MlClientParameters({
             host: this.hostname,
             port: this.port,
@@ -79,6 +81,21 @@ export class IntegrationTestHelper {
             pathToCa: this.pathToCa,
             ssl: true,
             rejectUnauthorized: this.rejectUnauthorized
+        })
+    );
+    readonly mlClientWithSslWithRejectUnauthorized = new ClientContext(
+        new MlClientParameters({
+            host: this.hostname,
+            port: this.serverSslPort,
+            managePort: this.managePort,
+            user: this.username,
+            pwd: this.password,
+            authType: 'DIGEST',
+            contentDb: this.modulesDB,
+            modulesDb: this.modulesDB,
+            pathToCa: this.pathToCa,
+            ssl: true,
+            rejectUnauthorized: true
         })
     );
 

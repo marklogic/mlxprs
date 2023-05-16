@@ -15,8 +15,8 @@
  */
 
 'use strict';
+
 import { XMLParser, XMLBuilder } from 'fast-xml-parser';
-import { contentType, RowsResponse } from 'marklogic';
 import * as ml from 'marklogic';
 import {
     ExtensionContext, TextDocument, TextEdit, TextEditor, Uri,
@@ -24,10 +24,11 @@ import {
 } from 'vscode';
 
 import { ClientResponseProvider, ErrorResultsObject } from './clientResponseProvider';
+import { ErrorReporter, MlxprsError } from './errorReporter';
 import { ClientContext, sendJSQuery, sendSparql, sendXQuery, sendRows } from './marklogicClient';
 import { MlxprsWebViewProvider } from './mlxprsWebViewProvider';
-import { cascadeOverrideClient } from './vscQueryParameterTools';
 import { getSparqlQueryForm, getSparqlResponseType } from './sparqlQueryHelper';
+import { cascadeOverrideClient } from './vscQueryParameterTools';
 
 export enum EditorQueryType {
     JS,
@@ -142,11 +143,13 @@ export class EditorQueryEvaluator {
                 (recordResults: Record<string, unknown>[]) => {
                     return this.updateResultsViewWithRecordArray(resultsEditorTabIdentifier, recordResults, false);
                 },
-                (error: Record<string, unknown>[]) => {
-                    return this.updateResultsViewWithError(resultsEditorTabIdentifier, error);
+                (error: Error) => {
+                    const mlxprsError: MlxprsError = ErrorReporter.buildMlxprsErrorFromError(error, `Unable to evaluate the query: ${error['code']}`);
+                    ErrorReporter.reportError(mlxprsError);
+                    return null;
                 })
             .then(resultsEditorTabIdentifier => {
-                if (this.sendResultsToEditorTab) {
+                if (resultsEditorTabIdentifier && (this.sendResultsToEditorTab)) {
                     EditorQueryEvaluator.showFormattedResults(resultsEditorTabIdentifier, editor);
                 }
             });
@@ -164,11 +167,13 @@ export class EditorQueryEvaluator {
                 (recordResults: Record<string, unknown>[]) => {
                     return this.updateResultsViewWithRecordArray(resultsEditorTabIdentifier, recordResults, false);
                 },
-                (error: Record<string, unknown>[]) => {
-                    return this.updateResultsViewWithError(resultsEditorTabIdentifier, error);
+                (error: Error) => {
+                    const mlxprsError: MlxprsError = ErrorReporter.buildMlxprsErrorFromError(error, 'Unable to evaluate the query');
+                    ErrorReporter.reportError(mlxprsError);
+                    return null;
                 })
             .then(resultsEditorTabIdentifier => {
-                if (this.sendResultsToEditorTab) {
+                if (resultsEditorTabIdentifier && (this.sendResultsToEditorTab)) {
                     EditorQueryEvaluator.showFormattedResults(resultsEditorTabIdentifier, editor);
                 }
             });
@@ -195,11 +200,13 @@ export class EditorQueryEvaluator {
                 (recordResults: Record<string, unknown>[]) => {
                     return this.updateResultsViewWithRecordArray(resultsEditorTabIdentifier, recordResults, false);
                 },
-                (error: Record<string, unknown>[]) => {
-                    return this.updateResultsViewWithError(resultsEditorTabIdentifier, error);
+                (error: Error) => {
+                    const mlxprsError: MlxprsError = ErrorReporter.buildMlxprsErrorFromError(error, `Unable to evaluate the query: ${error['code']}`);
+                    ErrorReporter.reportError(mlxprsError);
+                    return null;
                 })
             .then(resultsEditorTabIdentifier => {
-                if (this.sendResultsToEditorTab) {
+                if (resultsEditorTabIdentifier && (this.sendResultsToEditorTab)) {
                     EditorQueryEvaluator.showFormattedResults(resultsEditorTabIdentifier, editor);
                 }
             });
@@ -218,11 +225,13 @@ export class EditorQueryEvaluator {
                 (recordResults: Record<string, unknown>) => {
                     return this.updateResultsViewWithRecordArray(resultsEditorTabIdentifier, [recordResults], true);
                 },
-                (error: Record<string, unknown>[]) => {
-                    return this.updateResultsViewWithError(resultsEditorTabIdentifier, error);
+                (error: Error) => {
+                    const mlxprsError: MlxprsError = ErrorReporter.buildMlxprsErrorFromError(error, `Unable to evaluate the query: ${error['code']}`);
+                    ErrorReporter.reportError(mlxprsError);
+                    return null;
                 })
             .then(resultsEditorTabIdentifier => {
-                if (this.sendResultsToEditorTab) {
+                if (resultsEditorTabIdentifier && (this.sendResultsToEditorTab)) {
                     EditorQueryEvaluator.showFormattedResults(resultsEditorTabIdentifier, editor);
                 }
             });
@@ -237,7 +246,7 @@ export class EditorQueryEvaluator {
     ): void {
         sendRows(dbClientContext, query, resultFormat)
             .then(
-                (response: RowsResponse) => {
+                (response: ml.RowsResponse) => {
                     if (response.preRequestError) {
                         return this.updateResultsViewWithError(resultsEditorTabIdentifier, response.preRequestError as any);
                     } else {
@@ -252,10 +261,12 @@ export class EditorQueryEvaluator {
                 }
             )
             .catch(error => {
-                return this.updateResultsViewWithError(resultsEditorTabIdentifier, error);
+                const mlxprsError: MlxprsError = ErrorReporter.buildMlxprsErrorFromError(error, `Unable to evaluate the query: ${error['code']}`);
+                ErrorReporter.reportError(mlxprsError);
+                return null;
             })
             .then(resultsEditorTabIdentifier => {
-                if (this.sendResultsToEditorTab) {
+                if (resultsEditorTabIdentifier && (this.sendResultsToEditorTab)) {
                     EditorQueryEvaluator.showFormattedResults(resultsEditorTabIdentifier, editor);
                 }
             });
@@ -310,7 +321,7 @@ export class EditorQueryEvaluator {
         }
     }
 
-    private static requestMlxprsWebviewUpdateWithRowsResponse(response: RowsResponse, resultFormat?: ml.RowsResponseFormat): void {
+    private static requestMlxprsWebviewUpdateWithRowsResponse(response: ml.RowsResponse, resultFormat?: ml.RowsResponseFormat): void {
         if (EditorQueryEvaluator.mlxprsWebViewProvider) {
             EditorQueryEvaluator.focusOnResultsView();
             let stringResults = '';

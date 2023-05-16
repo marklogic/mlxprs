@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-import * as path from 'path';
-import * as Mocha from 'mocha';
 import * as glob from 'glob';
-import { IntegrationTestHelper } from './markLogicIntegrationTestHelper';
+import * as Mocha from 'mocha';
+import * as path from 'path';
 import * as vscode from 'vscode';
+
+import { IntegrationTestHelper } from './markLogicIntegrationTestHelper';
 
 export async function run(): Promise<void> {
     const mocha = new Mocha({
@@ -51,7 +52,7 @@ export async function run(): Promise<void> {
 
     return new Promise((c, e) => {
         // We can change the value below to run specific test files.
-        // glob('integration/sjsAdapter.test.js', { cwd: testsRoot }, (err, files) => {
+        // glob('integration/sslFailures.test.js', { cwd: testsRoot }, (err, files) => {
         glob('integration/**.test.js', { cwd: testsRoot }, (err, files) => {
             console.debug(JSON.stringify(files));
             vscode.window.showInformationMessage(JSON.stringify(files));
