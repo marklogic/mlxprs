@@ -21,8 +21,9 @@ import {
     DebugAdapterDescriptor, DebugSession, QuickPickItem, QuickPickOptions
 } from 'vscode';
 
-import { ErrorReporter, MlxprsError } from '../errorReporter';
+import { ErrorReporter } from '../errorReporter';
 import { MlClientParameters } from '../marklogicClient';
+import { MlxprsError } from '../mlxprsErrorBuilder';
 import { XqyDebugManager, DebugStatusQueryResponse } from './xqyDebugManager';
 import { ConfigurationManager } from '../configurationManager';
 

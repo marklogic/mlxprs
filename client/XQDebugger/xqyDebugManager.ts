@@ -16,8 +16,9 @@
 
 import { DebugSessionCustomEvent, QuickPickItem, window } from 'vscode';
 
-import { ErrorReporter, MlxprsError } from '../errorReporter';
+import { ErrorReporter } from '../errorReporter';
 import { ClientContext, MlClientParameters, sendXQuery, ServerQueryResponse } from '../marklogicClient';
+import { MlxprsError } from '../mlxprsErrorBuilder';
 import { MlxprsStatus } from '../mlxprsStatus';
 
 export interface DebugStatusQueryResponse {

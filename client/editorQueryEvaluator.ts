@@ -24,8 +24,9 @@ import {
 } from 'vscode';
 
 import { ClientResponseProvider, ErrorResultsObject } from './clientResponseProvider';
-import { ErrorReporter, MlxprsError } from './errorReporter';
+import { ErrorReporter } from './errorReporter';
 import { ClientContext, sendJSQuery, sendSparql, sendXQuery, sendRows } from './marklogicClient';
+import { buildMlxprsErrorFromError, MlxprsError } from './mlxprsErrorBuilder';
 import { MlxprsWebViewProvider } from './mlxprsWebViewProvider';
 import { getSparqlQueryForm, getSparqlResponseType } from './sparqlQueryHelper';
 import { cascadeOverrideClient } from './vscQueryParameterTools';
@@ -144,7 +145,7 @@ export class EditorQueryEvaluator {
                     return this.updateResultsViewWithRecordArray(resultsEditorTabIdentifier, recordResults, false);
                 },
                 (error: Error) => {
-                    const mlxprsError: MlxprsError = ErrorReporter.buildMlxprsErrorFromError(error, `Unable to evaluate the query: ${error['code']}`);
+                    const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, `Unable to evaluate the query: ${error['code']}`);
                     ErrorReporter.reportError(mlxprsError);
                     return null;
                 })
@@ -168,7 +169,7 @@ export class EditorQueryEvaluator {
                     return this.updateResultsViewWithRecordArray(resultsEditorTabIdentifier, recordResults, false);
                 },
                 (error: Error) => {
-                    const mlxprsError: MlxprsError = ErrorReporter.buildMlxprsErrorFromError(error, 'Unable to evaluate the query');
+                    const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, 'Unable to evaluate the query');
                     ErrorReporter.reportError(mlxprsError);
                     return null;
                 })
@@ -201,7 +202,7 @@ export class EditorQueryEvaluator {
                     return this.updateResultsViewWithRecordArray(resultsEditorTabIdentifier, recordResults, false);
                 },
                 (error: Error) => {
-                    const mlxprsError: MlxprsError = ErrorReporter.buildMlxprsErrorFromError(error, `Unable to evaluate the query: ${error['code']}`);
+                    const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, `Unable to evaluate the query: ${error['code']}`);
                     ErrorReporter.reportError(mlxprsError);
                     return null;
                 })
@@ -226,7 +227,7 @@ export class EditorQueryEvaluator {
                     return this.updateResultsViewWithRecordArray(resultsEditorTabIdentifier, [recordResults], true);
                 },
                 (error: Error) => {
-                    const mlxprsError: MlxprsError = ErrorReporter.buildMlxprsErrorFromError(error, `Unable to evaluate the query: ${error['code']}`);
+                    const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, `Unable to evaluate the query: ${error['code']}`);
                     ErrorReporter.reportError(mlxprsError);
                     return null;
                 })
@@ -261,7 +262,7 @@ export class EditorQueryEvaluator {
                 }
             )
             .catch(error => {
-                const mlxprsError: MlxprsError = ErrorReporter.buildMlxprsErrorFromError(error, `Unable to evaluate the query: ${error['code']}`);
+                const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, `Unable to evaluate the query: ${error['code']}`);
                 ErrorReporter.reportError(mlxprsError);
                 return null;
             })

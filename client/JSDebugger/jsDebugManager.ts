@@ -19,8 +19,9 @@ import * as querystring from 'querystring';
 import * as request from 'request-promise';
 import { QuickPickItem, window, workspace } from 'vscode';
 
-import { ErrorReporter, MlxprsError } from '../errorReporter';
+import { ErrorReporter } from '../errorReporter';
 import { ClientContext, sendXQuery, ServerQueryResponse } from '../marklogicClient';
+import { MlxprsError } from '../mlxprsErrorBuilder';
 import { MlxprsStatus } from '../mlxprsStatus';
 
 

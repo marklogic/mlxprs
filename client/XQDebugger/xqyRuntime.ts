@@ -19,8 +19,8 @@ import { EventEmitter } from 'events';
 import { ResultProvider } from 'marklogic';
 import { parseString } from 'xml2js';
 
-import { MlxprsError } from '../errorReporter';
 import { sendXQuery, ClientContext, MlClientParameters } from '../marklogicClient';
+import { buildMlxprsErrorFromError, MlxprsError } from '../mlxprsErrorBuilder';
 import { ModuleContentGetter } from '../moduleContentGetter';
 import { InitializeRequestArguments, XqyDebugSession } from './xqyDebug';
 
@@ -100,22 +100,9 @@ export class XqyRuntime extends EventEmitter {
                     this.setRunTimeState('launched');
                     return this._rid;
                 },
-                (error: Record<string, any>) => {
+                (error: Error) => {
                     XqyRuntime.reportError(error, 'launchWithDebugEval');
-                    this._runTimeState = 'error';
-                    const mlxprsError: MlxprsError = {
-                        reportedMessage: error.message,
-                        stack: error.stack,
-                        popupMessage: `Unable to connect to MarkLogic: ${error.code}`
-                    };
-                    const customEvent = new Event(
-                        'MlxprsDebugAdapterError',
-                        {
-                            event: 'LaunchWithDebugError',
-                            mlxprsError: mlxprsError
-                        }
-                    );
-                    this.xqyDebugSession.sendEvent(customEvent);
+                    this.reportErrorToClient(error);
                     return null;
                 });
     }
@@ -201,8 +188,9 @@ export class XqyRuntime extends EventEmitter {
                         console.debug(`set ${fulfill[0]['value'].length} breakpoints for ${uri} on ${this._rid}`);
                         return fulfill[0]['value'];
                     },
-                    (error: Record<string, any>[]) => {
+                    (error: Error) => {
                         XqyRuntime.reportError(error, 'setBreakPointsOnMl');
+                        this.reportErrorToClient(error);
                         return [];
                     });
         });
@@ -215,8 +203,9 @@ export class XqyRuntime extends EventEmitter {
                 () => {
                     console.debug(`removed breakpoints for ${uri} on ${this._rid}`);
                 },
-                (error: Record<string, any>[]) => {
+                (error: Error) => {
                     XqyRuntime.reportError(error, 'removeBreakPointsOnMl');
+                    this.reportErrorToClient(error);
                 });
     }
 
@@ -226,8 +215,9 @@ export class XqyRuntime extends EventEmitter {
                 (fulfill: Record<string, any>[]) => {
                     console.debug(`cleared breakpoints on ${this._rid}`);
                 },
-                (error: Record<string, any>[]) => {
+                (error: Error) => {
                     XqyRuntime.reportError(error, 'removeAllBreakPointsOnMl');
+                    this.reportErrorToClient(error);
                 });
     }
 
@@ -398,5 +388,22 @@ export class XqyRuntime extends EventEmitter {
             errorMessage = error.body.errorResponse.message;
         }
         console.error(`error (${functionName}): ${errorMessage}`);
+    }
+
+    private reportErrorToClient(error: Error): void {
+        this._runTimeState = 'error';
+        let popupMessageBase = 'Unable to launch the query for debugging: ';
+        if (error['code']) {
+            popupMessageBase = `{popupMessageBase}${error['code']}`;
+        }
+        const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, popupMessageBase);
+        const customEvent = new Event(
+            'MlxprsDebugAdapterError',
+            {
+                event: 'LaunchWithDebugError',
+                mlxprsError: mlxprsError
+            }
+        );
+        this.xqyDebugSession.sendEvent(customEvent);
     }
 }
