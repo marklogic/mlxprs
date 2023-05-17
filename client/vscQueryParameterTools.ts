@@ -19,8 +19,9 @@
 import * as esprima from 'esprima';
 import { Memento, WorkspaceConfiguration, window } from 'vscode';
 
-import { ErrorReporter, MlxprsError } from './errorReporter';
+import { ErrorReporter } from './errorReporter';
 import { SJS, XQY, parseXQueryForOverrides, MLSETTINGSFLAG, ClientContext, MlClientParameters, MLDBCLIENT } from './marklogicClient';
+import { MlxprsError } from './mlxprsErrorBuilder';
 
 /**
  * In SJS/XQuery queries, you can override the VS Code mxprs settings in a comment.
