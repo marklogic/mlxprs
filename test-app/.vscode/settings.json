@@ -5,5 +5,6 @@
     "marklogic.documentsDb": "mlxprs-test-content",
     "marklogic.modulesDb": "mlxprs-test-modules",
     "marklogic.rejectUnauthorized": false,
-    "marklogic.ssl": false
+    "marklogic.ssl": false,
+    "marklogic.managePort": 8002
 }

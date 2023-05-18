@@ -8,14 +8,16 @@
             "type": "ml-jsdebugger",
             "request": "launch",
             "name": "Evaluate Current JavaScript Module",
-            "root": "${workspaceFolder}/src/main/ml-modules/root"
+            "root": "${workspaceFolder}/src/main/ml-modules/root",
+            // "debugServer": 4711
         },
         {
             "type": "ml-jsdebugger",
             "request": "launch",
             "name": "Evaluate Specific JavaScript Module",
             "root": "${workspaceFolder}/src/main/ml-modules/root",
-            "program": "/Users/pbarber/Documents/workspaces/engineering/mlxprsStuff/mlxprsSampleProject/src/main/ml-modules/root/javascript/launch.sjs"
+            "program": "/Users/pbarber/Documents/workspaces/engineering/mlxprsStuff/mlxprsSampleProject/src/main/ml-modules/root/javascript/launch.sjs",
+            // "debugServer": 4711
         },
         {
             "type": "ml-jsdebugger",
@@ -38,6 +40,7 @@
             "name": "Evaluate Specific XQuery Module",
             "root": "${workspaceFolder}/src/main/ml-modules/root",
             "program": "/Users/pbarber/Documents/workspaces/engineering/mlxprsStuff/mlxprsSampleProject/src/main/ml-modules/root/xquery/longTest.xqy"
+            // "debugServer": 4712
         },
         {
             "type": "xquery-ml",

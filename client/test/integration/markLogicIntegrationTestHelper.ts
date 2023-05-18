@@ -136,16 +136,18 @@ export class IntegrationTestHelper {
         this.jsDebugClient = new DebugClient('node', this.jsDebugExec, 'node');
 
         return Promise.all([
+            // Include the port parameter when using the debugger with the "Launch ??? Debug Adapter Server" launch configuration in launch.json
+            // This is useful when you want to debug the adapter code while running a test
+            // this.jsDebugClient.start(4711),
+
+            // Exclude the port parameter when you want the test to start/stop a Debug Adapter Server on it's own.
+            // This is useful when the tests are automated.
             this.jsDebugClient.start(),
+
 
             // We have not been successful creating an XQY Debug Client for the automated integration tests.
             // However, the information below will be useful if we try again in the future.
-            //
-            // Include the port parameter when using the debugger with the "Launch ??? Debug Adapter Server" launch configuration in launch.json
-            // This is useful when you want to debug the adapter code while running a test
             // this.xqyDebugClient.start(4712)
-            // Exclude the port parameter when you want the test to start/stop a Debug Adapter Server on it's own.
-            // This is useful when the tests are automated.
             // this.xqyDebugClient.start()
         ]);
     }

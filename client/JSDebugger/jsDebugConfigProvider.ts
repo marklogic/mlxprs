@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-import * as vscode from 'vscode';
 import { readFileSync } from 'fs';
+import * as vscode from 'vscode';
+
+import { ErrorReporter } from '../errorReporter';
 import { JsDebugManager } from './jsDebugManager';
+import { buildMlxprsErrorFromError, MlxprsError } from '../mlxprsErrorBuilder';
 
 export class JsDebugConfigurationProvider implements vscode.DebugConfigurationProvider {
 
@@ -113,9 +116,9 @@ export class JsDebugConfigurationProvider implements vscode.DebugConfigurationPr
                 config.ssl, ca, config.rejectUnauthorized, config.managePort)
                 .then(resp => {
                     config.database = resp.match('\r\n\r\n(.*[0-9])\r\n')[1]; //better way of parsing?
-                }).catch(err => {
-                    console.debug(`Error attempting to retrieve database id for database name, '${config.database}': ${err}`);
-                    vscode.window.showErrorMessage(`Error getting database id for database name, '${config.database}'`);
+                }).catch(error => {
+                    const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, `Error attempting to retrieve database id for database name, '${config.database}':`);
+                    ErrorReporter.reportError(mlxprsError);
                     return null;
                 });
         }
@@ -124,10 +127,10 @@ export class JsDebugConfigurationProvider implements vscode.DebugConfigurationPr
                 config.ssl, ca, config.rejectUnauthorized, config.managePort)
                 .then(resp => {
                     config.modules = resp.match('\r\n\r\n(.*[0-9])\r\n')[1]; //better way of parsing?
-                }).catch(() => {
-                    return vscode.window.showErrorMessage('Error getting modules database setting').then(() => {
-                        return undefined;
-                    });
+                }).catch((error: Error) => {
+                    const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, `Error attempting to retrieve database id for database name, '${config.modules}':`);
+                    ErrorReporter.reportError(mlxprsError);
+                    return undefined;
                 });
         }
 

@@ -3,3 +3,11 @@ plugins {
   id 'net.saliman.properties' version '1.5.2'
   id "com.marklogic.ml-gradle" version "4.5.0"
 }
+
+ext {
+    def command = new com.marklogic.appdeployer.command.security.GenerateTemporaryCertificateCommand()
+    command.setTemplateIdOrName("mlxprs-ssl-certificate-template")
+    command.setCommonName("localhost")
+    command.setValidFor(365)
+    mlAppDeployer.commands.add(command)
+}

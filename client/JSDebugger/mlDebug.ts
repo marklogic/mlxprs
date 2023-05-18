@@ -17,15 +17,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import {
-    LoggingDebugSession, Breakpoint, OutputEvent,
-    InitializedEvent, TerminatedEvent, StoppedEvent,
+    LoggingDebugSession, Breakpoint, Event, OutputEvent, InitializedEvent, TerminatedEvent, StoppedEvent,
     Thread, StackFrame, Scope, Source, Handles, Logger, logger, BreakpointEvent
 } from '@vscode/debugadapter';
 import { DebugProtocol } from '@vscode/debugprotocol';
-import { basename } from 'path';
-import { MLRuntime, MLbreakPoint, V8Frame, ScopeObject, V8PropertyObject, V8PropertyValue } from './mlRuntime';
 import { Subject } from 'await-notify';
 import { existsSync } from 'fs';
+import { basename } from 'path';
+
+import { buildMlxprsErrorFromError, MlxprsError } from '../mlxprsErrorBuilder';
+import { MLRuntime, MLbreakPoint, V8Frame, ScopeObject, V8PropertyObject, V8PropertyValue } from './mlRuntime';
 
 interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
     program: string;
@@ -166,13 +167,14 @@ export class MLDebugSession extends LoggingDebugSession {
             this._trace('Launched Request with id: ' + rid);
             this.sendResponse(response);
             this.sendEvent(new StoppedEvent('entry', MLDebugSession.THREAD_ID));
-        } catch (err) {
-            this._handleError(err, 'Failed to start JS debugging', true, 'launchRequest');
+        } catch (error: unknown) {
+            this.reportErrorToClient(error as Error);
+            this._handleError(error, 'Failed to start JS debugging', true, 'launchRequest');
             this._runtime.setRunTimeState('shutdown');
+            response.body = error;
             this.sendResponse(response);
-            //error launching request
             this.sendEvent(new TerminatedEvent());
-
+            return null;
         }
     }
 
@@ -265,8 +267,9 @@ export class MLDebugSession extends LoggingDebugSession {
 
                 Promise.all(mlrequests).then(() => {
                     this.sendResponse(response);
-                }).catch(err => {
-                    this._handleError(err, 'Error setting breakpoints', false, 'setBreakPointsRequest');
+                }).catch(error => {
+                    this.reportErrorToClient(error as Error);
+                    this._handleError(error, 'Error setting breakpoints', false, 'setBreakPointsRequest');
                     this.sendResponse(response);
                 });
             } else {
@@ -309,8 +312,9 @@ export class MLDebugSession extends LoggingDebugSession {
                 totalFrames: stacks.length
             };
             this.sendResponse(response);
-        } catch (e) {
-            this._handleError(e, 'Error reading stack trace', true, 'stackTraceRequest');
+        } catch (error) {
+            this.reportErrorToClient(error as Error);
+            this._handleError(error, 'Error reading stack trace', true, 'stackTraceRequest');
             this.sendResponse(response);
         }
     }
@@ -334,8 +338,9 @@ export class MLDebugSession extends LoggingDebugSession {
                 scopes: scopes
             };
             this.sendResponse(response);
-        } catch (e) {
-            this._handleError(e, 'Error reading scopes', true, 'scopesRequest');
+        } catch (error) {
+            this.reportErrorToClient(error as Error);
+            this._handleError(error, 'Error reading scopes', true, 'scopesRequest');
             this.sendResponse(response);
         }
     }
@@ -373,16 +378,18 @@ export class MLDebugSession extends LoggingDebugSession {
                         value: value,
                         variablesReference: element.value.objectId ? this._variableHandles.create(element.value.objectId) : 0
                     } as DebugProtocol.Variable);
-                } catch (e) {
-                    this._handleError(e, 'Error inspecting variables', false, 'variablesRequest');
+                } catch (error) {
+                    this.reportErrorToClient(error as Error);
+                    this._handleError(error, 'Error inspecting variables', false, 'variablesRequest');
                 }
             }
             response.body = {
                 variables: variables
             };
             this.sendResponse(response);
-        }).catch(err => {
-            this._handleError(err, 'Error retrieving variables', false, 'variablesRequest');
+        }).catch(error => {
+            this.reportErrorToClient(error as Error);
+            this._handleError(error, 'Error retrieving variables', false, 'variablesRequest');
             this.sendResponse(response);
         });
     }
@@ -394,12 +401,14 @@ export class MLDebugSession extends LoggingDebugSession {
                 this.parseWaitResponse(resp);
                 this.sendEvent(new StoppedEvent('pause', MLDebugSession.THREAD_ID));
                 this._resetHandles();
-            }).catch(err => {
-                this._handleError(err, 'Error in waiting request', true, 'pauseRequest');
+            }).catch(error => {
+                this.reportErrorToClient(error as Error);
+                this._handleError(error, 'Error in waiting request', true, 'pauseRequest');
                 this.sendResponse(response);
             });
-        }).catch(err => {
-            this._handleError(err, 'Error in pause command', true, 'pauseRequest');
+        }).catch(error => {
+            this.reportErrorToClient(error as Error);
+            this._handleError(error, 'Error in pause command', true, 'pauseRequest');
         });
         this.sendResponse(response);
     }
@@ -410,12 +419,14 @@ export class MLDebugSession extends LoggingDebugSession {
                 this.parseWaitResponse(resp);
                 this.sendEvent(new StoppedEvent('breakpoint', MLDebugSession.THREAD_ID));
                 this._resetHandles();
-            }).catch(err => {
-                this._handleError(err, 'Error in waiting request', true, 'continueRequest');
+            }).catch(error => {
+                this.reportErrorToClient(error as Error);
+                this._handleError(error, 'Error in waiting request', true, 'continueRequest');
                 this.sendResponse(response);
             });
-        }).catch(err => {
-            this._handleError(err, 'Error in continue command', true, 'continueRequest');
+        }).catch(error => {
+            this.reportErrorToClient(error as Error);
+            this._handleError(error, 'Error in continue command', true, 'continueRequest');
         });
         this.sendResponse(response);
     }
@@ -426,12 +437,14 @@ export class MLDebugSession extends LoggingDebugSession {
                 this.parseWaitResponse(resp);
                 this.sendEvent(new StoppedEvent('step', MLDebugSession.THREAD_ID));
                 this._resetHandles();
-            }).catch(err => {
-                this._handleError(err, 'Error in waiting request', true, 'nextRequest');
+            }).catch(error => {
+                this.reportErrorToClient(error as Error);
+                this._handleError(error, 'Error in waiting request', true, 'nextRequest');
                 this.sendResponse(response);
             });
-        }).catch(err => {
-            this._handleError(err, 'Error in next command', true, 'nextRequest');
+        }).catch(error => {
+            this.reportErrorToClient(error as Error);
+            this._handleError(error, 'Error in next command', true, 'nextRequest');
         });
         this.sendResponse(response);
     }
@@ -442,12 +455,14 @@ export class MLDebugSession extends LoggingDebugSession {
                 this.parseWaitResponse(resp);
                 this.sendEvent(new StoppedEvent('step', MLDebugSession.THREAD_ID));
                 this._resetHandles();
-            }).catch(err => {
-                this._handleError(err, 'Error in waiting request', true, 'stepInRequest');
+            }).catch(error => {
+                this.reportErrorToClient(error as Error);
+                this._handleError(error, 'Error in waiting request', true, 'stepInRequest');
                 this.sendResponse(response);
             });
-        }).catch(err => {
-            this._handleError(err, 'Error in stepIn command', true, 'stepInRequest');
+        }).catch(error => {
+            this.reportErrorToClient(error as Error);
+            this._handleError(error, 'Error in stepIn command', true, 'stepInRequest');
         });
         this.sendResponse(response);
     }
@@ -458,12 +473,14 @@ export class MLDebugSession extends LoggingDebugSession {
                 this.parseWaitResponse(resp);
                 this.sendEvent(new StoppedEvent('step', MLDebugSession.THREAD_ID));
                 this._resetHandles();
-            }).catch(err => {
-                this._handleError(err, 'Error in waiting request', true, 'stepOutRequest');
+            }).catch(error => {
+                this.reportErrorToClient(error as Error);
+                this._handleError(error, 'Error in waiting request', true, 'stepOutRequest');
                 this.sendResponse(response);
             });
-        }).catch(err => {
-            this._handleError(err, 'Error in stepOut command', true, 'stepOutRequest');
+        }).catch(error => {
+            this.reportErrorToClient(error as Error);
+            this._handleError(error, 'Error in stepOut command', true, 'stepOutRequest');
         });
         this.sendResponse(response);
     }
@@ -473,8 +490,9 @@ export class MLDebugSession extends LoggingDebugSession {
             this._runtime.setRunTimeState('shutdown');
             this._runtime.terminate().then(() => {
                 this.sendResponse(response);
-            }).catch((e) => {
-                this._handleError(e, 'Error terminating request');
+            }).catch((error) => {
+                this.reportErrorToClient(error as Error);
+                this._handleError(error, 'Error terminating request');
                 this.sendResponse(response);
             });
         } else if (this._runtime.getRunTimeState() === 'attached') {
@@ -484,8 +502,9 @@ export class MLDebugSession extends LoggingDebugSession {
                     this._trace('Restart is not supported for attach, please attach to a new request');
                 }
                 this.sendResponse(response);
-            }).catch((e) => {
-                this._handleError(e, 'Error disconnecting request');
+            }).catch((error) => {
+                this.reportErrorToClient(error as Error);
+                this._handleError(error, 'Error disconnecting request');
                 this.sendResponse(response);
             });
         } else {
@@ -509,8 +528,9 @@ export class MLDebugSession extends LoggingDebugSession {
                 variablesReference: evalResult.hasOwnProperty('objectId') ? this._variableHandles.create(evalResult.objectId) : 0
             };
             this.sendResponse(response);
-        }).catch(err => {
-            this._handleError(err, 'Error in evaluating expression', false, 'evaluateRequest');
+        }).catch(error => {
+            this.reportErrorToClient(error as Error);
+            this._handleError(error, 'Error in evaluating expression', false, 'evaluateRequest');
             this.sendResponse(response);
         });
     }
@@ -632,8 +652,9 @@ export class MLDebugSession extends LoggingDebugSession {
             });
         }
 
-        Promise.all(mlrequests).catch(err => {
-            this._handleError(err);
+        Promise.all(mlrequests).catch(error => {
+            this.reportErrorToClient(error as Error);
+            this._handleError(error);
         });
     }
 
@@ -646,8 +667,8 @@ export class MLDebugSession extends LoggingDebugSession {
         this._frameHandles.reset();
     }
 
-    private _handleError(err: any, msg?: string, terminate?: boolean, func?: string): void {
-        const errAsObject = JSON.parse(JSON.stringify(err));
+    private _handleError(error: unknown, msg?: string, terminate?: boolean, func?: string): void {
+        const errAsObject = JSON.parse(JSON.stringify(error));
         const errResp = errAsObject.errorResponse || errAsObject.message;
         const messageCode = errResp.messageCode;
         if (messageCode === 'JSDBG-REQUESTRECORD' || messageCode === 'XDMP-NOREQUEST') {
@@ -682,6 +703,23 @@ export class MLDebugSession extends LoggingDebugSession {
         const locallyPresent: boolean = existsSync(localPath) || !uri;
         if (uri && locallyPresent) return localLine + 1;
         return localLine;
+    }
+
+    private reportErrorToClient(error: Error): void {
+        this._runtime.setRunTimeState('shutdown');
+        let popupMessageBase = 'Unable to launch the query for debugging: ';
+        if (error['code']) {
+            popupMessageBase = `{popupMessageBase}${error['code']}`;
+        }
+        const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, popupMessageBase);
+        const customEvent = new Event(
+            'MlxprsDebugAdapterError',
+            {
+                event: 'LaunchWithDebugError',
+                mlxprsError: mlxprsError
+            }
+        );
+        this.sendEvent(customEvent);
     }
 }
 
