@@ -1,12 +1,14 @@
 {
     "server-type": "http",
     "server-name": "mlxprs-ssl-test",
-    "authentication": "digest",
+    "root": "/",
     "port": 8057,
     "modules-database": "mlxprs-test-modules",
     "content-database": "mlxprs-test-content",
-    "root": "/",
-    "url-rewriter": "/MarkLogic/rest-api/rewriter.xml",
+    "authentication": "digest",
     "error-handler": "/MarkLogic/rest-api/error-handler.xqy",
-    "ssl-certificate-template": "mlxprs-ssl-certificate-template"
+    "url-rewriter": "/MarkLogic/rest-api/rewriter.xml",
+    "rewrite-resolves-globally": true,
+    "ssl-certificate-template": "mlxprs-ssl-certificate-template",
+    "ssl-require-client-certificate": false
 }
