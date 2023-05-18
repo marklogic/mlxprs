@@ -62,7 +62,10 @@ It is recommended to use VSCode as the editor for this package, as it can self-l
 
 * Open the project folder in VSCode
 * Select the "Run and Debug" sidebar window (Ctrl+Shift+D)
-* Choose "Launch Extension (debug)" from the RUN AND DEBUG dropdown menu
+* If you are not planning to use the debugging features (either 'Launch' or 'Attach'), then choose "Launch Extension (debug)" from the RUN AND DEBUG dropdown menu
+* If you want to use the debugging features, then you must also have a Debug Client running. You can do this in a couple of different ways:
+    * Choose either "Extension + SJS Server" or "Extension + XQY Server". This option starts the Debug Client along with the Extension.
+    * First choose and launch either "Launch XQY Debug Adapter Server" or "Launch SJS Debug Adapter Server" to start the Debug Client independently.
 * Press the green play button or F5 to compile and launch the plugin in a test environment
     * Note that at this time, the "Attach" commands do not work when debugging the extension from within VSCode. In order to test the "Attach" commands, you will need to build the artifact (.vsix) and use that extension with a different project, and then test manually.
 * Please see the README.md file for information on configuring and working in the test environment
