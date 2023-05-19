@@ -87,7 +87,8 @@ suite('Testing sjs/xqy boundary in eval/invoke', async () => {
         CP.exec(`curl --anyauth -k --user ${globalConfig.username}:${globalConfig.password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
                 http${globalConfig.ssl ? 's' : ''}://${globalConfig.hostname}:${integrationTestHelper.serverPortForAttaching}/LATEST/invoke --data-urlencode module=/MarkLogic/test/invoke1.xqy`);
         await wait(100);
-        const resp = await integrationTestHelper.getRid(integrationTestHelper.mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server(integrationTestHelper.attachServerName)).toObject()[0].requestStatuses[0].requestId');
+        const serverName = integrationTestHelper.attachServerName;
+        const resp = await integrationTestHelper.getRid(integrationTestHelper.mlClient, `xdmp.serverStatus(xdmp.host(),xdmp.server('${serverName}')).toObject()[0].requestStatuses[0].requestId`);
         const rid = resp[0];
         const root = Path.join(integrationTestHelper.scriptFolder, 'MarkLogic/test');
         const config = {

@@ -16,17 +16,20 @@
  */
 
 import * as assert from 'assert';
+import * as events from 'events';
 import * as sinon from 'sinon';
 
+import { EditorQueryEvaluator } from '../../editorQueryEvaluator';
 import { JsDebugManager } from '../../JSDebugger/jsDebugManager';
 import { ClientContext, sendJSQuery, sendRows, sendSparql, sendXQuery } from '../../marklogicClient';
-import { IntegrationTestHelper, } from './markLogicIntegrationTestHelper';
+import { IntegrationTestHelper } from './markLogicIntegrationTestHelper';
 
 suite('Testing SSL connectivity failures in various scenarios', async () => {
     const integrationTestHelper: IntegrationTestHelper = globalThis.integrationTestHelper;
     const mlClient: ClientContext = integrationTestHelper.mlClient;
     const mlClientWithSslWithRejectUnauthorized: ClientContext = integrationTestHelper.mlClientWithSslWithRejectUnauthorized;
     const showErrorPopup = integrationTestHelper.showErrorPopup;
+    const editorQueryEvaluator = new EditorQueryEvaluator(null, null);
 
     test('When attempting to Eval an XQY module that has syntax problems',
         async () => {
@@ -106,6 +109,33 @@ suite('Testing SSL connectivity failures in various scenarios', async () => {
             showErrorPopup.resetHistory();
             await JsDebugManager.disconnectFromJsDebugServer(mlClientWithSslWithRejectUnauthorized);
             sinon.assert.calledWith(showErrorPopup, sinon.match('Could not get list of connected servers'));
+        }).timeout(5000);
+
+    test('When attempting to Eval an XQY module that has syntax problems',
+        async () => {
+            showErrorPopup.resetHistory();
+            const evaluatorEmitter = new events.EventEmitter();
+            editorQueryEvaluator.editorXQuery(mlClient, 'gibberish', null, null, 'xdmp', evaluatorEmitter);
+            await events.once(evaluatorEmitter, 'complete');
+            sinon.assert.calledWith(showErrorPopup, sinon.match('XDMP-MISSINGCONTEXT'));
+        }).timeout(5000);
+
+    test('When attempting to Eval an SJS module that has syntax problems',
+        async () => {
+            showErrorPopup.resetHistory();
+            const evaluatorEmitter = new events.EventEmitter();
+            editorQueryEvaluator.editorJSQuery(mlClient, 'gibberish', null, null, evaluatorEmitter);
+            await events.once(evaluatorEmitter, 'complete');
+            sinon.assert.calledWith(showErrorPopup, sinon.match('JS-JAVASCRIPT'));
+        }).timeout(5000);
+
+    test('When attempting to submit an Optic query that has syntax problems to the /v1/rows endpoint',
+        async () => {
+            showErrorPopup.resetHistory();
+            const evaluatorEmitter = new events.EventEmitter();
+            editorQueryEvaluator.editorRowsQuery(mlClient, 'gibberish', null, null, 'json', evaluatorEmitter);
+            await events.once(evaluatorEmitter, 'complete');
+            sinon.assert.calledWith(showErrorPopup, sinon.match('INTERNAL ERROR'));
         }).timeout(5000);
 
 });

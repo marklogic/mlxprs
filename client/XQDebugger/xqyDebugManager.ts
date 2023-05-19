@@ -16,7 +16,7 @@
 
 import { DebugSessionCustomEvent, QuickPickItem, window } from 'vscode';
 
-import { ErrorReporter } from '../errorReporter';
+import { MlxprsErrorReporter } from '../mlxprsErrorReporter';
 import { ClientContext, MlClientParameters, sendXQuery, ServerQueryResponse } from '../marklogicClient';
 import { MlxprsError } from '../mlxprsErrorBuilder';
 import { MlxprsStatus } from '../mlxprsStatus';
@@ -129,7 +129,7 @@ export class XqyDebugManager {
                         stack: error.stack,
                         popupMessage: `Could not get list of connected servers; ${error}`
                     };
-                    ErrorReporter.reportError(mlxprsError);
+                    MlxprsErrorReporter.reportError(mlxprsError);
                     return null;
                 });
     }
@@ -142,6 +142,6 @@ function appServerSorter(a: QuickPickItem, b: QuickPickItem): number {
 export function handleDebugSessionCustomEvent(event: DebugSessionCustomEvent) {
     console.debug(`Received Debug Session Custom Event: ${JSON.stringify(event)}`);
     if (event.event === 'MlxprsDebugAdapterError') {
-        ErrorReporter.reportError(event.body['mlxprsError'] as MlxprsError);
+        MlxprsErrorReporter.reportError(event.body['mlxprsError'] as MlxprsError);
     }
 }

@@ -19,7 +19,7 @@
 import * as esprima from 'esprima';
 import { Memento, WorkspaceConfiguration, window } from 'vscode';
 
-import { ErrorReporter } from './errorReporter';
+import { MlxprsErrorReporter } from './mlxprsErrorReporter';
 import { SJS, XQY, parseXQueryForOverrides, MLSETTINGSFLAG, ClientContext, MlClientParameters, MLDBCLIENT } from './marklogicClient';
 import { MlxprsError } from './mlxprsErrorBuilder';
 
@@ -132,7 +132,7 @@ export function getDbClientWithoutOverrides(cfg: WorkspaceConfiguration, state: 
             stack: error.stack,
             popupMessage: `Unable to build the MarkLogic database client: ${error.message}`
         };
-        ErrorReporter.reportError(mlxprsError);
+        MlxprsErrorReporter.reportError(mlxprsError);
         return null;
     }
 }

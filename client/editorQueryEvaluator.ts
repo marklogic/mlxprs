@@ -24,12 +24,13 @@ import {
 } from 'vscode';
 
 import { ClientResponseProvider, ErrorResultsObject } from './clientResponseProvider';
-import { ErrorReporter } from './errorReporter';
+import { MlxprsErrorReporter } from './mlxprsErrorReporter';
 import { ClientContext, sendJSQuery, sendSparql, sendXQuery, sendRows } from './marklogicClient';
 import { buildMlxprsErrorFromError, MlxprsError } from './mlxprsErrorBuilder';
 import { MlxprsWebViewProvider } from './mlxprsWebViewProvider';
 import { getSparqlQueryForm, getSparqlResponseType } from './sparqlQueryHelper';
 import { cascadeOverrideClient } from './vscQueryParameterTools';
+import { EventEmitter } from 'stream';
 
 export enum EditorQueryType {
     JS,
@@ -133,11 +134,14 @@ export class EditorQueryEvaluator {
         return resultsEditorTabIdentifierPromise;
     }
 
-    private editorJSQuery(
+    // public only for testing purposes
+    public editorJSQuery(
         dbClientContext: ClientContext,
         query: string,
         resultsEditorTabIdentifier: Uri,
-        editor: TextEditor
+        editor: TextEditor,
+        // The EventEmitter parameter is only used for testing. Production clients should not pass anything for this param.
+        evaluatorEmitter?: EventEmitter
     ): void {
         sendJSQuery(dbClientContext, query)
             .result(
@@ -146,22 +150,28 @@ export class EditorQueryEvaluator {
                 },
                 (error: Error) => {
                     const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, `Unable to evaluate the query: ${error['code']}`);
-                    ErrorReporter.reportError(mlxprsError);
+                    MlxprsErrorReporter.reportError(mlxprsError);
                     return null;
                 })
             .then(resultsEditorTabIdentifier => {
                 if (resultsEditorTabIdentifier && (this.sendResultsToEditorTab)) {
                     EditorQueryEvaluator.showFormattedResults(resultsEditorTabIdentifier, editor);
                 }
+                if (evaluatorEmitter) {
+                    evaluatorEmitter.emit('complete');
+                }
             });
     }
 
-    private editorXQuery(
+    // public only for testing purposes
+    public editorXQuery(
         dbClientContext: ClientContext,
         query: string,
         resultsEditorTabIdentifier: Uri,
         editor: TextEditor,
-        prefix: 'xdmp' | 'dbg' = 'xdmp'
+        prefix: 'xdmp' | 'dbg' = 'xdmp',
+        // The EventEmitter parameter is only used for testing. Production clients should not pass anything for this param.
+        evaluatorEmitter?: EventEmitter
     ): void {
         sendXQuery(dbClientContext, query, prefix)
             .result(
@@ -170,12 +180,15 @@ export class EditorQueryEvaluator {
                 },
                 (error: Error) => {
                     const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, 'Unable to evaluate the query');
-                    ErrorReporter.reportError(mlxprsError);
+                    MlxprsErrorReporter.reportError(mlxprsError);
                     return null;
                 })
             .then(resultsEditorTabIdentifier => {
                 if (resultsEditorTabIdentifier && (this.sendResultsToEditorTab)) {
                     EditorQueryEvaluator.showFormattedResults(resultsEditorTabIdentifier, editor);
+                }
+                if (evaluatorEmitter) {
+                    evaluatorEmitter.emit('complete');
                 }
             });
     }
@@ -203,7 +216,7 @@ export class EditorQueryEvaluator {
                 },
                 (error: Error) => {
                     const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, `Unable to evaluate the query: ${error['code']}`);
-                    ErrorReporter.reportError(mlxprsError);
+                    MlxprsErrorReporter.reportError(mlxprsError);
                     return null;
                 })
             .then(resultsEditorTabIdentifier => {
@@ -228,7 +241,7 @@ export class EditorQueryEvaluator {
                 },
                 (error: Error) => {
                     const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, `Unable to evaluate the query: ${error['code']}`);
-                    ErrorReporter.reportError(mlxprsError);
+                    MlxprsErrorReporter.reportError(mlxprsError);
                     return null;
                 })
             .then(resultsEditorTabIdentifier => {
@@ -238,12 +251,15 @@ export class EditorQueryEvaluator {
             });
     }
 
-    private editorRowsQuery(
+    // public only for testing purposes
+    public  editorRowsQuery(
         dbClientContext: ClientContext,
         query: string,
         resultsEditorTabIdentifier: Uri,
         editor: TextEditor,
-        resultFormat: ml.RowsResponseFormat
+        resultFormat: ml.RowsResponseFormat,
+        // The EventEmitter parameter is only used for testing. Production clients should not pass anything for this param.
+        evaluatorEmitter?: EventEmitter
     ): void {
         sendRows(dbClientContext, query, resultFormat)
             .then(
@@ -263,12 +279,15 @@ export class EditorQueryEvaluator {
             )
             .catch(error => {
                 const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, `Unable to evaluate the query: ${error['code']}`);
-                ErrorReporter.reportError(mlxprsError);
+                MlxprsErrorReporter.reportError(mlxprsError);
                 return null;
             })
             .then(resultsEditorTabIdentifier => {
                 if (resultsEditorTabIdentifier && (this.sendResultsToEditorTab)) {
                     EditorQueryEvaluator.showFormattedResults(resultsEditorTabIdentifier, editor);
+                }
+                if (evaluatorEmitter) {
+                    evaluatorEmitter.emit('complete');
                 }
             });
     }
