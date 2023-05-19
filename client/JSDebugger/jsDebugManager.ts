@@ -19,7 +19,7 @@ import * as querystring from 'querystring';
 import * as request from 'request-promise';
 import { QuickPickItem, window, workspace } from 'vscode';
 
-import { ErrorReporter } from '../errorReporter';
+import { MlxprsErrorReporter } from '../mlxprsErrorReporter';
 import { ClientContext, sendXQuery, ServerQueryResponse } from '../marklogicClient';
 import { MlxprsError } from '../mlxprsErrorBuilder';
 import { MlxprsStatus } from '../mlxprsStatus';
@@ -153,7 +153,6 @@ export class JsDebugManager {
 
     public static async connectToNamedJsDebugServer(servername: string): Promise<void> {
         const cfg = workspace.getConfiguration('marklogic');
-        console.debug(JSON.stringify(cfg));
         const username: string = cfg.get('username');
         const password: string = cfg.get('password');
         const hostname: string = cfg.get('host');
@@ -317,7 +316,7 @@ export class JsDebugManager {
                         stack: error.stack,
                         popupMessage: `Could not get list of connected servers; ${error}`
                     };
-                    ErrorReporter.reportError(mlxprsError);
+                    MlxprsErrorReporter.reportError(mlxprsError);
                     return null;
                 });
     }

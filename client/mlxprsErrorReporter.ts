@@ -18,16 +18,16 @@ import { window } from 'vscode';
 
 import { MlxprsError } from './mlxprsErrorBuilder';
 
-export class ErrorReporter {
+export class MlxprsErrorReporter {
     static mlxprsOutput = window.createOutputChannel('mlxprs');
 
     static reportError(mlxprsError: MlxprsError) {
-        ErrorReporter.mlxprsOutput.appendLine(`Error Message: ${mlxprsError.reportedMessage}`);
+        MlxprsErrorReporter.mlxprsOutput.appendLine(`Error Message: ${mlxprsError.reportedMessage}`);
         if (mlxprsError.code) {
-            ErrorReporter.mlxprsOutput.appendLine(`Error Code: ${mlxprsError.code}`);
+            MlxprsErrorReporter.mlxprsOutput.appendLine(`Error Code: ${mlxprsError.code}`);
         }
-        ErrorReporter.mlxprsOutput.appendLine(`Stack: ${mlxprsError.stack}`);
-        ErrorReporter.mlxprsOutput.show();
+        MlxprsErrorReporter.mlxprsOutput.appendLine(`Stack: ${mlxprsError.stack}`);
+        MlxprsErrorReporter.mlxprsOutput.show();
         window.showErrorMessage(mlxprsError.popupMessage);
     }
 }

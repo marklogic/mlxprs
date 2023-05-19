@@ -21,7 +21,7 @@ import {
     DebugAdapterDescriptor, DebugSession, QuickPickItem, QuickPickOptions
 } from 'vscode';
 
-import { ErrorReporter } from '../errorReporter';
+import { MlxprsErrorReporter } from '../mlxprsErrorReporter';
 import { MlClientParameters } from '../marklogicClient';
 import { MlxprsError } from '../mlxprsErrorBuilder';
 import { XqyDebugManager, DebugStatusQueryResponse } from './xqyDebugManager';
@@ -79,7 +79,7 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
                     stack: error.stack,
                     popupMessage: `Path to certificate authority is an unreadable file or the file is empty; path: ${clientParams.pathToCa}`
                 };
-                ErrorReporter.reportError(mlxprsError);
+                MlxprsErrorReporter.reportError(mlxprsError);
                 return undefined;
             }
         }

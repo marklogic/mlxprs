@@ -17,7 +17,7 @@
 import { readFileSync } from 'fs';
 import * as vscode from 'vscode';
 
-import { ErrorReporter } from '../errorReporter';
+import { MlxprsErrorReporter } from '../mlxprsErrorReporter';
 import { JsDebugManager } from './jsDebugManager';
 import { buildMlxprsErrorFromError, MlxprsError } from '../mlxprsErrorBuilder';
 
@@ -118,7 +118,7 @@ export class JsDebugConfigurationProvider implements vscode.DebugConfigurationPr
                     config.database = resp.match('\r\n\r\n(.*[0-9])\r\n')[1]; //better way of parsing?
                 }).catch(error => {
                     const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, `Error attempting to retrieve database id for database name, '${config.database}':`);
-                    ErrorReporter.reportError(mlxprsError);
+                    MlxprsErrorReporter.reportError(mlxprsError);
                     return null;
                 });
         }
@@ -129,7 +129,7 @@ export class JsDebugConfigurationProvider implements vscode.DebugConfigurationPr
                     config.modules = resp.match('\r\n\r\n(.*[0-9])\r\n')[1]; //better way of parsing?
                 }).catch((error: Error) => {
                     const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, `Error attempting to retrieve database id for database name, '${config.modules}':`);
-                    ErrorReporter.reportError(mlxprsError);
+                    MlxprsErrorReporter.reportError(mlxprsError);
                     return undefined;
                 });
         }
