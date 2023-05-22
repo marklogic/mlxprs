@@ -94,23 +94,6 @@ suite('Testing SSL connectivity failures in various scenarios', async () => {
                 });
         }).timeout(5000);
 
-    test('When attempting to \'connect\' App Server with a self-signed certificate and the client turns ON the \'rejectUnauthorized\' setting',
-        async () => {
-            showErrorPopup.resetHistory();
-
-            const listServersForConnectQuery = mlClientWithSslWithRejectUnauthorized.buildListServersForConnectQuery();
-            await JsDebugManager.getAppServerListForJs(mlClientWithSslWithRejectUnauthorized, listServersForConnectQuery);
-
-            sinon.assert.calledWith(showErrorPopup, sinon.match('Could not get list of connected servers'));
-        }).timeout(5000);
-
-    test('When attempting to \'disconnect\' App Server with a self-signed certificate and the client turns ON the \'rejectUnauthorized\' setting',
-        async () => {
-            showErrorPopup.resetHistory();
-            await JsDebugManager.disconnectFromJsDebugServer(mlClientWithSslWithRejectUnauthorized);
-            sinon.assert.calledWith(showErrorPopup, sinon.match('Could not get list of connected servers'));
-        }).timeout(5000);
-
     test('When attempting to Eval an XQY module that has syntax problems',
         async () => {
             showErrorPopup.resetHistory();

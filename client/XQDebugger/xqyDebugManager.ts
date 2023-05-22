@@ -61,21 +61,30 @@ export class XqyDebugManager {
     public static async connectToXqyDebugServer(dbClientContext: ClientContext): Promise<void> {
         const listServersForConnectQuery = dbClientContext.buildListServersForConnectQuery();
         const choices: QuickPickItem[] = await this.getAppServerListForXqy(dbClientContext, listServersForConnectQuery);
-        const sortedChoices: QuickPickItem[] = choices.sort(appServerSorter);
-        if (sortedChoices.length) {
-            return window.showQuickPick(sortedChoices)
-                .then((choice: QuickPickItem) => {
-                    return sendXQuery(dbClientContext, `dbg:connect(${choice.description})`)
-                        .result(
-                            () => {
-                                window.showInformationMessage(`Successfully connected ${choice.label} on ${dbClientContext.params.host}`);
-                                this.requestStatusBarItemUpdate();
-                            },
-                            (err) => {
-                                window.showErrorMessage(`Failed to connect to ${choice.label}: ${JSON.stringify(err.body.errorResponse.message)}`);
-                                this.requestStatusBarItemUpdate();
-                            });
-                });
+        if (choices) {
+            const sortedChoices: QuickPickItem[] = choices.sort(appServerSorter);
+            if (sortedChoices.length) {
+                return window.showQuickPick(sortedChoices)
+                    .then((choice: QuickPickItem) => {
+                        return sendXQuery(dbClientContext, `dbg:connect(${choice.description})`)
+                            .result(
+                                () => {
+                                    window.showInformationMessage(`Successfully connected ${choice.label} on ${dbClientContext.params.host}`);
+                                    this.requestStatusBarItemUpdate();
+                                },
+                                (error) => {
+                                    const mlxprsError: MlxprsError = {
+                                        reportedMessage: error.message,
+                                        stack: error.stack,
+                                        popupMessage: `Failed to connect to ${choice.label}: ${JSON.stringify(error.body.errorResponse.message)}`
+                                    };
+                                    MlxprsErrorReporter.reportError(mlxprsError);
+                                    this.requestStatusBarItemUpdate();
+                                });
+                    });
+            } else {
+                return null;
+            }
         } else {
             return null;
         }
@@ -94,8 +103,13 @@ export class XqyDebugManager {
                                     window.showInformationMessage(`Successfully disconnected ${choice.label} on ${dbClientContext.params.host}`);
                                     this.requestStatusBarItemUpdate();
                                 },
-                                (err) => {
-                                    window.showErrorMessage(`Failed to connect to ${choice.label}: ${JSON.stringify(err.body.errorResponse.message)}`);
+                                (error) => {
+                                    const mlxprsError: MlxprsError = {
+                                        reportedMessage: error.message,
+                                        stack: error.stack,
+                                        popupMessage: `Failed to disconnect from ${choice.label}: ${JSON.stringify(error.body.errorResponse.message)}`
+                                    };
+                                    MlxprsErrorReporter.reportError(mlxprsError);
                                     this.requestStatusBarItemUpdate();
                                 });
                     });
@@ -127,7 +141,7 @@ export class XqyDebugManager {
                     const mlxprsError: MlxprsError = {
                         reportedMessage: error.message,
                         stack: error.stack,
-                        popupMessage: `Could not get list of connected servers; ${error}`
+                        popupMessage: `Could not get list of app servers; ${error}`
                     };
                     MlxprsErrorReporter.reportError(mlxprsError);
                     return null;
