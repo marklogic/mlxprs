@@ -98,6 +98,21 @@ export class IntegrationTestHelper {
             rejectUnauthorized: true
         })
     );
+    readonly mlClientWithBadPort = new ClientContext(
+        new MlClientParameters({
+            host: this.hostname,
+            port: 9999,
+            managePort: this.managePort,
+            user: this.username,
+            pwd: this.password,
+            authType: 'DIGEST',
+            contentDb: this.modulesDB,
+            modulesDb: this.modulesDB,
+            pathToCa: this.pathToCa,
+            ssl: this.ssl,
+            rejectUnauthorized: this.rejectUnauthorized
+        })
+    );
 
     private module1 = Path.join(this.rootFolder, 'client/test/integration/jsScripts/MarkLogic/test/test.sjs');
     private module2 = Path.join(this.rootFolder, 'client/test/integration/jsScripts/MarkLogic/test/lib1.sjs');

@@ -54,9 +54,14 @@ export class JsDebugManager {
         const listServersForConnectQuery = dbClientContext.buildListServersForConnectQuery();
         const choices: QuickPickItem[] = await this.getAppServerListForJs(dbClientContext, listServersForConnectQuery) as QuickPickItem[];
         if (choices) {
-            const filteredChoices: QuickPickItem[] = await this.filterServers(choices, requiredResponse);
-            const sortedFilteredChoices: QuickPickItem[] = filteredChoices.sort(appServerSorter);
-            return sortedFilteredChoices;
+            try {
+                const filteredChoices: QuickPickItem[] = await this.filterServers(choices, requiredResponse);
+                const sortedFilteredChoices: QuickPickItem[] = filteredChoices.sort(appServerSorter);
+                return sortedFilteredChoices;
+            } catch (error) {
+                MlxprsErrorReporter.reportError(error);
+                return null;
+            }
         } else {
             return null;
         }
@@ -64,7 +69,7 @@ export class JsDebugManager {
 
     public static async connectToJsDebugServer(dbClientContext: ClientContext): Promise<void> {
         const filteredServerItems: QuickPickItem[] = await this.getFilteredListOfJsAppServers(dbClientContext, 'false');
-        if (filteredServerItems.length) {
+        if (filteredServerItems && filteredServerItems.length) {
             return window.showQuickPick(filteredServerItems)
                 .then((serverChoice: QuickPickItem) => {
                     return this.connectToNamedJsDebugServer(serverChoice.label)
@@ -73,8 +78,13 @@ export class JsDebugManager {
                                 window.showInformationMessage(`Successfully connected ${serverChoice.label} on ${dbClientContext.params.host}`);
                                 this.requestStatusBarItemUpdate();
                             },
-                            (err) => {
-                                window.showErrorMessage(`Failed to connect to ${serverChoice.label}: ${JSON.stringify(err.body.errorResponse.message)}`);
+                            (error) => {
+                                const mlxprsError: MlxprsError = {
+                                    reportedMessage: error.message,
+                                    stack: error.stack,
+                                    popupMessage: `Failed to connect to ${serverChoice.label}: ${JSON.stringify(error.body.errorResponse.message)}`
+                                };
+                                MlxprsErrorReporter.reportError(mlxprsError);
                                 this.requestStatusBarItemUpdate();
                             });
                 });
@@ -94,6 +104,7 @@ export class JsDebugManager {
         const rejectUnauthorized = Boolean(cfg.get('rejectUnauthorized'));
         const requests = [];
         const filteredChoices: QuickPickItem[] = [];
+        let mlxprsError: MlxprsError = null;
         choices.forEach(async (choice) => {
             const url = ClientContext.buildUrl(hostname, `/jsdbg/v1/connected/${choice.label}`, ssl, managePort);
             const options = {
@@ -116,12 +127,19 @@ export class JsDebugManager {
                     if (response === requiredResponse) {
                         filteredChoices.push(choice);
                     }
-                }).catch(err => {
-                    window.showErrorMessage(`"Connected" request failed: ${err}`);
+                }).catch((error: Error) => {
+                    mlxprsError = {
+                        reportedMessage: error.message,
+                        stack: error.stack,
+                        popupMessage: `Unable to connect to the MarkLogic Manage App Server: ${error.message}`
+                    };
                 });
             requests.push(connectedRequest);
         });
         await Promise.all(requests);
+        if (mlxprsError) {
+            throw mlxprsError;
+        }
         return filteredChoices;
     }
 
@@ -138,8 +156,13 @@ export class JsDebugManager {
                                     window.showInformationMessage(`Successfully disconnected ${serverChoice.label} on ${dbClientContext.params.host}`);
                                     this.requestStatusBarItemUpdate();
                                 },
-                                (err) => {
-                                    window.showErrorMessage(`Failed to connect to ${serverChoice.label}: ${JSON.stringify(err.body.errorResponse.message)}`);
+                                (error) => {
+                                    const mlxprsError: MlxprsError = {
+                                        reportedMessage: error.message,
+                                        stack: error.stack,
+                                        popupMessage: `Failed to disconnect from ${serverChoice.label}: ${JSON.stringify(error.body.errorResponse.message)}`
+                                    };
+                                    MlxprsErrorReporter.reportError(mlxprsError);
                                     this.requestStatusBarItemUpdate();
                                 });
                     });
@@ -162,15 +185,15 @@ export class JsDebugManager {
         const rejectUnauthorized = Boolean(cfg.get('rejectUnauthorized'));
 
         if (!hostname) {
-            window.showErrorMessage('Hostname is not provided');
+            window.showInformationMessage('Hostname is not provided');
             return;
         }
         if (!username) {
-            window.showErrorMessage('Username is not provided');
+            window.showInformationMessage('Username is not provided');
             return;
         }
         if (!password) {
-            window.showErrorMessage('Password is not provided');
+            window.showInformationMessage('Password is not provided');
             return;
         }
         const url = ClientContext.buildUrl(hostname, `/jsdbg/v1/connect/${servername}`, ssl, managePort);
@@ -193,12 +216,17 @@ export class JsDebugManager {
         request.post(url, options)
             .then(() => {
                 window.showInformationMessage('Debug server connected');
-            }).catch(err => {
-                window.showErrorMessage('Debug server connect failed: ' + JSON.stringify(err));
+            }).catch((error: Error) => {
+                const mlxprsError: MlxprsError = {
+                    reportedMessage: error.message,
+                    stack: error.stack,
+                    popupMessage: `Debug server connect failed: ${JSON.stringify(error)}`
+                };
+                MlxprsErrorReporter.reportError(mlxprsError);
             });
     }
 
-    public static async disconnectFromNamedJsDebugServer(servername: string, reportDisconnectError = true): Promise<void> {
+    public static async disconnectFromNamedJsDebugServer(servername: string): Promise<void> {
         const cfg = workspace.getConfiguration('marklogic');
         const username: string = cfg.get('username');
         const password: string = cfg.get('password');
@@ -209,15 +237,15 @@ export class JsDebugManager {
         const rejectUnauthorized = Boolean(cfg.get('rejectUnauthorized'));
 
         if (!hostname) {
-            window.showErrorMessage('Hostname is not provided');
+            window.showInformationMessage('Hostname is not provided');
             return;
         }
         if (!username) {
-            window.showErrorMessage('Username is not provided');
+            window.showInformationMessage('Username is not provided');
             return;
         }
         if (!password) {
-            window.showErrorMessage('Password is not provided');
+            window.showInformationMessage('Password is not provided');
             return;
         }
         const url = ClientContext.buildUrl(hostname, `/jsdbg/v1/disconnect/${servername}`, ssl, managePort);
@@ -239,10 +267,13 @@ export class JsDebugManager {
 
         request.post(url, options).then(() => {
             window.showInformationMessage('Debug server disconnected');
-        }).catch(() => {
-            if (reportDisconnectError) {
-                window.showErrorMessage('Debug server disconnect failed');
-            }
+        }).catch((error: Error) => {
+            const mlxprsError: MlxprsError = {
+                reportedMessage: error.message,
+                stack: error.stack,
+                popupMessage: `Debug server disconnect failed: ${JSON.stringify(error)}`
+            };
+            MlxprsErrorReporter.reportError(mlxprsError);
         });
     }
 
@@ -314,7 +345,7 @@ export class JsDebugManager {
                     const mlxprsError: MlxprsError = {
                         reportedMessage: error.message,
                         stack: error.stack,
-                        popupMessage: `Could not get list of connected servers; ${error}`
+                        popupMessage: `Could not get list of app servers; ${error}`
                     };
                     MlxprsErrorReporter.reportError(mlxprsError);
                     return null;
