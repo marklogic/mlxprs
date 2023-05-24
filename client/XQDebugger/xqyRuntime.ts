@@ -383,11 +383,16 @@ export class XqyRuntime extends EventEmitter {
     }
 
     private static reportError(error: any, functionName: string): void {
-        let errorMessage = JSON.stringify(error);
-        if (error.body && error.body.errorResponse) {
-            errorMessage = error.body.errorResponse.message;
+        let informativeMessage: string;
+        if (error.body) {
+            informativeMessage = error.body.errorResponse.message || JSON.stringify(error);
+        } else if (error.message) {
+            informativeMessage = error.message || JSON.stringify(error);
+        } else  {
+            informativeMessage = JSON.stringify(error);
         }
-        console.error(`error (${functionName}): ${errorMessage}`);
+        const msg = `error (${functionName}): ${informativeMessage}`;
+        console.error(msg);
     }
 
     private reportErrorToClient(error: Error): void {
