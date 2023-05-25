@@ -670,8 +670,8 @@ export class MLDebugSession extends LoggingDebugSession {
     private _handleError(error: unknown, msg?: string, terminate?: boolean, func?: string): void {
         const errAsObject = JSON.parse(JSON.stringify(error));
         const errResp = errAsObject.errorResponse || errAsObject.message;
-        const messageCode = errResp.messageCode;
-        if (messageCode === 'JSDBG-REQUESTRECORD' || messageCode === 'XDMP-NOREQUEST') {
+        const messageCode: string = errResp.messageCode || errAsObject.message;
+        if (messageCode.includes('JSDBG-REQUESTRECORD') || messageCode.includes('XDMP-NOREQUEST')) {
             this._runtime.setRunTimeState('shutdown');
             this.sendEvent(new TerminatedEvent());
             this._trace(`Request ${this._runtime.getRid()} has ended`);
@@ -706,20 +706,22 @@ export class MLDebugSession extends LoggingDebugSession {
     }
 
     private reportErrorToClient(error: Error): void {
-        this._runtime.setRunTimeState('shutdown');
-        let popupMessageBase = 'Unable to launch the query for debugging: ';
-        if (error['code']) {
-            popupMessageBase = `{popupMessageBase}${error['code']}`;
-        }
-        const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, popupMessageBase);
-        const customEvent = new Event(
-            'MlxprsDebugAdapterError',
-            {
-                event: 'LaunchWithDebugError',
-                mlxprsError: mlxprsError
+        if (!(error.message.includes('JSDBG-REQUESTRECORD') || error.message.includes('XDMP-NOREQUEST'))) {
+            this._runtime.setRunTimeState('shutdown');
+            let popupMessageBase = 'Unable to launch the query for debugging: ';
+            if (error['code']) {
+                popupMessageBase = `{popupMessageBase}${error['code']}`;
             }
-        );
-        this.sendEvent(customEvent);
+            const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, popupMessageBase);
+            const customEvent = new Event(
+                'MlxprsDebugAdapterError',
+                {
+                    event: 'LaunchWithDebugError',
+                    mlxprsError: mlxprsError
+                }
+            );
+            this.sendEvent(customEvent);
+        }
     }
 }
 

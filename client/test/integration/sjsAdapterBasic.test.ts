@@ -16,10 +16,14 @@
 
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import * as assert from 'assert';
+import * as sinon from 'sinon';
+
 import { IntegrationTestHelper } from './markLogicIntegrationTestHelper';
 
 suite('Basic', () => {
     const integrationTestHelper: IntegrationTestHelper = globalThis.integrationTestHelper;
+    const showErrorPopup = integrationTestHelper.showErrorPopup;
+
     test('launch a script and it should stop at entry', async () => {
         const jsDebugClient = integrationTestHelper.jsDebugClient;
         return Promise.all([
@@ -147,5 +151,17 @@ suite('Basic', () => {
         await jsDebugClient.waitForEvent('stopped');
         const evalResult = await jsDebugClient.evaluateRequest({ expression: 'ret' });
         return assert.equal(evalResult.body.result, '105');
+    }).timeout(5000);
+
+    test('check continue', async () => {
+        const jsDebugClient = integrationTestHelper.jsDebugClient;
+        await Promise.all([
+            jsDebugClient.configurationSequence(),
+            jsDebugClient.launch(integrationTestHelper.config)
+        ]);
+        showErrorPopup.resetHistory();
+        await jsDebugClient.continueRequest({ threadId: 1 });
+        await jsDebugClient.waitForEvent('terminated');
+        return sinon.assert.notCalled(showErrorPopup);
     }).timeout(5000);
 });
