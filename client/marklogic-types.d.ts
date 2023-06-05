@@ -26,7 +26,7 @@ declare module 'marklogic' {
     export type contentType = 'application/json' | 'application/xml' | 'text/html' | 'text/csv'
     export type RowsResponseFormat = 'json' | 'xml' | 'csv'
     export type RowsQueryType = 'dsl' | 'json'
-    
+
     // application/trig should be supported according to the documentation
     // but there appears to be a bug in the implementation
     // so I removed it from package.json as an option
@@ -60,6 +60,24 @@ declare module 'marklogic' {
         query: (actualQuery: object | string, options: RowsOptions) => Promise<RowsResponse>
     }
 
+    export type RequestOptions = {
+        path: string,
+        method: string,
+        headers: object
+    }
+
+    export type RequestOperation = {
+        requestBody: string
+    }
+
+    interface Internal {
+        sendRequest(
+            path: string,
+            requestOptionsCallback?: object,
+            operationCallback?: object
+        ): ResultProvider<unknown>
+    }
+
     export interface DatabaseClient {
         release: () => void;
         xqueryEval: <U>(query: string, variables?: Variables) => ResultProvider<U>
@@ -70,6 +88,7 @@ declare module 'marklogic' {
         rows: Rows
         writeCollection: (collection: string, documents: Record<string, any>[]) => ResultProvider<string[]>
         removeCollection: (collection: string) => ResultProvider<string>
+        internal: Internal
     }
 
     export interface ConnectionParams {

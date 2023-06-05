@@ -25,8 +25,8 @@ import { Subject } from 'await-notify';
 import { existsSync } from 'fs';
 import { basename } from 'path';
 
-import { buildMlxprsErrorFromError, MlxprsError } from '../mlxprsErrorBuilder';
 import { MLRuntime, MLbreakPoint, V8Frame, ScopeObject, V8PropertyObject, V8PropertyValue } from './mlRuntime';
+import { buildMlxprsErrorFromError, MlxprsError } from '../mlxprsErrorBuilder';
 
 interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
     program: string;
@@ -669,8 +669,8 @@ export class MLDebugSession extends LoggingDebugSession {
 
     private _handleError(error: unknown, msg?: string, terminate?: boolean, func?: string): void {
         const errAsObject = JSON.parse(JSON.stringify(error));
-        const errResp = errAsObject.errorResponse || errAsObject.message;
-        const messageCode: string = errResp.messageCode || errAsObject.message;
+        const errResp = errAsObject.errorResponse || errAsObject.message || errAsObject.code;
+        const messageCode: string = errResp.messageCode || errAsObject.message || errAsObject.code;
         if (messageCode.includes('JSDBG-REQUESTRECORD') || messageCode.includes('XDMP-NOREQUEST')) {
             this._runtime.setRunTimeState('shutdown');
             this.sendEvent(new TerminatedEvent());
