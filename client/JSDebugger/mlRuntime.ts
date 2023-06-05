@@ -15,11 +15,11 @@
  */
 
 import { EventEmitter } from 'events';
+import * as fs from 'fs';
+import * as ml from 'marklogic';
+
 import { ClientContext, MlClientParameters } from '../marklogicClient';
 import { ModuleContentGetter } from '../moduleContentGetter';
-import * as request from 'request-promise';
-import * as fs from 'fs';
-import * as querystring from 'querystring';
 
 const DEFAULT_MANAGE_PORT = 8002;
 
@@ -84,6 +84,7 @@ export class MLRuntime extends EventEmitter {
     private _rejectUnauthorized = true;
     private dbClientContext: ClientContext;
     private _mlModuleGetter: ModuleContentGetter;
+    private managePort = null;
 
     public getHostString(): string {
         return `${this.dbClientContext.params.host}:${this.dbClientContext.params.port}`;
@@ -119,6 +120,7 @@ export class MLRuntime extends EventEmitter {
         this._username = args.username;
         this._password = args.password;
         this._dbgPort = args.managePort;
+        this.managePort = args.managePort;
         this._ssl = args.ssl;
         this._scheme = this._ssl ? 'https' : 'http';
         this._rejectUnauthorized = args.rejectUnauthorized;
@@ -244,71 +246,104 @@ export class MLRuntime extends EventEmitter {
 
     //---- helpers
 
+    private newMarklogicManageClient(): ClientContext {
+        const manageClientParams: MlClientParameters = JSON.parse(JSON.stringify(this.dbClientContext.params));
+        manageClientParams.port = this.managePort;
+        manageClientParams.contentDb = null;
+        manageClientParams.modulesDb = null;
+        return new ClientContext(manageClientParams);
+    }
+
     private _sendMLdebugRequestPOST(module: string, body?: string): Promise<string> {
-        const url = this.buildUrl(`/${module}/${this._rid}`);
-        const options: Record<string, unknown> = {
-            headers: {
-                'Content-type': 'application/x-www-form-urlencoded',
-                'X-Error-Accept': 'application/json'
-            },
-            auth: {
-                user: this._username,
-                pass: this._password,
-                'sendImmediately': false
-            }
-        };
-        if (body) {
-            options['body'] = body;
-        }
-        if (this._ca) options['agentOptions'] = { ca: this._ca };
-        options['rejectUnauthorized'] = this._rejectUnauthorized;
-        return request.post(url, options);
+        const manageClient = this.newMarklogicManageClient();
+
+        return new Promise((resolve, reject) => {
+            manageClient.databaseClient.internal.sendRequest(
+                `/jsdbg/v1/${module}/${this._rid}`,
+                (requestOptions: ml.RequestOptions) => {
+                    requestOptions.method = 'POST';
+                    requestOptions.headers = { 'X-Error-Accept': 'application/json' };
+                },
+                (operation: ml.RequestOperation) => {
+                    operation.requestBody = body;
+                })
+                .result((result: object) => {
+                    let response = '';
+                    if (result) {
+                        response = JSON.stringify(result);
+                    }
+                    resolve(response);
+                })
+                .catch(error => {
+                    reject(error.body.errorResponse);
+                });
+        });
     }
 
-    private _sendMLdebugRequestGET(module: string, queryString?: Record<string, unknown>): Promise<string> {
-        const url = this.buildUrl(`/${module}/${this._rid}`);
-        const options: Record<string, unknown> = {
-            headers: {
-                'X-Error-Accept': 'application/json'
-            },
-            auth: {
-                user: this._username,
-                pass: this._password,
-                'sendImmediately': false
-            }
-        };
-        if (queryString) {
-            options['qs'] = queryString;
+    private _sendMLdebugRequestGET(module: string, queryStringObject?: Record<string, unknown>): Promise<string> {
+        const manageClient = this.newMarklogicManageClient();
+
+        let endpoint = `/jsdbg/v1/${module}/${this._rid}`;
+        const urlParameters = new global.URLSearchParams(queryStringObject);
+        if (urlParameters.toString().length > 0) {
+            endpoint = `${endpoint}?${urlParameters.toString()}`;
         }
-        if (this._ca) options['agentOptions'] = { ca: this._ca };
-        options['rejectUnauthorized'] = this._rejectUnauthorized;
-        return request.get(url, options);
+
+        return new Promise((resolve, reject) => {
+            return manageClient.databaseClient.internal.sendRequest(
+                endpoint,
+                (requestOptions: ml.RequestOptions) => {
+                    requestOptions.method = 'GET';
+                    requestOptions.headers = { 'X-Error-Accept': 'application/json' };
+                })
+                .result((result: object) => {
+                    resolve(JSON.stringify(result));
+                })
+                .catch(error => {
+                    reject(error.body.errorResponse);
+                });
+        });
     }
 
-    private _sendMLdebugEvalRequest(script: string, database: string,
-        txnId: string, modules: string, root: string): Promise<string> {
-        const url = this.buildUrl('/eval');
-        const options = {
-            headers: {
-                'Content-type': 'application/x-www-form-urlencoded',
-                'X-Error-Accept': 'application/json'
-            },
-            auth: {
-                user: this._username,
-                pass: this._password,
-                'sendImmediately': false
-            },
-            body: `javascript=${querystring.escape(script)}`
-        };
-        if (this._ca) options['agentOptions'] = { ca: this._ca };
-        options['rejectUnauthorized'] = this._rejectUnauthorized;
-        const evalOptions = {
-            database: database,
-            modules: modules
-        };
+    private _sendMLdebugEvalRequest(
+        script: string, database: string, txnId: string, modules: string, root: string
+    ): Promise<string> {
+        const manageClient = this.newMarklogicManageClient();
+
+        const evalOptions = {};
+        if (database) evalOptions['database'] = database;
+        if (modules) evalOptions['modules'] = modules;
         if (txnId) evalOptions['txnId'] = txnId;
         if (root) evalOptions['root'] = root;
-        options['qs'] = evalOptions;
-        return request.post(url, options);
+        const urlParameters = new global.URLSearchParams(evalOptions);
+        let endpoint = '/jsdbg/v1/eval';
+        if (urlParameters.toString().length > 0) {
+            endpoint = `${endpoint}?${urlParameters.toString()}`;
+        }
+
+        return new Promise((resolve, reject) => {
+            manageClient.databaseClient.internal.sendRequest(
+                endpoint,
+                (requestOptions: ml.RequestOptions) => {
+                    requestOptions.method = 'POST';
+                    requestOptions.headers = {
+                        'Content-type': 'application/x-www-form-urlencoded',
+                        'X-Error-Accept': 'application/json'
+                    };
+                },
+                (operation: ml.RequestOperation) => {
+                    operation.requestBody = `javascript=${encodeURIComponent(script)}`;
+                })
+                .result((result: object) => {
+                    let response = '';
+                    if (result) {
+                        response = JSON.stringify(result);
+                    }
+                    resolve(response);
+                })
+                .catch(error => {
+                    reject(error);
+                });
+        });
     }
 }
