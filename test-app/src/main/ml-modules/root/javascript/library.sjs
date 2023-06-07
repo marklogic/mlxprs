@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 function hello(friend) {
     return 'Hello, ' + friend;
