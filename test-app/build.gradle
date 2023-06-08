@@ -11,3 +11,11 @@ ext {
     command.setValidFor(365)
     mlAppDeployer.commands.add(command)
 }
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  mlBundle "com.marklogic:marklogic-unit-test-modules:1.3.0"
+}

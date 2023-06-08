@@ -24,7 +24,7 @@
             "request": "attach",
             "name": "Attach to Remote JavaScript Request",
             "root": "${workspaceFolder}",
-            "debugServerName": "mlxprsSample",
+            "debugServerName": "mlxprs-test-test",
             // "debugServer": 4711
         },
         {
