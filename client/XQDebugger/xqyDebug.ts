@@ -92,8 +92,9 @@ export class XqyDebugSession extends LoggingDebugSession {
         let vsCodeUri = '';
         let origin = 'local file';
         let id = 0;
-        if (!filePath) vsCodeUri = this._workDir;
-        else {
+        if (!filePath) {
+            vsCodeUri = this._workDir;
+        } else {
             vsCodeUri = filePath;
         }
         if (!existsSync(filePath)) {
