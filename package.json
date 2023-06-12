@@ -2,7 +2,7 @@
     "name": "mlxprs",
     "displayName": "MarkLogic developer tools",
     "description": "MarkLogic JavaScript and XQuery development tools",
-    "version": "3.7.0-SNAPSHOT",
+    "version": "3.7.0",
     "publisher": "mlxprs",
     "engines": {
         "vscode": "^1.78.0"
@@ -564,7 +564,7 @@
         "await-notify": "1.0.1",
         "esprima": "4.0.1",
         "fast-xml-parser": "4.2.2",
-        "marklogic": "3.0.0",
+        "marklogic": "3.1.0",
         "merge-options": "3.0.4",
         "needle": "3.2.0",
         "ts-loader": "9.4.2",
