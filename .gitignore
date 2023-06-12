@@ -12,3 +12,5 @@ gradle-local.properties
 results/
 test-app/.gradle
 test-app/build
+
+test-app/src/main/ml-modules/root/MarkLogic
