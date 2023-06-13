@@ -253,6 +253,11 @@ In attach mode for JavaScript, `debugServerName` is a required parameter in the 
 
 In order to step through modules that get imported in your code, you need to tell the debugger where to find the modules root in your local project. This is the `path` parameter (for JavaScript) and `root` (for XQuery). These parameters are required.
 
+In order to step into the built-in MarkLogic modules, create a soft link in the root of your source directory to the Modules/MarkLogic directory in your local MarkLogic install. For example, from the root directory of your source files, use the following command:
+```
+ln -s <path-to-marklogic-install>/Modules/MarkLogic .
+```
+
 ### Debugging Limitations
 
 In XQuery attach-mode debugging, you should not 'connect' to the same server you use for queries. Since connecting stops all requests on that app server, you'd lock yourself out. For this reason, the extension will not offer to connect to your configured query client's port. Admin, Manage, HealthCheck, and App-Services are also excluded from debugging.

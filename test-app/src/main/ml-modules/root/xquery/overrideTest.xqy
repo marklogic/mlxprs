@@ -1,15 +1,15 @@
 (: mlxprs:settings
 {
 "host": "macpro-6191.marklogic.com",
-"managePort": 8002,
-"port": 8056,
-"contentDb": "mlxprsSample-content",
-"modulesDb": "mlxprsSample-modules",
+"managePort": 8052,
+"port": 8057,
+"contentDb": "mlxprs-test-content",
+"modulesDb": "mlxprs-test-modules",
 "user": "admin",
 "pwd": "admin",
 "note": "These settings are for testing only",
 "ssl": true,
-"rejectUnauthorized": true
+"rejectUnauthorized": false
 }
 :)
 (:

@@ -638,8 +638,9 @@ export class MLDebugSession extends LoggingDebugSession {
                     column: this.convertClientLineToDebugger(breakpoint.column),
                     condition: breakpoint.condition
                 } as MLbreakPoint).then(resp => {
-                    const location = JSON.parse(resp)['result']['locations'][0];
-                    if (location !== null) {
+                    const locations = JSON.parse(resp)['result']['locations'];
+                    if (locations !== null && locations.length > 0) {
+                        const location = locations[0];
                         const line = this.convertDebuggerLineToClient(location['lineNumber']);
                         const bpId = this._bpMap[path][String(line)];
 
@@ -653,8 +654,10 @@ export class MLDebugSession extends LoggingDebugSession {
         }
 
         Promise.all(mlrequests).catch(error => {
-            this.reportErrorToClient(error as Error);
-            this._handleError(error);
+            if (!error.error.includes('Breakpoint at specified location already exists.')) {
+                this.reportErrorToClient(error as Error);
+                this._handleError(error);
+            }
         });
     }
 
