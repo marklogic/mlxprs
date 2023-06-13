@@ -1,7 +1,3 @@
-## [3.6.2](https://github.com/marklogic-community/mlxprs/releases/tag/v3.6.2)
-
-- Fixed the icon used in the Visual Studio Marketplace 
-
 ## [3.7.0](https://github.com/marklogic-community/mlxprs/releases/tag/v3.7.0)
 
 - [#DEV-261](https://project.marklogic.com/jira/browse/DEVEXP-261) Submit an Optic DSL Query to /v1/rows and get back JSON
@@ -12,6 +8,10 @@
 - [#DEV-352](https://project.marklogic.com/jira/browse/DEVEXP-352) Display "eval" results in a new tab in the bottom panel (use a setting to revert back to an editor tab)
 - [#DEV-364](https://project.marklogic.com/jira/browse/DEVEXP-364) Permit attaching to a remote request even if the current editor tab is not source code
 
+
+## [3.6.2](https://github.com/marklogic-community/mlxprs/releases/tag/v3.6.2)
+
+- Fixed the icon used in the Visual Studio Marketplace 
 
 ## [3.6.0](https://github.com/marklogic-community/mlxprs/releases/tag/v3.6.0)
 
