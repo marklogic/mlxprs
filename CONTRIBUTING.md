@@ -40,15 +40,7 @@ please point me in the right direction (e.g. line numbers) to fix it.
 
 * Another important file is .vscode/settings.json. It is recommended that you use settings.json.template to create settings.json, and then customize settings.json to your local environment. Alternatively, these values can also be changed within VSCode when you change settings for this specific workspace.
 
-## Building The Project
-
-It is recommended to use VSCode as the editor for this package, as it can self-load a debug instance.
-
-* Open the project folder in VSCode
-* Select the "Run and Debug" sidebar window (Ctrl+Shift+D)
-* Choose "Launch Extension (debug)" from the RUN AND DEBUG dropdown menu
-* Press the green play button or F5 to compile and launch the plugin in a test environment
-* Please see the README.md file for information on configuring and working in the test environment
+## Building the Project
 
 Building the project requires [Node.js](https://nodejs.org/) to be installed on your local machine.  Node v14 LTS is recommended.
 
@@ -62,8 +54,54 @@ cd ..
 ```
 A shorthand script that does all of that for you is
 ```
-npm run npmInstallClientAndServer
+npm run installAll
 ```
+
+## Using the Extension from the Project (except the debugger)
+It is recommended to use VSCode as the editor for this package, as it can self-load a debug instance.
+
+* Open the project folder in VSCode
+* Select the "Run and Debug" sidebar window (Ctrl+Shift+D)
+* If you are not planning to use the debugging features (either 'Launch' or 'Attach'), then choose "Launch Extension (debug)" from the RUN AND DEBUG dropdown menu
+* If you want to use the debugging features, then you must also have a Debug Client running. You can do this in a couple of different ways:
+    * Choose either "Extension + SJS Server" or "Extension + XQY Server". This option starts the Debug Client along with the Extension.
+    * First choose and launch either "Launch XQY Debug Adapter Server" or "Launch SJS Debug Adapter Server" to start the Debug Client independently.
+* Press the green play button or F5 to compile and launch the plugin in a test environment
+    * Note that at this time, the "Attach" commands do not work when debugging the extension from within VSCode. In order to test the "Attach" commands, you will need to build the artifact (.vsix) and use that extension with a different project, and then test manually.
+* Please see the README.md file for information on configuring and working in the test environment
+
+## Debugging the Debugger/Evaluate tasks
+This can be just a little tricky. The preferred mechanism to test/debug the debugger from within VSCode is to use the "Extension + SJS Server" or "Extension + XQY Server" launch configuration. Using one of these configurations, VSCode will start a new VSCode window where you can have a different project open for testing the debugger. VSCode also starts an instance of the Debug Adapter. When you use one of the "attach" or "evaluate" launch.json configurations from the second window to attach to a process, the second window connects to the Debug Adapter in the original VSCode window for debugging purposes. At that point, you have effectively have 3 debug sessions going on:
+1. The debug/launch session in the second window. This, presumably, is the debugger you are working on.
+2. The debug session for the debugger you're working on. Shown as "Launch Extension (preprod)" in the Call Stack view.
+    * This will show the code from the mlxprs project, other than the four source files mentioned in #3.
+3. The debug session for the Debug Adapter. Shown as "Launch <XQY|SJS> Debug Adapter Server" in the Call Stack view.
+    * This will show the code from xqyDebug, xqyRuntime, mlDebug, and mlRuntime
+
+* Note that the Debug Adapter runs in a separate process with no direct access to the VSCode UI or most of the MLXPRS extension code. All interaction between the Debug Adapter and the main extension code must be accomplished via event messages. See the use of onDidReceiveDebugSessionCustomEvent in extension.ts for current use of custom events for error handling.
+
+### Configuration
+These configurations items are already done, but this should help with understanding how things work for making any future changes.
+* Configure the "Extension + SJS Server" and "Extension + XQY Server" launch configurations in the MLXPRS project.
+* Configure the "attach" (of types "xquery-ml" and "ml-jsdebugger") launch configurations in the project that you
+will use to test the MLXPRS debugger (the target project).
+* Ensure the "debugServer" property in the target project launcher matches the "--server=XXX" arg in the MLXPRS
+project for both configurations (XQY & JS).
+* Ensure the target project is deployed to a MarkLogic app server that can be connected to for debugging.
+* Note that the extension's port configuration setting should be set to a different port that the
+target app server. 
+
+### Steps
+1. In the MLXPRS project, start either the "Extension + SJS Server" or the "Extension + XQY Server" launch configuration using the little green button.
+2. In the new (2nd) VSCode window, open the target project.
+3. In the 2nd VSCode window, use the Command Palette to select either "Connect JavaScript Debug Server" or "Connect XQuery Debug Server" to connect to a MarkLogic App Server.
+4. Using a tool such as Postman or Curl, start either a JavaScript or XQuery request on that app server.
+5. In the 2nd VSCode window, use a launch configuration to either "Attach to Remote JavaScript Request" or to "Attach to Remote XQuery Request".
+6. The 2nd VSCode window will display a list of paused requests in the app server connected to. Select the request to attach to.
+* At this point the 2nd VSCode window will allow you to debug the request running in MarkLogic, and the 1st VSCode window will allow you to debug the debugger. 
+* Note that the type of server (XQuery or JavaScript) must be consistent during any given attempt to debug.
+
+For more information on developing debugger extensions, see [Debugger Extension](https://code.visualstudio.com/api/extension-guides/debugger-extension). According to that, there are other ways to debug the debugger part of the extension. However, the method described at the start of this section is what seems to work best.
 
 ## Testing
 
@@ -81,9 +119,21 @@ The project contains three test applications.
 
 ### Integration Testing Setup
 
-JavaScript debugger integration testing requires a running MarkLogic server where you have full admin rights. Ideally, you should use a dedicated MarkLogic instance for this purpose. The tests assume the existence of a "mlxprs-test" application server running on port 8055 using the "mlxprs-test-content" and "mlxprs-test-modules" databases. Those values are set in gradle.properties and the admin password should be set in gradle-local.properties. Then you can use the command, "./gradlew -i mlDeploy" to build and configure the databases and application servers.
+JavaScript debugger integration testing requires a running MarkLogic server where you have full admin rights. Ideally, you should use a dedicated MarkLogic instance for this purpose. The tests assume the existence of a "mlxprs-test" application server running on port 8055 using the "mlxprs-test-content" and "mlxprs-test-modules" databases. Those values are set in test-app/gradle.properties and the admin password should be set in test-app/gradle-local.properties. Then you can use the following commands to build and configure the databases and application servers.
+```
+cd test-app
+./gradlew mlDeploy
+```
 
-### Integration Test Overview
+### Manual Integration Testing
+* Use the "Launch Extension (debug)" launch configuration in the "RUN AND DEBUG" window to open a new VS Code session.
+* Once the new window is open, use "File -> Open Folder ..." menu to open the "test-app" folder as a separate project.
+* Now you can test out all the functionality using the source files in the project, both locally and by `attaching` to paused requests in the server.
+* It is easiest to leave the `marklogic.port` set to `8055`. This way evals will use that port.
+* Then, you can use the `mlxprsSample` App Server on port `8056` for `attaching` to paused requests.
+
+
+### Automated Integration Test Overview
 The integration test will do the following:
 * Upload test scripts and modules to `Modules` database
 * Run tests against the uploaded scripts and MarkLogic application server, simulating JS debugger interactions
@@ -118,20 +168,24 @@ Note that the order of priority for setting the property values in the test code
 ### Testing from the command line
 Run these two npm scripts from the command line in the root directory of the project to execute the tests. Note that VSCode must not be running while you run the tests.
 ```
-npm run npmInstallClientAndServer
+npm run installAll
 npm run test
 npm run testServer
 code --extensionDevelopmentPath=<mlxprs-project-dir>/client --extensionTestsPath=<mlxprs-project-dir>/dist/test/integration/index
 ```
 <mark>The final test (the integration tests), should not be run while VSCode is open.</mark>
 
-To ensure a clean build, you may also run this npm script before running the npmInstallClientAndServer script.
+To ensure a clean build, you may also run this npm script before running the `installAll` script.
 ```
-npm run completeClean
+npm run cleanAll
 ```
 
 ## Building the artifact
 
+- Install the webpack tool
+```
+npm install -g webpack
+```
 - Install the vsce tool
 ```
 npm install -g @vscode/vsce
@@ -151,7 +205,6 @@ The same NPM scripts should work in Windows, however this is not thoroughly veri
 ```
 npm install -g rimraf
 npm install -g typescript
-npm install -g webpack
 ```
 
 ## Submitting a Pull Request
