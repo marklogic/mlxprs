@@ -1,3 +1,7 @@
+## [3.6.2](https://github.com/marklogic-community/mlxprs/releases/tag/v3.6.2)
+
+- Fixed the icon used in the Visual Studio Marketplace 
+
 ## [3.7.0](https://github.com/marklogic-community/mlxprs/releases/tag/v3.7.0)
 
 - [#DEV-261](https://project.marklogic.com/jira/browse/DEVEXP-261) Submit an Optic DSL Query to /v1/rows and get back JSON
