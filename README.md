@@ -79,15 +79,16 @@ The configuration will look something like this:
 
 You can acquire the CA file from the MarkLogic admin pane (usually port 8001), by
 going to 'Security' -> 'Certificate Templates' -> (cert host name), and then
-selecting the "Status" tab. There is an "download" button in the "certificate template status"
-section. Click the "download" button to download a copy of your root CA.
+selecting the `Status` tab. There is a `download` button in the `certificate template status` section. Click the `download` button to download a copy of your root CA.
 
 Alternatively, you can turn off client certificate checks altogether.
 Set `marklogic.rejectUnauthorized` to `false` in your VS Code configuration.
 This is less secure, but may be useful for situations where you can't obtain or use a your own CA,
 such as when connecting to a IP address rather than a hostname.
 
-### Per-query configuration override
+Testing with some versions of VS Code has shown that if the project has a file named build.gradle and the VS Code Java Extension is enabled, the `marklogic.rejectUnauthorized` setting may be ignored. If you see this behavior, disabling the Java Extension is recommended to ensure the setting works properly. 
+
+### Query Eval configuration override
 
 You can override your VS Code configured settings by using a block comment as the first language token
 in a JavaScript or XQuery query. The comment should conform to the following:
@@ -131,7 +132,9 @@ xquery version "1.0-ml";
 fn:doc('/my-testing-doc.json')
 ```
 
-When this query runs, it will use the host, port, and `contentDb` specified in the comment, along with the VS Code configuration parameters for the rest of the MarkLogic client definition. (The "note" will be ignored.) Other queries in other editor tabs will not be affected.
+When this query runs, it will use the host, port, and `contentDb` specified in the comment, along with the VS Code configuration parameters for the rest of the MarkLogic client definition. (The `note` will be ignored.) Other queries in other editor tabs will not be affected.
+
+Note: This configuration override is only applied when using one of the "MarkLogic: Eval <language>" commands.
 
 ## Debugging
 
@@ -142,7 +145,7 @@ Both JavaScript and XQuery debuggers support two modes of debugging:
 
 Where it can, query debugging uses the same VS Code settings used for running queries (for example, `marklogic.host`, `marklogic.username`). In addition to these code settings, you will need a [**launch config**](https://code.visualstudio.com/docs/editor/debugging#_launch-configurations) in your project (under `.vscode/launch.json`) for debug-specific parameters.
 
-Open the `launch.json` from the VS Code command palette with the command: “Debug: Open launch.json” or "Debug.
+Open the `launch.json` from the VS Code command palette with the command: “Debug: Open launch.json” or `Debug`.
 
 Below is an example of a `launch.json` file, with JavaScript and XQuery configurations for both launch and attach:
 
@@ -201,7 +204,8 @@ Example 'launch' type configuration items for JavaScript and XQuery:
 ```
 
 By default, launch mode will launch the currently opened file for debugging.
-An optional "path" (for JavaScript) or "program" (for XQuery) can be provided to specify another file for debugging.
+An optional `program` property can be provided in a `launch.json` task configuration to specify another file for debugging.
+Additionally, older versions of this extension permitted the use of `path` for JS. However, while `path` still works, its use is deprecated and will be removed in mlxprs 4.0
 
 ### Attach
 
@@ -225,7 +229,7 @@ Here's an example of _attach_ configurations for JavaScript and XQuery:
 
 Attach mode intercepts a paused request in a given *debug server*, an app server connected to the VS Code debugger. To connect to an app server for debugging:
 
-1. open the command palette, start typing <kbd>MarkLogic: Connect...</kbd> until autocomplete prompts you with "MarkLogic: Connect JavaScript Debug Server" or "MarkLogic: Connect XQuery Debug Server", and choose the command you want.
+1. open the command palette, start typing <kbd>MarkLogic: Connect...</kbd> until autocomplete prompts you with `MarkLogic: Connect JavaScript Debug Server` or `MarkLogic: Connect XQuery Debug Server`, and choose the command you want.
 2. You'll be prompted to choose a server. Use the name of the app server in the MarkLogic configuration, _not_ its hostname or IP address.
 3. You should see a confirmation message once you're connected
 
@@ -249,9 +253,22 @@ In attach mode for JavaScript, `debugServerName` is a required parameter in the 
 
 In order to step through modules that get imported in your code, you need to tell the debugger where to find the modules root in your local project. This is the `path` parameter (for JavaScript) and `root` (for XQuery). These parameters are required.
 
+In order to step into the built-in MarkLogic modules, create a soft link in the root of your source directory to the Modules/MarkLogic directory in your local MarkLogic install. For example, from the root directory of your source files, use the following command:
+```
+ln -s <path-to-marklogic-install>/Modules/MarkLogic .
+```
+
 ### Debugging Limitations
 
 In XQuery attach-mode debugging, you should not 'connect' to the same server you use for queries. Since connecting stops all requests on that app server, you'd lock yourself out. For this reason, the extension will not offer to connect to your configured query client's port. Admin, Manage, HealthCheck, and App-Services are also excluded from debugging.
+
+Due to the nature of XQuery, the XQuery debugger functions a bit differently than many developers are accustomed to. Multiple lines of XQuery may be reported as a single expression by the MarkLogic debugger functions.
+Since the three primary stepping functions, `Step Over`, `Step Into`, and `Step Out`, all operate based on XQuery expressions, using those functions does not have the same result as using those functions in the JavaScript debugger.
+- `Step Over` continues evaluation of the request until the beginning or end of an expression that is not a descendant of the current expression.
+- `Step Into` continues evaluation of the request until the beginning or end of an expression. Using this function most closely resembles the expected functionality of a debugger.
+- `Step Out` continues evaluation of the request until the end of the current expression.
+
+Watch expressions do not currently work with the XQuery debugger.
 
 'Launch' debugging initiated from an unsaved ('Untitled') buffer in VS Code will not work. If you want to launch and debug an ad-hoc query, save it somewhere on disk beforehand.
 

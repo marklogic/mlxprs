@@ -115,6 +115,10 @@
             "program": "${workspaceFolder}/client/XQDebugger/xqyDebug.ts",
             "preLaunchTask": "npm: compile",
             "args": [
+                // Needs to match the launch settings in the debugger's project:
+                // "type": "xquery-ml",
+                // "request": "attach",
+                // "debugServer": 4712
                 "--server=4712",
             ],
             "outFiles": [
@@ -129,6 +133,10 @@
             "program": "${workspaceFolder}/client/JSDebugger/mlDebug.ts",
             "preLaunchTask": "npm: compile",
             "args": [
+                // Needs to match the launch settings in the debugger's project:
+                // "type": "ml-jsdebugger",
+                // "request": "attach",
+                // "debugServer": 4711
                 "--server=4711"
             ],
             "outFiles": [

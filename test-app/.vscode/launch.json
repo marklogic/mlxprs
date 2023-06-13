@@ -1,0 +1,53 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "ml-jsdebugger",
+            "request": "launch",
+            "name": "Evaluate Current JavaScript Module",
+            "root": "${workspaceFolder}/src/main/ml-modules/root",
+            // "debugServer": 4711
+        },
+        {
+            "type": "ml-jsdebugger",
+            "request": "launch",
+            "name": "Evaluate Specific JavaScript Module",
+            "root": "${workspaceFolder}/src/main/ml-modules/root",
+            "program": "/Users/pbarber/Documents/workspaces/engineering/mlxprsStuff/mlxprsSampleProject/src/main/ml-modules/root/javascript/launch.sjs",
+            // "debugServer": 4711
+        },
+        {
+            "type": "ml-jsdebugger",
+            "request": "attach",
+            "name": "Attach to Remote JavaScript Request",
+            "root": "${workspaceFolder}",
+            "debugServerName": "mlxprs-test-test",
+            // "debugServer": 4711
+        },
+        {
+            "type": "xquery-ml",
+            "request": "launch",
+            "name": "Evaluate Current XQuery Module",
+            "root": "${workspaceFolder}/src/main/ml-modules/root",
+            // "debugServer": 4712
+        },
+        {
+            "type": "xquery-ml",
+            "request": "launch",
+            "name": "Evaluate Specific XQuery Module",
+            "root": "${workspaceFolder}/src/main/ml-modules/root",
+            "program": "/Users/pbarber/Documents/workspaces/engineering/mlxprsStuff/mlxprsSampleProject/src/main/ml-modules/root/xquery/longTest.xqy"
+            // "debugServer": 4712
+        },
+        {
+            "type": "xquery-ml",
+            "request": "attach",
+            "name": "Attach to Remote XQuery Request",
+            "root": "${workspaceFolder}/src/main/ml-modules/root",
+            // "debugServer": 4712
+        }
+    ]
+}

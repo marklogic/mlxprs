@@ -1,8 +1,27 @@
-'use strict'
+/*
+ * Copyright (c) 2023 MarkLogic Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-import { Memento, WorkspaceConfiguration, window } from 'vscode'
-import { XQY, parseXQueryForOverrides, MLSETTINGSFLAG, MarklogicClient, MlClientParameters, MLDBCLIENT, buildNewClient } from './marklogicClient'
-import * as esprima from 'esprima'
+'use strict';
+
+import * as esprima from 'esprima';
+import { Memento, WorkspaceConfiguration, window } from 'vscode';
+
+import { MlxprsErrorReporter } from './mlxprsErrorReporter';
+import { SJS, XQY, parseXQueryForOverrides, MLSETTINGSFLAG, ClientContext, MlClientParameters, MLDBCLIENT } from './marklogicClient';
+import { MlxprsError } from './mlxprsErrorBuilder';
 
 /**
  * In SJS/XQuery queries, you can override the VS Code mxprs settings in a comment.
@@ -19,23 +38,23 @@ import * as esprima from 'esprima'
  */
 export function parseQueryForOverrides(queryText: string, language: string): Record<string, any> {
     if (language === XQY) {
-        return parseXQueryForOverrides(queryText)
+        return parseXQueryForOverrides(queryText);
     }
-    let overrides: Record<string, any> = {}
-    const tokens: esprima.Token[] = esprima.tokenize(queryText, { comment: true, tolerant: true })
+    let overrides: Record<string, any> = {};
+    const tokens: esprima.Token[] = esprima.tokenize(queryText, { comment: true, tolerant: true });
     if (tokens.length > 0 && tokens[0].type === 'BlockComment') {
-        const firstBlockComment: string = tokens[0].value
+        const firstBlockComment: string = tokens[0].value;
         const firstBlockCommentLine: string = firstBlockComment.split(/\n+/)[0]
             .replace(/\t+/g, '')
-            .trim()
+            .trim();
         if (firstBlockCommentLine.match(MLSETTINGSFLAG)) {
             const overridePayload: string = firstBlockComment
                 .replace(MLSETTINGSFLAG, '')
-                .trim()
-            overrides = JSON.parse(overridePayload)
+                .trim();
+            overrides = JSON.parse(overridePayload);
         }
     }
-    return overrides
+    return overrides;
 }
 /**
  * Caching mechanism for the ML Client in the extension's state. Checks the configuration for
@@ -51,8 +70,8 @@ export function parseQueryForOverrides(queryText: string, language: string): Rec
  *
  * @returns a MarklogicClient based on the contents of `cfg`
  */
-export function getDbClient(queryText: string, language: string, cfg: WorkspaceConfiguration, state: Memento): MarklogicClient {
-    const overrides: MlClientParameters = parseQueryForOverrides(queryText, language) as MlClientParameters
+export function getDbClient(queryText: string, language: string, cfg: WorkspaceConfiguration, state: Memento): ClientContext {
+    const overrides: MlClientParameters = parseQueryForOverrides(queryText, language) as MlClientParameters;
     const configParams: Record<string, any> = {
         host: String(cfg.get('marklogic.host')),
         user: String(cfg.get('marklogic.username')),
@@ -65,43 +84,55 @@ export function getDbClient(queryText: string, language: string, cfg: WorkspaceC
         ssl: Boolean(cfg.get('marklogic.ssl')),
         pathToCa: String(cfg.get('marklogic.pathToCa') || ''),
         rejectUnauthorized: Boolean(cfg.get('marklogic.rejectUnauthorized'))
-    }
+    };
     // merge VS Code configuration and overrides
-    const newParams = new MlClientParameters({ ...configParams, ...overrides })
+    const newParams = new MlClientParameters({ ...configParams, ...overrides });
     // if settings have changed, release and clear the client
-    const cachedClient = state.get(MLDBCLIENT) as MarklogicClient
+    const cachedClient = state.get(MLDBCLIENT) as ClientContext;
     if (cachedClient !== null && !cachedClient.hasSameParamsAs(newParams)) {
-        cachedClient.mldbClient.release()
-        state.update(MLDBCLIENT, null)
-        console.debug('Removed cached instance of MarklogicClient based on change in params')
+        cachedClient.databaseClient.release();
+        state.update(MLDBCLIENT, null);
+        console.debug('Removed cached instance of MarklogicClient based on change in params');
     }
     // if there's no existing client in the globalState, instantiate a new one
     if (state.get(MLDBCLIENT) === null) {
-        const newClient: MarklogicClient = buildNewClient(newParams)
+        const dbClientContext: ClientContext = new ClientContext(newParams);
         try {
-            state.update(MLDBCLIENT, newClient)
-            console.debug(`Created new MarklogicClient: ${state.get(MLDBCLIENT)}`)
-        }
-        catch (e) {
-            console.error('Error: ' + JSON.stringify(e))
-            e.message ? console.error(e.message) : null
+            state.update(MLDBCLIENT, dbClientContext);
+            console.debug(`Created new MarklogicClient: ${state.get(MLDBCLIENT)}`);
+        } catch (e) {
+            console.error('Error: ' + JSON.stringify(e));
+            e.message ? console.error(e.message) : null;
         }
     }
-    return state.get(MLDBCLIENT) as MarklogicClient
+    return state.get(MLDBCLIENT) as ClientContext;
 }
 /**
  * Try to call `getDbClient()` with overrides. If we can't parse the
  * overrides, call `getDbClient()` with no overrides, and show the
  * user an error.
  */
-export function cascadeOverrideClient(actualQuery: string, language: string, cfg: WorkspaceConfiguration, state: Memento): MarklogicClient {
-    let client: MarklogicClient = {} as MarklogicClient
+export function cascadeOverrideClient(actualQuery: string, language: string, cfg: WorkspaceConfiguration, state: Memento): ClientContext {
+    let dbClientContext: ClientContext = {} as ClientContext;
     try {
-        client = getDbClient(actualQuery, language, cfg, state)
+        dbClientContext = getDbClient(actualQuery, language, cfg, state);
+    } catch (error) {
+        window.showErrorMessage('could not parse JSON for overrides: ' + error.message);
+        dbClientContext = getDbClient('', language, cfg, state);
     }
-    catch (error) {
-        window.showErrorMessage('could not parse JSON for overrides: ' + error.message)
-        client = getDbClient('', language, cfg, state)
+    return dbClientContext;
+}
+
+export function getDbClientWithoutOverrides(cfg: WorkspaceConfiguration, state: Memento): ClientContext {
+    try {
+        return getDbClient('', SJS, cfg, state);
+    } catch (error) {
+        const mlxprsError: MlxprsError = {
+            reportedMessage: error.message,
+            stack: error.stack,
+            popupMessage: `Unable to build the MarkLogic database client: ${error.message}`
+        };
+        MlxprsErrorReporter.reportError(mlxprsError);
+        return null;
     }
-    return client
 }
