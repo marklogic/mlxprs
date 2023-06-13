@@ -563,7 +563,7 @@
         "@vscode/debugadapter": "1.59.0",
         "await-notify": "1.0.1",
         "esprima": "4.0.1",
-        "fast-xml-parser": "4.2.2",
+        "fast-xml-parser": "4.2.4",
         "marklogic": "3.1.0",
         "merge-options": "3.0.4",
         "needle": "3.2.0",
