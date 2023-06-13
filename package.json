@@ -2,10 +2,10 @@
     "name": "mlxprs",
     "displayName": "MarkLogic developer tools",
     "description": "MarkLogic JavaScript and XQuery development tools",
-    "version": "3.6.2",
+    "version": "3.7.0",
     "publisher": "mlxprs",
     "engines": {
-        "vscode": "^1.76.0"
+        "vscode": "^1.78.0"
     },
     "icon": "images/Progress_MarkLogic_DayOne_Logo_Primary_Stacked_Alternate_square.png",
     "galleryBanner": {
@@ -30,10 +30,29 @@
         "onDebug",
         "onLanguage:xquery-ml",
         "onLanguage:javascript",
-        "onLanguage:sparql"
+        "onLanguage:sparql",
+        "mlxprs.showConnectedServers"
     ],
     "main": "./dist/extension",
     "contributes": {
+        "viewsContainers": {
+            "panel": [
+                {
+                    "id": "mlxprsContainer",
+                    "title": "MLXPRS",
+                    "icon": "images/Progress_MarkLogic_DayOne_Logo_Primary_Stacked_Alternate_square.png"
+                }
+            ]
+        },
+        "views": {
+            "mlxprsContainer": [
+                {
+                    "type": "webview",
+                    "id": "mlxprs.ResultsView",
+                    "name": "Results"
+                }
+            ]
+        },
         "commands": [
             {
                 "command": "extension.sendXQuery",
@@ -52,11 +71,23 @@
                 "title": "MarkLogic: Eval SPARQL"
             },
             {
-                "command": "extension.connectServer",
+                "command": "extension.sendRowsJsonQuery",
+                "title": "MarkLogic: Submit Optic query - return JSON"
+            },
+            {
+                "command": "extension.sendRowsCsvQuery",
+                "title": "MarkLogic: Submit Optic query - return CSV"
+            },
+            {
+                "command": "extension.sendRowsXmlQuery",
+                "title": "MarkLogic: Submit Optic query - return XML"
+            },
+            {
+                "command": "extension.connectJsServer",
                 "title": "MarkLogic: Connect JavaScript Debug Server"
             },
             {
-                "command": "extension.disconnectServer",
+                "command": "extension.disconnectJsServer",
                 "title": "MarkLogic: Disconnect JavaScript Debug Server"
             },
             {
@@ -146,7 +177,7 @@
                         "type": "ml-jsdebugger",
                         "request": "launch",
                         "name": "Evaluate Current JavaScript Module",
-                        "root": "${workspaceFolder}/src/main/ml-modules/roote"
+                        "root": "${workspaceFolder}/src/main/ml-modules/root"
                     },
                     {
                         "type": "ml-jsdebugger",
@@ -270,114 +301,174 @@
                 }
             }
         ],
-        "configuration": {
-            "type": "object",
-            "title": "MarkLogic connection configuration",
-            "properties": {
-                "marklogic.host": {
-                    "type": "string",
-                    "default": "localhost",
-                    "description": "hostname for MarkLogic instance"
-                },
-                "marklogic.port": {
-                    "type": "integer",
-                    "default": 8000,
-                    "description": "port on which to reach the MarkLogic server"
-                },
-                "marklogic.managePort": {
-                    "type": "integer",
-                    "default": 8002,
-                    "description": "MarkLogic Manage AppServer port"
-                },
-                "marklogic.username": {
-                    "type": "string",
-                    "default": "admin",
-                    "description": "username for MarkLogic connection"
-                },
-                "marklogic.password": {
-                    "type": "string",
-                    "default": "admin",
-                    "description": "password for MarkLogic connection"
-                },
-                "marklogic.documentsDb": {
-                    "type": "string",
-                    "default": "",
-                    "description": "database against which to evaluate queries; required for debugging a local script"
-                },
-                "marklogic.modulesDb": {
-                    "type": "string",
-                    "default": "",
-                    "description": "modules database used in queries; default modules database for app server will be used if left unspecified"
-                },
-                "marklogic.modulesRoot": {
-                    "type": "string",
-                    "default": "/",
-                    "description": "modules root if using filesystem"
-                },
-                "marklogic.authType": {
-                    "type": "string",
-                    "default": "DIGEST",
-                    "description": "only DIGEST or BASIC for now"
-                },
-                "marklogic.ssl": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "whether to use ssl for the http connection"
-                },
-                "marklogic.pathToCa": {
-                    "type": "string",
-                    "default": "",
-                    "description": "path to certificate authority (e.g. for self-signed certificates)"
-                },
-                "marklogic.rejectUnauthorized": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "whether the server's SSL certificate should be verified against the list of supplied CAs"
-                },
-                "marklogic.sparqlContentType": {
-                    "type": "string",
-                    "enum": [
-                        "application/json",
-                        "application/xml",
-                        "text/html",
-                        "text/csv"
-                    ],
-                    "default": "application/json",
-                    "markdownDescription": "How to format SPARQL query results",
-                    "enumDescriptions": [
-                        "",
-                        "",
-                        "",
-                        "note: CSV-formatted results will not work with `describe` queries"
-                    ]
-                },
-                "marklogic.sql.results": {
-                    "type": "string",
-                    "markdownDescription": "How to present SQL results from 'Eval SQL'",
-                    "enum": [
-                        "array",
-                        "format",
-                        "map"
-                    ],
-                    "markdownEnumDescriptions": [
-                        "Return SQL results as a sequence of array values (`json:array`).",
-                        "Return SQL results as formatted strings.",
-                        "Return SQL result as a sequence of map values, where the key is the column name."
-                    ],
-                    "default": "array"
-                },
-                "marklogic.sql.optimize": {
-                    "type": "number",
-                    "enum": [
-                        0,
-                        1,
-                        2
-                    ],
-                    "default": 1,
-                    "description": "Optimization Levels of 0 (off), 1, and 2 are recognized."
+        "configuration": [
+            {
+                "id": "marklogicGeneral",
+                "order": 1,
+                "type": "object",
+                "title": "MarkLogic General Configuration",
+                "properties": {
+                    "marklogic.host": {
+                        "type": "string",
+                        "order": 1,
+                        "description": "hostname for MarkLogic instance",
+                        "default": "localhost"
+                    },
+                    "marklogic.managePort": {
+                        "order": 2,
+                        "type": "integer",
+                        "default": 8002,
+                        "description": "MarkLogic Manage AppServer port"
+                    },
+                    "marklogic.port": {
+                        "order": 3,
+                        "type": "integer",
+                        "default": 8000,
+                        "description": "The port of a REST API app server to connect to"
+                    },
+                    "marklogic.documentsDb": {
+                        "order": 4,
+                        "type": "string",
+                        "default": "",
+                        "description": "database against which to evaluate queries; required for debugging a local script"
+                    },
+                    "marklogic.modulesDb": {
+                        "order": 5,
+                        "type": "string",
+                        "default": "",
+                        "description": "modules database used in queries; default modules database for app server will be used if left unspecified"
+                    },
+                    "marklogic.modulesRoot": {
+                        "order": 6,
+                        "type": "string",
+                        "default": "/",
+                        "description": "modules root if using filesystem"
+                    }
+                }
+            },
+            {
+                "id": "marklogicSecurity",
+                "order": 2,
+                "type": "object",
+                "title": "MarkLogic Security Configuration",
+                "properties": {
+                    "marklogic.authType": {
+                        "order": 1,
+                        "type": "string",
+                        "default": "DIGEST",
+                        "description": "only DIGEST or BASIC for now"
+                    },
+                    "marklogic.username": {
+                        "order": 2,
+                        "type": "string",
+                        "default": "admin",
+                        "description": "username for MarkLogic connection"
+                    },
+                    "marklogic.password": {
+                        "order": 3,
+                        "type": "string",
+                        "default": "admin",
+                        "description": "password for MarkLogic connection"
+                    },
+                    "marklogic.pathToCa": {
+                        "order": 4,
+                        "type": "string",
+                        "default": "",
+                        "description": "path to certificate authority (e.g. for self-signed certificates)"
+                    },
+                    "marklogic.ssl": {
+                        "order": 5,
+                        "type": "boolean",
+                        "default": false,
+                        "description": "whether to use ssl for the http connection"
+                    },
+                    "marklogic.rejectUnauthorized": {
+                        "order": 6,
+                        "type": "boolean",
+                        "default": true,
+                        "description": "whether the server's SSL certificate should be verified against the list of supplied certificate authories"
+                    }
+                }
+            },
+            {
+                "id": "marklogicMiscellaneous",
+                "order": 3,
+                "type": "object",
+                "title": "MarkLogic Miscellaneous Configuration",
+                "properties": {
+                    "marklogic.resultsInEditorTab": {
+                        "order": 1,
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Display query results in a separate editor."
+                    },
+                    "marklogic.sparqlSelectResponseType": {
+                        "order": 2,
+                        "type": "string",
+                        "enum": [
+                            "application/sparql-results+json",
+                            "application/sparql-results+xml",
+                            "text/html",
+                            "text/csv"
+                        ],
+                        "default": "application/sparql-results+json",
+                        "description": "How to format SPARQL SELECT query results"
+                    },
+                    "marklogic.sparqlGraphResponseType": {
+                        "order": 3,
+                        "type": "string",
+                        "enum": [
+                            "text/turtle",
+                            "text/n3",
+                            "application/n-triples",
+                            "application/n-quads",
+                            "application/rdf+json",
+                            "application/rdf+xml"
+                        ],
+                        "default": "text/turtle",
+                        "description": "How to format SPARQL CONSTRUCT and DESCRIBE query results"
+                    },
+                    "marklogic.sparqlAskResponseType": {
+                        "order": 4,
+                        "type": "string",
+                        "enum": [
+                            "application/sparql-results+json",
+                            "application/sparql-results+xml",
+                            "text/html"
+                        ],
+                        "default": "application/sparql-results+json",
+                        "description": "How to format SPARQL ASK query results"
+                    },
+                    "marklogic.sql.optimize": {
+                        "order": 5,
+                        "type": "number",
+                        "enum": [
+                            0,
+                            1,
+                            2
+                        ],
+                        "default": 1,
+                        "description": "Optimization Levels of 0 (off), 1, and 2 are recognized."
+                    },
+                    "marklogic.sql.results": {
+                        "order": 6,
+                        "type": "string",
+                        "markdownDescription": "How to present SQL results from 'Eval SQL'",
+                        "enum": [
+                            "array",
+                            "format",
+                            "map"
+                        ],
+                        "markdownEnumDescriptions": [
+                            "Return SQL results as a sequence of array values (`json:array`).",
+                            "Return SQL results as formatted strings.",
+                            "Return SQL result as a sequence of map values, where the key is the column name."
+                        ],
+                        "default": "array"
+                    }
                 }
             }
-        },
+        ],
         "languages": [
             {
                 "id": "xquery-ml",
@@ -416,8 +507,8 @@
         ]
     },
     "scripts": {
-        "completeClean": "rimraf node_modules/ .vscode-test/ dist/ server/dist/ server/node_modules/ server/out/ mlxprs-${version}.vsix",
-        "npmInstallClientAndServer": "npm install && cd server && npm install && cd ..",
+        "cleanAll": "rimraf node_modules/ .vscode-test/ dist/ server/dist/ server/node_modules/ server/out/ mlxprs-${version}.vsix",
+        "installAll": "npm install && cd server && npm install && cd ..",
         "testAll": "npm run test && npm run testServer",
         "copy-files": "npm run copy-files --prefix server",
         "clean": "rimraf dist out server/dist server/out",
@@ -428,40 +519,56 @@
         "predebug": "npm run clean && npm run copy-files --prefix server && tsc -b server && tsc -b -w .",
         "test": "node dist/test/runTest.js --full-trace",
         "testServer": "npm run pretest-server && node server/dist/test/runTest.js --full-trace",
-        "watch": "webpack --mode none --watch & webpack --mode none --watch --config ./server/webpack.config.js"
+        "watch": "webpack --mode none --watch & webpack --mode none --watch --config ./server/webpack.config.js",
+        "lint": "eslint client/ server/ --ext .ts --ext .js --ext .sjs",
+        "lintFix": "eslint client/ server/ --ext .ts --ext .js --ext .sjs --fix"
+    },
+    "dependenciesComments": {
+        "webpack": "Something with version 5.80.0 is breaking the integration tests (and other things?).",
+        "possiblyUnused": {
+            "comment": "I'm not sure about these four packages. Without them, there seem to be problems when you attempt to 'attach' or 'launch'.",
+            "@types/estree": "1.0.1",
+            "https-proxy-agent": "5.0.1",
+            "js-yaml": "4.1.0",
+            "yargs-parser": "21.1.1"
+        }
     },
     "devDependencies": {
-        "@types/esprima": "4.0.3",
-        "@types/estree": "1.0.0",
-        "@types/mocha": "10.0.1",
-        "@types/node": "16.11.7",
-        "@types/vscode": "1.76.0",
-        "@types/webpack": "5.28.0",
-        "@types/xml2js": "0.4.11",
-        "@typescript-eslint/eslint-plugin": "5.54.1",
-        "@typescript-eslint/parser": "5.54.1",
-        "await-notify": "1.0.1",
-        "eslint": "8.35.0",
-        "esprima": "4.0.1",
+        "@types/estree": "1.0.1",
         "https-proxy-agent": "5.0.1",
         "js-yaml": "4.1.0",
-        "marklogic": "3.0.0",
-        "merge-options": "3.0.4",
+        "yargs-parser": "21.1.1",
+        "@types/esprima": "4.0.3",
+        "@types/mocha": "10.0.1",
+        "@types/node": "16.11.7",
+        "@types/sinon": "10.0.14",
+        "@types/vscode": "1.78.0",
+        "@types/webpack": "5.28.1",
+        "@types/xml2js": "0.4.11",
+        "@typescript-eslint/eslint-plugin": "5.59.2",
+        "@typescript-eslint/parser": "5.59.2",
+        "@vscode/debugadapter-testsupport": "1.59.0",
+        "@vscode/debugprotocol": "1.59.0",
+        "@vscode/test-electron": "2.3.0",
+        "eslint": "8.40.0",
         "mocha": "10.2.0",
         "request": "2.88.2",
         "request-promise": "4.2.6",
-        "ts-loader": "9.4.2",
-        "@vscode/debugadapter": "1.59.0",
-        "@vscode/debugadapter-testsupport": "1.59.0",
-        "@vscode/test-electron": "2.3.0",
+        "rimraf": "5.0.0",
+        "sinon": "15.0.4",
         "webpack": "5.76.1",
-        "webpack-cli": "5.0.1",
-        "xml2js": "0.4.23",
-        "yargs-parser": "21.1.1"
+        "webpack-cli": "5.0.2"
     },
     "dependencies": {
-        "rimraf": "4.3.1",
-        "@vscode/debugprotocol": "1.59.0",
-        "vscode-languageclient": "7.0.0"
+        "@vscode/debugadapter": "1.59.0",
+        "await-notify": "1.0.1",
+        "esprima": "4.0.1",
+        "fast-xml-parser": "4.2.2",
+        "marklogic": "3.1.0",
+        "merge-options": "3.0.4",
+        "needle": "3.2.0",
+        "ts-loader": "9.4.2",
+        "vscode-languageclient": "7.0.0",
+        "xml2js": "0.5.0"
     }
 }

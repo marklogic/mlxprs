@@ -1,0 +1,13 @@
+{
+    "server-type": "http",
+    "server-name": "Manage-ssl",
+    "root": "Apps/",
+    "port": 8052,
+    "content-database": "App-Services",
+    "authentication": "digest",
+    "error-handler": "manage/error-handler.xqy",
+    "url-rewriter": "/MarkLogic/manage/rewriter.xml",
+    "rewrite-resolves-globally": true,
+    "ssl-certificate-template": "mlxprs-ssl-certificate-template",
+    "ssl-require-client-certificate": false
+}

@@ -1,53 +1,69 @@
-'use strict'
+/*
+ * Copyright (c) 2023 MarkLogic Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-import { MarklogicClient, sendXQuery, MlClientParameters } from './marklogicClient'
+'use strict';
 
-export const listModulesQuery = 'cts:uris()'
+import { ClientContext, sendXQuery, MlClientParameters } from './marklogicClient';
+
+export const listModulesQuery = 'cts:uris()';
 
 export class ModuleContentGetter {
-    private _mlClient: MarklogicClient
+    private dbClientContext: ClientContext;
 
-    public constructor(client: MarklogicClient) {
-        const moduleGetterParams: MlClientParameters = client.params
-        moduleGetterParams.contentDb = moduleGetterParams.modulesDb
-        this._mlClient = new MarklogicClient(moduleGetterParams)
+    public constructor(dbClientContext: ClientContext) {
+        const moduleGetterParams: MlClientParameters = dbClientContext.params;
+        moduleGetterParams.contentDb = moduleGetterParams.modulesDb;
+        this.dbClientContext = new ClientContext(moduleGetterParams);
     }
 
     public host(): string {
-        return this._mlClient.params.host
+        return this.dbClientContext.params.host;
     }
 
     public port(): number {
-        return this._mlClient.params.port
+        return this.dbClientContext.params.port;
     }
 
-    public initialize(client: MarklogicClient): void {
-        this._mlClient = client
+    public initialize(dbClientContext: ClientContext): void {
+        this.dbClientContext = dbClientContext;
     }
 
     public async provideTextDocumentContent(modulePath: string): Promise<string> {
-        return this._mlClient.mldbClient.read(modulePath)
+        return this.dbClientContext.databaseClient.read(modulePath)
             .result(
                 (fulfill: string[]) => {
-                    const moduleContent: string = fulfill[0]
-                    return moduleContent
+                    const moduleContent: string = fulfill[0];
+                    return moduleContent;
                 },
                 (err) => {
-                    throw err
-                })
+                    throw err;
+                });
     }
 
     public async listModules(): Promise<string[]> {
-        return sendXQuery(this._mlClient, listModulesQuery)
+        return sendXQuery(this.dbClientContext, listModulesQuery)
             .result(
                 (fulfill: Record<string, any>[]) => {
                     return fulfill.map(o => {
-                        return o.value
-                    })
+                        return o.value;
+                    });
                 },
                 (err) => {
-                    throw err
-                })
+                    throw err;
+                });
     }
 
 
