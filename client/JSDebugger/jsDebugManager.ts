@@ -19,8 +19,8 @@ import * as querystring from 'querystring';
 import * as request from 'request-promise';
 import { QuickPickItem, window, workspace } from 'vscode';
 
-import { MlxprsErrorReporter } from '../mlxprsErrorReporter';
 import { ClientContext, sendXQuery, ServerQueryResponse } from '../marklogicClient';
+import { MlxprsErrorReporter } from '../mlxprsErrorReporter';
 import { MlxprsError } from '../mlxprsErrorBuilder';
 import { MlxprsStatus } from '../mlxprsStatus';
 
@@ -213,7 +213,7 @@ export class JsDebugManager {
         }
         options['rejectUnauthorized'] = rejectUnauthorized;
 
-        request.post(url, options)
+        return request.post(url, options)
             .then(() => {
                 window.showInformationMessage('Debug server connected');
             }).catch((error: Error) => {

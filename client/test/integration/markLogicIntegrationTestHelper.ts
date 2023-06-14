@@ -43,7 +43,7 @@ export class IntegrationTestHelper {
 
     private hostname = String(process.env.ML_HOST || 'localhost');
     private port = Number(process.env.ML_PORT || this.configuredServerPort);
-    private managePort = Number(process.env.ML_MANAGEPORT || '8002');
+    readonly managePort = Number(process.env.ML_MANAGEPORT || '8002');
     private username = String(process.env.ML_USERNAME || 'admin');
     private password = String(process.env.ML_PASSWORD || 'admin');
     private modulesDB = String(process.env.ML_MODULESDB || this.modulesDatabase);
