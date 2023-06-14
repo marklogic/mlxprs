@@ -18,7 +18,6 @@
 
 import * as fs from 'fs';
 import * as ml from 'marklogic';
-import * as request from 'request-promise';
 
 import { MlxprsStatus } from './mlxprsStatus';
 
@@ -363,33 +362,33 @@ export async function filterJsServerByConnectedStatus(
 ): Promise<MlxprsQuickPickItem[]> {
     const requests = [];
     const filteredChoices: MlxprsQuickPickItem[] = [];
-    choices.forEach(async (choice) => {
-        const url = ClientContext.buildUrl(dbClientContext.params.host, `/jsdbg/v1/connected/${choice.label}`, dbClientContext.params.ssl, managePort);
-        const options = {
-            headers: {
-                'Content-type': 'application/x-www-form-urlencoded',
-                'X-Error-Accept': 'application/json'
-            },
-            auth: {
-                user: dbClientContext.params.user,
-                pass: dbClientContext.params.pwd,
-                'sendImmediately': false
-            }
-        };
-        if (dbClientContext.params.pathToCa !== '') {
-            options['agentOptions'] = { ca: fs.readFileSync(dbClientContext.params.pathToCa) };
-        }
-        options['rejectUnauthorized'] = dbClientContext.params.rejectUnauthorized;
-        const connectedRequest = request.get(url, options)
-            .then((response) => {
-                if (response === requiredResponse) {
+
+    choices.forEach((choice) => {
+        const manageClient =  newMarklogicManageClient(dbClientContext, managePort);
+        const endpoint = `/jsdbg/v1/connected/${choice.label}`;
+        const connectedRequest = manageClient.databaseClient.internal.sendRequest(
+            endpoint,
+            (requestOptions: ml.RequestOptions) => {
+                requestOptions.method = 'GET';
+            })
+            .result((response: unknown) => {
+                if ((response as string) === requiredResponse) {
                     filteredChoices.push(choice);
                 }
-            }).catch(err => {
-                console.debug(`"Connected" request failed: ${err}`);
+            })
+            .catch(error => {
+                console.debug(error.body.errorResponse);
             });
         requests.push(connectedRequest);
     });
     await Promise.all(requests);
     return filteredChoices;
+}
+
+export function newMarklogicManageClient(dbClientContext: ClientContext, managePort: number): ClientContext {
+    const manageClientParams: MlClientParameters = JSON.parse(JSON.stringify(dbClientContext.params));
+    manageClientParams.port = managePort;
+    manageClientParams.contentDb = null;
+    manageClientParams.modulesDb = null;
+    return new ClientContext(manageClientParams);
 }
