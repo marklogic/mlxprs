@@ -180,14 +180,14 @@ export class MLRuntime extends EventEmitter {
     }
 
     public setBreakPoint(location: MLbreakPoint): Promise<string> {
-        let body = `url=${location.url}&lno=${location.line}`;
+        let urlParameters = `url=${location.url}&lno=${location.line}`;
         if (location.column) {
-            body = body.concat(`&cno=${location.column}`);
+            urlParameters = urlParameters.concat(`&cno=${location.column}`);
         }
         if (location.condition) {
-            body = body.concat(`&condition=${location.condition}`);
+            urlParameters = urlParameters.concat(`&condition=${location.condition}`);
         }
-        return this._sendMLdebugRequestPOST('set-breakpoint', body);
+        return this._sendMLdebugRequestPOST('set-breakpoint', '', urlParameters);
     }
 
     public removeBreakPoint(location: MLbreakPoint): Promise<string> {
@@ -200,7 +200,7 @@ export class MLRuntime extends EventEmitter {
 
     public wait(): Promise<string> {
         const body = 'time-out=5';
-        return this._sendMLdebugRequestPOST('wait', body);
+        return this._sendMLdebugRequestPOST('wait', '', body);
     }
 
     public evaluateOnCallFrame(expr: string, cid?: string): Promise<string> {
@@ -224,7 +224,7 @@ export class MLRuntime extends EventEmitter {
 
     public terminate(): Promise<string> {
         const data = 'server-name=TaskServer';
-        return this._sendMLdebugRequestPOST('request-cancel', data);
+        return this._sendMLdebugRequestPOST('request-cancel', '', data);
     }
 
     public async waitTillPaused(): Promise<string> {
@@ -247,13 +247,17 @@ export class MLRuntime extends EventEmitter {
     //---- helpers
 
     private _sendMLdebugRequestPOST(
-        module: string, body?: string
+        module: string, body?: string, urlParameters?: string
     ): Promise<string> {
         const manageClient = newMarklogicManageClient(this.dbClientContext, this.managePort);
 
+        let endpoint = `/jsdbg/v1/${module}/${this._rid}`;
+        if (urlParameters) {
+            endpoint = `${endpoint}?${urlParameters}`;
+        }
         return new Promise((resolve, reject) => {
             manageClient.databaseClient.internal.sendRequest(
-                `/jsdbg/v1/${module}/${this._rid}`,
+                endpoint,
                 (requestOptions: ml.RequestOptions) => {
                     requestOptions.method = 'POST';
                     requestOptions.headers = { 'X-Error-Accept': 'application/json' };

@@ -250,13 +250,25 @@ export class MLDebugSession extends LoggingDebugSession {
                         column: this.convertClientLineToDebugger(breakpoint.column),
                         condition: breakpoint.condition
                     } as MLbreakPoint).then(resp => {
-                        const location = JSON.parse(resp)['result']['locations'][0];
-                        if (location !== null) {
-                            const line = this.convertDebuggerLineToClient(location['lineNumber']);
-                            const actualBp = actualBreakpoints.find(bp =>
-                                line === bp.line);
-                            if (actualBp !== null) actualBp.verified = true;
-                            this._bpMap[path][String(line)] = 0; //verified
+                        try {
+                            const location = JSON.parse(resp)['result']['locations'][0];
+                            if (location !== null) {
+                                const line = this.convertDebuggerLineToClient(location['lineNumber']);
+                                const actualBp = actualBreakpoints.find(bp =>
+                                    line === bp.line);
+                                if (actualBp !== null) actualBp.verified = true;
+                                this._bpMap[path][String(line)] = 0; //verified
+                            }
+                        } catch (error) {
+                            const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, 'Error setting breakpoints');
+                            const customEvent = new Event(
+                                'MlxprsDebugAdapterError',
+                                {
+                                    event: 'BreakpointError',
+                                    mlxprsError: mlxprsError
+                                }
+                            );
+                            this.sendEvent(customEvent);
                         }
                     }));
                 });
@@ -671,23 +683,27 @@ export class MLDebugSession extends LoggingDebugSession {
     }
 
     private _handleError(error: unknown, msg?: string, terminate?: boolean, func?: string): void {
-        const errAsObject = JSON.parse(JSON.stringify(error));
-        const errResp = errAsObject.errorResponse || errAsObject.message || errAsObject.code;
-        const messageCode: string = errResp.messageCode || errAsObject.message || errAsObject.code;
-        if (messageCode.includes('JSDBG-REQUESTRECORD') || messageCode.includes('XDMP-NOREQUEST')) {
-            this._runtime.setRunTimeState('shutdown');
-            this.sendEvent(new TerminatedEvent());
-            this._trace(`Request ${this._runtime.getRid()} has ended`);
-        } else {
-            if (!messageCode) {
-                this._trace(errResp);
-            }
-            if (terminate === true) {
+        try {
+            const errAsObject = JSON.parse(JSON.stringify(error));
+            const errResp = errAsObject.errorResponse || errAsObject.message || errAsObject.code;
+            const messageCode: string = errResp.messageCode || errAsObject.message || errAsObject.code;
+            if (messageCode.includes('JSDBG-REQUESTRECORD') || messageCode.includes('XDMP-NOREQUEST')) {
+                this._runtime.setRunTimeState('shutdown');
                 this.sendEvent(new TerminatedEvent());
+                this._trace(`Request ${this._runtime.getRid()} has ended`);
+            } else {
+                if (!messageCode) {
+                    this._trace(errResp);
+                }
+                if (terminate === true) {
+                    this.sendEvent(new TerminatedEvent());
+                }
+                if (msg) {
+                    this._trace(msg);
+                }
             }
-            if (msg) {
-                this._trace(msg);
-            }
+        } catch (error) {
+            console.debug(error);
         }
     }
 

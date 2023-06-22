@@ -20,6 +20,7 @@ import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { DebugClient } from '@vscode/debugadapter-testsupport';
 
+import { JsDebugManager } from '../../JSDebugger/jsDebugManager';
 import { ClientContext, MlClientParameters, sendJSQuery } from '../../marklogicClient';
 
 export class IntegrationTestHelper {
@@ -30,6 +31,7 @@ export class IntegrationTestHelper {
     public serverSslPort = '8057';
     public appServerName = String(process.env.ML_APPSERVER || 'mlxprs-test');
     public attachServerName = String(process.env.ML_ATTACH_APPSERVER || 'mlxprsSample');
+    public attachedToServer = false;
     public attachSslServerName = String(process.env.ML_ATTACH_SSL_APPSERVER || 'mlxprs-ssl-test');
     public documentsDatabase = 'mlxprs-test-content';
     public modulesDatabase = 'mlxprs-test-modules';
@@ -168,9 +170,16 @@ export class IntegrationTestHelper {
     }
 
     async teardownEachTest(): Promise<void[]> {
-        return Promise.all([
-            this.jsDebugClient.stop()
-        ]);
+        if (globalThis.integrationTestHelper.attachedToServer) {
+            await JsDebugManager.disconnectFromNamedJsDebugServer(globalThis.integrationTestHelper.attachServerName);
+            globalThis.integrationTestHelper.attachedToServer = false;
+        }
+        return new Promise((resolve) => {
+            Promise.all([
+                globalThis.integrationTestHelper.jsDebugClient.stop()
+            ]);
+            resolve([]);
+        });
     }
 
     private async loadTestData(): Promise<void> {
@@ -234,50 +243,6 @@ export class IntegrationTestHelper {
                 (err) => {
                     throw err;
                 });
-    }
-
-    async getRequestStatuses(dbClientContext: ClientContext, qry: string): Promise<{ requestId: string }[][]> {
-        const newParams: MlClientParameters = JSON.parse(JSON.stringify(dbClientContext.params));
-        newParams.port = this.managePort;
-        const newClient = new ClientContext(newParams);
-        return sendJSQuery(newClient, qry)
-            .result(
-                (fulfill) => {
-                    return fulfill.map(o => {
-                        return o.value;
-                    });
-                },
-                (err) => {
-                    throw err;
-                });
-    }
-
-    async cancelRequest(dbClientContext: ClientContext, qry: string): Promise<unknown> {
-        const newParams: MlClientParameters = JSON.parse(JSON.stringify(dbClientContext.params));
-        newParams.port = this.managePort;
-        const newClient = new ClientContext(newParams);
-        return sendJSQuery(newClient, qry)
-            .result(
-                () => {
-                    return null;
-                },
-                (err) => {
-                    throw err;
-                });
-    }
-
-    async cancelAllRequests(): Promise<void> {
-        const existingRequestStatuses: { requestId: string }[][] = await this.getRequestStatuses(this.mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server(this.appServerName)).toObject()[0].requestStatuses.toObject()');
-        await existingRequestStatuses[0].forEach(async (requestStatus) => {
-            const requestId = requestStatus.requestId;
-            const cancelRequestCommand = `declareUpdate(); xdmp.requestCancel(xdmp.host(),xdmp.server(this.appServerName), \`${requestId}\`)`;
-            await this.cancelRequest(this.mlClient, cancelRequestCommand);
-        });
-    }
-
-    async runningRequestsExist(): Promise<boolean> {
-        const existingRequestStatuses: { requestId: string }[][] = await this.getRequestStatuses(this.mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server(this.appServerName)).toObject()[0].requestStatuses.toObject()');
-        return (existingRequestStatuses[0].length > 0);
     }
 
 }

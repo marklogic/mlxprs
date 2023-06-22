@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import * as fs from 'fs';
+import * as ml from 'marklogic';
 import * as querystring from 'querystring';
 import * as request from 'request-promise';
 import { QuickPickItem, window, workspace } from 'vscode';
 
-import { ClientContext, sendXQuery, ServerQueryResponse } from '../marklogicClient';
-import { MlxprsErrorReporter } from '../mlxprsErrorReporter';
+import { ClientContext, MlClientParameters, sendXQuery, ServerQueryResponse } from '../marklogicClient';
 import { MlxprsError } from '../mlxprsErrorBuilder';
+import { MlxprsErrorReporter } from '../mlxprsErrorReporter';
 import { MlxprsStatus } from '../mlxprsStatus';
 
 
@@ -94,40 +94,29 @@ export class JsDebugManager {
     }
 
     private static async filterServers(choices: QuickPickItem[], requiredResponse: string): Promise<QuickPickItem[]> {
-        const cfg = workspace.getConfiguration('marklogic');
-        const username: string = cfg.get('username');
-        const password: string = cfg.get('password');
-        const hostname: string = cfg.get('host');
-        const managePort: number = cfg.get('managePort');
-        const ssl = Boolean(cfg.get('ssl'));
-        const pathToCa = String(cfg.get('pathToCa') || '');
-        const rejectUnauthorized = Boolean(cfg.get('rejectUnauthorized'));
+        const mlManageClientParameters = buildNewManageClientParametersFromConfig();
         const requests = [];
         const filteredChoices: QuickPickItem[] = [];
         let mlxprsError: MlxprsError = null;
+
         choices.forEach(async (choice) => {
-            const url = ClientContext.buildUrl(hostname, `/jsdbg/v1/connected/${choice.label}`, ssl, managePort);
-            const options = {
-                headers: {
-                    'Content-type': 'application/x-www-form-urlencoded',
-                    'X-Error-Accept': 'application/json'
-                },
-                auth: {
-                    user: username,
-                    pass: password,
-                    'sendImmediately': false
-                }
-            };
-            if (pathToCa !== '') {
-                options['agentOptions'] = { ca: fs.readFileSync(pathToCa) };
-            }
-            options['rejectUnauthorized'] = rejectUnauthorized;
-            const connectedRequest = request.get(url, options)
-                .then((response) => {
+            const manageClient = new ClientContext(mlManageClientParameters);
+            const endpoint = `/jsdbg/v1/connected/${choice.label}`;
+            const connectedRequest = manageClient.databaseClient.internal.sendRequest(
+                endpoint,
+                (requestOptions: ml.RequestOptions) => {
+                    requestOptions.method = 'GET';
+                    requestOptions.headers = {
+                        'Content-type': 'application/x-www-form-urlencoded',
+                        'X-Error-Accept': 'application/json'
+                    };
+                })
+                .result((response: unknown) => {
                     if (response === requiredResponse) {
                         filteredChoices.push(choice);
                     }
-                }).catch((error: Error) => {
+                })
+                .catch(error => {
                     mlxprsError = {
                         reportedMessage: error.message,
                         stack: error.stack,
@@ -175,105 +164,64 @@ export class JsDebugManager {
     }
 
     public static async connectToNamedJsDebugServer(servername: string): Promise<void> {
-        const cfg = workspace.getConfiguration('marklogic');
-        const username: string = cfg.get('username');
-        const password: string = cfg.get('password');
-        const hostname: string = cfg.get('host');
-        const managePort: number = cfg.get('managePort');
-        const ssl = Boolean(cfg.get('ssl'));
-        const pathToCa = String(cfg.get('pathToCa') || '');
-        const rejectUnauthorized = Boolean(cfg.get('rejectUnauthorized'));
+        const mlManageClientParameters = buildNewManageClientParametersFromConfig();
+        const manageClient = new ClientContext(mlManageClientParameters);
+        const endpoint = `/jsdbg/v1/connect/${servername}`;
 
-        if (!hostname) {
-            window.showInformationMessage('Hostname is not provided');
-            return;
-        }
-        if (!username) {
-            window.showInformationMessage('Username is not provided');
-            return;
-        }
-        if (!password) {
-            window.showInformationMessage('Password is not provided');
-            return;
-        }
-        const url = ClientContext.buildUrl(hostname, `/jsdbg/v1/connect/${servername}`, ssl, managePort);
-        const options = {
-            headers: {
-                'Content-type': 'application/x-www-form-urlencoded',
-                'X-Error-Accept': 'application/json'
-            },
-            auth: {
-                user: username,
-                pass: password,
-                'sendImmediately': false
-            }
-        };
-        if (pathToCa !== '') {
-            options['agentOptions'] = { ca: fs.readFileSync(pathToCa) };
-        }
-        options['rejectUnauthorized'] = rejectUnauthorized;
-
-        return request.post(url, options)
-            .then(() => {
-                window.showInformationMessage('Debug server connected');
-            }).catch((error: Error) => {
-                const mlxprsError: MlxprsError = {
-                    reportedMessage: error.message,
-                    stack: error.stack,
-                    popupMessage: `Debug server connect failed: ${JSON.stringify(error)}`
-                };
-                MlxprsErrorReporter.reportError(mlxprsError);
-            });
+        return new Promise((resolve, reject) => {
+            manageClient.databaseClient.internal.sendRequest(
+                endpoint,
+                (requestOptions: ml.RequestOptions) => {
+                    requestOptions.method = 'POST';
+                    requestOptions.headers = {
+                        'Content-type': 'application/x-www-form-urlencoded',
+                        'X-Error-Accept': 'application/json'
+                    };
+                })
+                .result(() => {
+                    window.showInformationMessage('Debug server connected');
+                    resolve();
+                })
+                .catch(error => {
+                    const mlxprsError: MlxprsError = {
+                        reportedMessage: error.message,
+                        stack: error.stack,
+                        popupMessage: `Debug server connect failed: ${JSON.stringify(error)}`
+                    };
+                    MlxprsErrorReporter.reportError(mlxprsError);
+                    reject();
+                });
+        });
     }
 
     public static async disconnectFromNamedJsDebugServer(servername: string): Promise<void> {
-        const cfg = workspace.getConfiguration('marklogic');
-        const username: string = cfg.get('username');
-        const password: string = cfg.get('password');
-        const hostname: string = cfg.get('host');
-        const managePort: number = cfg.get('managePort');
-        const ssl = Boolean(cfg.get('ssl'));
-        const pathToCa = String(cfg.get('pathToCa') || '');
-        const rejectUnauthorized = Boolean(cfg.get('rejectUnauthorized'));
+        const mlManageClientParameters = buildNewManageClientParametersFromConfig();
+        const manageClient = new ClientContext(mlManageClientParameters);
+        const endpoint = `/jsdbg/v1/disconnect/${servername}`;
 
-        if (!hostname) {
-            window.showInformationMessage('Hostname is not provided');
-            return;
-        }
-        if (!username) {
-            window.showInformationMessage('Username is not provided');
-            return;
-        }
-        if (!password) {
-            window.showInformationMessage('Password is not provided');
-            return;
-        }
-        const url = ClientContext.buildUrl(hostname, `/jsdbg/v1/disconnect/${servername}`, ssl, managePort);
-        const options = {
-            headers: {
-                'Content-type': 'application/x-www-form-urlencoded',
-                'X-Error-Accept': 'application/json'
-            },
-            auth: {
-                user: username,
-                pass: password,
-                'sendImmediately': false
-            }
-        };
-        if (pathToCa !== '') {
-            options['agentOptions'] = { ca: fs.readFileSync(pathToCa) };
-        }
-        options['rejectUnauthorized'] = rejectUnauthorized;
-
-        request.post(url, options).then(() => {
-            window.showInformationMessage('Debug server disconnected');
-        }).catch((error: Error) => {
-            const mlxprsError: MlxprsError = {
-                reportedMessage: error.message,
-                stack: error.stack,
-                popupMessage: `Debug server disconnect failed: ${JSON.stringify(error)}`
-            };
-            MlxprsErrorReporter.reportError(mlxprsError);
+        return new Promise((resolve, reject) => {
+            manageClient.databaseClient.internal.sendRequest(
+                endpoint,
+                (requestOptions: ml.RequestOptions) => {
+                    requestOptions.method = 'POST';
+                    requestOptions.headers = {
+                        'Content-type': 'application/x-www-form-urlencoded',
+                        'X-Error-Accept': 'application/json'
+                    };
+                })
+                .result(() => {
+                    window.showInformationMessage('Debug server disconnected');
+                    resolve();
+                })
+                .catch(error => {
+                    const mlxprsError: MlxprsError = {
+                        reportedMessage: error.message,
+                        stack: error.stack,
+                        popupMessage: `Debug server disconnect failed: ${JSON.stringify(error)}`
+                    };
+                    MlxprsErrorReporter.reportError(mlxprsError);
+                    reject();
+                });
         });
     }
 
@@ -355,4 +303,47 @@ export class JsDebugManager {
 
 function appServerSorter(a: QuickPickItem, b: QuickPickItem): number {
     return (a.label.toUpperCase() > b.label.toUpperCase()) ? 1 : ((b.label.toUpperCase() > a.label.toUpperCase()) ? -1 : 0);
+}
+
+export function buildNewManageClientParametersFromConfig() {
+    const cfg = workspace.getConfiguration('marklogic');
+    if (!cfg.get('host')) {
+        const mlxprsError: MlxprsError = {
+            reportedMessage: 'Hostname is not provided',
+            popupMessage: 'Hostname is not provided',
+            stack: ''
+        };
+        window.showInformationMessage(mlxprsError.reportedMessage);
+        throw mlxprsError;
+    }
+    if (!cfg.get('username')) {
+        const mlxprsError: MlxprsError = {
+            reportedMessage: 'Username is not provided',
+            popupMessage: 'Username is not provided',
+            stack: ''
+        };
+        window.showInformationMessage(mlxprsError.reportedMessage);
+        throw mlxprsError;
+    }
+    if (!cfg.get('password')) {
+        const mlxprsError: MlxprsError = {
+            reportedMessage: 'Password is not provided',
+            popupMessage: 'Password is not provided',
+            stack: ''
+        };
+        window.showInformationMessage(mlxprsError.reportedMessage);
+        throw mlxprsError;
+    }
+    return new MlClientParameters({
+        host: cfg.get('host'),
+        port: cfg.get('managePort'),
+        user: cfg.get('username'),
+        pwd: cfg.get('password'),
+        authType: cfg.get('authType'),
+        contentDb: null,
+        modulesDb: null,
+        pathToCa: String(cfg.get('pathToCa') || ''),
+        ssl: Boolean(cfg.get('ssl')),
+        rejectUnauthorized: Boolean(cfg.get('rejectUnauthorized'))
+    });
 }
