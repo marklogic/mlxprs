@@ -25,7 +25,6 @@ suite('Testing \'disconnect\' functionality with varying scenarios', async () =>
     const dbClientContext: ClientContext = integrationTestHelper.mlClient;
     const managePort = integrationTestHelper.managePort;
     const attachServerName: string = integrationTestHelper.attachServerName;
-    await JsDebugManager.disconnectFromNamedJsDebugServer(attachServerName);
 
     test('When there are no "connected" app-servers initially', async () => {
         const disconnectedAppServers = await getFilteredListOfJsAppServers(dbClientContext, managePort, 'false');
@@ -35,6 +34,7 @@ suite('Testing \'disconnect\' functionality with varying scenarios', async () =>
         assert.equal(connectedAppServers.length, 0, 'no app servers should be returned for this list');
 
         await JsDebugManager.connectToNamedJsDebugServer(attachServerName);
+        globalThis.integrationTestHelper.attachedToServer = true;
 
         const updatedDisconnectedAppServers = await getFilteredListOfJsAppServers(dbClientContext, managePort, 'false');
         assert.equal(updatedDisconnectedAppServers.length + 1, disconnectedAppServers.length,

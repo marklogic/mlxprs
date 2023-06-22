@@ -28,7 +28,6 @@ suite('Testing \'disconnect\' functionality with varying scenarios', async () =>
     const dbClientContext: ClientContext = integrationTestHelper.mlClient;
     const mlClientWithBadSsl: ClientContext = integrationTestHelper.mlClientWithBadSsl;
     const attachServerName: string = integrationTestHelper.attachServerName;
-    await JsDebugManager.disconnectFromNamedJsDebugServer(attachServerName);
     const showErrorPopup = integrationTestHelper.showErrorPopup;
     const mlClientWithSslWithRejectUnauthorized: ClientContext = integrationTestHelper.mlClientWithSslWithRejectUnauthorized;
 
@@ -43,6 +42,7 @@ suite('Testing \'disconnect\' functionality with varying scenarios', async () =>
 
     test('When there is a single "connected" app-server, and no SSL settings are configured', async () => {
         await JsDebugManager.connectToNamedJsDebugServer(attachServerName);
+        globalThis.integrationTestHelper.attachedToServer = true;
 
         showErrorPopup.resetHistory();
         const connectedAppServers: QuickPickItem[] = await JsDebugManager.getFilteredListOfJsAppServers(dbClientContext, 'true');
@@ -50,7 +50,6 @@ suite('Testing \'disconnect\' functionality with varying scenarios', async () =>
         assert.strictEqual(connectedAppServers.length, 1, 'Then the response array should have 1 server listed');
         assert.strictEqual(connectedAppServers[0].label, attachServerName,
             `Then the label of the server in the response array match ${attachServerName}`);
-        JsDebugManager.disconnectFromNamedJsDebugServer(attachServerName);
     }).timeout(5000);
 
 
