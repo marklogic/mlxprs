@@ -15,10 +15,12 @@
  */
 
 import * as assert from 'assert';
+import * as CP from 'child_process';
 
 import { JsDebugManager } from '../../JSDebugger/jsDebugManager';
 import { ClientContext, getFilteredListOfJsAppServers } from '../../marklogicClient';
-import { IntegrationTestHelper } from './markLogicIntegrationTestHelper';
+import { IntegrationTestHelper, wait } from './markLogicIntegrationTestHelper';
+
 
 suite('Testing \'disconnect\' functionality with varying scenarios', async () => {
     const integrationTestHelper: IntegrationTestHelper = globalThis.integrationTestHelper;
@@ -43,4 +45,39 @@ suite('Testing \'disconnect\' functionality with varying scenarios', async () =>
         assert.equal(updatedConnectedAppServers.length, 1, 'This will return the single app server that was connected to');
     }).timeout(5000);
 
+});
+
+
+suite('Testing various MarkLogic calls', async () => {
+    const integrationTestHelper: IntegrationTestHelper = globalThis.integrationTestHelper;
+    const attachServerName: string = integrationTestHelper.attachServerName;
+
+    test('When querying MarkLogic for available requests', async () => {
+        await JsDebugManager.connectToNamedJsDebugServer(attachServerName);
+        globalThis.integrationTestHelper.restartServer = true;
+
+        const globalConfig = integrationTestHelper.config;
+        let availableRequestsString = await JsDebugManager.getAvailableRequests(attachServerName);
+        let availableRequests = JSON.parse(availableRequestsString);
+        assert.strictEqual(availableRequests.requestIds.length, 0,
+            'If no requests have been started, then the number of available requests should be 0');
+
+        CP.exec(`curl --anyauth -k --user ${globalConfig.username}:${globalConfig.password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
+                    http${globalConfig.ssl ? 's' : ''}://${globalConfig.hostname}:${integrationTestHelper.serverPortForAttaching}/LATEST/invoke --data-urlencode module=/MarkLogic/test/test.sjs`);
+        await wait(2000);
+
+        availableRequestsString = await JsDebugManager.getAvailableRequests(attachServerName);
+        availableRequests = JSON.parse(availableRequestsString);
+        assert.strictEqual(availableRequests.requestIds.length, 1,
+            'if a request has been started, then the number of available requests should be 1');
+        const resp = await JsDebugManager.getRequestInfo(availableRequests.requestIds[0], attachServerName);
+        assert(resp, 'if a request has been started, then retrieving info for that request should return an object');
+        assert(resp['requestText'], 'if a request has been started, then retrieving info for that request should return a requestText value');
+        assert(resp['startTime'], 'if a request has been started, then retrieving info for that request should return a startTime value');
+    }).timeout(10000);
+
+    test('When resolving a database id', async () => {
+        const dbId = await JsDebugManager.resolveDatabasetoId('NoSuchDatabase');
+        assert.strictEqual(dbId, null, 'If the database does not exist, the return value should be null');
+    }).timeout(1000);
 });
