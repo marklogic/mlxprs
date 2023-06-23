@@ -15,8 +15,6 @@
  */
 
 import * as ml from 'marklogic';
-import * as querystring from 'querystring';
-import * as request from 'request-promise';
 import { QuickPickItem, window, workspace } from 'vscode';
 
 import { ClientContext, MlClientParameters, sendXQuery, ServerQueryResponse } from '../marklogicClient';
@@ -29,24 +27,30 @@ export class JsDebugManager {
     static mlxprsStatus: MlxprsStatus = null;
 
     public static async getAvailableRequests(
-        username: string, password: string, debugServerName: string, hostname: string, ssl?: boolean,
-        ca?: Buffer, rejectUnauthorized = true, managePort = ClientContext.DEFAULT_MANAGE_PORT
+        debugServerName: string
     ): Promise<string> {
-
-        const url = ClientContext.buildUrl(hostname, `/jsdbg/v1/paused-requests/${debugServerName}`, ssl, managePort);
-        const options = {
-            headers: {
-                'X-Error-Accept': ' application/json'
-            },
-            auth: {
-                user: username,
-                pass: password,
-                'sendImmediately': false
-            }
-        };
-        if (ca) options['agentOptions'] = { ca: ca };
-        options['rejectUnauthorized'] = rejectUnauthorized;
-        return request.get(url, options);
+        const manageClient = newManageClient();
+        const endpoint = `/jsdbg/v1/paused-requests/${debugServerName}`;
+        return new Promise((resolve, reject) => {
+            manageClient.databaseClient.internal.sendRequest(
+                endpoint,
+                (requestOptions: ml.RequestOptions) => {
+                    requestOptions.method = 'GET';
+                    requestOptions.headers = {
+                        'X-Error-Accept': ' application/json'
+                    };
+                })
+                .result((result: object) => {
+                    let response = '';
+                    if (result) {
+                        response = JSON.stringify(result);
+                    }
+                    resolve(response);
+                })
+                .catch(error => {
+                    reject(error);
+                });
+        });
     }
 
 
@@ -94,13 +98,12 @@ export class JsDebugManager {
     }
 
     private static async filterServers(choices: QuickPickItem[], requiredResponse: string): Promise<QuickPickItem[]> {
-        const mlManageClientParameters = buildNewManageClientParametersFromConfig();
         const requests = [];
         const filteredChoices: QuickPickItem[] = [];
         let mlxprsError: MlxprsError = null;
 
         choices.forEach(async (choice) => {
-            const manageClient = new ClientContext(mlManageClientParameters);
+            const manageClient = newManageClient();
             const endpoint = `/jsdbg/v1/connected/${choice.label}`;
             const connectedRequest = manageClient.databaseClient.internal.sendRequest(
                 endpoint,
@@ -164,8 +167,7 @@ export class JsDebugManager {
     }
 
     public static async connectToNamedJsDebugServer(servername: string): Promise<void> {
-        const mlManageClientParameters = buildNewManageClientParametersFromConfig();
-        const manageClient = new ClientContext(mlManageClientParameters);
+        const manageClient = newManageClient();
         const endpoint = `/jsdbg/v1/connect/${servername}`;
 
         return new Promise((resolve, reject) => {
@@ -189,14 +191,13 @@ export class JsDebugManager {
                         popupMessage: `Debug server connect failed: ${JSON.stringify(error)}`
                     };
                     MlxprsErrorReporter.reportError(mlxprsError);
-                    reject();
+                    reject(mlxprsError);
                 });
         });
     }
 
     public static async disconnectFromNamedJsDebugServer(servername: string): Promise<void> {
-        const mlManageClientParameters = buildNewManageClientParametersFromConfig();
-        const manageClient = new ClientContext(mlManageClientParameters);
+        const manageClient = newManageClient();
         const endpoint = `/jsdbg/v1/disconnect/${servername}`;
 
         return new Promise((resolve, reject) => {
@@ -220,57 +221,71 @@ export class JsDebugManager {
                         popupMessage: `Debug server disconnect failed: ${JSON.stringify(error)}`
                     };
                     MlxprsErrorReporter.reportError(mlxprsError);
-                    reject();
+                    reject(mlxprsError);
                 });
         });
     }
 
-    public static async resolveDatabasetoId(username: string, password: string, database: string, hostname: string,
-        ssl?: boolean, ca?: Buffer, rejectUnauthorized = true, managePort = ClientContext.DEFAULT_MANAGE_PORT
-    ): Promise<string> {
+    public static async resolveDatabasetoId(database: string): Promise<string> {
+        const manageClient = newManageClient();
 
-        const url = ClientContext.buildUrl(hostname, '/v1/eval', ssl, managePort);
-        const script = `xdmp.database("${database}")`;
-        const options: Record<string, unknown> = {
-            headers: {
-                'Content-type': 'application/x-www-form-urlencoded',
-                'Accept': 'multipart/mixed',
-                'X-Error-Accept': ' application/json'
-            },
-            auth: {
-                user: username,
-                pass: password,
-                'sendImmediately': false
-            },
-            body: `javascript=${querystring.escape(script)}`
-        };
-        if (ca) options['agentOptions'] = { ca: ca };
-        options['rejectUnauthorized'] = rejectUnauthorized;
-        return request.post(url, options);
+        return new Promise((resolve, reject) => {
+            manageClient.databaseClient.internal.sendRequest(
+                '/v1/eval',
+                (requestOptions: ml.RequestOptions) => {
+                    requestOptions.method = 'POST';
+                    requestOptions.headers = {
+                        'Content-type': 'application/x-www-form-urlencoded',
+                        'Accept': 'multipart/mixed',
+                        'X-Error-Accept': ' application/json'
+                    };
+                },
+                (operation: ml.RequestOperation) => {
+                    operation.requestBody = `javascript=xdmp.database("${database}")`;
+                })
+                .result((result: object) => {
+                    const serverArray = JSON.parse(JSON.stringify(result));
+                    if (serverArray.length > 0) {
+                        resolve(serverArray[0].content);
+                    } else {
+                        resolve(null);
+                    }
+                })
+                .catch(() => {
+                    resolve(null);
+                });
+        });
     }
 
-    public static async getRequestInfo(username: string, password: string, requestId: string, debugServerName: string, hostname: string,
-        ssl?: boolean, ca?: Buffer, rejectUnauthorized = true, managePort = ClientContext.DEFAULT_MANAGE_PORT
-    ): Promise<string> {
+    public static async getRequestInfo(requestId: string, debugServerName: string): Promise<string> {
+        const manageClient = newManageClient();
 
-        const url = ClientContext.buildUrl(hostname, '/v1/eval', ssl, managePort);
-        const script = `xdmp.requestStatus(xdmp.host(),xdmp.server("${debugServerName}"),"${requestId}")`;
-        const options: Record<string, unknown> = {
-            headers: {
-                'Content-type': 'application/x-www-form-urlencoded',
-                'Accept': 'multipart/mixed',
-                'X-Error-Accept': ' application/json'
-            },
-            auth: {
-                user: username,
-                pass: password,
-                'sendImmediately': false
-            },
-            body: `javascript=${querystring.escape(script)}`
-        };
-        if (ca) options['agentOptions'] = { ca: ca };
-        options['rejectUnauthorized'] = rejectUnauthorized;
-        return request.post(url, options);
+        return new Promise((resolve, reject) => {
+            manageClient.databaseClient.internal.sendRequest(
+                '/v1/eval',
+                (requestOptions: ml.RequestOptions) => {
+                    requestOptions.method = 'POST';
+                    requestOptions.headers = {
+                        'Content-type': 'application/x-www-form-urlencoded',
+                        'Accept': 'multipart/mixed',
+                        'X-Error-Accept': ' application/json'
+                    };
+                },
+                (operation: ml.RequestOperation) => {
+                    operation.requestBody = `javascript=xdmp.requestStatus(xdmp.host(),xdmp.server("${debugServerName}"),"${requestId}")`;
+                })
+                .result((result: object) => {
+                    const infoArray = JSON.parse(JSON.stringify(result));
+                    if (infoArray.length > 0) {
+                        resolve(infoArray[0].content);
+                    } else {
+                        resolve(null);
+                    }
+                })
+                .catch(() => {
+                    resolve(null);
+                });
+        });
     }
 
     private static requestStatusBarItemUpdate() {
@@ -305,7 +320,12 @@ function appServerSorter(a: QuickPickItem, b: QuickPickItem): number {
     return (a.label.toUpperCase() > b.label.toUpperCase()) ? 1 : ((b.label.toUpperCase() > a.label.toUpperCase()) ? -1 : 0);
 }
 
-export function buildNewManageClientParametersFromConfig() {
+export function newManageClient() {
+    const mlManageClientParameters = newManageConfig();
+    return new ClientContext(mlManageClientParameters);
+}
+
+function newManageConfig() {
     const cfg = workspace.getConfiguration('marklogic');
     if (!cfg.get('host')) {
         const mlxprsError: MlxprsError = {

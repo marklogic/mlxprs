@@ -15,13 +15,14 @@
  */
 
 import * as fs from 'fs';
+import * as ml from 'marklogic';
 import * as Path from 'path';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { DebugClient } from '@vscode/debugadapter-testsupport';
 
 import { JsDebugManager } from '../../JSDebugger/jsDebugManager';
-import { ClientContext, MlClientParameters, sendJSQuery } from '../../marklogicClient';
+import { ClientContext, MlClientParameters, newMarklogicManageClient, sendJSQuery } from '../../marklogicClient';
 
 export class IntegrationTestHelper {
 
@@ -32,6 +33,7 @@ export class IntegrationTestHelper {
     public appServerName = String(process.env.ML_APPSERVER || 'mlxprs-test');
     public attachServerName = String(process.env.ML_ATTACH_APPSERVER || 'mlxprsSample');
     public attachedToServer = false;
+    public restartServer = false;
     public attachSslServerName = String(process.env.ML_ATTACH_SSL_APPSERVER || 'mlxprs-ssl-test');
     public documentsDatabase = 'mlxprs-test-content';
     public modulesDatabase = 'mlxprs-test-modules';
@@ -174,6 +176,19 @@ export class IntegrationTestHelper {
             await JsDebugManager.disconnectFromNamedJsDebugServer(globalThis.integrationTestHelper.attachServerName);
             globalThis.integrationTestHelper.attachedToServer = false;
         }
+        // Some tests can leave the MarkLogic server in a state that causes future tests to fail.
+        // The only reliable method for resolving this state is to restart the MarkLogic server.
+        if (globalThis.integrationTestHelper.restartServer) {
+            await this.restartMarkLogic();
+            globalThis.integrationTestHelper.restartServer = false;
+            await wait(500);
+            let markLogicIsRunning = false;
+            while (!markLogicIsRunning) {
+                await wait(500);
+                markLogicIsRunning = await this.isMarkLogicRunning();
+            }
+        }
+
         return new Promise((resolve) => {
             Promise.all([
                 globalThis.integrationTestHelper.jsDebugClient.stop()
@@ -243,6 +258,52 @@ export class IntegrationTestHelper {
                 (err) => {
                     throw err;
                 });
+    }
+
+    private async restartMarkLogic(): Promise<string> {
+        const manageClient = newMarklogicManageClient(this.mlClient, this.managePort);
+
+        return new Promise((resolve, reject) => {
+            manageClient.databaseClient.internal.sendRequest(
+                '/manage/v2',
+                (requestOptions: ml.RequestOptions) => {
+                    requestOptions.method = 'POST';
+                    requestOptions.headers = {
+                        'Content-type': 'application/json'
+                    };
+                },
+                (operation: ml.RequestOperation) => {
+                    operation.requestBody = '{"operation": "restart-local-cluster"}';
+                })
+                .result((result: string) => {
+                    resolve(result);
+                })
+                .catch((error) => {
+                    if (error.statusCode === 202) {
+                        resolve('202');
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+    }
+
+    private async isMarkLogicRunning(): Promise<boolean> {
+        const manageClient = newMarklogicManageClient(this.mlClient, this.managePort);
+
+        return new Promise((resolve) => {
+            manageClient.databaseClient.internal.sendRequest(
+                '/admin/v1/timestamp',
+                (requestOptions: ml.RequestOptions) => {
+                    requestOptions.method = 'GET';
+                })
+                .result(() => {
+                    resolve(true);
+                })
+                .catch(() => {
+                    resolve(false);
+                });
+        });
     }
 
 }
