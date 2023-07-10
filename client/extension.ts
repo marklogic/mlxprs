@@ -27,6 +27,7 @@ import { EditorQueryType, EditorQueryEvaluator } from './editorQueryEvaluator';
 import { JsDebugConfigurationProvider, DebugAdapterExecutableFactory } from './JSDebugger/jsDebugConfigProvider';
 import { JsDebugManager } from './JSDebugger/jsDebugManager';
 import { ClientContext } from './marklogicClient';
+import { MarkLogicUnitTestClient } from './marklogicUnitTestClient';
 import { MlxprsStatus } from './mlxprsStatus';
 import { MlxprsWebViewProvider } from './mlxprsWebViewProvider';
 import { ModuleContentProvider, pickAndShowModule } from './vscModuleContentProvider';
@@ -55,6 +56,7 @@ export function activate(context: vscode.ExtensionContext): void {
     });
 
     const editorQueryEvaluator = new EditorQueryEvaluator(context, provider);
+    const markLogicUnitTestClient = new MarkLogicUnitTestClient(context);
     const sendXQuery = vscode.commands.registerTextEditorCommand(
         'extension.sendXQuery',
         (editor: vscode.TextEditor) => editorQueryEvaluator.editorQuery(EditorQueryType.XQY, editor)
@@ -80,6 +82,13 @@ export function activate(context: vscode.ExtensionContext): void {
         'extension.sendRowsCsvQuery', (editor: vscode.TextEditor) => sendEditorRowsQuery(editor, 'csv'));
     const sendRowsXmlQuery = vscode.commands.registerTextEditorCommand(
         'extension.sendRowsXmlQuery', (editor: vscode.TextEditor) => sendEditorRowsQuery(editor, 'xml'));
+    const runTestModule = vscode.commands.registerTextEditorCommand(
+        'extension.runTestModule',
+        (editor: vscode.TextEditor) => {
+            const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
+            markLogicUnitTestClient.runTestModule(cfg, editor);
+        }
+    );
 
 
     const connectJsServer = vscode.commands.registerCommand('extension.connectJsServer', () => {
@@ -121,8 +130,10 @@ export function activate(context: vscode.ExtensionContext): void {
     });
 
     handleUnload(context, [
-        showModule, connectJsServer, disconnectJsServer, connectXqyServer, disconnectXqyServer, sendXQuery,
-        sendJSQuery, sendSqlQuery, sendSparqlQuery, sendRowsJsonQuery, sendRowsCsvQuery, sendRowsXmlQuery
+        connectJsServer, disconnectJsServer, connectXqyServer, disconnectXqyServer,
+        sendXQuery, sendJSQuery, sendSqlQuery, sendSparqlQuery,
+        sendRowsJsonQuery, sendRowsCsvQuery, sendRowsXmlQuery,
+        runTestModule, showModule
     ]);
     handleUnload(context, [
         vscode.languages.registerDocumentFormattingEditProvider(
@@ -199,6 +210,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const mlxprsWebViewProvider = new MlxprsWebViewProvider(context.extensionUri);
     const mlxprsWebView = vscode.window.registerWebviewViewProvider(MlxprsWebViewProvider.viewType, mlxprsWebViewProvider);
     EditorQueryEvaluator.registerMlxprsResultsViewProvider(mlxprsWebViewProvider);
+    MarkLogicUnitTestClient.registerMlxprsResultsViewProvider(mlxprsWebViewProvider);
     context.subscriptions.push(mlxprsWebView);
     handleUnload(context, [mlxprsWebView]);
 }

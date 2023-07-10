@@ -16,7 +16,6 @@
 
 'use strict';
 
-import { XMLParser, XMLBuilder } from 'fast-xml-parser';
 import * as ml from 'marklogic';
 import {
     ExtensionContext, TextDocument, TextEdit, TextEditor, Uri,
@@ -336,7 +335,7 @@ export class EditorQueryEvaluator {
     private static requestMlxprsWebviewUpdateWithErrorResultsObject(response: ErrorResultsObject): void {
         if (EditorQueryEvaluator.mlxprsWebViewProvider) {
             EditorQueryEvaluator.focusOnResultsView();
-            const stringResults = EditorQueryEvaluator.convertTextResponseToHtml(JSON.stringify(response, null, 2));
+            const stringResults = MlxprsWebViewProvider.convertTextResponseToHtml(JSON.stringify(response, null, 2));
             EditorQueryEvaluator.mlxprsWebViewProvider.updateViewContent(stringResults);
         }
     }
@@ -346,11 +345,11 @@ export class EditorQueryEvaluator {
             EditorQueryEvaluator.focusOnResultsView();
             let stringResults = '';
             if (resultFormat === 'json') {
-                stringResults = EditorQueryEvaluator.convertTextResponseToHtml(JSON.stringify(response, null, 2));
+                stringResults = MlxprsWebViewProvider.convertTextResponseToHtml(JSON.stringify(response, null, 2));
             } else if (resultFormat === 'xml') {
-                stringResults = EditorQueryEvaluator.convertXmlResponseToHtml(response.toString());
+                stringResults = MlxprsWebViewProvider.convertXmlResponseToHtml(response.toString());
             } else {
-                stringResults = EditorQueryEvaluator.convertTextResponseToHtml(response.toString());
+                stringResults = MlxprsWebViewProvider.convertTextResponseToHtml(response.toString());
             }
             EditorQueryEvaluator.mlxprsWebViewProvider.updateViewContent(stringResults);
         }
@@ -374,46 +373,27 @@ export class EditorQueryEvaluator {
 
     private static convertRecordToHtml(record: Record<string, any>, contentType?: string): string {
         if (record['format'] === 'xml') {
-            return EditorQueryEvaluator.convertXmlResponseToHtml(record['value']);
+            return MlxprsWebViewProvider.convertXmlResponseToHtml(record['value']);
         }
         if (record['format'] === 'text' && record['datatype'] === 'node()') {
-            return EditorQueryEvaluator.convertTextResponseToHtml(ClientResponseProvider.decodeBinaryText(record['value']));
+            return MlxprsWebViewProvider.convertTextResponseToHtml(ClientResponseProvider.decodeBinaryText(record['value']));
         }
         if (record['format'] === 'text' && record['datatype'] === 'other') {
-            return EditorQueryEvaluator.convertTextResponseToHtml(record['value']);
+            return MlxprsWebViewProvider.convertTextResponseToHtml(record['value']);
         }
         if (record['head']) {
-            return EditorQueryEvaluator.convertTextResponseToHtml(JSON.stringify(record, null, 2));
+            return MlxprsWebViewProvider.convertTextResponseToHtml(JSON.stringify(record, null, 2));
         }
         if (record['value']) {
-            return EditorQueryEvaluator.convertTextResponseToHtml(JSON.stringify(record['value'], null, 2));
+            return MlxprsWebViewProvider.convertTextResponseToHtml(JSON.stringify(record['value'], null, 2));
         }
         if (contentType === 'application/xml') {
             let rawXml = record.toString();
             if (rawXml.endsWith('\n')) {
                 rawXml = rawXml.substring(0, rawXml.length - 1);
             }
-            return EditorQueryEvaluator.convertXmlResponseToHtml(rawXml);
+            return MlxprsWebViewProvider.convertXmlResponseToHtml(rawXml);
         }
-        return EditorQueryEvaluator.convertTextResponseToHtml(record.toString());
-    }
-
-    private static convertXmlResponseToHtml(rawXml: string): string {
-        const options = {
-            ignoreAttributes: false,
-            attributeNamePrefix: '@_',
-            format: true
-        };
-        const parser = new XMLParser(options);
-        const jObj = parser.parse(rawXml);
-        const builder = new XMLBuilder(options);
-        const formattedXml = builder.build(jObj);
-
-        const lineCount = (formattedXml.match(/\n/g) || []).length + 1;
-        return `<textarea white-space: pre; rows="${lineCount}" cols="40" style="width: 100%; color: #fff;background: transparent;border:none;">` + formattedXml + '</textarea>';
-    }
-
-    private static convertTextResponseToHtml(text: string): string {
-        return '<pre>' + text + '</pre>';
+        return MlxprsWebViewProvider.convertTextResponseToHtml(record.toString());
     }
 }

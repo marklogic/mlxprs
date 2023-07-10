@@ -48,6 +48,7 @@ export class IntegrationTestHelper {
     private hostname = String(process.env.ML_HOST || 'localhost');
     private port = Number(process.env.ML_PORT || this.configuredServerPort);
     readonly managePort = Number(process.env.ML_MANAGEPORT || '8002');
+    readonly unitTestPort = Number(process.env.ML_UNITTESTPORT || '8054');
     private username = String(process.env.ML_USERNAME || 'admin');
     private password = String(process.env.ML_PASSWORD || 'admin');
     private modulesDB = String(process.env.ML_MODULESDB || this.modulesDatabase);
@@ -55,68 +56,50 @@ export class IntegrationTestHelper {
     private ssl = false;
     private rejectUnauthorized = false;
 
+    private clientDefaults = {
+        host: this.hostname,
+        port: this.port,
+        managePort: this.managePort,
+        user: this.username,
+        pwd: this.password,
+        authType: 'DIGEST',
+        contentDb: this.modulesDB,
+        modulesDb: this.modulesDB,
+        pathToCa: this.pathToCa,
+        ssl: this.ssl,
+        rejectUnauthorized: this.rejectUnauthorized
+    };
     public config = null;
     public jsDebugClient: DebugClient = null;
-    readonly mlClient = new ClientContext(
-        new MlClientParameters({
-            host: this.hostname,
-            port: this.port,
-            managePort: this.managePort,
-            user: this.username,
-            pwd: this.password,
-            authType: 'DIGEST',
-            contentDb: this.modulesDB,
-            modulesDb: this.modulesDB,
-            pathToCa: this.pathToCa,
-            ssl: this.ssl,
-            rejectUnauthorized: this.rejectUnauthorized
-        })
-    );
-    readonly mlClientWithBadSsl = new ClientContext(
-        new MlClientParameters({
-            host: this.hostname,
-            port: this.port,
-            managePort: this.managePort,
-            user: this.username,
-            pwd: this.password,
-            authType: 'DIGEST',
-            contentDb: this.modulesDB,
-            modulesDb: this.modulesDB,
-            pathToCa: this.pathToCa,
-            ssl: true,
-            rejectUnauthorized: this.rejectUnauthorized
-        })
-    );
-    readonly mlClientWithSslWithRejectUnauthorized = new ClientContext(
-        new MlClientParameters({
-            host: this.hostname,
-            port: this.serverSslPort,
-            managePort: this.managePort,
-            user: this.username,
-            pwd: this.password,
-            authType: 'DIGEST',
-            contentDb: this.modulesDB,
-            modulesDb: this.modulesDB,
-            pathToCa: this.pathToCa,
-            ssl: true,
-            rejectUnauthorized: true
-        })
-    );
-    readonly mlClientWithBadPort = new ClientContext(
-        new MlClientParameters({
-            host: this.hostname,
-            port: 9999,
-            managePort: this.managePort,
-            user: this.username,
-            pwd: this.password,
-            authType: 'DIGEST',
-            contentDb: this.modulesDB,
-            modulesDb: this.modulesDB,
-            pathToCa: this.pathToCa,
-            ssl: this.ssl,
-            rejectUnauthorized: this.rejectUnauthorized
-        })
-    );
+
+    readonly mlClient = this.newClientWithDefaultsAndOverrides();
+    readonly mlClientWithBadSsl = this.newClientWithDefaultsAndOverrides({
+        ssl: true
+    });
+    readonly mlClientWithSslWithRejectUnauthorized = this.newClientWithDefaultsAndOverrides({
+        port: this.serverSslPort,
+        ssl: true,
+        rejectUnauthorized: true
+    });
+    readonly mlClientWithBadPort = this.newClientWithDefaultsAndOverrides({
+        port: 9999
+    });
+
+    // Need to only define the parameters here, and the client in the test
+    // Due to the internal global variables in the internal.js file
+    readonly mlUnitTestClientParameters = new MlClientParameters({
+        host: this.hostname,
+        port: this.unitTestPort,
+        managePort: 8002,
+        user: this.username,
+        pwd: this.password,
+        authType: 'DIGEST',
+        contentDb: null,
+        modulesDb: null,
+        pathToCa: this.pathToCa,
+        ssl: false,
+        rejectUnauthorized: true
+    });
 
     private module1 = Path.join(this.rootFolder, 'client/test/integration/jsScripts/MarkLogic/test/test.sjs');
     private module2 = Path.join(this.rootFolder, 'client/test/integration/jsScripts/MarkLogic/test/lib1.sjs');
@@ -304,6 +287,12 @@ export class IntegrationTestHelper {
                     resolve(false);
                 });
         });
+    }
+
+    private newClientWithDefaultsAndOverrides(overrides: object = {}): ClientContext {
+        console.debug(this.clientDefaults);
+        const newParams = new MlClientParameters({ ...this.clientDefaults, ...overrides });
+        return new ClientContext(newParams);
     }
 
 }

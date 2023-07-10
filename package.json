@@ -27,6 +27,7 @@
         "onCommand:extension.sendSql",
         "onCommand:extension.sendSparqlQuery",
         "onCommand:extension.showModule",
+        "onCommand:extension.runTestModule",
         "onDebug",
         "onLanguage:xquery-ml",
         "onLanguage:javascript",
@@ -101,6 +102,10 @@
             {
                 "command": "extension.showModule",
                 "title": "MarkLogic: Show module"
+            },
+            {
+                "command": "extension.runTestModule",
+                "title": "MarkLogic: Run marklogic-unit-test module"
             }
         ],
         "breakpoints": [
@@ -326,20 +331,26 @@
                         "default": 8000,
                         "description": "The port of a REST API app server to connect to"
                     },
-                    "marklogic.documentsDb": {
+                    "marklogic.testPort": {
                         "order": 4,
+                        "type": "integer",
+                        "default": 8004,
+                        "description": "Optional port for a REST API server that supports running marklogic-unit-test modules"
+                    },
+                    "marklogic.documentsDb": {
+                        "order": 5,
                         "type": "string",
                         "default": "",
                         "description": "database against which to evaluate queries; required for debugging a local script"
                     },
                     "marklogic.modulesDb": {
-                        "order": 5,
+                        "order": 6,
                         "type": "string",
                         "default": "",
                         "description": "modules database used in queries; default modules database for app server will be used if left unspecified"
                     },
                     "marklogic.modulesRoot": {
-                        "order": 6,
+                        "order": 7,
                         "type": "string",
                         "default": "/",
                         "description": "modules root if using filesystem"

@@ -385,6 +385,21 @@ export async function filterJsServerByConnectedStatus(
     return filteredChoices;
 }
 
+export function requestMarkLogicUnitTest(
+    dbClientContext: ClientContext, testSuite: string, testFile: string
+): ml.ResultProvider<unknown> {
+    let endpoint = `/v1/resources/marklogic-unit-test?rs:format=xml&rs:func=run&rs:suite=${testSuite}`;
+    if (testFile) {
+        endpoint = `${endpoint}&rs:tests=${testFile}`;
+    }
+    return dbClientContext.databaseClient.internal.sendRequest(
+        endpoint,
+        (requestOptions: ml.RequestOptions) => {
+            requestOptions.method = 'GET';
+        }
+    );
+}
+
 export function newMarklogicManageClient(dbClientContext: ClientContext, managePort: number): ClientContext {
     const manageClientParams: MlClientParameters = JSON.parse(JSON.stringify(dbClientContext.params));
     manageClientParams.port = managePort;
