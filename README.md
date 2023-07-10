@@ -12,8 +12,9 @@ _Develop, run, and debug code for MarkLogic in the popular VS Code IDE_
 
 * Syntax highlighting and IntelliSense for MarkLogic Server-Side JavaScript and XQuery
 * Interactive debugging of JavaScript and XQuery running in MarkLogic, including attaching to in-flight requests and inspecting live variables
-* Real-time query evaluation of JavaScript, XQuery, SQL, and SPARQL against a live Data Hub Service or MarkLogic instance
+* Real-time query evaluation of JavaScript, XQuery, SQL, SPARQL, and Optic against a MarkLogic instance
 * View modules (read-only) in the editor
+* Run [marklogic-unit-test module](https://github.com/marklogic-community/marklogic-unit-test)
 
 _JavaScript debugging requires version 2.0.0+ of the MarkLogic extension and [MarkLogic 10.0-4+](https://developer.marklogic.com/products/marklogic-server/10.0)._
 
@@ -42,16 +43,28 @@ Note that marklogic.documentsDb *must* be declared in order to attach to remote 
 You can also set `marklogic.authType` to `DIGEST` or `BASIC`. Digest is the default,
 and works even if the server is running basic authentication.
 
-### Connect and query
 
-To evaluate JavaScript
+### Evaluate Queries
 
-1. Type a valid JavaScript query in the editor.
-2. Open the command palette (<kbd>Shift</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd>)
-3. Select `MarkLogic: Eval JS`
+To evaluate JavaScript, XQuery, SQL, or SPARQL:
 
-Query results will open in a new document in the current workspace.
-`Eval XQuery`, `Eval SQL` and `Eval SPARQL` work the same way.
+1. Type a valid query in the editor.
+2. Open the command palette (<kbd>Shift</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd>).
+3. Select `MarkLogic: Eval JS`, `MarkLogic: Eval XQuery`, `MarkLogic: Eval SQL`, or `MarkLogic: Eval SPARQL` - depending on the type of query.
+
+Query results will apper in the `MLXPRS: RESULTS` tab in the bottom panel, or open in a new editor tab - depending on the value of the `Marklogic: Results In Editor Tab` setting.
+
+
+### Submit Optic Queries
+
+To run an Optic query (either DSL or serialized):
+
+1. Type a valid query in the editor.
+2. Open the command palette (<kbd>Shift</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd>).
+3. Select one of the `MarkLogic: Submit Optic query - <Response Format>` commands, depending on the desired response format.
+
+Query results will apper in the `MLXPRS: RESULTS` tab in the bottom panel, or open in a new editor tab - depending on the value of the `Marklogic: Results In Editor Tab` setting.
+
 
 ### Inspect a module
 
@@ -62,6 +75,18 @@ To view a module from the configured modules database:
 3. Choose the module you'd like to view from the resulting list. The list searches and filters as you type.
 
 The module will appear read-only in a new text buffer.
+
+
+### Run marklogic-unit-test module
+
+This plugin provides a convenient method for running a [marklogic-unit-test module](https://marklogic-community.github.io/marklogic-unit-test/) within your MarkLogic server. To get started, your test suites and files must be organized under a "src/test/ml-modules/root/test/suites" directory. See this [ml-gradle sample project](https://github.com/marklogic/ml-gradle/tree/master/examples/unit-test-project) for an example of how to setup the project to use marklogic-unit-test. Additionally, you need to set the `Marklogic: Test Port` setting to the port number of the App Server that can run your unit tests. Finally, to run a test file:
+
+1. In an editor tab, open the test file that you wish to be executed.
+2. Open the command palette (<kbd>Shift</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd>)
+3. Select `MarkLogic: Run marklogic-unit-test module` from the list
+
+The results of the tests will appear in the `MLXPRS: RESULTS` tab in the bottom panel.
+
 
 ### SSL Configuration
 
@@ -235,9 +260,9 @@ Attach mode intercepts a paused request in a given *debug server*, an app server
 
 Connecting a server will automatically pause all requests so that you can attach the debugger. When you're done, use either <kbd>MarkLogic: Disconnect...</kbd> command to disable debugging and resume handling requests as normal.
 
-**Note: Only requests that are launched after a server is connected/made debug server can be attached.**
-
 Once you start debugging, a dropdown menu will pop up listing all paused requests on the debug server. Choose the one you want to debug.
+
+**Note: Only requests that are launched after a server is connected/made debug server can be attached.**
 
 ![Attach screenshot](images/attach_screenshot.png "attach screenshot")
 
