@@ -1,12 +1,12 @@
 # Contributing to mlxprs
 
-The MarkLogic extension for Visual Studio Code is an open-source project developed and maintained by the community. You can help by identifying bugs, requesting features you’d like to see, or even submitting code.
+The MarkLogic extension for Visual Studio Code is an open-source project developed and maintained by MarkLogic and the community. You can help by identifying bugs, requesting features you’d like to see, or even submitting code.
 
 _This project and its code and functionality are not representative of MarkLogic Server and are not supported by MarkLogic._
 
 ## Found a bug or issue?
 
-If you find a problem, or want to request something that’s lacking, please [file an issue](https://github.com/marklogic-community/mlxprs/issues/new). Make sure to specify which version of the extension you’re using as well as the version of MarkLogic you’re working against.
+If you find a problem, or want to request something that’s lacking, please [file an issue](https://github.com/marklogic/mlxprs/issues/new). Make sure to specify which version of the extension you’re using as well as the version of MarkLogic you’re working against.
 
 Even better, you can submit a Pull Request with a fix for the issue you filed.
 
