@@ -114,8 +114,7 @@ export class JsDebugConfigurationProvider implements vscode.DebugConfigurationPr
         if (config.request === 'launch' && !config.database.match(/^\d+$/)) {
             await JsDebugManager.resolveDatabasetoId(config.database)
                 .then(resp => {
-                    const serverInfo = JSON.parse(resp)[0];
-                    config.database = serverInfo.content;
+                    config.database = resp;
                 }).catch(error => {
                     const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, `Error attempting to retrieve database id for database name, '${config.database}':`);
                     MlxprsErrorReporter.reportError(mlxprsError);
