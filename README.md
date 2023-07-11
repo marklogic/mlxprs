@@ -32,13 +32,14 @@ The MarkLogic extension exposes several configuration options from the standard 
   "marklogic.host": "marklogic-instance.geocities.com",
   "marklogic.port": 8040,
   "marklogic.managePort": 8002,
+  "marklogic.testPort": 8054,
   "marklogic.username": "username",
   "marklogic.password": "****************",
   "marklogic.documentsDb": "myproject-content",
   "marklogic.modulesDb": "myproject-modules"
 }
 ```
-Note that marklogic.documentsDb *must* be declared in order to attach to remote JavaScript request.
+**Note: marklogic.documentsDb *must* be declared in order to attach to remote JavaScript request.
 
 You can also set `marklogic.authType` to `DIGEST` or `BASIC`. Digest is the default,
 and works even if the server is running basic authentication.
@@ -113,6 +114,8 @@ such as when connecting to a IP address rather than a hostname.
 
 Testing with some versions of VS Code has shown that if the project has a file named build.gradle and the VS Code Java Extension is enabled, the `marklogic.rejectUnauthorized` setting may be ignored. If you see this behavior, disabling the Java Extension is recommended to ensure the setting works properly. 
 
+**Note: Currently, all configured ports (port, managePort, and testPort) must have the same SSL settings and they must either use certs that pass the configured CA verification or have CA verification turned off.
+
 ### Query Eval configuration override
 
 You can override your VS Code configured settings by using a block comment as the first language token
@@ -159,7 +162,7 @@ fn:doc('/my-testing-doc.json')
 
 When this query runs, it will use the host, port, and `contentDb` specified in the comment, along with the VS Code configuration parameters for the rest of the MarkLogic client definition. (The `note` will be ignored.) Other queries in other editor tabs will not be affected.
 
-Note: This configuration override is only applied when using one of the "MarkLogic: Eval <language>" commands.
+**Note: This configuration override is only applied when using one of the "MarkLogic: Eval <language>" commands.
 
 ## Debugging
 
@@ -258,7 +261,7 @@ Attach mode intercepts a paused request in a given *debug server*, an app server
 2. You'll be prompted to choose a server. Use the name of the app server in the MarkLogic configuration, _not_ its hostname or IP address.
 3. You should see a confirmation message once you're connected
 
-Connecting a server will automatically pause all requests so that you can attach the debugger. When you're done, use either <kbd>MarkLogic: Disconnect...</kbd> command to disable debugging and resume handling requests as normal.
+Connecting a server will automatically pause all requests so that you can attach the debugger. When you're done, use either <kbd>MarkLogic: Disconnect...</kbd> command to disable debugging and resume handling requests as normal. Note that while the server is in "Connect" mode, you should not change any of the configured ports to the port number of the connected server. This will cause requests from the plugin to pause, leading to unexpected results. 
 
 Once you start debugging, a dropdown menu will pop up listing all paused requests on the debug server. Choose the one you want to debug.
 
@@ -303,6 +306,10 @@ Evaluating variables in module scope may throw reference error. Possible workaro
 
 - use the variables of interest inside a function, and inspect
 - place an `eval()` statement inside the affected module
+
+### Error Reporting
+
+While every effort is made to catch and handle error conditions, unexpected errors do occur from time to time and must be handled by VS Code internally. Those errors are sometimes reported only in the debug console and that tab is not automatically given focus in the UI. This means that it can be easy to miss that an error has occurred. Therefore, if a feature does not seem to be working properly but no error popup is shown, then check the debug console for errors.
 
 ### Required Privileges for Evaluation and Debugging
 
