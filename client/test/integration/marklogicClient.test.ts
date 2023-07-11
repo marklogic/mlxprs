@@ -76,8 +76,13 @@ suite('Testing various MarkLogic calls', async () => {
         assert(resp['startTime'], 'if a request has been started, then retrieving info for that request should return a startTime value');
     }).timeout(10000);
 
-    test('When resolving a database id', async () => {
+    test('When resolving a database id for a database name that does not exist', async () => {
         const dbId = await JsDebugManager.resolveDatabasetoId('NoSuchDatabase');
-        assert.strictEqual(dbId, null, 'If the database does not exist, the return value should be null');
+        assert.strictEqual(dbId, null, 'The return value should be null');
+    }).timeout(1000);
+
+    test('When resolving a database id for a database name that does exist', async () => {
+        const dbId = await JsDebugManager.resolveDatabasetoId('mlxprs-test-content');
+        assert.notEqual(dbId, null, 'The return value should not be null');
     }).timeout(1000);
 });
