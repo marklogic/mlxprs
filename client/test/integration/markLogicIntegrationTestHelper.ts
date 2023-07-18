@@ -38,7 +38,7 @@ export class IntegrationTestHelper {
     public documentsDatabase = 'mlxprs-test-content';
     public modulesDatabase = 'mlxprs-test-modules';
     public modulesDatabaseToken = '%%MODULES-DATABASE%%';
-    private rootFolder = Path.join(__dirname, '../../../');
+    readonly rootFolder = Path.join(__dirname, '../../../');
     readonly scriptFolder = Path.join(this.rootFolder, 'client/test/integration/jsScripts');
     readonly hwPath = Path.join(this.scriptFolder, 'helloWorld.sjs');
     private jsDebugExec = Path.join(this.rootFolder, 'dist/mlDebug.js');

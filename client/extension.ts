@@ -26,8 +26,9 @@ import { ConfigurationManager } from './configurationManager';
 import { EditorQueryType, EditorQueryEvaluator } from './editorQueryEvaluator';
 import { JsDebugConfigurationProvider, DebugAdapterExecutableFactory } from './JSDebugger/jsDebugConfigProvider';
 import { JsDebugManager } from './JSDebugger/jsDebugManager';
-import { ClientContext } from './marklogicClient';
+import { ClientContext, MlClientParameters } from './marklogicClient';
 import { MarkLogicUnitTestClient } from './marklogicUnitTestClient';
+import { MarkLogicTdeValidateClient } from './marklogicTdeValidateClient';
 import { MlxprsStatus } from './mlxprsStatus';
 import { MlxprsWebViewProvider } from './mlxprsWebViewProvider';
 import { ModuleContentProvider, pickAndShowModule } from './vscModuleContentProvider';
@@ -57,6 +58,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     const editorQueryEvaluator = new EditorQueryEvaluator(context, provider);
     const markLogicUnitTestClient = new MarkLogicUnitTestClient(context);
+    const markLogicTdeValidateClient = new MarkLogicTdeValidateClient(context);
     const sendXQuery = vscode.commands.registerTextEditorCommand(
         'extension.sendXQuery',
         (editor: vscode.TextEditor) => editorQueryEvaluator.editorQuery(EditorQueryType.XQY, editor)
@@ -87,6 +89,14 @@ export function activate(context: vscode.ExtensionContext): void {
         (editor: vscode.TextEditor) => {
             const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
             markLogicUnitTestClient.runTestModule(cfg, editor);
+        }
+    );
+    const validateTdeTemplate = vscode.commands.registerTextEditorCommand(
+        'extension.validateTdeTemplate',
+        (editor: vscode.TextEditor) => {
+            const dbClientContext: ClientContext = newMarklogicTdeValidateClient(vscode.workspace.getConfiguration());
+            const tdeText = editor.document.getText();
+            markLogicTdeValidateClient.validateTdeTemplate(dbClientContext, tdeText);
         }
     );
 
@@ -133,7 +143,7 @@ export function activate(context: vscode.ExtensionContext): void {
         connectJsServer, disconnectJsServer, connectXqyServer, disconnectXqyServer,
         sendXQuery, sendJSQuery, sendSqlQuery, sendSparqlQuery,
         sendRowsJsonQuery, sendRowsCsvQuery, sendRowsXmlQuery,
-        runTestModule, showModule
+        runTestModule, validateTdeTemplate, showModule
     ]);
     handleUnload(context, [
         vscode.languages.registerDocumentFormattingEditProvider(
@@ -211,6 +221,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const mlxprsWebView = vscode.window.registerWebviewViewProvider(MlxprsWebViewProvider.viewType, mlxprsWebViewProvider);
     EditorQueryEvaluator.registerMlxprsResultsViewProvider(mlxprsWebViewProvider);
     MarkLogicUnitTestClient.registerMlxprsResultsViewProvider(mlxprsWebViewProvider);
+    MarkLogicTdeValidateClient.registerMlxprsResultsViewProvider(mlxprsWebViewProvider);
     context.subscriptions.push(mlxprsWebView);
     handleUnload(context, [mlxprsWebView]);
 }
@@ -232,4 +243,21 @@ export function deactivate(context: vscode.ExtensionContext): void {
 */
 function handleUnload(context: vscode.ExtensionContext, arrayOfUnloadableObject: vscode.Disposable[]) {
     arrayOfUnloadableObject.forEach(unloadableObject => context.subscriptions.push(unloadableObject as vscode.Disposable));
+}
+
+function newMarklogicTdeValidateClient(cfg: vscode.WorkspaceConfiguration): ClientContext {
+    const configParams: Record<string, unknown> = {
+        host: String(cfg.get('marklogic.host')),
+        user: String(cfg.get('marklogic.username')),
+        pwd: String(cfg.get('marklogic.password')),
+        port: Number(cfg.get('marklogic.port')),
+        contentDb: String(cfg.get('marklogic.documentsDb')),
+        modulesDb: String(cfg.get('marklogic.modulesDb')),
+        authType: String(cfg.get('marklogic.authType')).toUpperCase(),
+        ssl: Boolean(cfg.get('marklogic.ssl')),
+        pathToCa: String(cfg.get('marklogic.pathToCa') || ''),
+        rejectUnauthorized: Boolean(cfg.get('marklogic.rejectUnauthorized'))
+    };
+    const newParams = new MlClientParameters(configParams);
+    return new ClientContext(newParams);
 }

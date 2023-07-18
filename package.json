@@ -106,6 +106,10 @@
             {
                 "command": "extension.runTestModule",
                 "title": "MarkLogic: Run marklogic-unit-test module"
+            },
+            {
+                "command": "extension.validateTdeTemplate",
+                "title": "MarkLogic: Validate TDE template"
             }
         ],
         "breakpoints": [
