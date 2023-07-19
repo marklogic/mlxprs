@@ -20,7 +20,8 @@ import * as esprima from 'esprima';
 import { Memento, WorkspaceConfiguration, window } from 'vscode';
 
 import { MlxprsErrorReporter } from './mlxprsErrorReporter';
-import { SJS, XQY, parseXQueryForOverrides, MLSETTINGSFLAG, ClientContext, MlClientParameters, MLDBCLIENT } from './marklogicClient';
+import { SJS, XQY, parseXQueryForOverrides, MLSETTINGSFLAG, ClientContext,
+    MlClientParameters, newClientParams, MLDBCLIENT } from './marklogicClient';
 import { MlxprsError } from './mlxprsErrorBuilder';
 
 /**
@@ -72,31 +73,18 @@ export function parseQueryForOverrides(queryText: string, language: string): Rec
  */
 export function getDbClient(queryText: string, language: string, cfg: WorkspaceConfiguration, state: Memento): ClientContext {
     const overrides: MlClientParameters = parseQueryForOverrides(queryText, language) as MlClientParameters;
-    const configParams: Record<string, any> = {
-        host: String(cfg.get('marklogic.host')),
-        user: String(cfg.get('marklogic.username')),
-        pwd: String(cfg.get('marklogic.password')),
-        port: Number(cfg.get('marklogic.port')),
-        managePort: Number(cfg.get('marklogic.managePort')),
-        contentDb: String(cfg.get('marklogic.documentsDb')),
-        modulesDb: String(cfg.get('marklogic.modulesDb')),
-        authType: String(cfg.get('marklogic.authType')).toUpperCase(),
-        ssl: Boolean(cfg.get('marklogic.ssl')),
-        pathToCa: String(cfg.get('marklogic.pathToCa') || ''),
-        rejectUnauthorized: Boolean(cfg.get('marklogic.rejectUnauthorized'))
-    };
     // merge VS Code configuration and overrides
-    const newParams = new MlClientParameters({ ...configParams, ...overrides });
+    const clientParams: MlClientParameters = newClientParams(cfg, overrides);
     // if settings have changed, release and clear the client
     const cachedClient = state.get(MLDBCLIENT) as ClientContext;
-    if (cachedClient !== null && !cachedClient.hasSameParamsAs(newParams)) {
+    if (cachedClient !== null && !cachedClient.hasSameParamsAs(clientParams)) {
         cachedClient.databaseClient.release();
         state.update(MLDBCLIENT, null);
         console.debug('Removed cached instance of MarklogicClient based on change in params');
     }
     // if there's no existing client in the globalState, instantiate a new one
     if (state.get(MLDBCLIENT) === null) {
-        const dbClientContext: ClientContext = new ClientContext(newParams);
+        const dbClientContext: ClientContext = new ClientContext(clientParams);
         try {
             state.update(MLDBCLIENT, dbClientContext);
             console.debug(`Created new MarklogicClient: ${state.get(MLDBCLIENT)}`);

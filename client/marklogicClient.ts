@@ -18,6 +18,7 @@
 
 import * as fs from 'fs';
 import * as ml from 'marklogic';
+import { WorkspaceConfiguration } from 'vscode';
 
 import { MlxprsStatus } from './mlxprsStatus';
 
@@ -406,4 +407,21 @@ export function newMarklogicManageClient(dbClientContext: ClientContext, manageP
     manageClientParams.contentDb = null;
     manageClientParams.modulesDb = null;
     return new ClientContext(manageClientParams);
+}
+
+export function newClientParams(cfg: WorkspaceConfiguration, overrides: object = {}): MlClientParameters {
+    const configParams: Record<string, unknown> = {
+        host: String(cfg.get('marklogic.host')),
+        user: String(cfg.get('marklogic.username')),
+        pwd: String(cfg.get('marklogic.password')),
+        port: Number(cfg.get('marklogic.port')),
+        managePort: Number(cfg.get('marklogic.managePort')),
+        contentDb: String(cfg.get('marklogic.documentsDb')),
+        modulesDb: String(cfg.get('marklogic.modulesDb')),
+        authType: String(cfg.get('marklogic.authType')).toUpperCase(),
+        ssl: Boolean(cfg.get('marklogic.ssl')),
+        pathToCa: String(cfg.get('marklogic.pathToCa') || ''),
+        rejectUnauthorized: Boolean(cfg.get('marklogic.rejectUnauthorized'))
+    };
+    return new MlClientParameters({ ...configParams, ...overrides });
 }

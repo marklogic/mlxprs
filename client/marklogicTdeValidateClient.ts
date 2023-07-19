@@ -72,7 +72,9 @@ export class MarkLogicTdeValidateClient {
     private handleResults(validationResults: object): string {
         const result = validationResults[0]['value'] as string;
         const formattedResults = MlxprsWebViewProvider.convertTextResponseToHtml(JSON.stringify(result, null, 2));
-        MarkLogicTdeValidateClient.mlxprsWebViewProvider.updateViewContent(formattedResults);
+        if (MarkLogicTdeValidateClient.mlxprsWebViewProvider) {
+            MarkLogicTdeValidateClient.mlxprsWebViewProvider.updateViewContent(formattedResults);
+        }
         return result;
     }
 

@@ -21,7 +21,8 @@ import {
     ExtensionContext, TextEditor, WorkspaceConfiguration
 } from 'vscode';
 
-import { ClientContext, MlClientParameters, requestMarkLogicUnitTest } from './marklogicClient';
+import { ClientContext, MlClientParameters, newClientParams, requestMarkLogicUnitTest }
+    from './marklogicClient';
 import { buildMlxprsErrorFromError, MlxprsError } from './mlxprsErrorBuilder';
 import { MlxprsErrorReporter } from './mlxprsErrorReporter';
 import { MlxprsWebViewProvider } from './mlxprsWebViewProvider';
@@ -39,23 +40,6 @@ export class MarkLogicUnitTestClient {
         this.extensionContext = context;
     }
 
-    private newMarklogicUnitTestClient(cfg: WorkspaceConfiguration): ClientContext {
-        const configParams: Record<string, unknown> = {
-            host: String(cfg.get('marklogic.host')),
-            user: String(cfg.get('marklogic.username')),
-            pwd: String(cfg.get('marklogic.password')),
-            port: Number(cfg.get('marklogic.unitTestPort')),
-            contentDb: null,
-            modulesDb: null,
-            authType: String(cfg.get('marklogic.authType')).toUpperCase(),
-            ssl: Boolean(cfg.get('marklogic.ssl')),
-            pathToCa: String(cfg.get('marklogic.pathToCa') || ''),
-            rejectUnauthorized: Boolean(cfg.get('marklogic.rejectUnauthorized'))
-        };
-        const newParams = new MlClientParameters(configParams);
-        return new ClientContext(newParams);
-    }
-
     public async runTestModule(
         cfg: WorkspaceConfiguration, editor: TextEditor
     ): Promise<void> {
@@ -68,7 +52,8 @@ export class MarkLogicUnitTestClient {
             const testSuite = testPath.substring(0, lastSlash);
             const testFile = testPath.substring(lastSlash + 1);
 
-            const dbClientContext: ClientContext = this.newMarklogicUnitTestClient(cfg);
+            const clientParams: MlClientParameters = newClientParams(cfg);
+            const dbClientContext: ClientContext = new ClientContext(clientParams);
             requestMarkLogicUnitTest(dbClientContext, testSuite, testFile)
                 .result((testResults: string) => {
                     const testResultsHtml = MlxprsWebViewProvider.convertXmlResponseToHtml(testResults);
