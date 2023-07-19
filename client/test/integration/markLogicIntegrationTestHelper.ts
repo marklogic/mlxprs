@@ -290,7 +290,6 @@ export class IntegrationTestHelper {
     }
 
     private newClientWithDefaultsAndOverrides(overrides: object = {}): ClientContext {
-        console.debug(this.clientDefaults);
         const newParams = new MlClientParameters({ ...this.clientDefaults, ...overrides });
         return new ClientContext(newParams);
     }
