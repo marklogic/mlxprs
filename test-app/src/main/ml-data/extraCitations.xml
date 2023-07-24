@@ -1,0 +1,30 @@
+<Citations>
+  <Citation>
+    <ID>1</ID>
+    <Article>
+      <Journal>
+        <ISSN>99999-004</ISSN>
+        <JournalIssue>
+          <Volume>99</Volume>
+          <PubDate>
+            <Date>2023-07-13</Date>
+            <Year>2023</Year>
+            <Month>07</Month>
+            <Day>13</Day>
+            <Time>19:00:00</Time>
+          </PubDate>
+        </JournalIssue>
+      </Journal>
+      <AuthorList>
+        <Author>
+          <LastName>Bill</LastName>
+          <ForeName>Jones</ForeName>
+        </Author>
+        <Author>
+          <LastName>Tom</LastName>
+          <ForeName>Johnson</ForeName>
+        </Author>
+      </AuthorList>
+    </Article>
+  </Citation>
+</Citations>
