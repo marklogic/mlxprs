@@ -94,11 +94,19 @@ export function activate(context: vscode.ExtensionContext): void {
     const validateTdeTemplate = vscode.commands.registerTextEditorCommand(
         'extension.validateTdeTemplate',
         (editor: vscode.TextEditor) => {
-            const clientParams: MlClientParameters =
-            newClientParams(vscode.workspace.getConfiguration());
+            const clientParams: MlClientParameters = newClientParams(vscode.workspace.getConfiguration());
             const dbClientContext: ClientContext = new ClientContext(clientParams);
             const tdeText = editor.document.getText();
             markLogicTdeValidateClient.validateTdeTemplate(dbClientContext, tdeText);
+        }
+    );
+    const tdeExtractNodes = vscode.commands.registerTextEditorCommand(
+        'extension.tdeExtractNodes',
+        (editor: vscode.TextEditor) => {
+            const clientParams: MlClientParameters = newClientParams(vscode.workspace.getConfiguration());
+            const dbClientContext: ClientContext = new ClientContext(clientParams);
+            const tdeText = editor.document.getText();
+            markLogicTdeValidateClient.tdeExtractNodes(dbClientContext, tdeText);
         }
     );
 
@@ -145,7 +153,7 @@ export function activate(context: vscode.ExtensionContext): void {
         connectJsServer, disconnectJsServer, connectXqyServer, disconnectXqyServer,
         sendXQuery, sendJSQuery, sendSqlQuery, sendSparqlQuery,
         sendRowsJsonQuery, sendRowsCsvQuery, sendRowsXmlQuery,
-        runTestModule, validateTdeTemplate, showModule
+        runTestModule, validateTdeTemplate, tdeExtractNodes, showModule
     ]);
     handleUnload(context, [
         vscode.languages.registerDocumentFormattingEditProvider(

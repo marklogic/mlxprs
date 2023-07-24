@@ -9,8 +9,16 @@
 
     "vars":[
       {
-        "name":"prefix1",
-        "val":"\"http://marklogic.com/example/\""
+        "name":"YYYY",
+        "val":"YYYY.xml"
+      },
+      {
+        "name":"MLXPRS_TEST_URI",
+        "val":"/citations.xml"
+      },
+      {
+        "name":"ZZZZ",
+        "val":"ZZZZ.xml"
       }
     ],
     "triples":[{

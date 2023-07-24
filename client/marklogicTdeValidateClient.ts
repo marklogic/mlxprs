@@ -26,6 +26,12 @@ import { MlxprsWebViewProvider } from './mlxprsWebViewProvider';
 
 export class MarkLogicTdeValidateClient {
     static mlxprsWebViewProvider: MlxprsWebViewProvider = null;
+    static xmlParserOptions = {
+        ignoreAttributes: false,
+        attributeNamePrefix: '@_',
+        format: true
+    };
+    static xmlParser = new XMLParser(MarkLogicTdeValidateClient.xmlParserOptions);
 
     public static registerMlxprsResultsViewProvider(mlxprsWebViewProvider: MlxprsWebViewProvider) {
         MarkLogicTdeValidateClient.mlxprsWebViewProvider = mlxprsWebViewProvider;
@@ -44,13 +50,7 @@ export class MarkLogicTdeValidateClient {
         } catch (e) {}
 
         try {
-            const options = {
-                ignoreAttributes: false,
-                attributeNamePrefix: '@_',
-                format: true
-            };
-            const parser = new XMLParser(options);
-            const parsedXml = parser.parse(tdeText);
+            const parsedXml = MarkLogicTdeValidateClient.xmlParser.parse(tdeText, true);
             if (Object.keys(parsedXml).length > 0) {
                 return 'XML';
             }
@@ -60,13 +60,11 @@ export class MarkLogicTdeValidateClient {
     }
 
     private buildJsonValidationQuery(tdeText: string) {
-        const validationQuery = `'use strict'; var tde = require('/MarkLogic/tde.xqy'); var t1=xdmp.toJSON(${tdeText}); tde.validate([t1],[]);`;
-        return validationQuery;
+        return `'use strict'; var tde = require('/MarkLogic/tde.xqy'); var t1=xdmp.toJSON(${tdeText}); tde.validate([t1],[]);`;
     }
 
     private buildXmlValidationQuery(tdeText: string) {
-        const validationQuery = `tde:validate(${tdeText})`;
-        return validationQuery;
+        return `tde:validate(${tdeText})`;
     }
 
     private handleResults(validationResults: object): string {
@@ -78,7 +76,7 @@ export class MarkLogicTdeValidateClient {
         return result;
     }
 
-    private handleError(error: Error): string {
+    private handleValidateError(error: Error): string {
         const errorMessage = `Unable to validate the template: ${error['body']['errorResponse']['message']}`;
         const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, errorMessage);
         MlxprsErrorReporter.reportError(mlxprsError);
@@ -94,7 +92,7 @@ export class MarkLogicTdeValidateClient {
                 return this.handleResults(validationResults as object);
             })
             .catch(error => {
-                return this.handleError(error);
+                return this.handleValidateError(error);
             });
     }
 
@@ -107,7 +105,7 @@ export class MarkLogicTdeValidateClient {
                 return this.handleResults(validationResults as object);
             })
             .catch(error => {
-                return this.handleError(error);
+                return this.handleValidateError(error);
             });
     }
 
@@ -122,6 +120,91 @@ export class MarkLogicTdeValidateClient {
             return this.validateXmlTde(dbClientContext, tdeText);
         } else {
             const errorMessage = 'To be validated, the template must be either valid JSON or XML.';
+            const mlxprsError: MlxprsError = buildMlxprsErrorFromError({} as Error, errorMessage);
+            MlxprsErrorReporter.reportError(mlxprsError);
+            return errorMessage;
+        }
+    }
+
+    private getTargetDocumentFromJsonVars(
+        tdeJson: object
+    ): string {
+        const vars = tdeJson['template']['vars'];
+        if (vars) {
+            const uriVarObj = vars.find(varObj => varObj.name === 'MLXPRS_TEST_URI');
+            if (uriVarObj) {
+                return `fn.document('${uriVarObj.val}')`;
+            } else {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private getTargetDocumentFromXmlVars(
+        tdeText: object
+    ): string {
+        const vars = tdeText['template']['vars'];
+        if (vars) {
+            if (vars.var) {
+                if (Array.isArray(vars.var)) {
+                    const uriVarObj = vars.var.find(varObj => varObj.name === 'MLXPRS_TEST_URI');
+                    if (uriVarObj) {
+                        return `fn.document('${uriVarObj.val}')`;
+                    } else {
+                        return null;
+                    }
+                } else {
+                    if (vars.var.name === 'MLXPRS_TEST_URI') {
+                        return `fn.document('${vars.var.val}')`;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private buildNodeExtractQuery(tdeText: string, targetDocument: string) {
+        return `'use strict'; var tde = require('/MarkLogic/tde.xqy'); var template = xdmp.unquote(\`${tdeText}\`); tde.nodeDataExtract([${targetDocument}], [template]);`;
+    }
+
+    private handleExtractNodesError(error: Error): string {
+        const errorMessage = `Unable to extract nodes using the template: ${error['body']['errorResponse']['message']}`;
+        const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, errorMessage);
+        MlxprsErrorReporter.reportError(mlxprsError);
+        return errorMessage;
+    }
+
+    public async tdeExtractNodes(
+        dbClientContext: ClientContext, tdeText: string
+    ): Promise<unknown> {
+        const tdeFormat = this.getTdeFormat(tdeText);
+        if (tdeFormat) {
+            let targetDocument = null;
+            if (tdeFormat === 'JSON') {
+                const tdeJson = JSON.parse(tdeText);
+                targetDocument = this.getTargetDocumentFromJsonVars(tdeJson);
+            } else {
+                const tdeXml = MarkLogicTdeValidateClient.xmlParser.parse(tdeText);
+                targetDocument = this.getTargetDocumentFromXmlVars(tdeXml);
+            }
+            if (targetDocument) {
+                const nodeExtractQuery = this.buildNodeExtractQuery(tdeText, targetDocument);
+                return sendJSQuery(dbClientContext, nodeExtractQuery)
+                    .result((validationResults: unknown) => {
+                        return this.handleResults(validationResults as object);
+                    })
+                    .catch(error => {
+                        return this.handleExtractNodesError(error);
+                    });
+            } else {
+                const errorMessage = 'To perform node extraction, the template must include a "var" entry with the name property "MLXPRS_TEST_URI" and a val property with the URI of the target document.';
+                const mlxprsError: MlxprsError = buildMlxprsErrorFromError({} as Error, errorMessage);
+                MlxprsErrorReporter.reportError(mlxprsError);
+                return errorMessage;
+            }
+        } else {
+            const errorMessage = 'To perform node extraction, the template must be either valid JSON or XML.';
             const mlxprsError: MlxprsError = buildMlxprsErrorFromError({} as Error, errorMessage);
             MlxprsErrorReporter.reportError(mlxprsError);
             return errorMessage;

@@ -110,6 +110,10 @@
             {
                 "command": "extension.validateTdeTemplate",
                 "title": "MarkLogic: Validate TDE template"
+            },
+            {
+                "command": "extension.tdeExtractNodes",
+                "title": "MarkLogic: Extract data via TDE"
             }
         ],
         "breakpoints": [

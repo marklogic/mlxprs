@@ -63,7 +63,7 @@ export class IntegrationTestHelper {
         user: this.username,
         pwd: this.password,
         authType: 'DIGEST',
-        contentDb: this.modulesDB,
+        contentDb: this.documentsDatabase,
         modulesDb: this.modulesDB,
         pathToCa: this.pathToCa,
         ssl: this.ssl,

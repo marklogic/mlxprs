@@ -1,6 +1,6 @@
 <template xmlns="http://marklogic.com/xdmp/tde">
   <description>populates patients' data</description>
-  <context>/Citation/Article</context>
+  <context>/Citations/Citation/Article</context>
   <rows>
     <row>
       <schema-name>Medical2</schema-name>

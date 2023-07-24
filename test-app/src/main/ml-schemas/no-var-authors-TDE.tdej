@@ -1,0 +1,23 @@
+{
+  "template": {
+    "context": "/Citations/Citation/Article/AuthorList/Author",
+    "rows": [
+      {
+        "schemaName": "Medical",
+        "viewName": "SmallAuthors",
+        "columns": [
+          {
+            "name": "ID",
+            "scalarType": "long",
+            "val": "../../../ID"
+          },
+          {
+            "name": "LastName",
+            "scalarType": "string",
+            "val": "LastName"
+          }
+        ]
+      }
+    ]
+  }
+}
