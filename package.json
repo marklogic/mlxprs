@@ -7,7 +7,7 @@
     "engines": {
         "vscode": "^1.78.0"
     },
-    "icon": "images/Progress_MarkLogic_DayOne_Logo_Primary_Stacked_Alternate_square.png",
+    "icon": "images/ProgressMarkLogic_PrimaryLogo_StackedAlternate.png",
     "galleryBanner": {
         "color": "#1D252D",
         "theme": "dark"
@@ -41,7 +41,7 @@
                 {
                     "id": "mlxprsContainer",
                     "title": "MLXPRS",
-                    "icon": "images/Progress_MarkLogic_DayOne_Logo_Primary_Stacked_Alternate_square.png"
+                    "icon": "images/ProgressMarkLogic_PrimaryLogo_StackedAlternate.png"
                 }
             ]
         },
