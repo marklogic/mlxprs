@@ -15,6 +15,7 @@ _Develop, run, and debug code for MarkLogic in the popular VS Code IDE_
 * Real-time query evaluation of JavaScript, XQuery, SQL, SPARQL, and Optic against a MarkLogic instance
 * View modules (read-only) in the editor
 * Run [marklogic-unit-test module](https://github.com/marklogic-community/marklogic-unit-test)
+* Validate TDE templates and test the templates with node extraction
 
 _JavaScript debugging requires version 2.0.0+ of the MarkLogic extension and [MarkLogic 10.0-4+](https://developer.marklogic.com/products/marklogic-server/10.0)._
 
@@ -87,6 +88,47 @@ This plugin provides a convenient method for running a [marklogic-unit-test modu
 3. Select `MarkLogic: Run marklogic-unit-test module` from the list
 
 The results of the tests will appear in the `MLXPRS: RESULTS` tab in the bottom panel.
+
+
+### Validate & Test TDE templates
+
+While developing TDE templates, you may verify that your templates are valid TDE templates. Additionally, if the template is valid, you may also use the template to extract nodes from data documents. That permits you to verify that template is extracting data as intended.
+
+To validate a TDE template:
+1. In an editor tab, open the template file that you wish to be validated.
+2. Open the command palette (<kbd>Shift</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd>)
+3. Select `MarkLogic: Validate TDE template` from the list
+
+The results of the validation will appear in the `MLXPRS: RESULTS` tab in the bottom panel.
+
+To extract nodes from a data document using a TDE template:
+1. In an editor tab, open the template file that you wish to use for node extraction.
+2. Add a "var" property with a "name" of "MLXPRS_TEST_URI" and a "val" that is the URI of the data document in the database. If there is not already a "vars" property, you will need to also add that as a child of the "template" property. Alternatively, you use a local file by using the var "name" of "MLXPRS_TEST_FILE" setting the "val" property to the path to the file.
+
+For a JSON document the vars section will look something like the following:
+```
+    "vars":[
+      {
+        "name":"MLXPRS_TEST_URI",
+        "val":"/citations.xml"
+      }
+    ]
+```
+
+For an XML document the vars section will look something like this:
+```
+  <vars>
+    <var>
+      <name>MLXPRS_TEST_FILE</name>
+      <val>src/main/ml-data/citations.xml</val>
+    </var>
+  </vars>
+```
+
+3. Open the command palette (<kbd>Shift</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd>)
+4. Select `MarkLogic: Extract Data via TDE` from the list
+
+The results of the node extraction will appear in the `MLXPRS: RESULTS` tab in the bottom panel.
 
 
 ### SSL Configuration
