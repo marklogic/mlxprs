@@ -1,0 +1,36 @@
+<template xmlns="http://marklogic.com/xdmp/tde">
+  <description>populates patients' data</description>
+  <context>/Citations/Citation/Article</context>
+  <rows>
+    <row>
+      <schema-name>Medical2</schema-name>
+      <view-name>Publications</view-name>
+      <columns>
+        <column>
+          <name>ID</name>
+          <scalar-type>long</scalar-type>
+          <val>../ID</val>
+        </column>
+        <column>
+          <name>ISSN</name>
+          <scalar-type>string</scalar-type>
+          <val>Journal/ISSN</val>
+        </column>
+      </columns>
+    </row>
+  </rows>
+  <vars>
+    <var>
+      <name>YYYY</name>
+      <val>YYYY.xml</val>
+    </var>
+    <var>
+      <name>MLXPRS_TEST_FILE</name>
+      <val>src/test/resources/localCitationsData.xml</val>
+    </var>
+    <var>
+      <name>ZZZZ</name>
+      <val>ZZZZ.xml</val>
+    </var>
+  </vars>
+</template>

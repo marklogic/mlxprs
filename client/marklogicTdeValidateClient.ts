@@ -17,7 +17,9 @@
 'use strict';
 
 import { XMLParser } from 'fast-xml-parser';
-import { ExtensionContext } from 'vscode';
+import * as fs from 'fs';
+import path = require('path');
+import { ExtensionContext, window, workspace } from 'vscode';
 
 import { ClientContext, sendJSQuery, sendXQuery } from './marklogicClient';
 import { buildMlxprsErrorFromError, MlxprsError } from './mlxprsErrorBuilder';
@@ -126,8 +128,31 @@ export class MarkLogicTdeValidateClient {
         }
     }
 
+    private getEditorWorkspaceFolder(): string | undefined {
+        const fileName = window.activeTextEditor?.document.fileName;
+        return workspace.workspaceFolders
+            ?.map((folder) => folder.uri.fsPath)
+            .filter((fsPath) => fileName?.startsWith(fsPath))[0];
+    }
+
+    private loadLocalDocument(filePath: string, rootDir: string): string {
+        try {
+            let targetFilePath = filePath;
+            if (!filePath.startsWith(path.sep)) {
+                targetFilePath = `${rootDir}${path.sep}${filePath}`;
+            }
+            const dataDocument = fs.readFileSync(targetFilePath, 'utf8');
+            return `xdmp.unquote(\`${dataDocument}\`)`;
+        } catch (e) {
+            const errorMessage = 'Error reading test file: ' + e.message;
+            const mlxprsError: MlxprsError = buildMlxprsErrorFromError({} as Error, errorMessage);
+            MlxprsErrorReporter.reportError(mlxprsError);
+            return null;
+        }
+    }
+
     private getTargetDocumentFromJsonVars(
-        tdeJson: object
+        tdeJson: object, rootDir: string
     ): string {
         const vars = tdeJson['template']['vars'];
         if (vars) {
@@ -135,14 +160,26 @@ export class MarkLogicTdeValidateClient {
             if (uriVarObj) {
                 return `fn.document('${uriVarObj.val}')`;
             } else {
-                return null;
+                const fileVarObj = vars.find(varObj => varObj.name === 'MLXPRS_TEST_FILE');
+                if (fileVarObj) {
+                    try {
+                        return this.loadLocalDocument(fileVarObj.val, rootDir);
+                    } catch (e) {
+                        const errorMessage = 'Error reading test file: ' + e.message;
+                        const mlxprsError: MlxprsError = buildMlxprsErrorFromError({} as Error, errorMessage);
+                        MlxprsErrorReporter.reportError(mlxprsError);
+                        return null;
+                    }
+                } else {
+                    return null;
+                }
             }
         }
         return null;
     }
 
     private getTargetDocumentFromXmlVars(
-        tdeText: object
+        tdeText: object, rootDir: string
     ): string {
         const vars = tdeText['template']['vars'];
         if (vars) {
@@ -152,11 +189,35 @@ export class MarkLogicTdeValidateClient {
                     if (uriVarObj) {
                         return `fn.document('${uriVarObj.val}')`;
                     } else {
-                        return null;
+                        const fileVarObj = vars.var.find(varObj => varObj.name === 'MLXPRS_TEST_FILE');
+                        if (fileVarObj) {
+                            try {
+                                return this.loadLocalDocument(fileVarObj.val, rootDir);
+                            } catch (e) {
+                                const errorMessage = 'Error reading test file: ' + e.message;
+                                const mlxprsError: MlxprsError = buildMlxprsErrorFromError({} as Error, errorMessage);
+                                MlxprsErrorReporter.reportError(mlxprsError);
+                                return null;
+                            }
+                        } else {
+                            return null;
+                        }
                     }
                 } else {
                     if (vars.var.name === 'MLXPRS_TEST_URI') {
                         return `fn.document('${vars.var.val}')`;
+                    } else if (vars.var.name === 'MLXPRS_TEST_FILE') {
+                        const fileVarObj = vars.var.find(varObj => varObj.name === 'MLXPRS_TEST_FILE');
+                        try {
+                            return this.loadLocalDocument(fileVarObj.val, rootDir);
+                        } catch (e) {
+                            const errorMessage = 'Error reading test file: ' + e.message;
+                            const mlxprsError: MlxprsError = buildMlxprsErrorFromError({} as Error, errorMessage);
+                            MlxprsErrorReporter.reportError(mlxprsError);
+                            return null;
+                        }
+                    } else {
+                        return null;
                     }
                 }
             }
@@ -175,18 +236,24 @@ export class MarkLogicTdeValidateClient {
         return errorMessage;
     }
 
+    // The rootDir parameter is generally retrieved from the current workspace and the current editor
+    // using the getEditorWorkspaceFolder() method
+    // However, during the automated tests, those values are unavailable, so the value must be passed in
     public async tdeExtractNodes(
-        dbClientContext: ClientContext, tdeText: string
+        dbClientContext: ClientContext, tdeText: string, rootDir: string = null
     ): Promise<unknown> {
         const tdeFormat = this.getTdeFormat(tdeText);
+        if (rootDir === null) {
+            rootDir = this.getEditorWorkspaceFolder();
+        }
         if (tdeFormat) {
             let targetDocument = null;
             if (tdeFormat === 'JSON') {
                 const tdeJson = JSON.parse(tdeText);
-                targetDocument = this.getTargetDocumentFromJsonVars(tdeJson);
+                targetDocument = this.getTargetDocumentFromJsonVars(tdeJson, rootDir);
             } else {
                 const tdeXml = MarkLogicTdeValidateClient.xmlParser.parse(tdeText);
-                targetDocument = this.getTargetDocumentFromXmlVars(tdeXml);
+                targetDocument = this.getTargetDocumentFromXmlVars(tdeXml, rootDir);
             }
             if (targetDocument) {
                 const nodeExtractQuery = this.buildNodeExtractQuery(tdeText, targetDocument);
@@ -198,7 +265,7 @@ export class MarkLogicTdeValidateClient {
                         return this.handleExtractNodesError(error);
                     });
             } else {
-                const errorMessage = 'To perform node extraction, the template must include a "var" entry with the name property "MLXPRS_TEST_URI" and a val property with the URI of the target document.';
+                const errorMessage = 'To perform node extraction, the template must include a "var" entry with the name property "MLXPRS_TEST_URI" or "MLXPRS_TEST_FILE", and a val property with the URI of the target document.';
                 const mlxprsError: MlxprsError = buildMlxprsErrorFromError({} as Error, errorMessage);
                 MlxprsErrorReporter.reportError(mlxprsError);
                 return errorMessage;

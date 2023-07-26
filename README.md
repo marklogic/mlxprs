@@ -103,7 +103,7 @@ The results of the validation will appear in the `MLXPRS: RESULTS` tab in the bo
 
 To extract nodes from a data document using a TDE template:
 1. In an editor tab, open the template file that you wish to use for node extraction.
-2. Add a "var" property with a "name" of "MLXPRS_TEST_URI" and a "val" that is the URI of the data document in the database. If there is not already a "vars" property, you will need to also add that as a child of the "template" property. Alternatively, you use a local file by using the var "name" of "MLXPRS_TEST_FILE" setting the "val" property to the path to the file.
+2. Add a "var" property with a "name" of "MLXPRS_TEST_URI" and a "val" that is the URI of the data document in the database. If there is not already a "vars" property, you will need to also add that as a child of the "template" property. Alternatively, you can extract data from a local file by using the var "name" of "MLXPRS_TEST_FILE" setting the "val" property to the path to the file. When using "MLXPRS_TEST_FILE", the path in the "val" property may be either an absolute path or a path relative to the current workspace.
 
 For a JSON document the vars section will look something like the following:
 ```
