@@ -71,6 +71,7 @@ suite('Testing TDE Template Node Extraction functionality', async () => {
     const integrationTestHelper: IntegrationTestHelper = globalThis.integrationTestHelper;
     const mlClient = integrationTestHelper.mlClient;
     const markLogicTdeValidateClient = new MarkLogicTdeValidateClient(null);
+    const testAppDir = integrationTestHelper.testAppFolder;
 
     test('When a valid JSON TDE is used for Node Extraction', async () => {
         const validationResult = await extractNodes('test-app/src/main/ml-schemas/authors-TDE.tdej');
@@ -113,20 +114,30 @@ suite('Testing TDE Template Node Extraction functionality', async () => {
     test('When a JSON TDE Template without the MLXPRS_TEST_URI var is used for Node Extraction', async () => {
         const validationResult = await extractNodes('test-app/src/main/ml-schemas/no-var-authors-TDE.tdej');
         assert.equal(validationResult,
-            'To perform node extraction, the template must include a "var" entry with the name property "MLXPRS_TEST_URI" and a val property with the URI of the target document.',
+            'To perform node extraction, the template must include a "var" entry with the name property "MLXPRS_TEST_URI" or "MLXPRS_TEST_FILE", and a val property with the URI of the target document.',
             'Then the validation result should be an error message');
     }).timeout(5000);
 
     test('When a XML TDE Template without the MLXPRS_TEST_URI var is used for Node Extraction', async () => {
         const validationResult = await extractNodes('test-app/src/main/ml-schemas/no-var-publications-TDE.tde');
         assert.equal(validationResult,
-            'To perform node extraction, the template must include a "var" entry with the name property "MLXPRS_TEST_URI" and a val property with the URI of the target document.',
+            'To perform node extraction, the template must include a "var" entry with the name property "MLXPRS_TEST_URI" or "MLXPRS_TEST_FILE", and a val property with the URI of the target document.',
             'Then the validation result should be an error message');
     }).timeout(5000);
 
-    async function extractNodes(jsonTdeRelativeFilePath: string) {
+    test('When a valid JSON TDE is used for Node Extraction from a local data file', async () => {
+        const validationResult = await extractNodes('test-app/src/main/ml-schemas/authors-local-data-TDE.tdej', testAppDir);
+        assert.equal(validationResult['document1'].length, 3, 'Then the number of resulting nodes should match');
+    }).timeout(5000);
+
+    test('When a valid XML TDE Template is used for Node Extraction from a local data file', async () => {
+        const validationResult = await extractNodes('test-app/src/main/ml-schemas/publications-local-data-TDE.tde', testAppDir);
+        assert.equal(validationResult['document1'].length, 2, 'Then the number of resulting nodes should match');
+    }).timeout(5000);
+
+    async function extractNodes(jsonTdeRelativeFilePath: string, rootDir: string = null) {
         const jsonTdeFilePath = Path.join(integrationTestHelper.rootFolder, jsonTdeRelativeFilePath);
         const module = fs.readFileSync(jsonTdeFilePath);
-        return await markLogicTdeValidateClient.tdeExtractNodes(mlClient, module.toString('utf8'));
+        return await markLogicTdeValidateClient.tdeExtractNodes(mlClient, module.toString('utf8'), rootDir);
     }
 });

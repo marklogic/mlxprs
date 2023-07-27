@@ -40,6 +40,7 @@ export class IntegrationTestHelper {
     public modulesDatabaseToken = '%%MODULES-DATABASE%%';
     readonly rootFolder = Path.join(__dirname, '../../../');
     readonly scriptFolder = Path.join(this.rootFolder, 'client/test/integration/jsScripts');
+    readonly testAppFolder = Path.join(__dirname, '../../../test-app');
     readonly hwPath = Path.join(this.scriptFolder, 'helloWorld.sjs');
     private jsDebugExec = Path.join(this.rootFolder, 'dist/mlDebug.js');
     private xqyDebugExec = Path.join(this.rootFolder, 'dist/XQDebugger/xqyDebug.js');
