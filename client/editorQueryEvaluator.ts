@@ -17,6 +17,7 @@
 'use strict';
 
 import * as ml from 'marklogic';
+import { EventEmitter } from 'stream';
 import {
     ExtensionContext, TextDocument, TextEdit, TextEditor, Uri,
     WorkspaceEdit, commands, window, workspace, WorkspaceConfiguration
@@ -24,18 +25,18 @@ import {
 
 import { ClientResponseProvider, ErrorResultsObject } from './clientResponseProvider';
 import { MlxprsErrorReporter } from './mlxprsErrorReporter';
-import { ClientContext, sendJSQuery, sendSparql, sendXQuery, sendRows } from './marklogicClient';
+import { ClientContext, sendJSQuery, sendGraphQl, sendRows, sendSparql, sendXQuery } from './marklogicClient';
 import { buildMlxprsErrorFromError, MlxprsError } from './mlxprsErrorBuilder';
 import { MlxprsWebViewProvider } from './mlxprsWebViewProvider';
 import { getSparqlQueryForm, getSparqlResponseType } from './sparqlQueryHelper';
 import { cascadeOverrideClient } from './vscQueryParameterTools';
-import { EventEmitter } from 'stream';
 
 export enum EditorQueryType {
     JS,
     XQY,
     SPARQL,
     SQL,
+    GRAPHQL,
     ROWS
 }
 
@@ -102,8 +103,11 @@ export class EditorQueryEvaluator {
         case EditorQueryType.SQL:
             this.editorSqlQuery(dbClientContext, query, resultsEditorTabIdentifier, editor, this.cfg);
             break;
+        case EditorQueryType.GRAPHQL:
+            this.editorRowsQuery(dbClientContext, query, resultsEditorTabIdentifier, editor, 'json', 'graphql');
+            break;
         case EditorQueryType.ROWS:
-            this.editorRowsQuery(dbClientContext, query, resultsEditorTabIdentifier, editor, rowsResponseFormat);
+            this.editorRowsQuery(dbClientContext, query, resultsEditorTabIdentifier, editor, rowsResponseFormat, 'optic');
             break;
         }
     }
@@ -257,10 +261,15 @@ export class EditorQueryEvaluator {
         resultsEditorTabIdentifier: Uri,
         editor: TextEditor,
         resultFormat: ml.RowsResponseFormat,
+        queryType: string,
         // The EventEmitter parameter is only used for testing. Production clients should not pass anything for this param.
         evaluatorEmitter?: EventEmitter
     ): void {
-        sendRows(dbClientContext, query, resultFormat)
+        let queryFunction = sendRows;
+        if (queryType === 'graphql') {
+            queryFunction = sendGraphQl;
+        }
+        queryFunction(dbClientContext, query, resultFormat)
             .then(
                 (response: ml.RowsResponse) => {
                     if (response.preRequestError) {

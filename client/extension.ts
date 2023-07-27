@@ -75,6 +75,10 @@ export function activate(context: vscode.ExtensionContext): void {
         'extension.sendSparqlQuery',
         (editor: vscode.TextEditor) => editorQueryEvaluator.editorQuery(EditorQueryType.SPARQL, editor)
     );
+    const sendGraphQlQuery = vscode.commands.registerTextEditorCommand(
+        'extension.sendGraphQlQuery',
+        (editor: vscode.TextEditor) => editorQueryEvaluator.editorQuery(EditorQueryType.GRAPHQL, editor)
+    );
     function sendEditorRowsQuery(editor: vscode.TextEditor, rowsResponseFormat: ml.RowsResponseFormat) {
         editorQueryEvaluator.editorQuery(EditorQueryType.ROWS, editor, rowsResponseFormat);
     }
@@ -151,7 +155,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     handleUnload(context, [
         connectJsServer, disconnectJsServer, connectXqyServer, disconnectXqyServer,
-        sendXQuery, sendJSQuery, sendSqlQuery, sendSparqlQuery,
+        sendXQuery, sendJSQuery, sendSqlQuery, sendSparqlQuery, sendGraphQlQuery,
         sendRowsJsonQuery, sendRowsCsvQuery, sendRowsXmlQuery,
         runTestModule, validateTdeTemplate, tdeExtractNodes, showModule
     ]);

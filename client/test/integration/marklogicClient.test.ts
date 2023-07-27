@@ -16,9 +16,11 @@
 
 import * as assert from 'assert';
 import * as CP from 'child_process';
+import * as fs from 'fs';
+import * as ml from 'marklogic';
 
 import { JsDebugManager } from '../../JSDebugger/jsDebugManager';
-import { ClientContext, getFilteredListOfJsAppServers } from '../../marklogicClient';
+import { ClientContext, getFilteredListOfJsAppServers, sendGraphQl } from '../../marklogicClient';
 import { IntegrationTestHelper, wait } from './markLogicIntegrationTestHelper';
 
 
@@ -85,4 +87,36 @@ suite('Testing various MarkLogic calls', async () => {
         const dbId = await JsDebugManager.resolveDatabasetoId('mlxprs-test-content');
         assert.notEqual(dbId, null, 'The return value should not be null');
     }).timeout(1000);
+});
+
+
+suite('Testing MarkLogic GraphQL queries', async () => {
+    const integrationTestHelper: IntegrationTestHelper = globalThis.integrationTestHelper;
+    const dbClientContext: ClientContext = integrationTestHelper.mlClient;
+    const rootFolder = integrationTestHelper.rootFolder;
+
+    test('When sending a valid GraphQL query', async () => {
+        const graphQlQuery = fs.readFileSync(`${rootFolder}/test-app/src/main/ml-modules/root/graphql/authors.json`).toString();
+        sendGraphQl(dbClientContext, graphQlQuery)
+            .then(
+                (response: ml.RowsResponse) => {
+                    assert.strictEqual(response['data']['Medical_Authors'].length, 34, 'The number of returned Authors should match the expected number');
+                }
+            )
+            .catch(() => {
+                assert.fail('The GraphQL query should succeed.');
+            });
+    }).timeout(5000);
+
+    test('When sending an invalid GraphQL query', async () => {
+        sendGraphQl(dbClientContext, 'This is not a valid GraphQL query')
+            .then(
+                () => {
+                    assert.fail('The GraphQL query should fail.');
+                }
+            )
+            .catch((error) => {
+                assert.strictEqual(error.body.errorResponse.messageCode, 'XDMP-JSONDOC', 'The result should be the expected error message');
+            });
+    }).timeout(5000);
 });

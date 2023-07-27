@@ -300,6 +300,10 @@ export function sendSparql(dbClientContext: ClientContext, sparqlQuery: string, 
     });
 }
 
+export function sendGraphQl(dbClientContext: ClientContext, actualQuery: string): Promise<ml.RowsResponse> {
+    return dbClientContext.databaseClient.rows.graphQL(actualQuery);
+}
+
 
 export function sendRows(dbClientContext: ClientContext, actualQuery: string, resultFormat: ml.RowsResponseFormat): Promise<ml.RowsResponse> {
     if (actualQuery.startsWith('{')) {
