@@ -84,6 +84,10 @@
                 "title": "MarkLogic: Submit Optic query - return XML"
             },
             {
+                "command": "extension.sendGraphQlQuery",
+                "title": "MarkLogic: Submit GraphQL Query"
+            },
+            {
                 "command": "extension.connectJsServer",
                 "title": "MarkLogic: Connect JavaScript Debug Server"
             },

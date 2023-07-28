@@ -20,7 +20,6 @@ import * as events from 'events';
 import * as sinon from 'sinon';
 
 import { EditorQueryEvaluator } from '../../editorQueryEvaluator';
-import { JsDebugManager } from '../../JSDebugger/jsDebugManager';
 import { ClientContext, sendJSQuery, sendRows, sendSparql, sendXQuery } from '../../marklogicClient';
 import { IntegrationTestHelper } from './markLogicIntegrationTestHelper';
 
@@ -116,7 +115,7 @@ suite('Testing SSL connectivity failures in various scenarios', async () => {
         async () => {
             showErrorPopup.resetHistory();
             const evaluatorEmitter = new events.EventEmitter();
-            editorQueryEvaluator.editorRowsQuery(mlClient, 'gibberish', null, null, 'json', evaluatorEmitter);
+            editorQueryEvaluator.editorRowsQuery(mlClient, 'gibberish', null, null, 'json', 'optic', evaluatorEmitter);
             await events.once(evaluatorEmitter, 'complete');
             sinon.assert.calledWith(showErrorPopup, sinon.match('INTERNAL ERROR'));
         }).timeout(5000);

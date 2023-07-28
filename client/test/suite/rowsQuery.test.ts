@@ -15,9 +15,10 @@
  */
 
 import * as assert from 'assert';
+import * as ml from 'marklogic';
+
 import { defaultDummyGlobalState } from './dummyGlobalState';
 import { sendRows } from '../../marklogicClient';
-import * as ml from 'marklogic';
 
 const dslQuery = 'op.fromView()';
 const serializedQueryString = '{ "$optic": { "ns": "op", "fn": "operators", "args": [{ "ns": "op", "fn": "from-view", "args": ["Medical", "Authors"] }] } }';
@@ -30,6 +31,9 @@ function dummyRowsQuerier(): ml.Rows {
         query: (actualQuery: object | string, options: ml.RowsOptions): Promise<ml.RowsResponse> => {
             calculatedQuery = actualQuery;
             calculatedOptions = options;
+            return null;
+        },
+        graphQL: (actualQuery: object | string): Promise<ml.RowsResponse> => {
             return null;
         }
     };

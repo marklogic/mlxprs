@@ -57,6 +57,7 @@ declare module 'marklogic' {
     }
 
     interface Rows {
+        graphQL: (actualQuery: object | string) => Promise<RowsResponse>
         query: (actualQuery: object | string, options: RowsOptions) => Promise<RowsResponse>
     }
 
