@@ -73,15 +73,15 @@
             },
             {
                 "command": "extension.sendRowsJsonQuery",
-                "title": "MarkLogic: Submit Optic Query - return JSON"
+                "title": "MarkLogic: Submit Optic Query - Return JSON"
             },
             {
                 "command": "extension.sendRowsCsvQuery",
-                "title": "MarkLogic: Submit Optic Query - return CSV"
+                "title": "MarkLogic: Submit Optic Query - Return CSV"
             },
             {
                 "command": "extension.sendRowsXmlQuery",
-                "title": "MarkLogic: Submit Optic Query - return XML"
+                "title": "MarkLogic: Submit Optic Query - Return XML"
             },
             {
                 "command": "extension.sendGraphQlQuery",
