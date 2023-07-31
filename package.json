@@ -73,15 +73,15 @@
             },
             {
                 "command": "extension.sendRowsJsonQuery",
-                "title": "MarkLogic: Submit Optic query - return JSON"
+                "title": "MarkLogic: Submit Optic Query - return JSON"
             },
             {
                 "command": "extension.sendRowsCsvQuery",
-                "title": "MarkLogic: Submit Optic query - return CSV"
+                "title": "MarkLogic: Submit Optic Query - return CSV"
             },
             {
                 "command": "extension.sendRowsXmlQuery",
-                "title": "MarkLogic: Submit Optic query - return XML"
+                "title": "MarkLogic: Submit Optic Query - return XML"
             },
             {
                 "command": "extension.sendGraphQlQuery",
@@ -105,19 +105,19 @@
             },
             {
                 "command": "extension.showModule",
-                "title": "MarkLogic: Show module"
+                "title": "MarkLogic: Show Module"
             },
             {
                 "command": "extension.runTestModule",
-                "title": "MarkLogic: Run marklogic-unit-test module"
+                "title": "MarkLogic: Run marklogic-unit-test Module"
             },
             {
                 "command": "extension.validateTdeTemplate",
-                "title": "MarkLogic: Validate TDE template"
+                "title": "MarkLogic: Validate TDE Template"
             },
             {
                 "command": "extension.tdeExtractNodes",
-                "title": "MarkLogic: Extract data via TDE"
+                "title": "MarkLogic: Extract Data Via TDE"
             }
         ],
         "breakpoints": [
