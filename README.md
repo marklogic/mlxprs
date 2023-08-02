@@ -63,17 +63,29 @@ To run an Optic query (either DSL or serialized):
 
 1. Type a valid query in the editor.
 2. Open the command palette (<kbd>Shift</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd>).
-3. Select one of the `MarkLogic: Submit Optic query - <Response Format>` commands, depending on the desired response format.
+3. Select one of the `MarkLogic: Submit Optic Query - <Response Format>` commands, depending on the desired response format.
 
 Query results will apper in the `MLXPRS: RESULTS` tab in the bottom panel, or open in a new editor tab - depending on the value of the `Marklogic: Results In Editor Tab` setting.
 
+
+### Submit GraphQL Queries
+
+To run a GraphQL query:
+
+1. Type a valid query in the editor.
+2. Open the command palette (<kbd>Shift</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd>).
+3. Select the `MarkLogic: Submit GraphQL Query` command.
+
+Query results will apper in the `MLXPRS: RESULTS` tab in the bottom panel, or open in a new editor tab - depending on the value of the `Marklogic: Results In Editor Tab` setting.
+
+For more information on sending GraphQL request to MarkLogic, please refer to [GET /v1/rows/graphql](https://docs.marklogic.com/REST/GET/v1/rows/graphql) and [Introduction to GraphQL with MarkLogic](https://www.marklogic.com/blog/introduction-to-graphql-with-marklogic/).
 
 ### Inspect a module
 
 To view a module from the configured modules database:
 
 1. Open the command palette (<kbd>Shift</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd>)
-2. Select `MarkLogic: Show module` from the list
+2. Select `MarkLogic: Show Module` from the list
 3. Choose the module you'd like to view from the resulting list. The list searches and filters as you type.
 
 The module will appear read-only in a new text buffer.
@@ -85,7 +97,7 @@ This plugin provides a convenient method for running a [marklogic-unit-test modu
 
 1. In an editor tab, open the test file that you wish to be executed.
 2. Open the command palette (<kbd>Shift</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd>)
-3. Select `MarkLogic: Run marklogic-unit-test module` from the list
+3. Select `MarkLogic: Run marklogic-unit-test Module` from the list
 
 The results of the tests will appear in the `MLXPRS: RESULTS` tab in the bottom panel.
 
@@ -97,7 +109,7 @@ While developing TDE templates, you may verify that your templates are valid TDE
 To validate a TDE template:
 1. In an editor tab, open the template file that you wish to be validated.
 2. Open the command palette (<kbd>Shift</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd>)
-3. Select `MarkLogic: Validate TDE template` from the list
+3. Select `MarkLogic: Validate TDE Template` from the list
 
 The results of the validation will appear in the `MLXPRS: RESULTS` tab in the bottom panel.
 
@@ -126,7 +138,7 @@ For an XML document the vars section will look something like this:
 ```
 
 3. Open the command palette (<kbd>Shift</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd>)
-4. Select `MarkLogic: Extract Data via TDE` from the list
+4. Select `MarkLogic: Extract Data Via TDE` from the list
 
 The results of the node extraction will appear in the `MLXPRS: RESULTS` tab in the bottom panel.
 
