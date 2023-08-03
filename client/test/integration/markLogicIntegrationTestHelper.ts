@@ -95,7 +95,7 @@ export class IntegrationTestHelper {
         user: this.username,
         pwd: this.password,
         authType: 'DIGEST',
-        contentDb: null,
+        contentDb: 'mlxprs-test-test-content',
         modulesDb: null,
         pathToCa: this.pathToCa,
         ssl: false,
