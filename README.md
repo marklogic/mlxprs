@@ -26,7 +26,7 @@ Install this tool using the VS Code built-in [marketplace](https://marketplace.v
 
 ### Configuration
 
-The MarkLogic extension exposes several configuration options from the standard VS Code `settings.json` file (<kbd>Cmd</kbd>-<kbd>,</kbd>),
+The MarkLogic extension exposes several configuration options from the standard VS Code `settings.json` file:
 
 ```json
 {
@@ -51,7 +51,7 @@ and works even if the server is running basic authentication.
 To evaluate JavaScript, XQuery, SQL, or SPARQL:
 
 1. Type a valid query in the editor.
-2. Open the command palette (<kbd>Shift</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd>).
+2. Open the VS Code command palette.
 3. Select `MarkLogic: Eval JS`, `MarkLogic: Eval XQuery`, `MarkLogic: Eval SQL`, or `MarkLogic: Eval SPARQL` - depending on the type of query.
 
 Query results will apper in the `MLXPRS: RESULTS` tab in the bottom panel, or open in a new editor tab - depending on the value of the `Marklogic: Results In Editor Tab` setting.
@@ -62,7 +62,7 @@ Query results will apper in the `MLXPRS: RESULTS` tab in the bottom panel, or op
 To run an Optic query (either DSL or serialized):
 
 1. Type a valid query in the editor.
-2. Open the command palette (<kbd>Shift</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd>).
+2. Open the VS Code command palette.
 3. Select one of the `MarkLogic: Submit Optic Query - <Response Format>` commands, depending on the desired response format.
 
 Query results will apper in the `MLXPRS: RESULTS` tab in the bottom panel, or open in a new editor tab - depending on the value of the `Marklogic: Results In Editor Tab` setting.
@@ -73,7 +73,7 @@ Query results will apper in the `MLXPRS: RESULTS` tab in the bottom panel, or op
 To run a GraphQL query:
 
 1. Type a valid query in the editor.
-2. Open the command palette (<kbd>Shift</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd>).
+2. Open the VS Code command palette.
 3. Select the `MarkLogic: Submit GraphQL Query` command.
 
 Query results will apper in the `MLXPRS: RESULTS` tab in the bottom panel, or open in a new editor tab - depending on the value of the `Marklogic: Results In Editor Tab` setting.
@@ -84,8 +84,8 @@ For more information on sending GraphQL request to MarkLogic, please refer to [G
 
 To view a module from the configured modules database:
 
-1. Open the command palette (<kbd>Shift</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd>)
-2. Select `MarkLogic: Show Module` from the list
+1. Open the VS Code command palette.
+2. Select `MarkLogic: Show Module` from the list.
 3. Choose the module you'd like to view from the resulting list. The list searches and filters as you type.
 
 The module will appear read-only in a new text buffer.
@@ -96,8 +96,8 @@ The module will appear read-only in a new text buffer.
 This plugin provides a convenient method for running a [marklogic-unit-test module](https://marklogic-community.github.io/marklogic-unit-test/) within your MarkLogic server. To get started, your test suites and files must be organized under a "src/test/ml-modules/root/test/suites" directory. See this [ml-gradle sample project](https://github.com/marklogic/ml-gradle/tree/master/examples/unit-test-project) for an example of how to setup the project to use marklogic-unit-test. Additionally, you need to set the `Marklogic: Test Port` setting to the port number of the App Server that can run your unit tests. Finally, to run a test file:
 
 1. In an editor tab, open the test file that you wish to be executed.
-2. Open the command palette (<kbd>Shift</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd>)
-3. Select `MarkLogic: Run marklogic-unit-test Module` from the list
+2. Open the VS Code command palette.
+3. Select `MarkLogic: Run marklogic-unit-test Module` from the list.
 
 The results of the tests will appear in the `MLXPRS: RESULTS` tab in the bottom panel.
 
@@ -108,7 +108,7 @@ While developing TDE templates, you may verify that your templates are valid TDE
 
 To validate a TDE template:
 1. In an editor tab, open the template file that you wish to be validated.
-2. Open the command palette (<kbd>Shift</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd>)
+2. Open the VS Code command palette.
 3. Select `MarkLogic: Validate TDE Template` from the list
 
 The results of the validation will appear in the `MLXPRS: RESULTS` tab in the bottom panel.
@@ -137,7 +137,7 @@ For an XML document the vars section will look something like this:
   </vars>
 ```
 
-3. Open the command palette (<kbd>Shift</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd>)
+3. Open the VS Code command palette.
 4. Select `MarkLogic: Extract Data Via TDE` from the list
 
 The results of the node extraction will appear in the `MLXPRS: RESULTS` tab in the bottom panel.
