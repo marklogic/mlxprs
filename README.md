@@ -309,10 +309,10 @@ Here's an example of _attach_ configurations for JavaScript and XQuery:
     }
 ```
 
-Attach mode intercepts a paused request in a given *debug server*, an app server connected to the VS Code debugger. To connect to an app server for debugging:
+Attach mode intercepts a paused request in a given *debug server*, an App Server connected to the VS Code debugger. To connect to an App Server for debugging:
 
 1. open the command palette, start typing <kbd>MarkLogic: Connect...</kbd> until autocomplete prompts you with `MarkLogic: Connect JavaScript Debug Server` or `MarkLogic: Connect XQuery Debug Server`, and choose the command you want.
-2. You'll be prompted to choose a server. Use the name of the app server in the MarkLogic configuration, _not_ its hostname or IP address.
+2. You'll be prompted to choose a server. Use the name of the App Server in the MarkLogic configuration, _not_ its hostname or IP address.
 3. You should see a confirmation message once you're connected
 
 Connecting a server will automatically pause all requests so that you can attach the debugger. When you're done, use either <kbd>MarkLogic: Disconnect...</kbd> command to disable debugging and resume handling requests as normal. Note that while the server is in "Connect" mode, you should not change any of the configured ports to the port number of the connected server. This will cause requests from the plugin to pause, leading to unexpected results. 
@@ -342,7 +342,7 @@ ln -s <path-to-marklogic-install>/Modules/MarkLogic .
 
 ### Debugging Limitations
 
-In XQuery attach-mode debugging, you should not 'connect' to the same server you use for queries. Since connecting stops all requests on that app server, you'd lock yourself out. For this reason, the extension will not offer to connect to your configured query client's port. Admin, Manage, HealthCheck, and App-Services are also excluded from debugging.
+In XQuery attach-mode debugging, you should not 'connect' to the same server you use for queries. Since connecting stops all requests on that App Server, you'd lock yourself out. For this reason, the extension will not offer to connect to your configured query client's port. Admin, Manage, HealthCheck, and App-Services are also excluded from debugging.
 
 Due to the nature of XQuery, the XQuery debugger functions a bit differently than many developers are accustomed to. Multiple lines of XQuery may be reported as a single expression by the MarkLogic debugger functions.
 Since the three primary stepping functions, `Step Over`, `Step Into`, and `Step Out`, all operate based on XQuery expressions, using those functions does not have the same result as using those functions in the JavaScript debugger.
@@ -374,10 +374,12 @@ To run queries with the MarkLogic JavaScript and XQuery Debugger, a user will ne
 - **xdmp-eval-modules-change**: to use a non-default modules database or modules root
 - **xdmp-eval-modules-change-file**: to use the filesystem for modules
 
-For debugging, a user must also have at least one of these privileges:
+For debugging, a user must also have at least one of these privileges to evaluate a JavaScript or XQuery module in debug mode.
 
-- **debug-my-request**: for debugging requests launched by the debug user only
-- **debug-any-request**: for debugging requests launched by any user
+- **debug-my-requests**: for debugging requests launched by the debug user only
+- **debug-any-requests**: for debugging requests launched by any user
+
+If a user wants to connect to a MarkLogic App Server in order to attach to paused requests and debugging the requests, they must have the **debug-any-requests** privilege.
 
 For more about privileges, see [xdmp:eval](https://docs.marklogic.com/10.0/xdmp:eval) and [Debug functions](https://docs.marklogic.com/dbg) in the API docs, along with [Pre-defined Executive Privileges](https://docs.marklogic.com/guide/admin/exec_privs) in the MarkLogic server documentation.
 
