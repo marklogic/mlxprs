@@ -393,13 +393,19 @@ export async function filterJsServerByConnectedStatus(
 export function requestMarkLogicUnitTest(
     dbClientContext: ClientContext, testSuite: string, testFile: string
 ): ml.ResultProvider<unknown> {
-    let endpoint = `/v1/resources/marklogic-unit-test?rs:format=xml&rs:func=run&rs:suite=${testSuite}`;
+    const endpoint = '/v1/resources/marklogic-unit-test';
+    let endpointParameters = `rs:format=xml&rs:func=run&rs:suite=${encodeURIComponent(testSuite)}`;
     if (testFile) {
-        endpoint = `${endpoint}&rs:tests=${testFile}`;
+        endpointParameters = `${endpointParameters}&rs:tests=${encodeURIComponent(testFile)}`;
     }
     return dbClientContext.databaseClient.internal.sendRequest(
         endpoint,
         (requestOptions: ml.RequestOptions) => {
+            let initialSeparator = '?';
+            if (requestOptions.path.includes('?')) {
+                initialSeparator = '&';
+            }
+            requestOptions.path = `${requestOptions.path}${initialSeparator}${endpointParameters}`;
             requestOptions.method = 'GET';
         }
     );
