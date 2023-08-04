@@ -379,7 +379,7 @@ For debugging, a user must also have at least one of these privileges to evaluat
 - **debug-my-requests**: for debugging requests launched by the debug user only
 - **debug-any-requests**: for debugging requests launched by any user
 
-If a user wants to connect to a MarkLogic App Server in order to attach to paused requests and debugging the requests, they must have the **debug-any-requests** privilege.
+If a user wants to attach to paused requests within a MarkLogic App Server, in order to debug requests, they must have the **debug-any-requests** privilege.
 
 For more about privileges, see [xdmp:eval](https://docs.marklogic.com/10.0/xdmp:eval) and [Debug functions](https://docs.marklogic.com/dbg) in the API docs, along with [Pre-defined Executive Privileges](https://docs.marklogic.com/guide/admin/exec_privs) in the MarkLogic server documentation.
 
