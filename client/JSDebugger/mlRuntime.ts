@@ -180,14 +180,17 @@ export class MLRuntime extends EventEmitter {
     }
 
     public setBreakPoint(location: MLbreakPoint): Promise<string> {
-        let urlParameters = `url=${location.url}&lno=${location.line}`;
+        const queryParameters = {
+            'url': location.url,
+            'lno': location.line
+        };
         if (location.column) {
-            urlParameters = urlParameters.concat(`&cno=${location.column}`);
+            queryParameters['cno'] = location.column;
         }
         if (location.condition) {
-            urlParameters = urlParameters.concat(`&condition=${location.condition}`);
+            queryParameters['condition'] = location.condition;
         }
-        return this._sendMLdebugRequestPOST('set-breakpoint', '', urlParameters);
+        return this._sendMLdebugRequestPOST('set-breakpoint', '', queryParameters);
     }
 
     public removeBreakPoint(location: MLbreakPoint): Promise<string> {
@@ -199,8 +202,7 @@ export class MLRuntime extends EventEmitter {
     }
 
     public wait(): Promise<string> {
-        const body = 'time-out=5';
-        return this._sendMLdebugRequestPOST('wait', '', body);
+        return this._sendMLdebugRequestPOST('wait', '', { 'time-out': 5 });
     }
 
     public evaluateOnCallFrame(expr: string, cid?: string): Promise<string> {
@@ -223,8 +225,7 @@ export class MLRuntime extends EventEmitter {
     }
 
     public terminate(): Promise<string> {
-        const data = 'server-name=TaskServer';
-        return this._sendMLdebugRequestPOST('request-cancel', '', data);
+        return this._sendMLdebugRequestPOST('request-cancel', '', { 'server-name': 'TaskServer' });
     }
 
     public async waitTillPaused(): Promise<string> {
@@ -246,19 +247,34 @@ export class MLRuntime extends EventEmitter {
 
     //---- helpers
 
+    private updateRequestPathWithParameters(
+        requestPath: string, requestParametersString: string
+    ) {
+        if (requestParametersString.toString().length > 0) {
+            let initialSeparator = '?';
+            if (requestPath.includes('?')) {
+                initialSeparator = '&';
+            }
+            return `${requestPath}${initialSeparator}${requestParametersString.toString()}`;
+        } else {
+            return requestPath;
+        }
+    }
+
     private _sendMLdebugRequestPOST(
-        module: string, body?: string, urlParameters?: string
+        module: string, body?: string, requestParameters?: Record<string, unknown>
     ): Promise<string> {
         const manageClient = newMarklogicManageClient(this.dbClientContext, this.managePort);
 
-        let endpoint = `/jsdbg/v1/${module}/${this._rid}`;
-        if (urlParameters) {
-            endpoint = `${endpoint}?${urlParameters}`;
-        }
+        const endpoint = `/jsdbg/v1/${module}/${this._rid}`;
+        const urlSearchParams = new global.URLSearchParams(requestParameters);
+
         return new Promise((resolve, reject) => {
             manageClient.databaseClient.internal.sendRequest(
                 endpoint,
                 (requestOptions: ml.RequestOptions) => {
+                    requestOptions.path =
+                        this.updateRequestPathWithParameters(requestOptions.path, urlSearchParams);
                     requestOptions.method = 'POST';
                     requestOptions.headers = { 'X-Error-Accept': 'application/json' };
                 },
@@ -279,20 +295,19 @@ export class MLRuntime extends EventEmitter {
     }
 
     private _sendMLdebugRequestGET(
-        module: string, queryStringObject?: Record<string, unknown>
+        module: string, requestParameters?: Record<string, unknown>
     ): Promise<string> {
         const manageClient = newMarklogicManageClient(this.dbClientContext, this.managePort);
 
-        let endpoint = `/jsdbg/v1/${module}/${this._rid}`;
-        const urlParameters = new global.URLSearchParams(queryStringObject);
-        if (urlParameters.toString().length > 0) {
-            endpoint = `${endpoint}?${urlParameters.toString()}`;
-        }
+        const endpoint = `/jsdbg/v1/${module}/${this._rid}`;
+        const urlSearchParams = new global.URLSearchParams(requestParameters);
 
         return new Promise((resolve, reject) => {
             return manageClient.databaseClient.internal.sendRequest(
                 endpoint,
                 (requestOptions: ml.RequestOptions) => {
+                    requestOptions.path =
+                        this.updateRequestPathWithParameters(requestOptions.path, urlSearchParams);
                     requestOptions.method = 'GET';
                     requestOptions.headers = { 'X-Error-Accept': 'application/json' };
                 })
@@ -315,16 +330,15 @@ export class MLRuntime extends EventEmitter {
         if (modules) evalOptions['modules'] = modules;
         if (txnId) evalOptions['txnId'] = txnId;
         if (root) evalOptions['root'] = root;
-        const urlParameters = new global.URLSearchParams(evalOptions);
-        let endpoint = '/jsdbg/v1/eval';
-        if (urlParameters.toString().length > 0) {
-            endpoint = `${endpoint}?${urlParameters.toString()}`;
-        }
+        const urlSearchParams = new global.URLSearchParams(evalOptions);
+        const endpoint = '/jsdbg/v1/eval';
 
         return new Promise((resolve, reject) => {
             manageClient.databaseClient.internal.sendRequest(
                 endpoint,
                 (requestOptions: ml.RequestOptions) => {
+                    requestOptions.path =
+                        this.updateRequestPathWithParameters(requestOptions.path, urlSearchParams);
                     requestOptions.method = 'POST';
                     requestOptions.headers = {
                         'Content-type': 'application/x-www-form-urlencoded',
