@@ -1,8 +1,8 @@
 {
     "name": "mlxprs",
-    "displayName": "MarkLogic developer tools",
-    "description": "MarkLogic JavaScript and XQuery development tools",
-    "version": "3.8.0-SNAPSHOT",
+    "displayName": "MLXPRS: MarkLogic plugin for VS Code",
+    "description": "Simplifies and automates common development tasks for creating applications on MarkLogic.",
+    "version": "3.8.0",
     "publisher": "mlxprs",
     "engines": {
         "vscode": "^1.78.0"
