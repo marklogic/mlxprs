@@ -2,11 +2,11 @@
 [![](https://vsmarketplacebadges.dev/installs-short/mlxprs.mlxprs.png)](https://marketplace.visualstudio.com/items?itemName=mlxprs.mlxprs)
 [![](https://vsmarketplacebadges.dev/rating-short/mlxprs.mlxprs.png)](https://marketplace.visualstudio.com/items?itemName=mlxprs.mlxprs)
 
-# MarkLogic Extension for Visual Studio Code
+# MLXPRS: MarkLogic Extension for Visual Studio Code
 
 _Develop, run, and debug code for MarkLogic in the popular VS Code IDE_
 
-[Visual Studio Code](https://code.visualstudio.com) is a free, cross-platform code editor and development tool from Microsoft. The free, open-source [**MarkLogic extension for VS Code**](https://marketplace.visualstudio.com/items?itemName=mlxprs.mlxprs) integrates MarkLogic in the cloud or on your laptop into this modern development environment.
+[Visual Studio Code](https://code.visualstudio.com), also known as VS Code, is a free, cross-platform code editor and development tool from Microsoft. [**MLXPRS**](https://marketplace.visualstudio.com/items?itemName=mlxprs.mlxprs) is a free, open-source extension for VS Code that increases the productivity of developers creating applications on MarkLogic.
 
 ## Features
 
