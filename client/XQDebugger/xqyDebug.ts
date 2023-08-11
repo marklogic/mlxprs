@@ -166,7 +166,7 @@ export class XqyDebugSession extends LoggingDebugSession {
             const lines: number[] = [...bps].map(bp => this.lineOnMl(bp.line, uri));
             xqyRequests.push(this._runtime.setBreakPointsOnMl(uri, lines)
                 .then((confirmedLines: number[]) => {
-                    console.debug(`${confirmedLines.length} breakpoints set no ${uri}: (${confirmedLines.toString()})`);
+                    return;
                 })
             );
         }
@@ -257,7 +257,6 @@ export class XqyDebugSession extends LoggingDebugSession {
 
                 this._runtime.setBreakPointsOnMl(uri, mlLineNos)
                     .then((confirmedLines: number[]) => {
-                        console.debug(`set ${confirmedLines.length} new breakpoints on ${uri}: ${confirmedLines.toString()}`);
                         confirmedLines.forEach(mlLineNo => {
                             localBreakpoints.find(bp => mlLineNo === this.lineOnMl(bp.line, uri)).verified = true;
                         });
