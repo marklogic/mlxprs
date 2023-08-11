@@ -95,7 +95,6 @@ export class XqyRuntime extends EventEmitter {
         return this.sendFreshQuery(query, 'dbg')
             .result(
                 (fulfill: Record<string, any>) => {
-                    console.debug('fulfill (dbg): ' + JSON.stringify(fulfill));
                     this._rid = fulfill[0]['value'];
                     this.setRunTimeState('launched');
                     return this._rid;
@@ -108,11 +107,7 @@ export class XqyRuntime extends EventEmitter {
     }
 
     public initialize(args: InitializeRequestArguments): void {
-        if (args.clientParams) {
-            this._clientParams = args.clientParams;
-        } else {
-            this._clientParams = args as unknown as MlClientParameters;
-        }
+        this._clientParams = args.clientParams;
         this.dbClientContext = new ClientContext(this._clientParams);
     }
 
@@ -139,7 +134,7 @@ export class XqyRuntime extends EventEmitter {
         return this.sendFreshQuery(`dbg:${call}(${this._rid})`)
             .result(
                 () => {
-                    console.debug(`called dbg:${call}(${this._rid})`);
+                    return;
                 },
                 (error: Record<string, any>[]) => {
                     console.error(`error in dbg:${call}(): ${JSON.stringify(error)}`);
@@ -185,7 +180,6 @@ export class XqyRuntime extends EventEmitter {
             return this.sendFreshQuery(q)
                 .result(
                     (fulfill: Record<string, number[]>[]) => {
-                        console.debug(`set ${fulfill[0]['value'].length} breakpoints for ${uri} on ${this._rid}`);
                         return fulfill[0]['value'];
                     },
                     (error: Error) => {
@@ -201,7 +195,7 @@ export class XqyRuntime extends EventEmitter {
         return this.sendFreshQuery(q)
             .result(
                 () => {
-                    console.debug(`removed breakpoints for ${uri} on ${this._rid}`);
+                    return;
                 },
                 (error: Error) => {
                     XqyRuntime.reportError(error, 'removeBreakPointsOnMl');
@@ -213,7 +207,7 @@ export class XqyRuntime extends EventEmitter {
         return this.sendFreshQuery(`dbg:breakpoints(${this._rid}) ! dbg:clear(${this._rid}, .)`)
             .result(
                 (fulfill: Record<string, any>[]) => {
-                    console.debug(`cleared breakpoints on ${this._rid}`);
+                    return;
                 },
                 (error: Error) => {
                     XqyRuntime.reportError(error, 'removeAllBreakPointsOnMl');
@@ -367,14 +361,12 @@ export class XqyRuntime extends EventEmitter {
 
         return this.sendFreshQuery(`dbg:stack(${this._rid})`).result(
             (fulfill: Record<string, any>) => {
-                console.debug('stack: ' + JSON.stringify(fulfill[0].value));
                 return XqyRuntime.parseStackXML(fulfill[0].value);
             },
             (error: Record<string, any>) => {
                 // combined with the 60 ms delay above, retry if the request
                 // hasn't been stopped yet
                 if (error.body.errorResponse.messageCode === 'DBG-NOTSTOPPED') {
-                    console.debug(`Request ${this._rid} not yet stopped`);
                     return this.getCurrentStack();
                 }
                 console.error('error (stack): ' + JSON.stringify(error));

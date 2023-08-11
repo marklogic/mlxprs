@@ -39,9 +39,11 @@ export class IntegrationTestHelper {
     public modulesDatabase = 'mlxprs-test-modules';
     public modulesDatabaseToken = '%%MODULES-DATABASE%%';
     readonly rootFolder = Path.join(__dirname, '../../../');
-    readonly scriptFolder = Path.join(this.rootFolder, 'client/test/integration/jsScripts');
+    readonly jsScriptFolder = Path.join(this.rootFolder, 'client/test/integration/jsScripts');
+    readonly xqyScriptFolder = Path.join(this.rootFolder, 'client/test/integration/xqyScripts');
     readonly testAppFolder = Path.join(__dirname, '../../../test-app');
-    readonly hwPath = Path.join(this.scriptFolder, 'helloWorld.sjs');
+    readonly hwPath = Path.join(this.jsScriptFolder, 'helloWorld.sjs');
+    readonly hwXqyPath = Path.join(this.xqyScriptFolder, 'factorial.xqy');
     private jsDebugExec = Path.join(this.rootFolder, 'dist/mlDebug.js');
     private xqyDebugExec = Path.join(this.rootFolder, 'dist/XQDebugger/xqyDebug.js');
     readonly showErrorPopup = sinon.stub(vscode.window, 'showErrorMessage');
@@ -71,7 +73,9 @@ export class IntegrationTestHelper {
         rejectUnauthorized: this.rejectUnauthorized
     };
     public config = null;
+    public xqyConfig = null;
     public jsDebugClient: DebugClient = null;
+    public xqyDebugClient: DebugClient = null;
 
     readonly mlClient = this.newClientWithDefaultsAndOverrides();
     readonly mlClientWithBadSsl = this.newClientWithDefaultsAndOverrides({
@@ -136,7 +140,24 @@ export class IntegrationTestHelper {
             pathToCa: this.pathToCa,
             rejectUnauthorized: this.rejectUnauthorized
         };
+        this.xqyConfig = {
+            program: this.hwXqyPath,
+            query: fs.readFileSync(this.hwXqyPath).toString(),
+            clientParams: {
+                host: this.hostname,
+                user: this.username,
+                pwd: this.password,
+                contentDb: 'mlxprs-test-test-content',
+                authType: 'DIGEST',
+                port: this.unitTestPort,
+                managePort: this.managePort,
+                ssl: this.ssl,
+                pathToCa: this.pathToCa,
+                rejectUnauthorized: this.rejectUnauthorized
+            }
+        };
         this.jsDebugClient = new DebugClient('node', this.jsDebugExec, 'node');
+        this.xqyDebugClient = new DebugClient('node', this.xqyDebugExec, 'xquery-ml', {}, true);
 
         return Promise.all([
             // Include the port parameter when using the debugger with the "Launch ??? Debug Adapter Server" launch configuration in launch.json
@@ -151,7 +172,7 @@ export class IntegrationTestHelper {
             // We have not been successful creating an XQY Debug Client for the automated integration tests.
             // However, the information below will be useful if we try again in the future.
             // this.xqyDebugClient.start(4712)
-            // this.xqyDebugClient.start()
+            this.xqyDebugClient.start()
         ]);
     }
 
@@ -175,7 +196,8 @@ export class IntegrationTestHelper {
 
         return new Promise((resolve) => {
             Promise.all([
-                globalThis.integrationTestHelper.jsDebugClient.stop()
+                globalThis.integrationTestHelper.jsDebugClient.stop(),
+                globalThis.integrationTestHelper.xqyDebugClient.stop()
             ]);
             resolve([]);
         });

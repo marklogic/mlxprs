@@ -27,7 +27,7 @@ suite('Issue 69', async () => {
 
     test('set breakpoints on two files', async () => {
         const mlClient = integrationTestHelper.mlClient;
-        const scriptFolder = integrationTestHelper.scriptFolder;
+        const jsScriptFolder = integrationTestHelper.jsScriptFolder;
         const globalConfig = integrationTestHelper.config;
 
         CP.exec(`curl --anyauth -k --user ${globalConfig.username}:${globalConfig.password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
@@ -35,7 +35,7 @@ suite('Issue 69', async () => {
         await wait(1000);
         const resp = await integrationTestHelper.getRid(mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server(this.attachServerName)).toObject()[0].requestStatuses[0].requestId');
         const rid = resp[0];
-        const root = Path.join(scriptFolder, 'MarkLogic/test');
+        const root = Path.join(jsScriptFolder, 'MarkLogic/test');
         const config = {
             rid: rid, root: root,
             username: globalConfig.username, password: globalConfig.password,

@@ -107,7 +107,7 @@ export class ClientContext {
         this.params = params;
         this.params.authType = params.authType.toUpperCase();
 
-        if (params.pathToCa !== '') {
+        if ((params.pathToCa) && (params.pathToCa !== '')) {
             try {
                 this.ca = fs.readFileSync(this.params.pathToCa, 'utf8');
             } catch (e) {
@@ -271,8 +271,8 @@ export function sendJSQuery(
 export function sendXQuery(
     dbClientContext: ClientContext,
     actualQuery: string,
-    prefix: 'xdmp' | 'dbg' = 'xdmp')
-    : ml.ResultProvider<Record<string, any>> {
+    prefix: 'xdmp' | 'dbg' = 'xdmp'
+): ml.ResultProvider<Record<string, any>> {
     const query =
         'xquery version "1.0-ml";' +
         'declare variable $actualQuery as xs:string external;' +
