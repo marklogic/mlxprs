@@ -1,0 +1,35 @@
+{
+  "template": {
+    "context": "/Citations/Citation/Article/AuthorList/Author",
+    "rows": [
+      {
+        "schemaName": "Medical"
+      }
+    ],
+
+    "vars":[
+      {
+        "name":"YYYY",
+        "val":"YYYY.xml"
+      },
+      {
+        "name":"MLXPRS_TEST_URI",
+        "val":"/citations.xml"
+      },
+      {
+        "name":"ZZZZ",
+        "val":"ZZZZ.xml"
+      }
+    ],
+    "triples":[{
+      "subject":{
+        "val":"sem:iri($prefix1||'person/'||AuthorList/Author[1]/ForeName||'_'||AuthorList/Author[1]/LastName)"},
+      "predicate":{
+        "val":"sem:iri(($prefix1||'authored'))"},
+      "object":{
+        "val":"xs:string(../../Journal/ISSN)"}
+      }
+    ]
+
+  }
+}

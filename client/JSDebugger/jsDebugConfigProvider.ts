@@ -112,10 +112,9 @@ export class JsDebugConfigurationProvider implements vscode.DebugConfigurationPr
             });
         }
         if (config.request === 'launch' && !config.database.match(/^\d+$/)) {
-            await JsDebugManager.resolveDatabasetoId(config.username, config.password, config.database, config.hostname,
-                config.ssl, ca, config.rejectUnauthorized, config.managePort)
+            await JsDebugManager.resolveDatabasetoId(config.database)
                 .then(resp => {
-                    config.database = resp.match('\r\n\r\n(.*[0-9])\r\n')[1]; //better way of parsing?
+                    config.database = resp;
                 }).catch(error => {
                     const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, `Error attempting to retrieve database id for database name, '${config.database}':`);
                     MlxprsErrorReporter.reportError(mlxprsError);
@@ -123,10 +122,9 @@ export class JsDebugConfigurationProvider implements vscode.DebugConfigurationPr
                 });
         }
         if (config.request === 'launch' && !config.modules.match(/^\d+$/)) {
-            await JsDebugManager.resolveDatabasetoId(config.username, config.password, config.modules, config.hostname,
-                config.ssl, ca, config.rejectUnauthorized, config.managePort)
+            await JsDebugManager.resolveDatabasetoId(config.modules)
                 .then(resp => {
-                    config.modules = resp.match('\r\n\r\n(.*[0-9])\r\n')[1]; //better way of parsing?
+                    config.modules = resp;
                 }).catch((error: Error) => {
                     const mlxprsError: MlxprsError = buildMlxprsErrorFromError(error, `Error attempting to retrieve database id for database name, '${config.modules}':`);
                     MlxprsErrorReporter.reportError(mlxprsError);
@@ -136,18 +134,14 @@ export class JsDebugConfigurationProvider implements vscode.DebugConfigurationPr
 
         //query for paused requests
         if (config.request === 'attach' && config.username && config.password) {
-            const resp = await JsDebugManager.getAvailableRequests(config.username, config.password, config.debugServerName,
-                config.hostname, config.ssl, ca, config.rejectUnauthorized, config.managePort);
+            const resp = await JsDebugManager.getAvailableRequests(config.debugServerName);
             const requests: string[] = JSON.parse(resp).requestIds;
             const pausedRequests = [];
             for (let i = 0; i < requests.length; i++) {
                 try {
-                    let resp = await JsDebugManager.getRequestInfo(
-                        config.username, config.password, requests[i] as string, config.debugServerName,
-                        config.hostname, config.ssl, ca, config.managePort);
-                    resp = resp.match('\r\n\r\n(.*)\r\n')[1];
-                    const requestText = JSON.parse(resp)['requestText'];
-                    const startTime = JSON.parse(resp)['startTime'];
+                    const requestInfo = await JsDebugManager.getRequestInfo(requests[i] as string, config.debugServerName);
+                    const requestText = requestInfo['requestText'];
+                    const startTime = requestInfo['startTime'];
 
                     pausedRequests.push({
                         label: requests[i],

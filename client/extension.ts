@@ -26,7 +26,9 @@ import { ConfigurationManager } from './configurationManager';
 import { EditorQueryType, EditorQueryEvaluator } from './editorQueryEvaluator';
 import { JsDebugConfigurationProvider, DebugAdapterExecutableFactory } from './JSDebugger/jsDebugConfigProvider';
 import { JsDebugManager } from './JSDebugger/jsDebugManager';
-import { ClientContext } from './marklogicClient';
+import { ClientContext, MlClientParameters, newClientParams } from './marklogicClient';
+import { MarkLogicUnitTestClient } from './marklogicUnitTestClient';
+import { MarkLogicTdeValidateClient } from './marklogicTdeValidateClient';
 import { MlxprsStatus } from './mlxprsStatus';
 import { MlxprsWebViewProvider } from './mlxprsWebViewProvider';
 import { ModuleContentProvider, pickAndShowModule } from './vscModuleContentProvider';
@@ -55,6 +57,8 @@ export function activate(context: vscode.ExtensionContext): void {
     });
 
     const editorQueryEvaluator = new EditorQueryEvaluator(context, provider);
+    const markLogicUnitTestClient = new MarkLogicUnitTestClient(context);
+    const markLogicTdeValidateClient = new MarkLogicTdeValidateClient(context);
     const sendXQuery = vscode.commands.registerTextEditorCommand(
         'extension.sendXQuery',
         (editor: vscode.TextEditor) => editorQueryEvaluator.editorQuery(EditorQueryType.XQY, editor)
@@ -71,6 +75,10 @@ export function activate(context: vscode.ExtensionContext): void {
         'extension.sendSparqlQuery',
         (editor: vscode.TextEditor) => editorQueryEvaluator.editorQuery(EditorQueryType.SPARQL, editor)
     );
+    const sendGraphQlQuery = vscode.commands.registerTextEditorCommand(
+        'extension.sendGraphQlQuery',
+        (editor: vscode.TextEditor) => editorQueryEvaluator.editorQuery(EditorQueryType.GRAPHQL, editor)
+    );
     function sendEditorRowsQuery(editor: vscode.TextEditor, rowsResponseFormat: ml.RowsResponseFormat) {
         editorQueryEvaluator.editorQuery(EditorQueryType.ROWS, editor, rowsResponseFormat);
     }
@@ -80,6 +88,31 @@ export function activate(context: vscode.ExtensionContext): void {
         'extension.sendRowsCsvQuery', (editor: vscode.TextEditor) => sendEditorRowsQuery(editor, 'csv'));
     const sendRowsXmlQuery = vscode.commands.registerTextEditorCommand(
         'extension.sendRowsXmlQuery', (editor: vscode.TextEditor) => sendEditorRowsQuery(editor, 'xml'));
+    const runTestModule = vscode.commands.registerTextEditorCommand(
+        'extension.runTestModule',
+        (editor: vscode.TextEditor) => {
+            const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
+            markLogicUnitTestClient.runTestModule(cfg, editor);
+        }
+    );
+    const validateTdeTemplate = vscode.commands.registerTextEditorCommand(
+        'extension.validateTdeTemplate',
+        (editor: vscode.TextEditor) => {
+            const clientParams: MlClientParameters = newClientParams(vscode.workspace.getConfiguration());
+            const dbClientContext: ClientContext = new ClientContext(clientParams);
+            const tdeText = editor.document.getText();
+            markLogicTdeValidateClient.validateTdeTemplate(dbClientContext, tdeText);
+        }
+    );
+    const tdeExtractNodes = vscode.commands.registerTextEditorCommand(
+        'extension.tdeExtractNodes',
+        (editor: vscode.TextEditor) => {
+            const clientParams: MlClientParameters = newClientParams(vscode.workspace.getConfiguration());
+            const dbClientContext: ClientContext = new ClientContext(clientParams);
+            const tdeText = editor.document.getText();
+            markLogicTdeValidateClient.tdeExtractNodes(dbClientContext, tdeText);
+        }
+    );
 
 
     const connectJsServer = vscode.commands.registerCommand('extension.connectJsServer', () => {
@@ -121,8 +154,10 @@ export function activate(context: vscode.ExtensionContext): void {
     });
 
     handleUnload(context, [
-        showModule, connectJsServer, disconnectJsServer, connectXqyServer, disconnectXqyServer, sendXQuery,
-        sendJSQuery, sendSqlQuery, sendSparqlQuery, sendRowsJsonQuery, sendRowsCsvQuery, sendRowsXmlQuery
+        connectJsServer, disconnectJsServer, connectXqyServer, disconnectXqyServer,
+        sendXQuery, sendJSQuery, sendSqlQuery, sendSparqlQuery, sendGraphQlQuery,
+        sendRowsJsonQuery, sendRowsCsvQuery, sendRowsXmlQuery,
+        runTestModule, validateTdeTemplate, tdeExtractNodes, showModule
     ]);
     handleUnload(context, [
         vscode.languages.registerDocumentFormattingEditProvider(
@@ -199,6 +234,8 @@ export function activate(context: vscode.ExtensionContext): void {
     const mlxprsWebViewProvider = new MlxprsWebViewProvider(context.extensionUri);
     const mlxprsWebView = vscode.window.registerWebviewViewProvider(MlxprsWebViewProvider.viewType, mlxprsWebViewProvider);
     EditorQueryEvaluator.registerMlxprsResultsViewProvider(mlxprsWebViewProvider);
+    MarkLogicUnitTestClient.registerMlxprsResultsViewProvider(mlxprsWebViewProvider);
+    MarkLogicTdeValidateClient.registerMlxprsResultsViewProvider(mlxprsWebViewProvider);
     context.subscriptions.push(mlxprsWebView);
     handleUnload(context, [mlxprsWebView]);
 }

@@ -39,6 +39,10 @@ export async function run(): Promise<void> {
     // mocha.reporter('xunit', { output: resultsFileName });
 
     mocha.options.color = true;
+    // Need to set the timeout a little high since some tests require a server restart
+    // 10s is a little arbitrary, but it works.
+    // We could set the timeout lower, but that would only save time when things are broken.
+    mocha.timeout(10000);
     mocha.rootHooks({
         beforeEach: async () => {
             await globalThis.integrationTestHelper.setupEachTest();
@@ -52,7 +56,7 @@ export async function run(): Promise<void> {
 
     return new Promise((c, e) => {
         // We can change the value below to run specific test files.
-        // glob('integration/sjsFailures.test.js', { cwd: testsRoot }, (err, files) => {
+        // glob('integration/marklogicUnitTest.test.js', { cwd: testsRoot }, (err, files) => {
         glob('integration/**.test.js', { cwd: testsRoot }, (err, files) => {
             console.debug(JSON.stringify(files));
             vscode.window.showInformationMessage(JSON.stringify(files));

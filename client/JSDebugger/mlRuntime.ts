@@ -15,11 +15,11 @@
  */
 
 import { EventEmitter } from 'events';
-import { ClientContext, MlClientParameters } from '../marklogicClient';
-import { ModuleContentGetter } from '../moduleContentGetter';
-import * as request from 'request-promise';
 import * as fs from 'fs';
-import * as querystring from 'querystring';
+import * as ml from 'marklogic';
+
+import { ClientContext, MlClientParameters, newMarklogicManageClient } from '../marklogicClient';
+import { ModuleContentGetter } from '../moduleContentGetter';
 
 const DEFAULT_MANAGE_PORT = 8002;
 
@@ -84,6 +84,7 @@ export class MLRuntime extends EventEmitter {
     private _rejectUnauthorized = true;
     private dbClientContext: ClientContext;
     private _mlModuleGetter: ModuleContentGetter;
+    private managePort = null;
 
     public getHostString(): string {
         return `${this.dbClientContext.params.host}:${this.dbClientContext.params.port}`;
@@ -119,6 +120,7 @@ export class MLRuntime extends EventEmitter {
         this._username = args.username;
         this._password = args.password;
         this._dbgPort = args.managePort;
+        this.managePort = args.managePort;
         this._ssl = args.ssl;
         this._scheme = this._ssl ? 'https' : 'http';
         this._rejectUnauthorized = args.rejectUnauthorized;
@@ -178,14 +180,17 @@ export class MLRuntime extends EventEmitter {
     }
 
     public setBreakPoint(location: MLbreakPoint): Promise<string> {
-        let body = `url=${location.url}&lno=${location.line}`;
+        const queryParameters = {
+            'url': location.url,
+            'lno': location.line
+        };
         if (location.column) {
-            body = body.concat(`&cno=${location.column}`);
+            queryParameters['cno'] = location.column;
         }
         if (location.condition) {
-            body = body.concat(`&condition=${location.condition}`);
+            queryParameters['condition'] = location.condition;
         }
-        return this._sendMLdebugRequestPOST('set-breakpoint', body);
+        return this._sendMLdebugRequestPOST('set-breakpoint', '', queryParameters);
     }
 
     public removeBreakPoint(location: MLbreakPoint): Promise<string> {
@@ -197,8 +202,7 @@ export class MLRuntime extends EventEmitter {
     }
 
     public wait(): Promise<string> {
-        const body = 'time-out=5';
-        return this._sendMLdebugRequestPOST('wait', body);
+        return this._sendMLdebugRequestPOST('wait', '', { 'time-out': 5 });
     }
 
     public evaluateOnCallFrame(expr: string, cid?: string): Promise<string> {
@@ -221,8 +225,7 @@ export class MLRuntime extends EventEmitter {
     }
 
     public terminate(): Promise<string> {
-        const data = 'server-name=TaskServer';
-        return this._sendMLdebugRequestPOST('request-cancel', data);
+        return this._sendMLdebugRequestPOST('request-cancel', '', { 'server-name': 'TaskServer' });
     }
 
     public async waitTillPaused(): Promise<string> {
@@ -244,71 +247,117 @@ export class MLRuntime extends EventEmitter {
 
     //---- helpers
 
-    private _sendMLdebugRequestPOST(module: string, body?: string): Promise<string> {
-        const url = this.buildUrl(`/${module}/${this._rid}`);
-        const options: Record<string, unknown> = {
-            headers: {
-                'Content-type': 'application/x-www-form-urlencoded',
-                'X-Error-Accept': 'application/json'
-            },
-            auth: {
-                user: this._username,
-                pass: this._password,
-                'sendImmediately': false
+    private updateRequestPathWithParameters(
+        requestPath: string, requestParametersString: string
+    ) {
+        if (requestParametersString.toString().length > 0) {
+            let initialSeparator = '?';
+            if (requestPath.includes('?')) {
+                initialSeparator = '&';
             }
-        };
-        if (body) {
-            options['body'] = body;
+            return `${requestPath}${initialSeparator}${requestParametersString.toString()}`;
+        } else {
+            return requestPath;
         }
-        if (this._ca) options['agentOptions'] = { ca: this._ca };
-        options['rejectUnauthorized'] = this._rejectUnauthorized;
-        return request.post(url, options);
     }
 
-    private _sendMLdebugRequestGET(module: string, queryString?: Record<string, unknown>): Promise<string> {
-        const url = this.buildUrl(`/${module}/${this._rid}`);
-        const options: Record<string, unknown> = {
-            headers: {
-                'X-Error-Accept': 'application/json'
-            },
-            auth: {
-                user: this._username,
-                pass: this._password,
-                'sendImmediately': false
-            }
-        };
-        if (queryString) {
-            options['qs'] = queryString;
-        }
-        if (this._ca) options['agentOptions'] = { ca: this._ca };
-        options['rejectUnauthorized'] = this._rejectUnauthorized;
-        return request.get(url, options);
+    private _sendMLdebugRequestPOST(
+        module: string, body?: string, requestParameters?: Record<string, unknown>
+    ): Promise<string> {
+        const manageClient = newMarklogicManageClient(this.dbClientContext, this.managePort);
+
+        const endpoint = `/jsdbg/v1/${module}/${this._rid}`;
+        const urlSearchParams = new global.URLSearchParams(requestParameters);
+
+        return new Promise((resolve, reject) => {
+            manageClient.databaseClient.internal.sendRequest(
+                endpoint,
+                (requestOptions: ml.RequestOptions) => {
+                    requestOptions.path =
+                        this.updateRequestPathWithParameters(requestOptions.path, urlSearchParams);
+                    requestOptions.method = 'POST';
+                    requestOptions.headers = { 'X-Error-Accept': 'application/json' };
+                },
+                (operation: ml.RequestOperation) => {
+                    operation.requestBody = body;
+                })
+                .result((result: object) => {
+                    let response = '';
+                    if (result) {
+                        response = JSON.stringify(result);
+                    }
+                    resolve(response);
+                })
+                .catch(error => {
+                    reject(error.body.errorResponse);
+                });
+        });
     }
 
-    private _sendMLdebugEvalRequest(script: string, database: string,
-        txnId: string, modules: string, root: string): Promise<string> {
-        const url = this.buildUrl('/eval');
-        const options = {
-            headers: {
-                'Content-type': 'application/x-www-form-urlencoded',
-                'X-Error-Accept': 'application/json'
-            },
-            auth: {
-                user: this._username,
-                pass: this._password,
-                'sendImmediately': false
-            },
-            body: `javascript=${querystring.escape(script)}`
-        };
-        if (this._ca) options['agentOptions'] = { ca: this._ca };
-        options['rejectUnauthorized'] = this._rejectUnauthorized;
-        const evalOptions = {
-            database: database,
-            modules: modules
-        };
+    private _sendMLdebugRequestGET(
+        module: string, requestParameters?: Record<string, unknown>
+    ): Promise<string> {
+        const manageClient = newMarklogicManageClient(this.dbClientContext, this.managePort);
+
+        const endpoint = `/jsdbg/v1/${module}/${this._rid}`;
+        const urlSearchParams = new global.URLSearchParams(requestParameters);
+
+        return new Promise((resolve, reject) => {
+            return manageClient.databaseClient.internal.sendRequest(
+                endpoint,
+                (requestOptions: ml.RequestOptions) => {
+                    requestOptions.path =
+                        this.updateRequestPathWithParameters(requestOptions.path, urlSearchParams);
+                    requestOptions.method = 'GET';
+                    requestOptions.headers = { 'X-Error-Accept': 'application/json' };
+                })
+                .result((result: object) => {
+                    resolve(JSON.stringify(result));
+                })
+                .catch(error => {
+                    reject(error.body.errorResponse);
+                });
+        });
+    }
+
+    private _sendMLdebugEvalRequest(
+        script: string, database: string, txnId: string, modules: string, root: string
+    ): Promise<string> {
+        const manageClient = newMarklogicManageClient(this.dbClientContext, this.managePort);
+
+        const evalOptions = {};
+        if (database) evalOptions['database'] = database;
+        if (modules) evalOptions['modules'] = modules;
         if (txnId) evalOptions['txnId'] = txnId;
         if (root) evalOptions['root'] = root;
-        options['qs'] = evalOptions;
-        return request.post(url, options);
+        const urlSearchParams = new global.URLSearchParams(evalOptions);
+        const endpoint = '/jsdbg/v1/eval';
+
+        return new Promise((resolve, reject) => {
+            manageClient.databaseClient.internal.sendRequest(
+                endpoint,
+                (requestOptions: ml.RequestOptions) => {
+                    requestOptions.path =
+                        this.updateRequestPathWithParameters(requestOptions.path, urlSearchParams);
+                    requestOptions.method = 'POST';
+                    requestOptions.headers = {
+                        'Content-type': 'application/x-www-form-urlencoded',
+                        'X-Error-Accept': 'application/json'
+                    };
+                },
+                (operation: ml.RequestOperation) => {
+                    operation.requestBody = `javascript=${encodeURIComponent(script)}`;
+                })
+                .result((result: object) => {
+                    let response = '';
+                    if (result) {
+                        response = JSON.stringify(result);
+                    }
+                    resolve(response);
+                })
+                .catch(error => {
+                    reject(error);
+                });
+        });
     }
 }

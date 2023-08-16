@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-import { CancellationToken, SnippetString, Uri, Webview, WebviewView, WebviewViewProvider, WebviewViewResolveContext, window } from 'vscode';
+import { XMLParser, XMLBuilder } from 'fast-xml-parser';
+import {
+    CancellationToken, SnippetString, Uri, Webview, WebviewView,
+    WebviewViewProvider, WebviewViewResolveContext, window
+} from 'vscode';
 
 export class MlxprsWebViewProvider implements WebviewViewProvider {
 
@@ -78,6 +82,25 @@ export class MlxprsWebViewProvider implements WebviewViewProvider {
         ${content}
       </body>
       </html>`;
+    }
+
+    public static convertXmlResponseToHtml(rawXml: string): string {
+        const options = {
+            ignoreAttributes: false,
+            attributeNamePrefix: '@_',
+            format: true
+        };
+        const parser = new XMLParser(options);
+        const jObj = parser.parse(rawXml);
+        const builder = new XMLBuilder(options);
+        const formattedXml = builder.build(jObj);
+
+        const lineCount = (formattedXml.match(/\n/g) || []).length + 1;
+        return `<textarea white-space: pre; rows="${lineCount}" cols="40" style="width: 100%; color: #fff;background: transparent;border:none;">` + formattedXml + '</textarea>';
+    }
+
+    public static convertTextResponseToHtml(text: string): string {
+        return '<pre>' + text + '</pre>';
     }
 
 }

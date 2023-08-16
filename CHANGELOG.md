@@ -1,25 +1,34 @@
-## [3.6.2](https://github.com/marklogic-community/mlxprs/releases/tag/v3.6.2)
+## [3.8.0](https://github.com/marklogic/mlxprs/releases/tag/v3.8.0)
+
+- Run marklogic-unit-test modules in a MarkLogic server
+- Validate TDE Templates
+- Extract Nodes from data documents using a TDE Template
+- Submit a GraphQL Query to /v1/rows/graphql
+- Various updates to the README
+
+
+## [3.7.0](https://github.com/marklogic/mlxprs/releases/tag/v3.7.0)
+
+- Submit an Optic DSL Query to /v1/rows and get back JSON
+- Submit Optic Query and get back XML or CSV
+- View "Connected" status information in bottom status line
+- Made the UX for attaching to a JS server match attaching to an XQY server, and sorted based on server name
+- Run Highlighted Code in editor windows (rather than the entire window)
+- Display "eval" results in a new tab in the bottom panel (use a setting to revert back to an editor tab)
+- Permit attaching to a remote request even if the current editor tab is not source code
+
+
+## [3.6.2](https://github.com/marklogic/mlxprs/releases/tag/v3.6.2)
 
 - Fixed the icon used in the Visual Studio Marketplace 
 
-## [3.7.0](https://github.com/marklogic-community/mlxprs/releases/tag/v3.7.0)
+## [3.6.0](https://github.com/marklogic/mlxprs/releases/tag/v3.6.0)
 
-- [#DEV-261](https://project.marklogic.com/jira/browse/DEVEXP-261) Submit an Optic DSL Query to /v1/rows and get back JSON
-- [#DEV-262](https://project.marklogic.com/jira/browse/DEVEXP-262) Submit Optic Query and get back XML or CSV
-- [#DEV-353](https://project.marklogic.com/jira/browse/DEVEXP-353) View "Connected" status information in bottom status line
-- [#DEV-350](https://project.marklogic.com/jira/browse/DEVEXP-350) Made the UX for attaching to a JS server match attaching to an XQY server, and sorted based on server name
-- [#DEV-349](https://project.marklogic.com/jira/browse/DEVEXP-349) Run Highlighted Code in editor windows (rather than the entire window)
-- [#DEV-352](https://project.marklogic.com/jira/browse/DEVEXP-352) Display "eval" results in a new tab in the bottom panel (use a setting to revert back to an editor tab)
-- [#DEV-364](https://project.marklogic.com/jira/browse/DEVEXP-364) Permit attaching to a remote request even if the current editor tab is not source code
-
-
-## [3.6.0](https://github.com/marklogic-community/mlxprs/releases/tag/v3.6.0)
-
-- [#116](https://github.com/marklogic-community/mlxprs/issues/116) Updated dependencies and fixed all known security vulnerabilities
-- [#119](https://github.com/marklogic-community/mlxprs/issues/119) Added SJS binding to JavaScript language
-- [#97](https://github.com/marklogic-community/mlxprs/issues/97) Added a configuration option for the MarkLogic Manage app server port (used for the SJS debug server port)
-- [#117](https://github.com/marklogic-community/mlxprs/issues/117) Fixed a bug with the first attempt to eval a JavaScript tab
-- [#109](https://github.com/marklogic-community/mlxprs/issues/109) Prevent the database param from being used in REST calls when the database setting is empty
+- [#116](https://github.com/marklogic/mlxprs/issues/116) Updated dependencies and fixed all known security vulnerabilities
+- [#119](https://github.com/marklogic/mlxprs/issues/119) Added SJS binding to JavaScript language
+- [#97](https://github.com/marklogic/mlxprs/issues/97) Added a configuration option for the MarkLogic Manage app server port (used for the SJS debug server port)
+- [#117](https://github.com/marklogic/mlxprs/issues/117) Fixed a bug with the first attempt to eval a JavaScript tab
+- [#109](https://github.com/marklogic/mlxprs/issues/109) Prevent the database param from being used in REST calls when the database setting is empty
 
 
 ## [3.5.1](https://github.com/mikrovvelle/mlxprs/tree/v3.5.1)

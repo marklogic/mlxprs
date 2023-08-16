@@ -37,16 +37,8 @@
 
     "vars":[
       {
-        "name":"YYYY",
-        "val":"YYYY.xml"
-      },
-      {
-        "name":"MLXPRS_TEST_URI",
-        "val":"/citations.xml"
-      },
-      {
-        "name":"ZZZZ",
-        "val":"ZZZZ.xml"
+        "name":"MLXPRS_TEST_FILE",
+        "val":"src/test/resources/localCitationsData.xml"
       }
     ]
   }

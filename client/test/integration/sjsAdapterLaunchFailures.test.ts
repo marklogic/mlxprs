@@ -47,7 +47,7 @@ suite('Testing SJS Debug failures in various scenarios, including a couple of su
             jsDebugClient.configurationSequence(),
             launchResponse = await jsDebugClient.launch(globalConfig)
         ]);
-        assert.equal(launchResponse.body.name, 'RequestError', 'The response should contain an error object with the expected name.');
+        assert.equal(launchResponse.body.code, 'EPROTO', 'The response should contain an error object with the expected name.');
     }).timeout(5000);
 
     test('Attempt to Launch Eval Debug with SSL OFF in extension, but ON in MarkLogic', async () => {
@@ -62,7 +62,7 @@ suite('Testing SJS Debug failures in various scenarios, including a couple of su
             jsDebugClient.configurationSequence(),
             launchResponse = await jsDebugClient.launch(globalConfig)
         ]);
-        assert.equal(launchResponse.body.name, 'RequestError', 'The response should contain an error object with the expected name.');
+        assert.equal(launchResponse.body.code, 'HPE_INVALID_HEADER_TOKEN', 'The response should contain an error object with the expected name.');
     }).timeout(5000);
 
     test('Attempt to Launch Eval Debug with SSL ON in extension and in MarkLogic', async () => {
@@ -91,7 +91,7 @@ suite('Testing SJS Debug failures in various scenarios, including a couple of su
             jsDebugClient.configurationSequence(),
             launchResponse = await jsDebugClient.launch(globalConfig)
         ]);
-        assert.equal(launchResponse.body.name, 'StatusCodeError', 'The response should contain an error object with the expected name.');
+        assert.equal(launchResponse.body.messageCode, 'JSDBG-REQUESTRECORD', 'The response should contain an error object with the expected name.');
     }).timeout(10000);
 
     test('Attempt to Launch Eval Debug with a bad password', async () => {
@@ -104,7 +104,7 @@ suite('Testing SJS Debug failures in various scenarios, including a couple of su
             jsDebugClient.configurationSequence(),
             launchResponse = await jsDebugClient.launch(globalConfig)
         ]);
-        assert.equal(launchResponse.body.name, 'StatusCodeError', 'The response should contain an error object with the expected name.');
+        assert.equal(launchResponse.body.statusCode, '401', 'The response should contain an error object with the expected name.');
     }).timeout(5000);
 
 });

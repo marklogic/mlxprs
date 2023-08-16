@@ -29,7 +29,7 @@ suite('Testing sjs/xqy boundary in eval/invoke', async () => {
     const integrationTestHelper: IntegrationTestHelper = globalThis.integrationTestHelper;
     test('sjs calling xdmp:invoke()', async () => {
         const globalConfig = integrationTestHelper.config;
-        globalConfig.program = Path.join(integrationTestHelper.scriptFolder, 'invoke2.sjs');
+        globalConfig.program = Path.join(integrationTestHelper.jsScriptFolder, 'invoke2.sjs');
         globalConfig.queryText = fs.readFileSync(globalConfig.program).toString();
         globalConfig.queryText = globalConfig.queryText.replace(integrationTestHelper.modulesDatabaseToken, integrationTestHelper.modulesDatabase);
 
@@ -47,7 +47,7 @@ suite('Testing sjs/xqy boundary in eval/invoke', async () => {
 
     test('sjs calling xdmp:eval()', async () => {
         const globalConfig = integrationTestHelper.config;
-        globalConfig.program = Path.join(integrationTestHelper.scriptFolder, 'eval2.sjs');
+        globalConfig.program = Path.join(integrationTestHelper.jsScriptFolder, 'eval2.sjs');
         globalConfig.queryText = fs.readFileSync(globalConfig.program).toString();
 
         const jsDebugClient = integrationTestHelper.jsDebugClient;
@@ -64,7 +64,7 @@ suite('Testing sjs/xqy boundary in eval/invoke', async () => {
 
     test('sjs importing xqy', async () => {
         const globalConfig = integrationTestHelper.config;
-        globalConfig.program = Path.join(integrationTestHelper.scriptFolder, 'eval3.sjs');
+        globalConfig.program = Path.join(integrationTestHelper.jsScriptFolder, 'eval3.sjs');
         globalConfig.queryText = fs.readFileSync(globalConfig.program).toString();
 
         const jsDebugClient = integrationTestHelper.jsDebugClient;
@@ -83,6 +83,7 @@ suite('Testing sjs/xqy boundary in eval/invoke', async () => {
     test('xqy calling xdmp.invoke()', async () => {
         const globalConfig = integrationTestHelper.config;
         await JsDebugManager.connectToNamedJsDebugServer(integrationTestHelper.attachServerName);
+        globalThis.integrationTestHelper.attachedToServer = true;
 
         CP.exec(`curl --anyauth -k --user ${globalConfig.username}:${globalConfig.password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
                 http${globalConfig.ssl ? 's' : ''}://${globalConfig.hostname}:${integrationTestHelper.serverPortForAttaching}/LATEST/invoke --data-urlencode module=/MarkLogic/test/invoke1.xqy`);
@@ -90,7 +91,7 @@ suite('Testing sjs/xqy boundary in eval/invoke', async () => {
         const serverName = integrationTestHelper.attachServerName;
         const resp = await integrationTestHelper.getRid(integrationTestHelper.mlClient, `xdmp.serverStatus(xdmp.host(),xdmp.server('${serverName}')).toObject()[0].requestStatuses[0].requestId`);
         const rid = resp[0];
-        const root = Path.join(integrationTestHelper.scriptFolder, 'MarkLogic/test');
+        const root = Path.join(integrationTestHelper.jsScriptFolder, 'MarkLogic/test');
         const config = {
             rid: rid, root: root,
             username: globalConfig.username, password: globalConfig.password,
@@ -107,7 +108,6 @@ suite('Testing sjs/xqy boundary in eval/invoke', async () => {
         await jsDebugClient.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'jsInvoke-1.sjs') }, breakpoints: [{ line: 3 }] });
         await jsDebugClient.continueRequest({ threadId: 1 });
         jsDebugClient.assertStoppedLocation('breakpoint', { path: Path.join('/MarkLogic/test', 'jsInvoke-1.sjs'), line: 3 });
-        JsDebugManager.disconnectFromNamedJsDebugServer(integrationTestHelper.attachServerName);
     }).timeout(10000).skip();
 
 });

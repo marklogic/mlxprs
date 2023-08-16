@@ -23,7 +23,7 @@ export interface MlxprsError {
 
 export function buildMlxprsErrorFromError(error: Error, popupMessageBase: string): MlxprsError {
     const mlxprsError: MlxprsError = {
-        reportedMessage: 'Unable to determine the error message',
+        reportedMessage: `${popupMessageBase}`,
         stack: 'Unable to find the stack trace in the error object',
         popupMessage: `${popupMessageBase}`
     };

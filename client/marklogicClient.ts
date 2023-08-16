@@ -18,7 +18,7 @@
 
 import * as fs from 'fs';
 import * as ml from 'marklogic';
-import * as request from 'request-promise';
+import { WorkspaceConfiguration } from 'vscode';
 
 import { MlxprsStatus } from './mlxprsStatus';
 
@@ -107,7 +107,7 @@ export class ClientContext {
         this.params = params;
         this.params.authType = params.authType.toUpperCase();
 
-        if (params.pathToCa !== '') {
+        if ((params.pathToCa) && (params.pathToCa !== '')) {
             try {
                 this.ca = fs.readFileSync(this.params.pathToCa, 'utf8');
             } catch (e) {
@@ -271,8 +271,8 @@ export function sendJSQuery(
 export function sendXQuery(
     dbClientContext: ClientContext,
     actualQuery: string,
-    prefix: 'xdmp' | 'dbg' = 'xdmp')
-    : ml.ResultProvider<Record<string, any>> {
+    prefix: 'xdmp' | 'dbg' = 'xdmp'
+): ml.ResultProvider<Record<string, any>> {
     const query =
         'xquery version "1.0-ml";' +
         'declare variable $actualQuery as xs:string external;' +
@@ -298,6 +298,10 @@ export function sendSparql(dbClientContext: ClientContext, sparqlQuery: string, 
         contentType: contentType,
         query: sparqlQuery
     });
+}
+
+export function sendGraphQl(dbClientContext: ClientContext, actualQuery: string): Promise<ml.RowsResponse> {
+    return dbClientContext.databaseClient.rows.graphQL(actualQuery);
 }
 
 
@@ -363,33 +367,71 @@ export async function filterJsServerByConnectedStatus(
 ): Promise<MlxprsQuickPickItem[]> {
     const requests = [];
     const filteredChoices: MlxprsQuickPickItem[] = [];
-    choices.forEach(async (choice) => {
-        const url = ClientContext.buildUrl(dbClientContext.params.host, `/jsdbg/v1/connected/${choice.label}`, dbClientContext.params.ssl, managePort);
-        const options = {
-            headers: {
-                'Content-type': 'application/x-www-form-urlencoded',
-                'X-Error-Accept': 'application/json'
-            },
-            auth: {
-                user: dbClientContext.params.user,
-                pass: dbClientContext.params.pwd,
-                'sendImmediately': false
-            }
-        };
-        if (dbClientContext.params.pathToCa !== '') {
-            options['agentOptions'] = { ca: fs.readFileSync(dbClientContext.params.pathToCa) };
-        }
-        options['rejectUnauthorized'] = dbClientContext.params.rejectUnauthorized;
-        const connectedRequest = request.get(url, options)
-            .then((response) => {
-                if (response === requiredResponse) {
+
+    choices.forEach((choice) => {
+        const manageClient =  newMarklogicManageClient(dbClientContext, managePort);
+        const endpoint = `/jsdbg/v1/connected/${choice.label}`;
+        const connectedRequest = manageClient.databaseClient.internal.sendRequest(
+            endpoint,
+            (requestOptions: ml.RequestOptions) => {
+                requestOptions.method = 'GET';
+            })
+            .result((response: unknown) => {
+                if ((response as string) === requiredResponse) {
                     filteredChoices.push(choice);
                 }
-            }).catch(err => {
-                console.debug(`"Connected" request failed: ${err}`);
+            })
+            .catch(error => {
+                console.debug(error.body.errorResponse);
             });
         requests.push(connectedRequest);
     });
     await Promise.all(requests);
     return filteredChoices;
+}
+
+export function requestMarkLogicUnitTest(
+    dbClientContext: ClientContext, testSuite: string, testFile: string
+): ml.ResultProvider<unknown> {
+    const endpoint = '/v1/resources/marklogic-unit-test';
+    let endpointParameters = `rs:format=xml&rs:func=run&rs:suite=${encodeURIComponent(testSuite)}`;
+    if (testFile) {
+        endpointParameters = `${endpointParameters}&rs:tests=${encodeURIComponent(testFile)}`;
+    }
+    return dbClientContext.databaseClient.internal.sendRequest(
+        endpoint,
+        (requestOptions: ml.RequestOptions) => {
+            let initialSeparator = '?';
+            if (requestOptions.path.includes('?')) {
+                initialSeparator = '&';
+            }
+            requestOptions.path = `${requestOptions.path}${initialSeparator}${endpointParameters}`;
+            requestOptions.method = 'GET';
+        }
+    );
+}
+
+export function newMarklogicManageClient(dbClientContext: ClientContext, managePort: number): ClientContext {
+    const manageClientParams: MlClientParameters = JSON.parse(JSON.stringify(dbClientContext.params));
+    manageClientParams.port = managePort;
+    manageClientParams.contentDb = null;
+    manageClientParams.modulesDb = null;
+    return new ClientContext(manageClientParams);
+}
+
+export function newClientParams(cfg: WorkspaceConfiguration, overrides: object = {}): MlClientParameters {
+    const configParams: Record<string, unknown> = {
+        host: String(cfg.get('marklogic.host')),
+        user: String(cfg.get('marklogic.username')),
+        pwd: String(cfg.get('marklogic.password')),
+        port: Number(cfg.get('marklogic.port')),
+        managePort: Number(cfg.get('marklogic.managePort')),
+        contentDb: String(cfg.get('marklogic.documentsDb')),
+        modulesDb: String(cfg.get('marklogic.modulesDb')),
+        authType: String(cfg.get('marklogic.authType')).toUpperCase(),
+        ssl: Boolean(cfg.get('marklogic.ssl')),
+        pathToCa: String(cfg.get('marklogic.pathToCa') || ''),
+        rejectUnauthorized: Boolean(cfg.get('marklogic.rejectUnauthorized'))
+    };
+    return new MlClientParameters({ ...configParams, ...overrides });
 }

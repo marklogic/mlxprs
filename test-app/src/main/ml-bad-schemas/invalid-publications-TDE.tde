@@ -1,0 +1,23 @@
+<template xmlns="http://marklogic.com/xdmp/tde">
+  <description>populates patients' data</description>
+  <context>/Citation/Article</context>
+  <rows>
+    <row>
+      <schema-name>Medical2</schema-name>
+    </row>
+  </rows>
+  <vars>
+    <var>
+      <name>YYYY</name>
+      <val>YYYY.xml</val>
+    </var>
+    <var>
+      <name>MLXPRS_TEST_URI</name>
+      <val>/citations.xml</val>
+    </var>
+    <var>
+      <name>ZZZZ</name>
+      <val>ZZZZ.xml</val>
+    </var>
+  </vars>
+</template>

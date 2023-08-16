@@ -15,12 +15,14 @@
  */
 
 import * as fs from 'fs';
+import * as ml from 'marklogic';
 import * as Path from 'path';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { DebugClient } from '@vscode/debugadapter-testsupport';
 
-import { ClientContext, MlClientParameters, sendJSQuery } from '../../marklogicClient';
+import { JsDebugManager } from '../../JSDebugger/jsDebugManager';
+import { ClientContext, MlClientParameters, newMarklogicManageClient, sendJSQuery } from '../../marklogicClient';
 
 export class IntegrationTestHelper {
 
@@ -30,20 +32,26 @@ export class IntegrationTestHelper {
     public serverSslPort = '8057';
     public appServerName = String(process.env.ML_APPSERVER || 'mlxprs-test');
     public attachServerName = String(process.env.ML_ATTACH_APPSERVER || 'mlxprsSample');
+    public attachedToServer = false;
+    public restartServer = false;
     public attachSslServerName = String(process.env.ML_ATTACH_SSL_APPSERVER || 'mlxprs-ssl-test');
     public documentsDatabase = 'mlxprs-test-content';
     public modulesDatabase = 'mlxprs-test-modules';
     public modulesDatabaseToken = '%%MODULES-DATABASE%%';
-    private rootFolder = Path.join(__dirname, '../../../');
-    readonly scriptFolder = Path.join(this.rootFolder, 'client/test/integration/jsScripts');
-    readonly hwPath = Path.join(this.scriptFolder, 'helloWorld.sjs');
+    readonly rootFolder = Path.join(__dirname, '../../../');
+    readonly jsScriptFolder = Path.join(this.rootFolder, 'client/test/integration/jsScripts');
+    readonly xqyScriptFolder = Path.join(this.rootFolder, 'client/test/integration/xqyScripts');
+    readonly testAppFolder = Path.join(__dirname, '../../../test-app');
+    readonly hwPath = Path.join(this.jsScriptFolder, 'helloWorld.sjs');
+    readonly hwXqyPath = Path.join(this.xqyScriptFolder, 'factorial.xqy');
     private jsDebugExec = Path.join(this.rootFolder, 'dist/mlDebug.js');
     private xqyDebugExec = Path.join(this.rootFolder, 'dist/XQDebugger/xqyDebug.js');
     readonly showErrorPopup = sinon.stub(vscode.window, 'showErrorMessage');
 
     private hostname = String(process.env.ML_HOST || 'localhost');
     private port = Number(process.env.ML_PORT || this.configuredServerPort);
-    private managePort = Number(process.env.ML_MANAGEPORT || '8002');
+    readonly managePort = Number(process.env.ML_MANAGEPORT || '8002');
+    readonly unitTestPort = Number(process.env.ML_UNITTESTPORT || '8054');
     private username = String(process.env.ML_USERNAME || 'admin');
     private password = String(process.env.ML_PASSWORD || 'admin');
     private modulesDB = String(process.env.ML_MODULESDB || this.modulesDatabase);
@@ -51,68 +59,52 @@ export class IntegrationTestHelper {
     private ssl = false;
     private rejectUnauthorized = false;
 
+    private clientDefaults = {
+        host: this.hostname,
+        port: this.port,
+        managePort: this.managePort,
+        user: this.username,
+        pwd: this.password,
+        authType: 'DIGEST',
+        contentDb: this.documentsDatabase,
+        modulesDb: this.modulesDB,
+        pathToCa: this.pathToCa,
+        ssl: this.ssl,
+        rejectUnauthorized: this.rejectUnauthorized
+    };
     public config = null;
+    public xqyConfig = null;
     public jsDebugClient: DebugClient = null;
-    readonly mlClient = new ClientContext(
-        new MlClientParameters({
-            host: this.hostname,
-            port: this.port,
-            managePort: this.managePort,
-            user: this.username,
-            pwd: this.password,
-            authType: 'DIGEST',
-            contentDb: this.modulesDB,
-            modulesDb: this.modulesDB,
-            pathToCa: this.pathToCa,
-            ssl: this.ssl,
-            rejectUnauthorized: this.rejectUnauthorized
-        })
-    );
-    readonly mlClientWithBadSsl = new ClientContext(
-        new MlClientParameters({
-            host: this.hostname,
-            port: this.port,
-            managePort: this.managePort,
-            user: this.username,
-            pwd: this.password,
-            authType: 'DIGEST',
-            contentDb: this.modulesDB,
-            modulesDb: this.modulesDB,
-            pathToCa: this.pathToCa,
-            ssl: true,
-            rejectUnauthorized: this.rejectUnauthorized
-        })
-    );
-    readonly mlClientWithSslWithRejectUnauthorized = new ClientContext(
-        new MlClientParameters({
-            host: this.hostname,
-            port: this.serverSslPort,
-            managePort: this.managePort,
-            user: this.username,
-            pwd: this.password,
-            authType: 'DIGEST',
-            contentDb: this.modulesDB,
-            modulesDb: this.modulesDB,
-            pathToCa: this.pathToCa,
-            ssl: true,
-            rejectUnauthorized: true
-        })
-    );
-    readonly mlClientWithBadPort = new ClientContext(
-        new MlClientParameters({
-            host: this.hostname,
-            port: 9999,
-            managePort: this.managePort,
-            user: this.username,
-            pwd: this.password,
-            authType: 'DIGEST',
-            contentDb: this.modulesDB,
-            modulesDb: this.modulesDB,
-            pathToCa: this.pathToCa,
-            ssl: this.ssl,
-            rejectUnauthorized: this.rejectUnauthorized
-        })
-    );
+    public xqyDebugClient: DebugClient = null;
+
+    readonly mlClient = this.newClientWithDefaultsAndOverrides();
+    readonly mlClientWithBadSsl = this.newClientWithDefaultsAndOverrides({
+        ssl: true
+    });
+    readonly mlClientWithSslWithRejectUnauthorized = this.newClientWithDefaultsAndOverrides({
+        port: this.serverSslPort,
+        ssl: true,
+        rejectUnauthorized: true
+    });
+    readonly mlClientWithBadPort = this.newClientWithDefaultsAndOverrides({
+        port: 9999
+    });
+
+    // Need to only define the parameters here, and the client in the test
+    // Due to the internal global variables in the internal.js file
+    readonly mlUnitTestClientParameters = new MlClientParameters({
+        host: this.hostname,
+        port: this.unitTestPort,
+        managePort: 8002,
+        user: this.username,
+        pwd: this.password,
+        authType: 'DIGEST',
+        contentDb: 'mlxprs-test-test-content',
+        modulesDb: null,
+        pathToCa: this.pathToCa,
+        ssl: false,
+        rejectUnauthorized: true
+    });
 
     private module1 = Path.join(this.rootFolder, 'client/test/integration/jsScripts/MarkLogic/test/test.sjs');
     private module2 = Path.join(this.rootFolder, 'client/test/integration/jsScripts/MarkLogic/test/lib1.sjs');
@@ -148,7 +140,24 @@ export class IntegrationTestHelper {
             pathToCa: this.pathToCa,
             rejectUnauthorized: this.rejectUnauthorized
         };
+        this.xqyConfig = {
+            program: this.hwXqyPath,
+            query: fs.readFileSync(this.hwXqyPath).toString(),
+            clientParams: {
+                host: this.hostname,
+                user: this.username,
+                pwd: this.password,
+                contentDb: 'mlxprs-test-test-content',
+                authType: 'DIGEST',
+                port: this.unitTestPort,
+                managePort: this.managePort,
+                ssl: this.ssl,
+                pathToCa: this.pathToCa,
+                rejectUnauthorized: this.rejectUnauthorized
+            }
+        };
         this.jsDebugClient = new DebugClient('node', this.jsDebugExec, 'node');
+        this.xqyDebugClient = new DebugClient('node', this.xqyDebugExec, 'xquery-ml', {}, true);
 
         return Promise.all([
             // Include the port parameter when using the debugger with the "Launch ??? Debug Adapter Server" launch configuration in launch.json
@@ -163,14 +172,35 @@ export class IntegrationTestHelper {
             // We have not been successful creating an XQY Debug Client for the automated integration tests.
             // However, the information below will be useful if we try again in the future.
             // this.xqyDebugClient.start(4712)
-            // this.xqyDebugClient.start()
+            this.xqyDebugClient.start()
         ]);
     }
 
     async teardownEachTest(): Promise<void[]> {
-        return Promise.all([
-            this.jsDebugClient.stop()
-        ]);
+        if (globalThis.integrationTestHelper.attachedToServer) {
+            await JsDebugManager.disconnectFromNamedJsDebugServer(globalThis.integrationTestHelper.attachServerName);
+            globalThis.integrationTestHelper.attachedToServer = false;
+        }
+        // Some tests can leave the MarkLogic server in a state that causes future tests to fail.
+        // The only reliable method for resolving this state is to restart the MarkLogic server.
+        if (globalThis.integrationTestHelper.restartServer) {
+            await this.restartMarkLogic();
+            globalThis.integrationTestHelper.restartServer = false;
+            await wait(500);
+            let markLogicIsRunning = false;
+            while (!markLogicIsRunning) {
+                await wait(500);
+                markLogicIsRunning = await this.isMarkLogicRunning();
+            }
+        }
+
+        return new Promise((resolve) => {
+            Promise.all([
+                globalThis.integrationTestHelper.jsDebugClient.stop(),
+                globalThis.integrationTestHelper.xqyDebugClient.stop()
+            ]);
+            resolve([]);
+        });
     }
 
     private async loadTestData(): Promise<void> {
@@ -236,48 +266,55 @@ export class IntegrationTestHelper {
                 });
     }
 
-    async getRequestStatuses(dbClientContext: ClientContext, qry: string): Promise<{ requestId: string }[][]> {
-        const newParams: MlClientParameters = JSON.parse(JSON.stringify(dbClientContext.params));
-        newParams.port = this.managePort;
-        const newClient = new ClientContext(newParams);
-        return sendJSQuery(newClient, qry)
-            .result(
-                (fulfill) => {
-                    return fulfill.map(o => {
-                        return o.value;
-                    });
-                },
-                (err) => {
-                    throw err;
-                });
-    }
+    private async restartMarkLogic(): Promise<string> {
+        const manageClient = newMarklogicManageClient(this.mlClient, this.managePort);
 
-    async cancelRequest(dbClientContext: ClientContext, qry: string): Promise<unknown> {
-        const newParams: MlClientParameters = JSON.parse(JSON.stringify(dbClientContext.params));
-        newParams.port = this.managePort;
-        const newClient = new ClientContext(newParams);
-        return sendJSQuery(newClient, qry)
-            .result(
-                () => {
-                    return null;
+        return new Promise((resolve, reject) => {
+            manageClient.databaseClient.internal.sendRequest(
+                '/manage/v2',
+                (requestOptions: ml.RequestOptions) => {
+                    requestOptions.method = 'POST';
+                    requestOptions.headers = {
+                        'Content-type': 'application/json'
+                    };
                 },
-                (err) => {
-                    throw err;
+                (operation: ml.RequestOperation) => {
+                    operation.requestBody = '{"operation": "restart-local-cluster"}';
+                })
+                .result((result: string) => {
+                    resolve(result);
+                })
+                .catch((error) => {
+                    if (error.statusCode === 202) {
+                        resolve('202');
+                    } else {
+                        reject(error);
+                    }
                 });
-    }
-
-    async cancelAllRequests(): Promise<void> {
-        const existingRequestStatuses: { requestId: string }[][] = await this.getRequestStatuses(this.mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server(this.appServerName)).toObject()[0].requestStatuses.toObject()');
-        await existingRequestStatuses[0].forEach(async (requestStatus) => {
-            const requestId = requestStatus.requestId;
-            const cancelRequestCommand = `declareUpdate(); xdmp.requestCancel(xdmp.host(),xdmp.server(this.appServerName), \`${requestId}\`)`;
-            await this.cancelRequest(this.mlClient, cancelRequestCommand);
         });
     }
 
-    async runningRequestsExist(): Promise<boolean> {
-        const existingRequestStatuses: { requestId: string }[][] = await this.getRequestStatuses(this.mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server(this.appServerName)).toObject()[0].requestStatuses.toObject()');
-        return (existingRequestStatuses[0].length > 0);
+    private async isMarkLogicRunning(): Promise<boolean> {
+        const manageClient = newMarklogicManageClient(this.mlClient, this.managePort);
+
+        return new Promise((resolve) => {
+            manageClient.databaseClient.internal.sendRequest(
+                '/admin/v1/timestamp',
+                (requestOptions: ml.RequestOptions) => {
+                    requestOptions.method = 'GET';
+                })
+                .result(() => {
+                    resolve(true);
+                })
+                .catch(() => {
+                    resolve(false);
+                });
+        });
+    }
+
+    private newClientWithDefaultsAndOverrides(overrides: object = {}): ClientContext {
+        const newParams = new MlClientParameters({ ...this.clientDefaults, ...overrides });
+        return new ClientContext(newParams);
     }
 
 }

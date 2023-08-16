@@ -1,0 +1,1 @@
+{"query": "query Authors { Medical_Authors { ID LastName } }"}
