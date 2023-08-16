@@ -1,3 +1,12 @@
+## [3.8.0](https://github.com/marklogic/mlxprs/releases/tag/v3.8.0)
+
+- Run marklogic-unit-test modules in a MarkLogic server
+- Validate TDE Templates
+- Extract Nodes from data documents using a TDE Template
+- Submit a GraphQL Query to /v1/rows/graphql
+- Various updates to the README
+
+
 ## [3.7.0](https://github.com/marklogic/mlxprs/releases/tag/v3.7.0)
 
 - Submit an Optic DSL Query to /v1/rows and get back JSON
