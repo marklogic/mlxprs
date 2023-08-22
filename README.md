@@ -12,7 +12,7 @@ _Develop, run, and debug code for MarkLogic in the popular VS Code IDE_
 
 * Syntax highlighting and IntelliSense for MarkLogic Server-Side JavaScript and XQuery
 * Interactive debugging of JavaScript and XQuery running in MarkLogic, including attaching to in-flight requests and inspecting live variables
-* Real-time query evaluation of JavaScript, XQuery, SQL, SPARQL, and Optic against a MarkLogic instance
+* Real-time query evaluation of JavaScript, XQuery, SQL, SPARQL, Optic, and GraphQL against a MarkLogic instance
 * View modules (read-only) in the editor
 * Run [marklogic-unit-test module](https://github.com/marklogic-community/marklogic-unit-test)
 * Validate TDE templates and test the templates with node extraction
