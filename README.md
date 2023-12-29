@@ -361,6 +361,12 @@ Evaluating variables in module scope may throw reference error. Possible workaro
 - use the variables of interest inside a function, and inspect
 - place an `eval()` statement inside the affected module
 
+While debugging an MJS file, variables and watch expressions do not work work as expected.
+
+[Resource Services](https://docs.marklogic.com/guide/rest-dev/extensions#id_59188) do not pause as expected and therefore cannot currently be debugged.
+
+If you encounter any issue with the debugger that is not addressed above, please [open a ticket](https://github.com/marklogic/mlxprs/issues) with steps for reproducing the issue.
+
 ### Error Reporting
 
 While every effort is made to catch and handle error conditions, unexpected errors do occur from time to time and must be handled by VS Code internally. Those errors are sometimes reported only in the debug console and that tab is not automatically given focus in the UI. This means that it can be easy to miss that an error has occurred. Therefore, if a feature does not seem to be working properly but no error popup is shown, then check the debug console for errors.
