@@ -27,35 +27,35 @@ suite('Testing TDE Template Validation functionality', async () => {
     const markLogicTdeValidateClient = new MarkLogicTdeValidateClient(null);
 
     test('When a valid JSON TDE Template is validated', async () => {
-        const validationResult = await validateFile('test-app/src/main/ml-schemas/authors-TDE.tdej');
+        const validationResult = await validateFile('test-app/src/main/ml-schemas/authors-TDE.json');
         assert.equal(validationResult['valid'], true, 'Then the validation result should true');
     }).timeout(5000);
 
     test('When a valid XML TDE Template is validated', async () => {
-        const validationResult = await validateFile('test-app/src/main/ml-schemas/publications-TDE.tde');
+        const validationResult = await validateFile('test-app/src/main/ml-schemas/publications-TDE.xml');
         assert.equal(validationResult['valid'], true, 'Then the validation result should true');
     }).timeout(5000);
 
     test('When an invalid JSON TDE Template is validated', async () => {
-        const validationResult = await validateFile('test-app/src/main/ml-bad-schemas/invalid-authors-TDE.tdej');
+        const validationResult = await validateFile('test-app/src/main/ml-bad-schemas/invalid-authors-TDE.json');
         assert.equal(validationResult['valid'], false, 'Then the validation result should false');
         assert.equal(validationResult['error'], 'TDE-INVALIDTEMPLATENODE', 'Then the validation error should match the expected error');
     }).timeout(5000);
 
     test('When an invalid XML TDE Template is validated', async () => {
-        const validationResult = await validateFile('test-app/src/main/ml-bad-schemas/invalid-publications-TDE.tde');
+        const validationResult = await validateFile('test-app/src/main/ml-bad-schemas/invalid-publications-TDE.xml');
         assert.equal(validationResult['valid'], false, 'Then the validation result should false');
         assert.equal(validationResult['error'], 'TDE-INVALIDTEMPLATENODE', 'Then the validation error should match the expected error');
     }).timeout(5000);
 
     test('When an unparsable JSON TDE Template is validated', async () => {
-        const validationResult = await validateFile('test-app/src/main/ml-bad-schemas/invalid-json-TDE.tdej');
+        const validationResult = await validateFile('test-app/src/main/ml-bad-schemas/invalid-json-TDE.json');
         assert.equal(validationResult, 'To be validated, the template must be either valid JSON or XML.',
             'Then the validation result should be an error message');
     }).timeout(5000);
 
     test('When an unparsable XML TDE Template is validated', async () => {
-        const validationResult = await validateFile('test-app/src/main/ml-bad-schemas/invalid-xml-TDE.tde');
+        const validationResult = await validateFile('test-app/src/main/ml-bad-schemas/invalid-xml-TDE.xml');
         assert.equal(validationResult, 'To be validated, the template must be either valid JSON or XML.',
             'Then the validation result should be an error message');
     }).timeout(5000);
@@ -74,64 +74,64 @@ suite('Testing TDE Template Node Extraction functionality', async () => {
     const testAppDir = integrationTestHelper.testAppFolder;
 
     test('When a valid JSON TDE is used for Node Extraction', async () => {
-        const validationResult = await extractNodes('test-app/src/main/ml-schemas/authors-TDE.tdej');
+        const validationResult = await extractNodes('test-app/src/main/ml-schemas/authors-TDE.json');
         assert.equal(validationResult['/citations.xml'].length, 15, 'Then the number of resulting nodes should match');
         assert.equal(validationResult['/extraCitations.xml'], null, 'Then there should not be an "/extraCitations.xml" property');
     }).timeout(5000);
 
     test('When a valid XML TDE Template is used for Node Extraction', async () => {
-        const validationResult = await extractNodes('test-app/src/main/ml-schemas/publications-TDE.tde');
+        const validationResult = await extractNodes('test-app/src/main/ml-schemas/publications-TDE.xml');
         assert.equal(validationResult['/citations.xml'].length, 5, 'Then the number of resulting nodes should match');
         assert.equal(validationResult['/extraCitations.xml'], null, 'Then there should not be an "/extraCitations.xml" property');
     }).timeout(5000);
 
     test('When an invalid JSON TDE Template is used for Node Extraction', async () => {
-        const validationResult = await extractNodes('test-app/src/main/ml-bad-schemas/invalid-authors-TDE.tdej') as string;
+        const validationResult = await extractNodes('test-app/src/main/ml-bad-schemas/invalid-authors-TDE.json') as string;
         assert.equal(
             validationResult.startsWith('Unable to extract nodes using the template: TDE-INVALIDTEMPLATENODE:'), true,
             'Then the validation result should false');
     }).timeout(5000);
 
     test('When an invalid XML TDE Template is used for Node Extraction', async () => {
-        const validationResult = await extractNodes('test-app/src/main/ml-bad-schemas/invalid-publications-TDE.tde') as string;
+        const validationResult = await extractNodes('test-app/src/main/ml-bad-schemas/invalid-publications-TDE.xml') as string;
         assert.equal(
             validationResult.startsWith('Unable to extract nodes using the template: TDE-INVALIDTEMPLATENODE:'), true,
             'Then the validation result should false');
     }).timeout(5000);
 
     test('When an unparsable JSON TDE Template is used for Node Extraction', async () => {
-        const validationResult = await extractNodes('test-app/src/main/ml-bad-schemas/invalid-json-TDE.tdej');
+        const validationResult = await extractNodes('test-app/src/main/ml-bad-schemas/invalid-json-TDE.json');
         assert.equal(validationResult, 'To perform node extraction, the template must be either valid JSON or XML.',
             'Then the validation result should be an error message');
     }).timeout(5000);
 
     test('When an unparsable XML TDE Template is used for Node Extraction', async () => {
-        const validationResult = await extractNodes('test-app/src/main/ml-bad-schemas/invalid-xml-TDE.tde');
+        const validationResult = await extractNodes('test-app/src/main/ml-bad-schemas/invalid-xml-TDE.xml');
         assert.equal(validationResult, 'To perform node extraction, the template must be either valid JSON or XML.',
             'Then the validation result should be an error message');
     }).timeout(5000);
 
     test('When a JSON TDE Template without the MLXPRS_TEST_URI var is used for Node Extraction', async () => {
-        const validationResult = await extractNodes('test-app/src/main/ml-schemas/no-var-authors-TDE.tdej');
+        const validationResult = await extractNodes('test-app/src/main/ml-schemas/no-var-authors-TDE.json');
         assert.equal(validationResult,
             'To perform node extraction, the template must include a "var" entry with the name property "MLXPRS_TEST_URI" or "MLXPRS_TEST_FILE", and a val property with the URI of the target document.',
             'Then the validation result should be an error message');
     }).timeout(5000);
 
     test('When a XML TDE Template without the MLXPRS_TEST_URI var is used for Node Extraction', async () => {
-        const validationResult = await extractNodes('test-app/src/main/ml-schemas/no-var-publications-TDE.tde');
+        const validationResult = await extractNodes('test-app/src/main/ml-schemas/no-var-publications-TDE.xml');
         assert.equal(validationResult,
             'To perform node extraction, the template must include a "var" entry with the name property "MLXPRS_TEST_URI" or "MLXPRS_TEST_FILE", and a val property with the URI of the target document.',
             'Then the validation result should be an error message');
     }).timeout(5000);
 
     test('When a valid JSON TDE is used for Node Extraction from a local data file', async () => {
-        const validationResult = await extractNodes('test-app/src/main/ml-schemas/authors-local-data-TDE.tdej', testAppDir);
+        const validationResult = await extractNodes('test-app/src/main/ml-schemas/authors-local-data-TDE.json', testAppDir);
         assert.equal(validationResult['document1'].length, 3, 'Then the number of resulting nodes should match');
     }).timeout(5000);
 
     test('When a valid XML TDE Template is used for Node Extraction from a local data file', async () => {
-        const validationResult = await extractNodes('test-app/src/main/ml-schemas/publications-local-data-TDE.tde', testAppDir);
+        const validationResult = await extractNodes('test-app/src/main/ml-schemas/publications-local-data-TDE.xml', testAppDir);
         assert.equal(validationResult['document1'].length, 2, 'Then the number of resulting nodes should match');
     }).timeout(5000);
 
