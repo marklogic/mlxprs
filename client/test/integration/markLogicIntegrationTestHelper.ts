@@ -89,6 +89,9 @@ export class IntegrationTestHelper {
     readonly mlClientWithBadPort = this.newClientWithDefaultsAndOverrides({
         port: 9999
     });
+    readonly mlModulesClient = this.newClientWithDefaultsAndOverrides({
+        contentDb: 'mlxprs-test-modules'
+    });
 
     // Need to only define the parameters here, and the client in the test
     // Due to the internal global variables in the internal.js file
@@ -221,7 +224,7 @@ export class IntegrationTestHelper {
                     textNode.addText(\`${module}\`);
                     const options = {collections: '${this.collection}'};
                     xdmp.documentInsert("Apps/MarkLogic/test/${fname}", textNode.toNode(), options);`;
-            requests.push(sendJSQuery(this.mlClient, qry));
+            requests.push(sendJSQuery(this.mlModulesClient, qry));
         });
         try {
             try {
