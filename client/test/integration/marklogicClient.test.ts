@@ -65,7 +65,7 @@ suite('Testing various MarkLogic calls', async () => {
             'If no requests have been started, then the number of available requests should be 0');
 
         CP.exec(`curl --anyauth -k --user ${globalConfig.username}:${globalConfig.password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
-                    http${globalConfig.ssl ? 's' : ''}://${globalConfig.hostname}:${integrationTestHelper.serverPortForAttaching}/LATEST/invoke --data-urlencode module=/MarkLogic/test/test.sjs`);
+                    http${globalConfig.ssl ? 's' : ''}://${globalConfig.hostname}:${integrationTestHelper.serverPortForAttaching}/LATEST/invoke --data-urlencode module=/javascript/testSjs.sjs`);
         await wait(2000);
 
         availableRequestsString = await JsDebugManager.getAvailableRequests(attachServerName);

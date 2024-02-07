@@ -123,7 +123,7 @@ cts.doc(cts.uris().toArray()[12 + 19])
         // Verify third client is same as second client since their params are the same
         const thirdClient = getDbClient(queryWithDocumentsDbOverride, SJS, config, gstate);
         assert.strictEqual(thirdClient.params, secondClient.params);
-        // assert.notStrictEqual(thirdClient.params.host, newHost);
+        assert.notStrictEqual(thirdClient.params.host, newHost);
     });
 
     test('override parser should recognize config overrides', () => {
