@@ -3,7 +3,7 @@ layout: default
 title: Development Support
 nav_order: 3
 has_children: true
-permalink: /documents
+permalink: /docs/development-support
 ---
 
 Development Support
