@@ -6,7 +6,7 @@ parent: Debugging Support
 ---
 
 
-### Attach - Attach & step through remote requests
+## Attach - Attach & step through remote requests
 
 Here's an example of _attach_ configurations for JavaScript and XQuery:
 
@@ -46,9 +46,9 @@ In attach mode for JavaScript, `debugServerName` is a required parameter in the 
 
 
 
-### Notes
+## Notes
 
-#### Debugger module mapping
+### Debugger module mapping
 
 In order to step through modules that get imported in your code, you need to tell the debugger where to find the modules root in your local project. This is the `path` parameter (for JavaScript) and `root` (for XQuery). These parameters are required.
 
@@ -57,7 +57,11 @@ In order to step into the built-in MarkLogic modules, create a soft link in the 
 ln -s <path-to-marklogic-install>/Modules/MarkLogic .
 ```
 
-#### Debugging Limitations
+### JavaScript Import/Require paths
+
+The JavaScript debugger does not reliably follow relative paths in import/require statements. This is because relative paths are an anti-pattern with MarkLogic since modules are stored with absolute paths as URIs. We recommend using absolute paths for greater code clarity. 
+
+### Debugging Limitations
 
 In XQuery attach-mode debugging, you should not 'connect' to the same server you use for queries. Since connecting stops all requests on that App Server, you'd lock yourself out. For this reason, the extension will not offer to connect to your configured query client's port. Admin, Manage, HealthCheck, and App-Services are also excluded from debugging.
 
@@ -84,6 +88,6 @@ While debugging an MJS file, variables and watch expressions do not work work as
 
 If you encounter any issue with the debugger that is not addressed above, please [open a ticket](https://github.com/marklogic/mlxprs/issues) with steps for reproducing the issue.
 
-#### Error Reporting
+### Error Reporting
 
 While every effort is made to catch and handle error conditions, unexpected errors do occur from time to time and must be handled by VS Code internally. Those errors are sometimes reported only in the debug console and that tab is not automatically given focus in the UI. This means that it can be easy to miss that an error has occurred. Therefore, if a feature does not seem to be working properly but no error popup is shown, then check the debug console for errors.
