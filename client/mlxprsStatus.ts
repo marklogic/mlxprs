@@ -29,7 +29,7 @@ export class MlxprsStatus {
 
     constructor(context: vscode.ExtensionContext) {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        this.managePort = Number(cfg.get('marklogic.managePort'));
+        this.managePort = Number(cfg.get('marklogic.managePort')) || ClientContext.DEFAULT_MANAGE_PORT;
         this.dbClientContext = getDbClientWithoutOverrides(cfg, context.globalState);
         this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
         this.command = vscode.commands.registerCommand(this.commandId, () => {

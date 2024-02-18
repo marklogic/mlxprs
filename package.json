@@ -43,9 +43,30 @@
                     "title": "MLXPRS",
                     "icon": "images/ProgressMarkLogic_PrimaryLogo_StackedAlternate.png"
                 }
+            ],
+            "activitybar": [
+                {
+                    "id": "marklogic-activity-bar",
+                    "title": "MarkLogic Server Explorer",
+                    "icon": "media/Progress_PrimarySymbol.svg"
+                }
             ]
         },
         "views": {
+            "marklogic-activity-bar": [
+                {
+                    "id": "markLogicServerStatus",
+                    "name": "MarkLogic Server Configuration",
+                    "icon": "media/Progress_PrimarySymbol.svg",
+                    "contextualTitle": "MarkLogic Server Explorer"
+                },
+                {
+                    "id": "markLogicDebugStatus",
+                    "name": "MarkLogic App Server Debug Status",
+                    "icon": "media/Progress_PrimarySymbol.svg",
+                    "contextualTitle": "MarkLogic App Server Debug Status"
+                }
+            ],
             "mlxprsContainer": [
                 {
                     "type": "webview",
@@ -337,32 +358,38 @@
                         "default": 8002,
                         "description": "MarkLogic Manage AppServer port"
                     },
-                    "marklogic.port": {
+                    "marklogic.adminPort": {
                         "order": 3,
+                        "type": "integer",
+                        "default": 8001,
+                        "description": "MarkLogic Admin AppServer port"
+                    },
+                    "marklogic.port": {
+                        "order": 4,
                         "type": "integer",
                         "default": 8000,
                         "description": "The port of a REST API app server to connect to"
                     },
                     "marklogic.testPort": {
-                        "order": 4,
+                        "order": 5,
                         "type": "integer",
                         "default": 8004,
                         "description": "Optional port for a REST API server that supports running marklogic-unit-test modules"
                     },
                     "marklogic.documentsDb": {
-                        "order": 5,
+                        "order": 6,
                         "type": "string",
                         "default": "",
                         "description": "database against which to evaluate queries; required for debugging a local script"
                     },
                     "marklogic.modulesDb": {
-                        "order": 6,
+                        "order": 7,
                         "type": "string",
                         "default": "",
                         "description": "modules database used in queries; default modules database for app server will be used if left unspecified"
                     },
                     "marklogic.modulesRoot": {
-                        "order": 7,
+                        "order": 8,
                         "type": "string",
                         "default": "/",
                         "description": "modules root if using filesystem"

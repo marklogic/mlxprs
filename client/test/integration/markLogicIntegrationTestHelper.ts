@@ -50,7 +50,7 @@ export class IntegrationTestHelper {
 
     private hostname = String(process.env.ML_HOST || 'localhost');
     private port = Number(process.env.ML_PORT || this.configuredServerPort);
-    readonly managePort = Number(process.env.ML_MANAGEPORT || '8002');
+    readonly managePort = Number(process.env.ML_MANAGEPORT) || ClientContext.DEFAULT_MANAGE_PORT;
     readonly unitTestPort = Number(process.env.ML_UNITTESTPORT || '8054');
     private username = String(process.env.ML_USERNAME || 'admin');
     private password = String(process.env.ML_PASSWORD || 'admin');
@@ -98,7 +98,7 @@ export class IntegrationTestHelper {
     readonly mlUnitTestClientParameters = new MlClientParameters({
         host: this.hostname,
         port: this.unitTestPort,
-        managePort: 8002,
+        managePort: ClientContext.DEFAULT_MANAGE_PORT,
         user: this.username,
         pwd: this.password,
         authType: 'DIGEST',

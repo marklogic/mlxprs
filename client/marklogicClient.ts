@@ -33,12 +33,40 @@ export interface ServerQueryResponse {
     port?: number;
 }
 
+export interface ResourceResponse {
+    config: ResourceConfig[];
+}
+
+export interface PropertiesResponse {
+    config: PropertiesConfig[];
+}
+
+interface ResourceConfig {
+    database: Resource[];
+    server: Resource[];
+}
+
+interface Resource {
+    name: string;
+    id: number;
+}
+
+interface PropertiesConfig {
+    server: AppServerProperties[];
+}
+
+interface AppServerProperties {
+    'server-name': string;
+    port: number;
+}
+
 export class MlClientParameters {
     contentDb: string;
     modulesDb: string;
-
     host: string;
     port: number;
+    managePort: number;
+    adminPort: number;
     user: string;
     pwd: string;
     authType: string;
@@ -53,6 +81,8 @@ export class MlClientParameters {
     constructor(rawParams: Record<string, any>) {
         this.host = rawParams.host;
         this.port = Number(rawParams.port);
+        this.managePort = Number(rawParams.managePort) || ClientContext.DEFAULT_MANAGE_PORT;
+        this.adminPort = Number(rawParams.adminPort) || ClientContext.DEFAULT_ADMIN_PORT;
         this.user = rawParams.user;
         this.pwd = rawParams.pwd;
         this.contentDb = rawParams.contentDb || rawParams.documentsDb || '';
@@ -99,6 +129,7 @@ export class MlClientParameters {
 
 export class ClientContext {
     public static DEFAULT_MANAGE_PORT = 8002;
+    public static DEFAULT_ADMIN_PORT = 8001;
     params: MlClientParameters;
     ca: string;
 
@@ -135,7 +166,7 @@ export class ClientContext {
     }
 
 
-    async getConnectedServers(requestingObject: MlxprsStatus, managePort: number, updateCallback: (connectedServers: string[]) => void): Promise<void> {
+    async getConnectedServers(requestingObject: MlxprsStatus | null, managePort: number, updateCallback: (connectedServers: string[]) => void): Promise<string[]> {
         const connectedJsServers: MlxprsQuickPickItem[] = await getFilteredListOfJsAppServers(this, managePort, 'true');
         return this.databaseClient.xqueryEval('xquery version "1.0-ml"; dbg:connected()')
             .result(
@@ -159,7 +190,10 @@ export class ClientContext {
                     connectedJsServers.forEach((quickPickItem) => {
                         connectedServers.push('JS:' + quickPickItem.label);
                     });
-                    updateCallback.call(requestingObject, connectedServers);
+                    if (updateCallback) {
+                        updateCallback.call(requestingObject, connectedServers);
+                    }
+                    return connectedServers;
                 },
                 (err) => {
                     throw err;
@@ -215,10 +249,39 @@ return $json-servers
             });
     }
 
-    public static buildUrl(hostname: string, endpointPath: string, ssl = true, managePort = ClientContext.DEFAULT_MANAGE_PORT): string {
-        const scheme: string = ssl ? 'https' : 'http';
-        const url = `${scheme}://${hostname}:${managePort}${endpointPath}`;
-        return url;
+    public buildUrlBase(port?: number): string {
+        const targetPort = port ? port : this.params.port;
+        const scheme: string = this.params.ssl ? 'https' : 'http';
+        return `${scheme}://${this.params.host}:${targetPort}`;
+    }
+
+    async executeGenericGetRequest(url: string): Promise<unknown> {
+        return new Promise((resolve, reject) => {
+            this.databaseClient.internal.sendRequest(
+                url,
+                (requestOptions: ml.RequestOptions) => {
+                    requestOptions.method = 'GET';
+                    requestOptions.headers = {
+                        'Content-type': 'application/json'
+                    };
+                })
+                .result((result: string) => {
+                    resolve(result);
+                })
+                .catch((error) => {
+                    reject(error);
+                });
+        });
+    }
+
+    async getAllProperties(): Promise<PropertiesResponse> {
+        const resourcePropertiesUrl = '/manage/v3?resource-type=database,server&include-properties=true&format=json';
+        return this.executeGenericGetRequest(resourcePropertiesUrl) as Promise<PropertiesResponse>;
+    }
+
+    async getAllResources(): Promise<ResourceResponse> {
+        const resourcesUrl = '/manage/v3?resource-type=database,server&include-properties=false&format=json';
+        return this.executeGenericGetRequest(resourcesUrl) as Promise<ResourceResponse>;
     }
 
 }
@@ -369,7 +432,7 @@ export async function filterJsServerByConnectedStatus(
     const filteredChoices: MlxprsQuickPickItem[] = [];
 
     choices.forEach((choice) => {
-        const manageClient =  newMarklogicManageClient(dbClientContext, managePort);
+        const manageClient = newMarklogicManageClient(dbClientContext, managePort);
         const endpoint = `/jsdbg/v1/connected/${choice.label}`;
         const connectedRequest = manageClient.databaseClient.internal.sendRequest(
             endpoint,
@@ -426,6 +489,7 @@ export function newClientParams(cfg: WorkspaceConfiguration, overrides: object =
         pwd: String(cfg.get('marklogic.password')),
         port: Number(cfg.get('marklogic.port')),
         managePort: Number(cfg.get('marklogic.managePort')),
+        adminPort: Number(cfg.get('marklogic.adminPort')),
         contentDb: String(cfg.get('marklogic.documentsDb')),
         modulesDb: String(cfg.get('marklogic.modulesDb')),
         authType: String(cfg.get('marklogic.authType')).toUpperCase(),
