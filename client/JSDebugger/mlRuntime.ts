@@ -93,11 +93,6 @@ export class MLRuntime extends EventEmitter {
     //Internal
     private _runTimeState: 'shutdown' | 'launched' | 'attached' | 'error' = 'shutdown';
 
-    private buildUrl(uriPath: string): string {
-        const url = `${this._scheme}://${this._hostName}:${this._dbgPort}${this._endpointRoot}${uriPath}`;
-        return url;
-    }
-
     constructor() {
         super();
     }
