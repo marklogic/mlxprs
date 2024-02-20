@@ -97,15 +97,17 @@ suite('Testing MarkLogic GraphQL queries', async () => {
 
     test('When sending a valid GraphQL query', async () => {
         const graphQlQuery = fs.readFileSync(`${rootFolder}/test-app/src/main/ml-modules/root/graphql/authors.json`).toString();
-        sendGraphQl(dbClientContext, graphQlQuery)
+        let queryResponse = null;
+        await sendGraphQl(dbClientContext, graphQlQuery)
             .then(
                 (response: ml.RowsResponse) => {
-                    assert.strictEqual(response['data']['Medical_Authors'].length, 34, 'The number of returned Authors should match the expected number');
+                    queryResponse = response;
                 }
             )
-            .catch(() => {
-                assert.fail('The GraphQL query should succeed.');
+            .catch((error) => {
+                assert.fail(error);
             });
+        assert.equal(queryResponse['data']['Medical_Authors'].length, 34, 'The number of returned Authors should match the expected number');
     }).timeout(5000);
 
     test('When sending an invalid GraphQL query', async () => {

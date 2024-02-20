@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 import {
-    ClientContext, newMarklogicManageClient, newClientParams, PropertiesResponse, ResourceResponse
+    ClientContext, newClientParams, PropertiesResponse, ResourceResponse
 } from './marklogicClient';
 
 export class MarkLogicServerStatusTreeDataProvider implements vscode.TreeDataProvider<MarkLogicServerStatus> {
@@ -24,17 +24,26 @@ export class MarkLogicServerStatusTreeDataProvider implements vscode.TreeDataPro
 
     onConfigurationChanged(event: vscode.ConfigurationChangeEvent) {
         if (event.affectsConfiguration('marklogic')) {
-            this.dbClientContext.databaseClient.release();
-            this.dbManageClientContext.databaseClient.release();
+            if (this.dbClientContext.databaseClient) {
+                this.dbClientContext.databaseClient.release();
+            }
+            if (this.dbClientContext.databaseClient) {
+                this.dbManageClientContext.databaseClient.release();
+            }
             this.configure();
         }
     }
 
     private configure() {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const managePort = Number(cfg.get('marklogic.managePort')) || ClientContext.DEFAULT_MANAGE_PORT;
-        this.dbClientContext = new ClientContext(newClientParams(cfg));
-        this.dbManageClientContext = newMarklogicManageClient(this.dbClientContext, managePort);
+        const clientParams = newClientParams(cfg);
+        this.dbClientContext = new ClientContext(clientParams);
+
+        clientParams.port = Number(cfg.get('marklogic.managePort')) || ClientContext.DEFAULT_MANAGE_PORT;
+        clientParams.contentDb = null;
+        clientParams.modulesDb = null;
+        this.dbManageClientContext = new ClientContext(clientParams);
+
         this.getAllResourcesPromise = this.dbManageClientContext.getAllResources();
         this.getAllPropertiesPromise = null;
     }
