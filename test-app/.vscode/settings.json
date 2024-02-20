@@ -7,6 +7,6 @@
     "marklogic.rejectUnauthorized": false,
     "marklogic.ssl": false,
     "marklogic.managePort": 8002,
-    "marklogic.unitTestPort": 8054,
+    "marklogic.testPort": 8054,
     "marklogic.adminPort": 8001
 }
