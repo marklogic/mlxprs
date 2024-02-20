@@ -358,38 +358,62 @@
                         "default": 8002,
                         "description": "MarkLogic Manage AppServer port"
                     },
-                    "marklogic.adminPort": {
+                    "marklogic.manageBasePath": {
                         "order": 3,
+                        "type": "string",
+                        "default": "",
+                        "description": "MarkLogic Manage AppServer path when using MarkLogic Cloud or behind a reverse proxy"
+                    },
+                    "marklogic.adminPort": {
+                        "order": 4,
                         "type": "integer",
                         "default": 8001,
                         "description": "MarkLogic Admin AppServer port"
                     },
+                    "marklogic.adminBasePath": {
+                        "order": 5,
+                        "type": "string",
+                        "default": "",
+                        "description": "MarkLogic Admin AppServer path when using MarkLogic Cloud or behind a reverse proxy"
+                    },
                     "marklogic.port": {
-                        "order": 4,
+                        "order": 6,
                         "type": "integer",
                         "default": 8000,
                         "description": "The port of a REST API app server to connect to"
                     },
+                    "marklogic.restBasePath": {
+                        "order": 7,
+                        "type": "string",
+                        "default": "",
+                        "description": "The REST API app server path when using MarkLogic Cloud or behind a reverse proxy"
+                    },
                     "marklogic.testPort": {
-                        "order": 5,
+                        "order": 8,
                         "type": "integer",
                         "default": 8004,
                         "description": "Optional port for a REST API server that supports running marklogic-unit-test modules"
                     },
+                    "marklogic.testBasePath": {
+                        "order": 9,
+                        "type": "string",
+                        "default": "",
+                        "description": "Optional, REST API server path that supports running marklogic-unit-test modules when using MarkLogic Cloud or behind a reverse proxy"
+                    },
                     "marklogic.documentsDb": {
-                        "order": 6,
+                        "order": 10,
                         "type": "string",
                         "default": "",
                         "description": "database against which to evaluate queries; required for debugging a local script"
                     },
                     "marklogic.modulesDb": {
-                        "order": 7,
+                        "order": 11,
                         "type": "string",
                         "default": "",
                         "description": "modules database used in queries; default modules database for app server will be used if left unspecified"
                     },
                     "marklogic.modulesRoot": {
-                        "order": 8,
+                        "order": 12,
                         "type": "string",
                         "default": "/",
                         "description": "modules root if using filesystem"

@@ -40,6 +40,7 @@ export class MarkLogicServerStatusTreeDataProvider implements vscode.TreeDataPro
         this.dbClientContext = new ClientContext(clientParams);
 
         clientParams.port = Number(cfg.get('marklogic.managePort')) || ClientContext.DEFAULT_MANAGE_PORT;
+        clientParams.restBasePath = String(cfg.get('marklogic.manageBasePath')) || '';
         clientParams.contentDb = null;
         clientParams.modulesDb = null;
         this.dbManageClientContext = new ClientContext(clientParams);
@@ -115,7 +116,8 @@ export class MarkLogicServerStatusTreeDataProvider implements vscode.TreeDataPro
         const databaseList: MarkLogicServerStatus[] = [];
         databaseConfigList.forEach(databaseItem => {
             const databasePath = `/database-admin.xqy?section=database&database=${databaseItem.id}`;
-            const urlBase = this.dbClientContext.buildUrlBase(this.dbClientContext.params.adminPort);
+            const urlBase =
+                this.dbClientContext.buildUrlBase(this.dbClientContext.params.adminPort, this.dbClientContext.params.adminBasePath);
             const url = `${urlBase}${databasePath}`;
             databaseList.push(
                 new MarkLogicServerStatus(
@@ -140,7 +142,8 @@ export class MarkLogicServerStatusTreeDataProvider implements vscode.TreeDataPro
         const appServerList: MarkLogicServerStatus[] = [];
         appServerConfigList.forEach(appServer => {
             const appServerPath = `/http-server-admin.xqy?http-server=${appServer.id}`;
-            const urlBase = this.dbClientContext.buildUrlBase(this.dbClientContext.params.adminPort);
+            const urlBase =
+                this.dbClientContext.buildUrlBase(this.dbClientContext.params.adminPort, this.dbClientContext.params.adminBasePath);
             const url = `${urlBase}${appServerPath}`;
             const appServerProperties = appServerPropertiesList
                 .filter((properties) => properties['server-name'] === appServer.name)[0];
