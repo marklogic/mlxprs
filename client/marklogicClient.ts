@@ -73,6 +73,10 @@ export class MlClientParameters {
     ssl: boolean;
     pathToCa: string;
     rejectUnauthorized: boolean;
+    manageBasePath: string;
+    adminBasePath: string;
+    restBasePath: string;
+    testBasePath: string;
     /**
      * note: defaults not applied here. Properties can remain undefined so that
      *       per-query overrides don't clobber the existing config with default values.
@@ -91,6 +95,10 @@ export class MlClientParameters {
         this.ssl = Boolean(rawParams.ssl);
         this.pathToCa = rawParams.pathToCa || '';
         this.rejectUnauthorized = Boolean(rawParams.rejectUnauthorized);
+        this.manageBasePath = rawParams.manageBasePath || '';
+        this.adminBasePath = rawParams.adminBasePath || '';
+        this.restBasePath = rawParams.restBasePath || '';
+        this.testBasePath = rawParams.testBasePath || '';
 
         // This check was previously done in the MarklogicClient constructor, but doing so causes the sameAs
         // function in this class to not behave properly
@@ -149,7 +157,7 @@ export class ClientContext {
             this.params.contentDb = null;
         }
         this.databaseClient = ml.createDatabaseClient({
-            host: this.params.host, port: this.params.port,
+            host: this.params.host, port: this.params.port, basePath: this.params.restBasePath,
             user: this.params.user, password: this.params.pwd,
             database: this.params.contentDb,
             authType: this.params.authType, ssl: this.params.ssl,
@@ -249,10 +257,11 @@ return $json-servers
             });
     }
 
-    public buildUrlBase(port?: number): string {
+    public buildUrlBase(port?: number, basePath?: string): string {
         const targetPort = port ? port : this.params.port;
+        const targetBasePath = basePath ? basePath : '';
         const scheme: string = this.params.ssl ? 'https' : 'http';
-        return `${scheme}://${this.params.host}:${targetPort}`;
+        return `${scheme}://${this.params.host}:${targetPort}${targetBasePath}`;
     }
 
     async executeGenericGetRequest(url: string): Promise<unknown> {
@@ -432,7 +441,9 @@ export async function filterJsServerByConnectedStatus(
     const filteredChoices: MlxprsQuickPickItem[] = [];
 
     choices.forEach((choice) => {
-        const manageClient = newMarklogicManageClient(dbClientContext, managePort);
+        // TODO - manageBasePath
+        const manageBasePath = null;
+        const manageClient = newMarklogicClientWithPort(dbClientContext, managePort, manageBasePath);
         const endpoint = `/jsdbg/v1/connected/${choice.label}`;
         const connectedRequest = manageClient.databaseClient.internal.sendRequest(
             endpoint,
@@ -474,9 +485,12 @@ export function requestMarkLogicUnitTest(
     );
 }
 
-export function newMarklogicManageClient(dbClientContext: ClientContext, managePort: number): ClientContext {
+export function newMarklogicClientWithPort(
+    dbClientContext: ClientContext, targetPort: number, targetPath: string
+): ClientContext {
     const manageClientParams: MlClientParameters = JSON.parse(JSON.stringify(dbClientContext.params));
-    manageClientParams.port = managePort;
+    manageClientParams.port = targetPort;
+    manageClientParams.restBasePath = targetPath;
     manageClientParams.contentDb = null;
     manageClientParams.modulesDb = null;
     return new ClientContext(manageClientParams);
@@ -489,7 +503,9 @@ export function newClientParams(cfg: WorkspaceConfiguration, overrides: object =
         pwd: String(cfg.get('marklogic.password')),
         port: Number(cfg.get('marklogic.port')),
         managePort: Number(cfg.get('marklogic.managePort')),
+        manageBasePath: String(cfg.get('marklogic.manageBasePath')) || '',
         adminPort: Number(cfg.get('marklogic.adminPort')),
+        adminBasePath: String(cfg.get('marklogic.adminBasePath')) || '',
         contentDb: String(cfg.get('marklogic.documentsDb')),
         modulesDb: String(cfg.get('marklogic.modulesDb')),
         authType: String(cfg.get('marklogic.authType')).toUpperCase(),

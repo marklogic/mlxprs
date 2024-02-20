@@ -18,7 +18,7 @@ import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as ml from 'marklogic';
 
-import { ClientContext, MlClientParameters, newMarklogicManageClient } from '../marklogicClient';
+import { ClientContext, MlClientParameters, newMarklogicClientWithPort } from '../marklogicClient';
 import { ModuleContentGetter } from '../moduleContentGetter';
 
 const DEFAULT_MANAGE_PORT = 8002;
@@ -85,6 +85,8 @@ export class MLRuntime extends EventEmitter {
     private dbClientContext: ClientContext;
     private _mlModuleGetter: ModuleContentGetter;
     private managePort = null;
+    // TODO - manageBasePath
+    private manageBasePath = null;
 
     public getHostString(): string {
         return `${this.dbClientContext.params.host}:${this.dbClientContext.params.port}`;
@@ -259,7 +261,8 @@ export class MLRuntime extends EventEmitter {
     private _sendMLdebugRequestPOST(
         module: string, body?: string, requestParameters?: Record<string, unknown>
     ): Promise<string> {
-        const manageClient = newMarklogicManageClient(this.dbClientContext, this.managePort);
+        const manageClient =
+            newMarklogicClientWithPort(this.dbClientContext, this.managePort, this.manageBasePath);
 
         const endpoint = `/jsdbg/v1/${module}/${this._rid}`;
         const urlSearchParams = new global.URLSearchParams(requestParameters);
@@ -292,7 +295,8 @@ export class MLRuntime extends EventEmitter {
     private _sendMLdebugRequestGET(
         module: string, requestParameters?: Record<string, unknown>
     ): Promise<string> {
-        const manageClient = newMarklogicManageClient(this.dbClientContext, this.managePort);
+        const manageClient =
+            newMarklogicClientWithPort(this.dbClientContext, this.managePort, this.manageBasePath);
 
         const endpoint = `/jsdbg/v1/${module}/${this._rid}`;
         const urlSearchParams = new global.URLSearchParams(requestParameters);
@@ -318,7 +322,8 @@ export class MLRuntime extends EventEmitter {
     private _sendMLdebugEvalRequest(
         script: string, database: string, txnId: string, modules: string, root: string
     ): Promise<string> {
-        const manageClient = newMarklogicManageClient(this.dbClientContext, this.managePort);
+        const manageClient =
+            newMarklogicClientWithPort(this.dbClientContext, this.managePort, this.manageBasePath);
 
         const evalOptions = {};
         if (database) evalOptions['database'] = database;

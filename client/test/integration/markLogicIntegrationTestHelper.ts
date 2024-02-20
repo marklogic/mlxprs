@@ -22,7 +22,7 @@ import * as vscode from 'vscode';
 import { DebugClient } from '@vscode/debugadapter-testsupport';
 
 import { JsDebugManager } from '../../JSDebugger/jsDebugManager';
-import { ClientContext, MlClientParameters, newMarklogicManageClient, sendJSQuery } from '../../marklogicClient';
+import { ClientContext, MlClientParameters, newMarklogicClientWithPort, sendJSQuery } from '../../marklogicClient';
 
 export class IntegrationTestHelper {
 
@@ -50,7 +50,9 @@ export class IntegrationTestHelper {
 
     private hostname = String(process.env.ML_HOST || 'localhost');
     private port = Number(process.env.ML_PORT || this.configuredServerPort);
+    readonly restBasePath = String(process.env.ML_RESTBASEPATH) || null;
     readonly managePort = Number(process.env.ML_MANAGEPORT) || ClientContext.DEFAULT_MANAGE_PORT;
+    readonly manageBasePath = String(process.env.ML_MANAGEPATH) || null;
     readonly unitTestPort = Number(process.env.ML_UNITTESTPORT || '8054');
     private username = String(process.env.ML_USERNAME || 'admin');
     private password = String(process.env.ML_PASSWORD || 'admin');
@@ -62,7 +64,9 @@ export class IntegrationTestHelper {
     private clientDefaults = {
         host: this.hostname,
         port: this.port,
+        restBasePath: this.restBasePath,
         managePort: this.managePort,
+        manageBasePath: this.manageBasePath,
         user: this.username,
         pwd: this.password,
         authType: 'DIGEST',
@@ -270,7 +274,7 @@ export class IntegrationTestHelper {
     }
 
     private async restartMarkLogic(): Promise<string> {
-        const manageClient = newMarklogicManageClient(this.mlClient, this.managePort);
+        const manageClient = newMarklogicClientWithPort(this.mlClient, this.managePort, this.manageBasePath);
 
         return new Promise((resolve, reject) => {
             manageClient.databaseClient.internal.sendRequest(
@@ -298,7 +302,7 @@ export class IntegrationTestHelper {
     }
 
     private async isMarkLogicRunning(): Promise<boolean> {
-        const manageClient = newMarklogicManageClient(this.mlClient, this.managePort);
+        const manageClient = newMarklogicClientWithPort(this.mlClient, this.managePort, this.manageBasePath);
 
         return new Promise((resolve) => {
             manageClient.databaseClient.internal.sendRequest(
