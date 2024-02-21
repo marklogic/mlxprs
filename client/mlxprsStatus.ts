@@ -26,10 +26,12 @@ export class MlxprsStatus {
     private command: vscode.Disposable;
     private connectedServers = null;
     private managePort: number;
+    private manageBasePath: string;
 
     constructor(context: vscode.ExtensionContext) {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
         this.managePort = Number(cfg.get('marklogic.managePort')) || ClientContext.DEFAULT_MANAGE_PORT;
+        this.manageBasePath = String(cfg.get('marklogic.manageBasePath')) || '';
         this.dbClientContext = getDbClientWithoutOverrides(cfg, context.globalState);
         this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
         this.command = vscode.commands.registerCommand(this.commandId, () => {
@@ -47,7 +49,7 @@ export class MlxprsStatus {
     }
 
     requestUpdate(): void {
-        this.dbClientContext.getConnectedServers(this, this.managePort, this.updateStatusBarItem);
+        this.dbClientContext.getConnectedServers(this, this.managePort, this.manageBasePath, this.updateStatusBarItem);
     }
 
     updateStatusBarItem(connectedServers: string[]): void {

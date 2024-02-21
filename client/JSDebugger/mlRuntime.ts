@@ -86,7 +86,7 @@ export class MLRuntime extends EventEmitter {
     private _mlModuleGetter: ModuleContentGetter;
     private managePort = null;
     // TODO - manageBasePath
-    private manageBasePath = null;
+    private manageBasePath = '';
 
     public getHostString(): string {
         return `${this.dbClientContext.params.host}:${this.dbClientContext.params.port}`;

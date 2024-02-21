@@ -174,8 +174,14 @@ export class ClientContext {
     }
 
 
-    async getConnectedServers(requestingObject: MlxprsStatus | null, managePort: number, updateCallback: (connectedServers: string[]) => void): Promise<string[]> {
-        const connectedJsServers: MlxprsQuickPickItem[] = await getFilteredListOfJsAppServers(this, managePort, 'true');
+    async getConnectedServers(
+        requestingObject: MlxprsStatus | null,
+        managePort: number,
+        manageBasePath: string,
+        updateCallback: (connectedServers: string[]) => void
+    ): Promise<string[]> {
+        const connectedJsServers: MlxprsQuickPickItem[] =
+            await getFilteredListOfJsAppServers(this, managePort, manageBasePath, 'true');
         return this.databaseClient.xqueryEval('xquery version "1.0-ml"; dbg:connected()')
             .result(
                 async (items: ml.Item[]) => {
@@ -416,11 +422,14 @@ export interface MlxprsQuickPickItem {
 }
 
 export async function getFilteredListOfJsAppServers(
-    dbClientContext: ClientContext, managePort: number, requiredResponse: string
+    dbClientContext: ClientContext,
+    managePort: number,
+    manageBasePath: string,
+    requiredResponse: string
 ): Promise<MlxprsQuickPickItem[]> {
     const listServersForConnectQuery = dbClientContext.buildListServersForConnectQuery();
     const allPossibleJsServers: MlxprsQuickPickItem[] = await getAppServerListForJs(dbClientContext, listServersForConnectQuery) as MlxprsQuickPickItem[];
-    return await filterJsServerByConnectedStatus(dbClientContext, managePort, allPossibleJsServers, requiredResponse);
+    return await filterJsServerByConnectedStatus(dbClientContext, managePort, manageBasePath, allPossibleJsServers, requiredResponse);
 }
 
 export async function getAppServerListForJs(dbClientContext: ClientContext, serverListQuery: string): Promise<MlxprsQuickPickItem[]> {
@@ -435,14 +444,16 @@ export async function getAppServerListForJs(dbClientContext: ClientContext, serv
 }
 
 export async function filterJsServerByConnectedStatus(
-    dbClientContext: ClientContext, managePort: number, choices: MlxprsQuickPickItem[], requiredResponse: string
+    dbClientContext: ClientContext,
+    managePort: number,
+    manageBasePath: string,
+    choices: MlxprsQuickPickItem[],
+    requiredResponse: string
 ): Promise<MlxprsQuickPickItem[]> {
     const requests = [];
     const filteredChoices: MlxprsQuickPickItem[] = [];
 
     choices.forEach((choice) => {
-        // TODO - manageBasePath
-        const manageBasePath = '';
         const manageClient = newMarklogicClientWithPort(dbClientContext, managePort, manageBasePath);
         const endpoint = `/jsdbg/v1/connected/${choice.label}`;
         const connectedRequest = manageClient.databaseClient.internal.sendRequest(
@@ -486,14 +497,20 @@ export function requestMarkLogicUnitTest(
 }
 
 export function newMarklogicClientWithPort(
-    dbClientContext: ClientContext, targetPort: number, targetPath: string
+    dbClientContext: ClientContext,
+    targetPort: number,
+    targetPath: string
 ): ClientContext {
-    const manageClientParams: MlClientParameters = JSON.parse(JSON.stringify(dbClientContext.params));
-    manageClientParams.port = targetPort;
-    manageClientParams.restBasePath = targetPath;
-    manageClientParams.contentDb = null;
-    manageClientParams.modulesDb = null;
-    return new ClientContext(manageClientParams);
+    const newClientParams: MlClientParameters = JSON.parse(JSON.stringify(dbClientContext.params));
+    newClientParams.port = targetPort;
+    newClientParams.restBasePath = targetPath;
+    // This function is used to create new clients for the Manage app-server
+    // The requests to those endpoints do not expect a contentDb or modulesDb parameter.
+    // Additional some of those endpoints generate a 500 response when those parameters
+    // are included. Therefore, we null the values out for the new client.
+    newClientParams.contentDb = null;
+    newClientParams.modulesDb = null;
+    return new ClientContext(newClientParams);
 }
 
 export function newClientParams(cfg: WorkspaceConfiguration, overrides: object = {}): MlClientParameters {
