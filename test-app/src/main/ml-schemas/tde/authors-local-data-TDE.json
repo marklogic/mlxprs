@@ -34,11 +34,10 @@
         ]
       }
     ],
-
-    "vars":[
+    "vars": [
       {
-        "name":"MLXPRS_TEST_FILE",
-        "val":"src/test/resources/localCitationsData.xml"
+        "name": "MLXPRS_TEST_FILE",
+        "val": "src/test/resources/localCitationsData.xml"
       }
     ]
   }
