@@ -55,7 +55,9 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
         const clientParams: MlClientParameters = new MlClientParameters({
             host: String(ConfigurationManager.getHost()),
             port: Number(ConfigurationManager.getPort()),
+            restBasePath: String(ConfigurationManager.getRestBasePath()),
             managePort: Number(ConfigurationManager.getManagePort()),
+            manageBasePath: String(ConfigurationManager.getManageBasePath()),
             user: String(ConfigurationManager.getUsername()),
             pwd: String(ConfigurationManager.getPassword()),
             contentDb: String(ConfigurationManager.getDocumentsDb()),

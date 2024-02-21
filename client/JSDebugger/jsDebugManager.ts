@@ -357,6 +357,7 @@ function newManageConfig() {
     return new MlClientParameters({
         host: cfg.get('host'),
         port: cfg.get('managePort'),
+        restBasePath: cfg.get('manageBasePath'),
         user: cfg.get('username'),
         pwd: cfg.get('password'),
         authType: cfg.get('authType'),

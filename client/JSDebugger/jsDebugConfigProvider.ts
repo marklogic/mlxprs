@@ -78,6 +78,7 @@ export class JsDebugConfigurationProvider implements vscode.DebugConfigurationPr
         config.username = String(wcfg.get('marklogic.username'));
         config.password = String(wcfg.get('marklogic.password'));
         config.managePort = Number(wcfg.get('marklogic.managePort'));
+        config.manageBasePath = String(wcfg.get('marklogic.manageBasePath'));
         config.database = String(wcfg.get('marklogic.documentsDb'));
         config.modules = String(wcfg.get('marklogic.modulesDb'));
         config.mlModulesRoot = String(wcfg.get('marklogic.modulesRoot'));

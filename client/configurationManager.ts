@@ -19,7 +19,9 @@ import * as vscode from 'vscode';
 export interface MarklogicConfigurationSettings {
     host?: string;
     port?: string;
+    restBasePath?: string;
     managePort?: string;
+    manageBasePath?: string;
     username?: string;
     password?: string;
     documentsDb?: string;
@@ -59,8 +61,16 @@ export class ConfigurationManager {
         return ConfigurationManager.getConfigValue('port') as string;
     }
 
+    static getRestBasePath(): string {
+        return ConfigurationManager.getConfigValue('restBasePath') as string;
+    }
+
     static getManagePort(): string {
         return ConfigurationManager.getConfigValue('managePort') as string;
+    }
+
+    static getManageBasePath(): string {
+        return ConfigurationManager.getConfigValue('manageBasePath') as string;
     }
 
     static getUsername(): string {
