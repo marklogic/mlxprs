@@ -53,6 +53,10 @@ export class MarkLogicUnitTestClient {
             const testFile = testPath.substring(lastSlash + 1);
 
             const clientParams: MlClientParameters = newClientParams(cfg);
+            clientParams.port = clientParams.testPort;
+            clientParams.restBasePath = clientParams.testBasePath;
+            clientParams.contentDb = null;
+            clientParams.modulesDb = null;
             const dbClientContext: ClientContext = new ClientContext(clientParams);
             requestMarkLogicUnitTest(dbClientContext, testSuite, testFile)
                 .result((testResults: string) => {

@@ -67,6 +67,7 @@ export class MlClientParameters {
     port: number;
     managePort: number;
     adminPort: number;
+    testPort: number;
     user: string;
     pwd: string;
     authType: string;
@@ -85,8 +86,13 @@ export class MlClientParameters {
     constructor(rawParams: Record<string, any>) {
         this.host = rawParams.host;
         this.port = Number(rawParams.port);
+        this.restBasePath = rawParams.restBasePath || '';
         this.managePort = Number(rawParams.managePort) || ClientContext.DEFAULT_MANAGE_PORT;
+        this.manageBasePath = rawParams.manageBasePath || '';
         this.adminPort = Number(rawParams.adminPort) || ClientContext.DEFAULT_ADMIN_PORT;
+        this.adminBasePath = rawParams.adminBasePath || '';
+        this.testPort = Number(rawParams.testPort);
+        this.testBasePath = rawParams.testBasePath || '';
         this.user = rawParams.user;
         this.pwd = rawParams.pwd;
         this.contentDb = rawParams.contentDb || rawParams.documentsDb || '';
@@ -95,10 +101,6 @@ export class MlClientParameters {
         this.ssl = Boolean(rawParams.ssl);
         this.pathToCa = rawParams.pathToCa || '';
         this.rejectUnauthorized = Boolean(rawParams.rejectUnauthorized);
-        this.manageBasePath = rawParams.manageBasePath || '';
-        this.adminBasePath = rawParams.adminBasePath || '';
-        this.restBasePath = rawParams.restBasePath || '';
-        this.testBasePath = rawParams.testBasePath || '';
 
         // This check was previously done in the MarklogicClient constructor, but doing so causes the sameAs
         // function in this class to not behave properly
@@ -522,6 +524,8 @@ export function newClientParams(cfg: WorkspaceConfiguration, overrides: object =
         restBasePath: String(cfg.get('marklogic.restBasePath')) || '',
         managePort: Number(cfg.get('marklogic.managePort')),
         manageBasePath: String(cfg.get('marklogic.manageBasePath')) || '',
+        testPort: Number(cfg.get('marklogic.testPort')),
+        testBasePath: String(cfg.get('marklogic.testBasePath')) || '',
         adminPort: Number(cfg.get('marklogic.adminPort')),
         adminBasePath: String(cfg.get('marklogic.adminBasePath')) || '',
         contentDb: String(cfg.get('marklogic.documentsDb')),
