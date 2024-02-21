@@ -125,6 +125,9 @@ cd test-app
 ./gradlew mlDeploy
 ```
 
+Note that in order to facilitate testing the application with a proxy, the app-servers associated with the
+test-app are set to use basic authentication. That includes a version of the Manage app-server on port 8059.
+
 ### Manual Integration Testing
 * Use the "Launch Extension (debug)" launch configuration in the "RUN AND DEBUG" window to open a new VS Code session.
 * Once the new window is open, use "File -> Open Folder ..." menu to open the "test-app" folder as a separate project.
@@ -178,6 +181,32 @@ code --extensionDevelopmentPath=<mlxprs-project-dir>/client --extensionTestsPath
 To ensure a clean build, you may also run this npm script before running the `installAll` script.
 ```
 npm run cleanAll
+```
+
+### Proxy testing
+
+For testing the extension with a proxy server, it is recommended that you use the reverse
+proxy server included in the Java Client project for proxy testing. To start that server,
+simply run the following command in the root directory of the Java Client project. That
+command will start the reverse proxy server in blocking mode listening on port 8020. It
+will then forward requests to port 8020 based on the custom mappings.
+
+```
+./gradlew runBlockingReverseProxyServer -PrpsCustomMappings=/mlxprs/manage,8059,/mlxprs/rest,8055,/mlxprs/test,8054
+```
+
+Once the reverse proxy server is running, change the MLXPRS settings for your workspace
+to the following (in .vscode/settings.json):
+```
+    "marklogic.authType": "BASIC",
+    "marklogic.port": 8020,
+    "marklogic.restBasePath": "/mlxprs/rest",
+    "marklogic.managePort": 8020,
+    "marklogic.manageBasePath": "/mlxprs/manage",
+    "marklogic.adminPort": 8001,
+    "marklogic.adminBasePath": "",
+    "marklogic.testPort": 8020,
+    "marklogic.testBasePath": "/mlxprs/test",
 ```
 
 ## Building the artifact

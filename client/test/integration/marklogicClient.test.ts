@@ -56,7 +56,7 @@ suite('Testing various MarkLogic calls', async () => {
 
     test('When querying MarkLogic for available requests', async () => {
         await JsDebugManager.connectToNamedJsDebugServer(attachServerName);
-        globalThis.integrationTestHelper.restartServer = true;
+        globalThis.integrationTestHelper.attachedToServer = true;
 
         const globalConfig = integrationTestHelper.config;
         let availableRequestsString = await JsDebugManager.getAvailableRequests(attachServerName);
@@ -65,7 +65,7 @@ suite('Testing various MarkLogic calls', async () => {
             'If no requests have been started, then the number of available requests should be 0');
 
         CP.exec(`curl --anyauth -k --user ${globalConfig.username}:${globalConfig.password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
-                    http${globalConfig.ssl ? 's' : ''}://${globalConfig.hostname}:${integrationTestHelper.serverPortForAttaching}/LATEST/invoke --data-urlencode module=/javascript/testSjs.sjs`);
+                        http${globalConfig.ssl ? 's' : ''}://${globalConfig.hostname}:${integrationTestHelper.serverPortForAttaching}/LATEST/invoke --data-urlencode module=/javascript/testSjs.sjs`);
         await wait(2000);
 
         availableRequestsString = await JsDebugManager.getAvailableRequests(attachServerName);
@@ -76,6 +76,11 @@ suite('Testing various MarkLogic calls', async () => {
         assert(resp, 'if a request has been started, then retrieving info for that request should return an object');
         assert(resp['requestText'], 'if a request has been started, then retrieving info for that request should return a requestText value');
         assert(resp['startTime'], 'if a request has been started, then retrieving info for that request should return a startTime value');
+
+        const resumeProcessCurl =
+            `curl --anyauth -k --user ${globalConfig.username}:${globalConfig.password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
+            http${globalConfig.ssl ? 's' : ''}://${globalConfig.hostname}:${integrationTestHelper.managePort}/jsdbg/v1/resume/${availableRequests.requestIds[0]} --data-urlencode ''`;
+        CP.exec(resumeProcessCurl);
     }).timeout(10000);
 
     test('When resolving a database id for a database name that does not exist', async () => {

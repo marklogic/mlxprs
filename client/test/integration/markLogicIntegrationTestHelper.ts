@@ -50,9 +50,9 @@ export class IntegrationTestHelper {
 
     private hostname = String(process.env.ML_HOST || 'localhost');
     private port = Number(process.env.ML_PORT || this.configuredServerPort);
-    readonly restBasePath = String(process.env.ML_RESTBASEPATH) || null;
-    readonly managePort = Number(process.env.ML_MANAGEPORT) || ClientContext.DEFAULT_MANAGE_PORT;
-    readonly manageBasePath = String(process.env.ML_MANAGEPATH) || null;
+    readonly restBasePath = String(process.env.ML_RESTBASEPATH);
+    readonly managePort = Number(process.env.ML_MANAGEPORT) || 8059;
+    readonly manageBasePath = String(process.env.ML_MANAGEPATH) || '';
     readonly unitTestPort = Number(process.env.ML_UNITTESTPORT || '8054');
     private username = String(process.env.ML_USERNAME || 'admin');
     private password = String(process.env.ML_PASSWORD || 'admin');
@@ -69,7 +69,7 @@ export class IntegrationTestHelper {
         manageBasePath: this.manageBasePath,
         user: this.username,
         pwd: this.password,
-        authType: 'DIGEST',
+        authType: 'BASIC',
         contentDb: this.documentsDatabase,
         modulesDb: this.modulesDB,
         pathToCa: this.pathToCa,
@@ -105,7 +105,7 @@ export class IntegrationTestHelper {
         managePort: ClientContext.DEFAULT_MANAGE_PORT,
         user: this.username,
         pwd: this.password,
-        authType: 'DIGEST',
+        authType: 'BASIC',
         contentDb: 'mlxprs-test-test-content',
         modulesDb: null,
         pathToCa: this.pathToCa,
@@ -141,7 +141,7 @@ export class IntegrationTestHelper {
             username: this.username,
             password: this.password,
             hostname: this.hostname,
-            authType: 'DIGEST',
+            authType: 'BASIC',
             managePort: this.managePort,
             ssl: this.ssl,
             pathToCa: this.pathToCa,
@@ -155,7 +155,7 @@ export class IntegrationTestHelper {
                 user: this.username,
                 pwd: this.password,
                 contentDb: 'mlxprs-test-test-content',
-                authType: 'DIGEST',
+                authType: 'BASIC',
                 port: this.unitTestPort,
                 managePort: this.managePort,
                 ssl: this.ssl,
@@ -321,6 +321,9 @@ export class IntegrationTestHelper {
 
     private newClientWithDefaultsAndOverrides(overrides: object = {}): ClientContext {
         const newParams = new MlClientParameters({ ...this.clientDefaults, ...overrides });
+        if (newParams.restBasePath === 'undefined') {
+            newParams.restBasePath = '';
+        }
         return new ClientContext(newParams);
     }
 

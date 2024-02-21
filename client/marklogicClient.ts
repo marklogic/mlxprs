@@ -442,7 +442,7 @@ export async function filterJsServerByConnectedStatus(
 
     choices.forEach((choice) => {
         // TODO - manageBasePath
-        const manageBasePath = null;
+        const manageBasePath = '';
         const manageClient = newMarklogicClientWithPort(dbClientContext, managePort, manageBasePath);
         const endpoint = `/jsdbg/v1/connected/${choice.label}`;
         const connectedRequest = manageClient.databaseClient.internal.sendRequest(
