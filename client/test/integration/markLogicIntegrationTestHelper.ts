@@ -50,10 +50,11 @@ export class IntegrationTestHelper {
 
     private hostname = String(process.env.ML_HOST || 'localhost');
     private port = Number(process.env.ML_PORT || this.configuredServerPort);
-    readonly restBasePath = String(process.env.ML_RESTBASEPATH);
+    readonly restBasePath = process.env.ML_RESTBASEPATH ? String(process.env.ML_RESTBASEPATH) : '';
     readonly managePort = Number(process.env.ML_MANAGEPORT) || 8059;
-    readonly manageBasePath = String(process.env.ML_MANAGEPATH) || '';
+    readonly manageBasePath = process.env.ML_MANAGEBASEPATH ? String(process.env.ML_MANAGEBASEPATH) : '';
     readonly unitTestPort = Number(process.env.ML_UNITTESTPORT || '8054');
+    readonly testBasePath = process.env.ML_TESTBASEPATH ? String(process.env.ML_TESTBASEPATH) : '';
     private username = String(process.env.ML_USERNAME || 'admin');
     private password = String(process.env.ML_PASSWORD || 'admin');
     private modulesDB = String(process.env.ML_MODULESDB || this.modulesDatabase);
@@ -321,9 +322,6 @@ export class IntegrationTestHelper {
 
     private newClientWithDefaultsAndOverrides(overrides: object = {}): ClientContext {
         const newParams = new MlClientParameters({ ...this.clientDefaults, ...overrides });
-        if (newParams.restBasePath === 'undefined') {
-            newParams.restBasePath = '';
-        }
         return new ClientContext(newParams);
     }
 

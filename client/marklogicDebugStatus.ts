@@ -11,6 +11,7 @@ export class MarkLogicDebugStatusTreeDataProvider implements vscode.TreeDataProv
 
     private dbClientContext: ClientContext;
     private managePort: number;
+    private manageBasePath: string;
     private: ClientContext;
 
     constructor() {
@@ -27,6 +28,7 @@ export class MarkLogicDebugStatusTreeDataProvider implements vscode.TreeDataProv
     private configure() {
         const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
         this.managePort = Number(cfg.get('marklogic.managePort')) || ClientContext.DEFAULT_MANAGE_PORT;
+        this.manageBasePath = String(cfg.get('marklogic.manageBasePath')) || '';
         this.dbClientContext = new ClientContext(newClientParams(cfg));
     }
 
@@ -70,7 +72,7 @@ export class MarkLogicDebugStatusTreeDataProvider implements vscode.TreeDataProv
 
     private async buildDebugAppServerEntries(): Promise<MarkLogicDebugStatus[]> {
         const connectedServerTreeElementList: MarkLogicDebugStatus[] = [];
-        return this.dbClientContext.getConnectedServers(null, this.managePort, null)
+        return this.dbClientContext.getConnectedServers(null, this.managePort, this.manageBasePath, null)
             .then((connectedServers) => {
                 if (connectedServers.length > 0) {
                     connectedServers.forEach(serverName => {
