@@ -519,6 +519,7 @@ export function newClientParams(cfg: WorkspaceConfiguration, overrides: object =
         user: String(cfg.get('marklogic.username')),
         pwd: String(cfg.get('marklogic.password')),
         port: Number(cfg.get('marklogic.port')),
+        restBasePath: String(cfg.get('marklogic.restBasePath')) || '',
         managePort: Number(cfg.get('marklogic.managePort')),
         manageBasePath: String(cfg.get('marklogic.manageBasePath')) || '',
         adminPort: Number(cfg.get('marklogic.adminPort')),

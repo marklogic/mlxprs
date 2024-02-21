@@ -118,6 +118,7 @@ export class MLRuntime extends EventEmitter {
         this._password = args.password;
         this._dbgPort = args.managePort;
         this.managePort = args.managePort;
+        this.manageBasePath = args.manageBasePath;
         this._ssl = args.ssl;
         this._scheme = this._ssl ? 'https' : 'http';
         this._rejectUnauthorized = args.rejectUnauthorized;
@@ -129,6 +130,7 @@ export class MLRuntime extends EventEmitter {
             new MlClientParameters({
                 host: this._hostName,
                 port: this._dbgPort,
+                restBasePath: this.manageBasePath,
                 user: this._username,
                 pwd: this._password,
                 contentDb: args.database,

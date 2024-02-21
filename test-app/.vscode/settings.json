@@ -2,7 +2,7 @@
     "marklogic.host": "localhost",
     "marklogic.ssl": false,
     "marklogic.authType": "BASIC",
-    "marklogic.port": 8055,
+    "marklogic.port": 8020,
     "marklogic.restBasePath": "/mlxprs/rest",
     "marklogic.managePort": 8020,
     "marklogic.manageBasePath": "/mlxprs/manage",

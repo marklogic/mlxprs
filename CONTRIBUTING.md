@@ -192,7 +192,13 @@ command will start the reverse proxy server in blocking mode listening on port 8
 will then forward requests to port 8020 based on the custom mappings.
 
 ```
-./gradlew runBlockingReverseProxyServer -PrpsCustomMappings=/mlxprs/manage,8059,/mlxprs/rest,8055,/mlxprs/test,8054
+./gradlew runBlockingReverseProxyServer
+```
+Node Client Test-App Reverse Proxy Mappings
+```
+"/mlxprs/manage" => port 8059
+"/mlxprs/rest"   => port 8055
+"/mlxprs/test"   => port 8054
 ```
 
 Once the reverse proxy server is running, change the MLXPRS settings for your workspace
