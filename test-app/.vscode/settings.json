@@ -1,17 +1,19 @@
 {
-    "marklogic.resultsInEditorTab": false,
     "marklogic.host": "localhost",
+    "marklogic.ssl": false,
+    "marklogic.authType": "BASIC",
     "marklogic.port": 8055,
+    "marklogic.restBasePath": "/mlxprs/rest",
+    "marklogic.managePort": 8020,
+    "marklogic.manageBasePath": "/mlxprs/manage",
+    "marklogic.testPort": 8054,
+    "marklogic.testBasePath": "/mlxprs/test",
+    "marklogic.adminPort": 8001,
+    "marklogic.adminBasePath": "",
     "marklogic.documentsDb": "mlxprs-test-content",
     "marklogic.modulesDb": "mlxprs-test-modules",
     "marklogic.rejectUnauthorized": false,
-    "marklogic.ssl": false,
-    "marklogic.managePort": 8020,
-    "marklogic.testPort": 8054,
-    "marklogic.adminPort": 8020,
-    "marklogic.manageBasePath": "/local/manage",
+    "marklogic.resultsInEditorTab": false,
     "java.configuration.updateBuildConfiguration": "automatic",
-    "java.compile.nullAnalysis.mode": "disabled",
-    "marklogic.authType": "BASIC",
-    "marklogic.adminBasePath": "/local/admin"
+    "java.compile.nullAnalysis.mode": "disabled"
 }

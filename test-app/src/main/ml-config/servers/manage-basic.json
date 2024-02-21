@@ -1,13 +1,11 @@
 {
     "server-type": "http",
-    "server-name": "Manage-ssl",
+    "server-name": "Manage-basic",
     "root": "Apps/",
-    "port": 8052,
+    "port": 8059,
     "content-database": "App-Services",
     "authentication": "basic",
     "error-handler": "manage/error-handler.xqy",
     "url-rewriter": "/MarkLogic/manage/rewriter.xml",
-    "rewrite-resolves-globally": true,
-    "ssl-certificate-template": "mlxprs-ssl-certificate-template",
-    "ssl-require-client-certificate": false
+    "rewrite-resolves-globally": true
 }
