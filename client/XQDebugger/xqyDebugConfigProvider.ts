@@ -23,12 +23,13 @@ import {
 
 import { MlxprsErrorReporter } from '../mlxprsErrorReporter';
 import { MlClientParameters } from '../marklogicClient';
+import { buildClientFactoryFromConfigurationManager } from '../clientFactory';
 import { MlxprsError } from '../mlxprsErrorBuilder';
 import { XqyDebugManager, DebugStatusQueryResponse } from './xqyDebugManager';
-import { ConfigurationManager } from '../configurationManager';
 
-
+/* eslint-disable @typescript-eslint/no-unused-vars */
 export class XqyDebugConfiguration implements DebugConfiguration {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any
     type: string;
     name: string;
@@ -50,23 +51,13 @@ const placeholder: QuickPickOptions = {
 
 export class XqyDebugConfigurationProvider implements DebugConfigurationProvider {
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    private async resolveRemainingDebugConfiguration(folder: WorkspaceFolder | undefined, config: XqyDebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration> {
-        const clientParams: MlClientParameters = new MlClientParameters({
-            host: String(ConfigurationManager.getHost()),
-            port: Number(ConfigurationManager.getPort()),
-            restBasePath: String(ConfigurationManager.getRestBasePath()),
-            managePort: Number(ConfigurationManager.getManagePort()),
-            manageBasePath: String(ConfigurationManager.getManageBasePath()),
-            user: String(ConfigurationManager.getUsername()),
-            pwd: String(ConfigurationManager.getPassword()),
-            contentDb: String(ConfigurationManager.getDocumentsDb()),
-            modulesDb: String(ConfigurationManager.getModulesDb()),
-            authType: String(ConfigurationManager.getAuthType()),
-            ssl: Boolean(ConfigurationManager.getSsl()),
-            pathToCa: String(ConfigurationManager.getPathToCa() || ''),
-            rejectUnauthorized: Boolean(ConfigurationManager.getRejectUnauthorized())
-        });
+    private async resolveRemainingDebugConfiguration(
+        folder: WorkspaceFolder | undefined,
+        config: XqyDebugConfiguration,
+        token?: CancellationToken
+    ): Promise<DebugConfiguration> {
+        const clientParams: MlClientParameters =
+            buildClientFactoryFromConfigurationManager().toMlClientParameters();
         config.clientParams = clientParams;
 
         if (clientParams.pathToCa) {
@@ -113,8 +104,8 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
     }
 
     /**
-     * @override
-     */
+ * @override
+ */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     resolveDebugConfiguration(folder: WorkspaceFolder | undefined, config: XqyDebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
         if (!config.type && !config.request && !config.name) {
