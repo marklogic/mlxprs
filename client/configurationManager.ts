@@ -22,6 +22,10 @@ export interface MarklogicConfigurationSettings {
     restBasePath?: string;
     managePort?: string;
     manageBasePath?: string;
+    testPort?: string;
+    testBasePath?: string;
+    adminPort?: string;
+    adminBasePath?: string;
     username?: string;
     password?: string;
     documentsDb?: string;
@@ -57,20 +61,36 @@ export class ConfigurationManager {
         return ConfigurationManager.getConfigValue('host') as string;
     }
 
-    static getPort(): string {
-        return ConfigurationManager.getConfigValue('port') as string;
+    static getPort(): number {
+        return Number(ConfigurationManager.getConfigValue('port'));
     }
 
     static getRestBasePath(): string {
         return ConfigurationManager.getConfigValue('restBasePath') as string;
     }
 
-    static getManagePort(): string {
-        return ConfigurationManager.getConfigValue('managePort') as string;
+    static getManagePort(): number {
+        return Number(ConfigurationManager.getConfigValue('managePort')) as number;
     }
 
     static getManageBasePath(): string {
         return ConfigurationManager.getConfigValue('manageBasePath') as string;
+    }
+
+    static getTestPort(): number {
+        return Number(ConfigurationManager.getConfigValue('testPort')) as number;
+    }
+
+    static getTestBasePath(): string {
+        return ConfigurationManager.getConfigValue('testBasePath') as string;
+    }
+
+    static getAdminPort(): number {
+        return Number(ConfigurationManager.getConfigValue('adminPort')) as number;
+    }
+
+    static getAdminBasePath(): string {
+        return ConfigurationManager.getConfigValue('testAdminPath') as string;
     }
 
     static getUsername(): string {
@@ -93,15 +113,15 @@ export class ConfigurationManager {
         return ConfigurationManager.getConfigValue('authType') as string;
     }
 
-    static getSsl(): string {
-        return ConfigurationManager.getConfigValue('ssl') as string;
+    static getSsl(): boolean {
+        return Boolean(ConfigurationManager.getConfigValue('ssl')) as boolean;
     }
 
     static getPathToCa(): string {
         return ConfigurationManager.getConfigValue('pathToCa') as string;
     }
 
-    static getRejectUnauthorized(): string {
-        return ConfigurationManager.getConfigValue('rejectUnauthorized') as string;
+    static getRejectUnauthorized(): boolean {
+        return Boolean(ConfigurationManager.getConfigValue('rejectUnauthorized')) as boolean;
     }
 }

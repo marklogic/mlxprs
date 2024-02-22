@@ -22,7 +22,8 @@ import * as vscode from 'vscode';
 import { DebugClient } from '@vscode/debugadapter-testsupport';
 
 import { JsDebugManager } from '../../JSDebugger/jsDebugManager';
-import { ClientContext, MlClientParameters, newMarklogicClientWithPort, sendJSQuery } from '../../marklogicClient';
+import { ClientContext, sendJSQuery } from '../../marklogicClient';
+import { ClientFactory } from '../../clientFactory';
 
 export class IntegrationTestHelper {
 
@@ -53,7 +54,7 @@ export class IntegrationTestHelper {
     readonly restBasePath = process.env.ML_RESTBASEPATH ? String(process.env.ML_RESTBASEPATH) : '';
     readonly managePort = Number(process.env.ML_MANAGEPORT) || 8059;
     readonly manageBasePath = process.env.ML_MANAGEBASEPATH ? String(process.env.ML_MANAGEBASEPATH) : '';
-    readonly unitTestPort = Number(process.env.ML_UNITTESTPORT || '8054');
+    readonly testPort = Number(process.env.ML_TESTPORT || '8054');
     readonly testBasePath = process.env.ML_TESTBASEPATH ? String(process.env.ML_TESTBASEPATH) : '';
     private username = String(process.env.ML_USERNAME || 'admin');
     private password = String(process.env.ML_PASSWORD || 'admin');
@@ -69,7 +70,7 @@ export class IntegrationTestHelper {
         managePort: this.managePort,
         manageBasePath: this.manageBasePath,
         user: this.username,
-        pwd: this.password,
+        password: this.password,
         authType: 'BASIC',
         contentDb: this.documentsDatabase,
         modulesDb: this.modulesDB,
@@ -100,12 +101,15 @@ export class IntegrationTestHelper {
 
     // Need to only define the parameters here, and the client in the test
     // Due to the internal global variables in the internal.js file
-    readonly mlUnitTestClientParameters = new MlClientParameters({
+    readonly mlUnitTestClientParameters = new ClientFactory({
         host: this.hostname,
-        port: this.unitTestPort,
+        port: null,
+        restBasePath: null,
+        testPort: this.testPort,
+        testBasePath: this.testBasePath,
         managePort: ClientContext.DEFAULT_MANAGE_PORT,
         user: this.username,
-        pwd: this.password,
+        password: this.password,
         authType: 'BASIC',
         contentDb: 'mlxprs-test-test-content',
         modulesDb: null,
@@ -157,7 +161,7 @@ export class IntegrationTestHelper {
                 pwd: this.password,
                 contentDb: 'mlxprs-test-test-content',
                 authType: 'BASIC',
-                port: this.unitTestPort,
+                port: this.testPort,
                 managePort: this.managePort,
                 ssl: this.ssl,
                 pathToCa: this.pathToCa,
@@ -259,9 +263,7 @@ export class IntegrationTestHelper {
     }
 
     async getRid(dbClientContext: ClientContext, qry: string): Promise<string[]> {
-        const newParams: MlClientParameters = JSON.parse(JSON.stringify(dbClientContext.params));
-        newParams.port = this.managePort;
-        const newClient = new ClientContext(newParams);
+        const newClient: ClientContext = new ClientFactory(dbClientContext.params).newMarklogicManageClient();
         return sendJSQuery(newClient, qry)
             .result(
                 (fulfill: Record<string, never>[]) => {
@@ -275,7 +277,7 @@ export class IntegrationTestHelper {
     }
 
     private async restartMarkLogic(): Promise<string> {
-        const manageClient = newMarklogicClientWithPort(this.mlClient, this.managePort, this.manageBasePath);
+        const manageClient = new ClientFactory({ ...this.clientDefaults }).newMarklogicTestClient();
 
         return new Promise((resolve, reject) => {
             manageClient.databaseClient.internal.sendRequest(
@@ -303,7 +305,7 @@ export class IntegrationTestHelper {
     }
 
     private async isMarkLogicRunning(): Promise<boolean> {
-        const manageClient = newMarklogicClientWithPort(this.mlClient, this.managePort, this.manageBasePath);
+        const manageClient = new ClientFactory({ ...this.clientDefaults }).newMarklogicTestClient();
 
         return new Promise((resolve) => {
             manageClient.databaseClient.internal.sendRequest(
@@ -321,8 +323,8 @@ export class IntegrationTestHelper {
     }
 
     private newClientWithDefaultsAndOverrides(overrides: object = {}): ClientContext {
-        const newParams = new MlClientParameters({ ...this.clientDefaults, ...overrides });
-        return new ClientContext(newParams);
+        const newParams = new ClientFactory({ ...this.clientDefaults, ...overrides });
+        return newParams.newMarklogicRestClient();
     }
 
 }

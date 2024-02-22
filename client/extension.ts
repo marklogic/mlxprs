@@ -94,12 +94,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const sendRowsXmlQuery = vscode.commands.registerTextEditorCommand(
         'extension.sendRowsXmlQuery', (editor: vscode.TextEditor) => sendEditorRowsQuery(editor, 'xml'));
     const runTestModule = vscode.commands.registerTextEditorCommand(
-        'extension.runTestModule',
-        (editor: vscode.TextEditor) => {
-            const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-            markLogicUnitTestClient.runTestModule(cfg, editor);
-        }
-    );
+        'extension.runTestModule', (editor: vscode.TextEditor) => markLogicUnitTestClient.runTestModule(editor));
     const validateTdeTemplate = vscode.commands.registerTextEditorCommand(
         'extension.validateTdeTemplate',
         (editor: vscode.TextEditor) => {

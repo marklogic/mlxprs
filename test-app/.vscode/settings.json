@@ -17,7 +17,7 @@
     "marklogic.testBasePath": "",
     "marklogic.adminPort": 8001,
     "marklogic.adminBasePath": "",
-}   // Use these for the reverse proxy and basePath testing
+    // Use these for the reverse proxy and basePath testing
     // "marklogic.port": 8020,
     // "marklogic.restBasePath": "/mlxprs/rest",
     // "marklogic.managePort": 8020,
