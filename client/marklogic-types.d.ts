@@ -100,6 +100,8 @@ declare module 'marklogic' {
         password: string;
         database: string;
         authType: string;
+        apiKey: string;
+        accessTokenDuration: number;
         ssl: boolean;
         ca: string;
         rejectUnauthorized: boolean;

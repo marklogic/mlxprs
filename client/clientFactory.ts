@@ -14,6 +14,8 @@ export class ClientFactory implements ml.ConnectionParams {
     password: string;
     database: string;
     authType: string;
+    apiKey: string;
+    accessTokenDuration: number;
     ssl: boolean;
     ca: string;
     rejectUnauthorized: boolean;
@@ -34,7 +36,8 @@ export class ClientFactory implements ml.ConnectionParams {
     ) {
         this.host = rawParams.host;
         this.port = Number(rawParams.port);
-        this.basePath = rawParams.basePath || '';
+        this.basePath = rawParams.restBasePath || '';
+        this.restBasePath = rawParams.restBasePath || '';
         this.managePort = Number(rawParams.managePort);
         this.manageBasePath = rawParams.manageBasePath || '';
         this.testPort = Number(rawParams.testPort);
@@ -47,13 +50,15 @@ export class ClientFactory implements ml.ConnectionParams {
         this.database = rawParams.contentDb || rawParams.documentsDb || '';
         this.modulesDb = rawParams.modulesDb || '';
         this.authType = rawParams.authType;
+        this.apiKey = rawParams.apiKey;
+        this.accessTokenDuration = rawParams.accessTokenDuration;
         this.ssl = Boolean(rawParams.ssl);
         this.pathToCa = rawParams.pathToCa || '';
         this.rejectUnauthorized = Boolean(rawParams.rejectUnauthorized);
 
         // This check was previously done in the MarklogicClient constructor, but doing
         // so causes the sameAs function in this class to not behave properly
-        if (this.authType !== 'DIGEST' && this.authType !== 'BASIC') {
+        if (this.authType !== 'DIGEST' && this.authType !== 'BASIC' && this.authType !== 'CLOUD') {
             this.authType = 'DIGEST';
         }
     }
@@ -91,6 +96,8 @@ export class ClientFactory implements ml.ConnectionParams {
             contentDb: this.database,
             modulesDb: this.modulesDb,
             authType: this.authType.toUpperCase(),
+            apiKey: this.apiKey,
+            accessTokenDuration: this.accessTokenDuration,
             ssl: this.ssl,
             pathToCa: this.pathToCa || '',
             rejectUnauthorized: this.rejectUnauthorized,
@@ -144,6 +151,8 @@ export function buildClientFactoryFromWorkspaceConfig(
         contentDb: String(cfg.get('marklogic.documentsDb')),
         modulesDb: String(cfg.get('marklogic.modulesDb')),
         authType: String(cfg.get('marklogic.authType')).toUpperCase(),
+        apiKey: String(cfg.get('marklogic.apiKey')),
+        accessTokenDuration: Number(cfg.get('marklogic.accessTokenDuration')),
         ssl: Boolean(cfg.get('marklogic.ssl')),
         pathToCa: String(cfg.get('marklogic.pathToCa') || ''),
         rejectUnauthorized: Boolean(cfg.get('marklogic.rejectUnauthorized'))
@@ -167,8 +176,9 @@ export function buildClientFactoryFromConfigurationManager(): ClientFactory {
         adminBasePath: ConfigurationManager.getAdminBasePath(),
         contentDb: ConfigurationManager.getDocumentsDb(),
         modulesDb: ConfigurationManager.getModulesDb(),
-        authType: ConfigurationManager.getAuthType(),
-        ssl: ConfigurationManager.getSsl(),
+        authType: ConfigurationManager.getAuthType().toUpperCase(),
+        apiKey: ConfigurationManager.getApiKey(),
+        accessTokenDuration: ConfigurationManager.getAccessTokenDuration(),
         pathToCa: ConfigurationManager.getPathToCa() || '',
         rejectUnauthorized: ConfigurationManager.getRejectUnauthorized()
     };

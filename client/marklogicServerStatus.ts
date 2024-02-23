@@ -12,6 +12,8 @@ export class MarkLogicServerStatusTreeDataProvider implements vscode.TreeDataPro
 
     private dbClientContext: ClientContext;
     private dbManageClientContext: ClientContext;
+    private adminPort: number;
+    private adminBasePath: string;
     private allResources: ResourceResponse;
     private allProperties: PropertiesResponse;
     private getAllResourcesPromise: Promise<ResourceResponse>;
@@ -40,6 +42,8 @@ export class MarkLogicServerStatusTreeDataProvider implements vscode.TreeDataPro
 
         this.getAllResourcesPromise = this.dbManageClientContext.getAllResources();
         this.getAllPropertiesPromise = null;
+        this.adminPort = clientFactory.adminPort;
+        this.adminBasePath = clientFactory.adminBasePath;
     }
 
     refresh(): void {
@@ -110,7 +114,7 @@ export class MarkLogicServerStatusTreeDataProvider implements vscode.TreeDataPro
         databaseConfigList.forEach(databaseItem => {
             const databasePath = `/database-admin.xqy?section=database&database=${databaseItem.id}`;
             const urlBase =
-                this.dbClientContext.buildUrlBase(this.dbClientContext.params.adminPort, this.dbClientContext.params.adminBasePath);
+                this.dbClientContext.buildUrlBase(this.adminPort, this.adminBasePath);
             const url = `${urlBase}${databasePath}`;
             databaseList.push(
                 new MarkLogicServerStatus(
@@ -136,7 +140,7 @@ export class MarkLogicServerStatusTreeDataProvider implements vscode.TreeDataPro
         appServerConfigList.forEach(appServer => {
             const appServerPath = `/http-server-admin.xqy?http-server=${appServer.id}`;
             const urlBase =
-                this.dbClientContext.buildUrlBase(this.dbClientContext.params.adminPort, this.dbClientContext.params.adminBasePath);
+                this.dbClientContext.buildUrlBase(this.adminPort, this.adminBasePath);
             const url = `${urlBase}${appServerPath}`;
             const appServerProperties = appServerPropertiesList
                 .filter((properties) => properties['server-name'] === appServer.name)[0];
@@ -188,6 +192,8 @@ export class MarkLogicServerStatus extends vscode.TreeItem {
     contextValue = 'TODO';
 
     static MarkLogicServerStatusSorter(a: MarkLogicServerStatus, b: MarkLogicServerStatus): number {
-        return (a.label.toUpperCase() > b.label.toUpperCase()) ? 1 : ((b.label.toUpperCase() > a.label.toUpperCase()) ? -1 : 0);
+        return (a.label.toUpperCase() > b.label.toUpperCase()) ?
+            1 :
+            ((b.label.toUpperCase() > a.label.toUpperCase()) ? -1 : 0);
     }
 }

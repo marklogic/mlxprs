@@ -430,7 +430,7 @@
                         "order": 1,
                         "type": "string",
                         "default": "DIGEST",
-                        "description": "only DIGEST or BASIC for now"
+                        "description": "only DIGEST, BASIC, or CLOUD for now"
                     },
                     "marklogic.username": {
                         "order": 2,
@@ -444,20 +444,26 @@
                         "default": "admin",
                         "description": "password for MarkLogic connection"
                     },
-                    "marklogic.pathToCa": {
+                    "marklogic.apiKey": {
                         "order": 4,
+                        "type": "string",
+                        "default": "",
+                        "description": "API Key for a MarkLogic Cloud connection"
+                    },
+                    "marklogic.pathToCa": {
+                        "order": 5,
                         "type": "string",
                         "default": "",
                         "description": "path to certificate authority (e.g. for self-signed certificates)"
                     },
                     "marklogic.ssl": {
-                        "order": 5,
+                        "order": 6,
                         "type": "boolean",
                         "default": false,
                         "description": "whether to use ssl for the http connection"
                     },
                     "marklogic.rejectUnauthorized": {
-                        "order": 6,
+                        "order": 7,
                         "type": "boolean",
                         "default": true,
                         "description": "whether the server's SSL certificate should be verified against the list of supplied certificate authories"
