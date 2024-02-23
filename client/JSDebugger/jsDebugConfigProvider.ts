@@ -84,6 +84,8 @@ export class JsDebugConfigurationProvider implements vscode.DebugConfigurationPr
         config.mlModulesRoot = String(wcfg.get('marklogic.modulesRoot'));
         config.ssl = Boolean(wcfg.get('marklogic.ssl'));
         config.authType = String(wcfg.get('marklogic.authType'));
+        config.apiKey = String(wcfg.get('marklogic.apiKey'));
+        config.accessTokenDuration = Number(wcfg.get('marklogic.accessTokenDuration'));
         config.rejectUnauthorized = Boolean(wcfg.get('marklogic.rejectUnauthorized'));
 
         if (config.ssl) config.pathToCa = String(wcfg.get('marklogic.pathToCa') || '');

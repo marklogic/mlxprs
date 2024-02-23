@@ -361,6 +361,8 @@ function newManageConfig() {
         user: cfg.get('username'),
         pwd: cfg.get('password'),
         authType: cfg.get('authType'),
+        apiKey: cfg.get('apiKey'),
+        accessTokenDuration: cfg.get('accessTokenDuration'),
         contentDb: null,
         modulesDb: null,
         pathToCa: String(cfg.get('pathToCa') || ''),

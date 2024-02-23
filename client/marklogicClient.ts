@@ -71,6 +71,8 @@ export class MlClientParameters {
     user: string;
     pwd: string;
     authType: string;
+    apiKey: string;
+    accessTokenDuration: number;
     ssl: boolean;
     pathToCa: string;
     rejectUnauthorized: boolean;
@@ -98,19 +100,25 @@ export class MlClientParameters {
         this.contentDb = rawParams.contentDb || rawParams.documentsDb || '';
         this.modulesDb = rawParams.modulesDb || '';
         this.authType = rawParams.authType;
+        this.apiKey = rawParams.apiKey;
+        this.accessTokenDuration = rawParams.accessTokenDuration;
         this.ssl = Boolean(rawParams.ssl);
         this.pathToCa = rawParams.pathToCa || '';
         this.rejectUnauthorized = Boolean(rawParams.rejectUnauthorized);
 
         // This check was previously done in the MarklogicClient constructor, but doing so causes the sameAs
         // function in this class to not behave properly
-        if (this.authType !== 'DIGEST' && this.authType !== 'BASIC') {
+        if (this.authType !== 'DIGEST' && this.authType !== 'BASIC' && this.authType !== 'CLOUD') {
             this.authType = 'DIGEST';
         }
     }
 
     toString(): string {
-        const paramsArray = [this.host, this.port, this.user, this.pwd.replace(/./g, '*'), this.authType, this.contentDb, this.modulesDb];
+        const paramsArray = [
+            this.host, this.port, this.user, this.pwd.replace(/./g, '*'),
+            this.authType, this.contentDb, this.modulesDb,
+            this.apiKey, this.accessTokenDuration
+        ];
         if (this.ssl) {
             paramsArray.push('ssl');
             if (!this.rejectUnauthorized) paramsArray.push('insecure');
@@ -130,6 +138,8 @@ export class MlClientParameters {
             this.user === other.user &&
             this.pwd === other.pwd &&
             this.authType === other.authType &&
+            this.apiKey === other.apiKey &&
+            this.accessTokenDuration === other.accessTokenDuration &&
             this.ssl === other.ssl &&
             this.pathToCa === other.pathToCa &&
             this.rejectUnauthorized === other.rejectUnauthorized
@@ -163,6 +173,7 @@ export class ClientContext {
             user: this.params.user, password: this.params.pwd,
             database: this.params.contentDb,
             authType: this.params.authType, ssl: this.params.ssl,
+            apiKey: this.params.apiKey, accessTokenDuration: this.params.accessTokenDuration,
             ca: this.ca, rejectUnauthorized: this.params.rejectUnauthorized
         });
     }
@@ -531,6 +542,8 @@ export function newClientParams(cfg: WorkspaceConfiguration, overrides: object =
         contentDb: String(cfg.get('marklogic.documentsDb')),
         modulesDb: String(cfg.get('marklogic.modulesDb')),
         authType: String(cfg.get('marklogic.authType')).toUpperCase(),
+        apiKey: String(cfg.get('marklogic.apiKey')),
+        accessTokenDuration: Number(cfg.get('marklogic.accessTokenDuration')),
         ssl: Boolean(cfg.get('marklogic.ssl')),
         pathToCa: String(cfg.get('marklogic.pathToCa') || ''),
         rejectUnauthorized: Boolean(cfg.get('marklogic.rejectUnauthorized'))

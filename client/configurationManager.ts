@@ -31,6 +31,8 @@ export interface MarklogicConfigurationSettings {
     documentsDb?: string;
     modulesDb?: string;
     authType?: string;
+    apiKey?: string;
+    accessTokenDuration?: string;
     ssl?: string;
     pathToCa?: string;
     rejectUnauthorized?: string;
@@ -111,6 +113,14 @@ export class ConfigurationManager {
 
     static getAuthType(): string {
         return ConfigurationManager.getConfigValue('authType') as string;
+    }
+
+    static getApiKey(): string {
+        return ConfigurationManager.getConfigValue('apiKey') as string;
+    }
+
+    static getAccessTokenDuration(): number {
+        return ConfigurationManager.getConfigValue('accessTokenDuration') as number;
     }
 
     static getSsl(): boolean {

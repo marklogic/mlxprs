@@ -87,6 +87,7 @@ suite('Extension Test Suite', () => {
         assert.strictEqual(runTime.getDbgPort(), 11111, 'the custom managePort should be reflected in the RunTime object');
     });
 
+
     test('getDbClient should cache its settings in the state passed to it', () => {
         const config = workspace.getConfiguration();
         // This allows the test to ensure that the config values are predictable
@@ -102,6 +103,8 @@ suite('Extension Test Suite', () => {
     "documentsDb": "DOCS",
     "modulesDb": "MODS",
     "authType": "DIGEST",
+    "apiKey": "apiKey",
+    "accessTokenDuration": "accessTokenDuration",
     "ssl": true,
     "pathToCa": "",
     "rejectUnauthorized": ""

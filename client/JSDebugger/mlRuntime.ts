@@ -136,6 +136,9 @@ export class MLRuntime extends EventEmitter {
                 contentDb: args.database,
                 ssl: this._ssl,
                 authType: args.authType,
+                apiKey: args.apiKey,
+                accessTokenDuration: args.accessTokenDuration,
+
                 modulesDb: args.modules,
                 pathToCa: args.pathToCa ? args.pathToCa : '',
                 rejectUnauthorized: args.rejectUnauthorized
