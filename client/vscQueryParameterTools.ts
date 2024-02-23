@@ -20,8 +20,10 @@ import * as esprima from 'esprima';
 import { Memento, WorkspaceConfiguration, window } from 'vscode';
 
 import { MlxprsErrorReporter } from './mlxprsErrorReporter';
-import { SJS, XQY, parseXQueryForOverrides, MLSETTINGSFLAG, ClientContext,
-    MlClientParameters, newClientParams, MLDBCLIENT } from './marklogicClient';
+import {
+    SJS, XQY, parseXQueryForOverrides, MLSETTINGSFLAG, ClientContext,
+    MlClientParameters, newClientParams, MLDBCLIENT
+} from './marklogicClient';
 import { MlxprsError } from './mlxprsErrorBuilder';
 
 /**
@@ -94,21 +96,6 @@ export function getDbClient(queryText: string, language: string, cfg: WorkspaceC
         }
     }
     return state.get(MLDBCLIENT) as ClientContext;
-}
-/**
- * Try to call `getDbClient()` with overrides. If we can't parse the
- * overrides, call `getDbClient()` with no overrides, and show the
- * user an error.
- */
-export function cascadeOverrideClient(actualQuery: string, language: string, cfg: WorkspaceConfiguration, state: Memento): ClientContext {
-    let dbClientContext: ClientContext = {} as ClientContext;
-    try {
-        dbClientContext = getDbClient(actualQuery, language, cfg, state);
-    } catch (error) {
-        window.showErrorMessage('could not parse JSON for overrides: ' + error.message);
-        dbClientContext = getDbClient('', language, cfg, state);
-    }
-    return dbClientContext;
 }
 
 export function getDbClientWithoutOverrides(cfg: WorkspaceConfiguration, state: Memento): ClientContext {

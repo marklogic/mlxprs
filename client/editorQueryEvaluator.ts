@@ -23,13 +23,14 @@ import {
     WorkspaceEdit, commands, window, workspace, WorkspaceConfiguration
 } from 'vscode';
 
+import { buildClientFactoryFromWorkspaceConfig } from './clientFactory';
 import { ClientResponseProvider, ErrorResultsObject } from './clientResponseProvider';
 import { MlxprsErrorReporter } from './mlxprsErrorReporter';
 import { ClientContext, sendJSQuery, sendGraphQl, sendRows, sendSparql, sendXQuery } from './marklogicClient';
 import { buildMlxprsErrorFromError, MlxprsError } from './mlxprsErrorBuilder';
 import { MlxprsWebViewProvider } from './mlxprsWebViewProvider';
 import { getSparqlQueryForm, getSparqlResponseType } from './sparqlQueryHelper';
-import { cascadeOverrideClient } from './vscQueryParameterTools';
+import { parseQueryForOverrides } from './vscQueryParameterTools';
 
 export enum EditorQueryType {
     JS,
@@ -75,6 +76,7 @@ export class EditorQueryEvaluator {
         return query;
     }
 
+    /* eslint-disable indent */
     public editorQuery(
         editorQueryType: EditorQueryType, editor: TextEditor, rowsResponseFormat?: ml.RowsResponseFormat
     ): void {
@@ -85,30 +87,32 @@ export class EditorQueryEvaluator {
         if (editorQueryType === EditorQueryType.XQY) {
             language = EditorQueryEvaluator.XQY;
         }
-        const dbClientContext: ClientContext = cascadeOverrideClient(query, language, this.cfg, this.extensionContext.globalState);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const overrides: Record<string, any> = parseQueryForOverrides(query, language);
+        const dbClientContext = buildClientFactoryFromWorkspaceConfig(this.cfg, overrides).newMarklogicRestClient();
         const host = dbClientContext.params.host;
         const port = dbClientContext.params.port;
         const resultsEditorTabIdentifier = ClientResponseProvider.encodeLocation(editor.document.uri, host, port);
 
         switch (editorQueryType) {
-        case EditorQueryType.XQY:
-            this.editorXQuery(dbClientContext, query, resultsEditorTabIdentifier, editor);
-            break;
-        case EditorQueryType.JS:
-            this.editorJSQuery(dbClientContext, query, resultsEditorTabIdentifier, editor);
-            break;
-        case EditorQueryType.SPARQL:
-            this.editorSparqlQuery(dbClientContext, query, resultsEditorTabIdentifier, editor);
-            break;
-        case EditorQueryType.SQL:
-            this.editorSqlQuery(dbClientContext, query, resultsEditorTabIdentifier, editor, this.cfg);
-            break;
-        case EditorQueryType.GRAPHQL:
-            this.editorRowsQuery(dbClientContext, query, resultsEditorTabIdentifier, editor, 'json', 'graphql');
-            break;
-        case EditorQueryType.ROWS:
-            this.editorRowsQuery(dbClientContext, query, resultsEditorTabIdentifier, editor, rowsResponseFormat, 'optic');
-            break;
+            case EditorQueryType.XQY:
+                this.editorXQuery(dbClientContext, query, resultsEditorTabIdentifier, editor);
+                break;
+            case EditorQueryType.JS:
+                this.editorJSQuery(dbClientContext, query, resultsEditorTabIdentifier, editor);
+                break;
+            case EditorQueryType.SPARQL:
+                this.editorSparqlQuery(dbClientContext, query, resultsEditorTabIdentifier, editor);
+                break;
+            case EditorQueryType.SQL:
+                this.editorSqlQuery(dbClientContext, query, resultsEditorTabIdentifier, editor, this.cfg);
+                break;
+            case EditorQueryType.GRAPHQL:
+                this.editorRowsQuery(dbClientContext, query, resultsEditorTabIdentifier, editor, 'json', 'graphql');
+                break;
+            case EditorQueryType.ROWS:
+                this.editorRowsQuery(dbClientContext, query, resultsEditorTabIdentifier, editor, rowsResponseFormat, 'optic');
+                break;
         }
     }
 
@@ -255,7 +259,7 @@ export class EditorQueryEvaluator {
     }
 
     // public only for testing purposes
-    public  editorRowsQuery(
+    public editorRowsQuery(
         dbClientContext: ClientContext,
         query: string,
         resultsEditorTabIdentifier: Uri,

@@ -65,19 +65,19 @@ export class MlClientParameters {
     modulesDb: string;
     host: string;
     port: number;
-    managePort: number;
-    adminPort: number;
-    testPort: number;
+    managePort?: number;
+    adminPort?: number;
+    testPort?: number;
     user: string;
     pwd: string;
     authType: string;
     ssl: boolean;
     pathToCa: string;
     rejectUnauthorized: boolean;
-    manageBasePath: string;
-    adminBasePath: string;
-    restBasePath: string;
-    testBasePath: string;
+    manageBasePath?: string;
+    adminBasePath?: string;
+    restBasePath?: string;
+    testBasePath?: string;
     /**
      * note: defaults not applied here. Properties can remain undefined so that
      *       per-query overrides don't clobber the existing config with default values.

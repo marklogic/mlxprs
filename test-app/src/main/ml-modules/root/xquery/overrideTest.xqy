@@ -1,7 +1,8 @@
 (: mlxprs:settings
 {
-"host": "macpro-6191.marklogic.com",
-"managePort": 8052,
+"host": "localhost",
+"authType": "BASIC",
+"managePort": 8059,
 "port": 8057,
 "contentDb": "mlxprs-test-content",
 "modulesDb": "mlxprs-test-modules",
