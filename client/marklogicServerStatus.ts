@@ -1,8 +1,7 @@
 import * as vscode from 'vscode';
 
-import {
-    ClientContext, newClientParams, PropertiesResponse, ResourceResponse
-} from './marklogicClient';
+import { ClientContext, PropertiesResponse, ResourceResponse } from './marklogicClient';
+import { buildClientFactoryFromWorkspaceConfig } from './clientFactory';
 
 export class MarkLogicServerStatusTreeDataProvider implements vscode.TreeDataProvider<MarkLogicServerStatus> {
 
@@ -27,7 +26,7 @@ export class MarkLogicServerStatusTreeDataProvider implements vscode.TreeDataPro
             if (this.dbClientContext.databaseClient) {
                 this.dbClientContext.databaseClient.release();
             }
-            if (this.dbClientContext.databaseClient) {
+            if (this.dbManageClientContext.databaseClient) {
                 this.dbManageClientContext.databaseClient.release();
             }
             this.configure();
@@ -35,15 +34,9 @@ export class MarkLogicServerStatusTreeDataProvider implements vscode.TreeDataPro
     }
 
     private configure() {
-        const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const clientParams = newClientParams(cfg);
-        this.dbClientContext = new ClientContext(clientParams);
-
-        clientParams.port = Number(cfg.get('marklogic.managePort')) || ClientContext.DEFAULT_MANAGE_PORT;
-        clientParams.restBasePath = String(cfg.get('marklogic.manageBasePath')) || '';
-        clientParams.contentDb = null;
-        clientParams.modulesDb = null;
-        this.dbManageClientContext = new ClientContext(clientParams);
+        const clientFactory = buildClientFactoryFromWorkspaceConfig(vscode.workspace.getConfiguration());
+        this.dbClientContext = clientFactory.newMarklogicRestClient();
+        this.dbManageClientContext = clientFactory.newMarklogicManageClient();
 
         this.getAllResourcesPromise = this.dbManageClientContext.getAllResources();
         this.getAllPropertiesPromise = null;

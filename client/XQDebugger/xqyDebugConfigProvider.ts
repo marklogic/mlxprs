@@ -57,7 +57,7 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
         token?: CancellationToken
     ): Promise<DebugConfiguration> {
         const clientParams: MlClientParameters =
-            buildClientFactoryFromConfigurationManager().toMlClientParameters();
+            buildClientFactoryFromConfigurationManager().newRestClientParams();
         config.clientParams = clientParams;
 
         if (clientParams.pathToCa) {

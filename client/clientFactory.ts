@@ -58,101 +58,69 @@ export class ClientFactory implements ml.ConnectionParams {
         }
     }
 
-    toMlClientParameters(): MlClientParameters {
-        return new MlClientParameters({
-            host: this.host,
-            port: this.port,
-            basePath: this.basePath,
-            user: this.user,
-            pwd: this.password,
-            contentDb: this.database,
-            modulesDb: this.modulesDb,
-            authType: this.authType,
-            ssl: this.ssl,
-            pathToCa: this.pathToCa,
-            rejectUnauthorized: this.rejectUnauthorized,
-        });
-    }
-
     newMarklogicRestClient(
         overrides: object = {}
     ): ClientContext {
-        const restClientConnectionParams: ClientFactory =
-            this.newRestClientParams(overrides);
-        return new ClientContext(restClientConnectionParams.toMlClientParameters());
+        const restClientConnectionParams: MlClientParameters = this.newRestClientParams(overrides);
+        return new ClientContext(restClientConnectionParams);
     }
 
     newMarklogicManageClient(
         overrides: object = {}
     ): ClientContext {
-        const manageClientConnectionParams: ClientFactory =
-            this.newManageClientParams(overrides);
-        return new ClientContext(manageClientConnectionParams.toMlClientParameters());
+        const manageClientConnectionParams: MlClientParameters = this.newManageClientParams(overrides);
+        return new ClientContext(manageClientConnectionParams);
     }
 
     newMarklogicTestClient(
         overrides: object = {}
     ): ClientContext {
-        const testClientConnectionParams: ClientFactory =
-            this.newTestClientParams(overrides);
-        return new ClientContext(testClientConnectionParams.toMlClientParameters());
+        const testClientConnectionParams: MlClientParameters = this.newTestClientParams(overrides);
+        return new ClientContext(testClientConnectionParams);
     }
 
     newRestClientParams(
         overrides: object = {}
-    ): ClientFactory {
-        const configParams: Record<string, unknown> = {
+    ): MlClientParameters {
+        const configParams: MlClientParameters = {
             host: this.host,
             user: this.user,
-            password: this.password,
+            pwd: this.password,
             port: this.port,
-            basePath: this.restBasePath,
-            database: this.database,
+            restBasePath: this.restBasePath,
+            contentDb: this.database,
             modulesDb: this.modulesDb,
             authType: this.authType.toUpperCase(),
             ssl: this.ssl,
             pathToCa: this.pathToCa || '',
-            rejectUnauthorized: this.rejectUnauthorized
+            rejectUnauthorized: this.rejectUnauthorized,
+            sameAs: null
         };
-        return new ClientFactory({ ...configParams, ...overrides });
+        return ({ ...configParams, ...overrides }) as MlClientParameters;
     }
 
     newManageClientParams(
         overrides: object = {}
-    ): ClientFactory {
-        const configParams: Record<string, unknown> = {
-            host: this.host,
-            user: this.user,
-            password: this.password,
+    ): MlClientParameters {
+        const manageOverrides: object = {
             port: this.managePort,
-            basePath: this.manageBasePath,
-            database: null,
-            modulesDb: null,
-            authType: this.authType.toUpperCase(),
-            ssl: this.ssl,
-            pathToCa: this.pathToCa || '',
-            rejectUnauthorized: this.rejectUnauthorized
+            restBasePath: this.manageBasePath,
+            contentDb: null,
+            modulesDb: null
         };
-        return new ClientFactory({ ...configParams, ...overrides });
+        return this.newRestClientParams({ ...manageOverrides, ...overrides });
     }
 
     newTestClientParams(
         overrides: object = {}
-    ): ClientFactory {
-        const configParams: Record<string, unknown> = {
-            host: this.host,
-            user: this.user,
-            password: this.password,
+    ): MlClientParameters {
+        const testOverrides: object = {
             port: this.testPort,
-            basePath: this.testBasePath,
-            database: null,
-            modulesDb: null,
-            authType: this.authType.toUpperCase(),
-            ssl: this.ssl,
-            pathToCa: this.pathToCa || '',
-            rejectUnauthorized: this.rejectUnauthorized
+            restBasePath: this.testBasePath,
+            contentDb: null,
+            modulesDb: null
         };
-        return new ClientFactory({ ...configParams, ...overrides });
+        return this.newRestClientParams({ ...testOverrides, ...overrides });
     }
 }
 

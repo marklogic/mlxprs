@@ -21,18 +21,17 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
 
+import { buildClientFactoryFromWorkspaceConfig } from './clientFactory';
 import { ClientResponseProvider } from './clientResponseProvider';
 import { ConfigurationManager } from './configurationManager';
 import { EditorQueryType, EditorQueryEvaluator } from './editorQueryEvaluator';
 import { JsDebugConfigurationProvider, DebugAdapterExecutableFactory } from './JSDebugger/jsDebugConfigProvider';
 import { JsDebugManager } from './JSDebugger/jsDebugManager';
-import { ClientContext, MlClientParameters, newClientParams } from './marklogicClient';
 import { MarkLogicUnitTestClient } from './marklogicUnitTestClient';
 import { MarkLogicTdeValidateClient } from './marklogicTdeValidateClient';
 import { MlxprsStatus } from './mlxprsStatus';
 import { MlxprsWebViewProvider } from './mlxprsWebViewProvider';
 import { ModuleContentProvider, pickAndShowModule } from './vscModuleContentProvider';
-import { getDbClientWithoutOverrides } from './vscQueryParameterTools';
 import { XmlFormattingEditProvider } from './xmlFormatting/Formatting';
 import { XqyDebugConfigurationProvider, XqyDebugAdapterDescriptorFactory } from './XQDebugger/xqyDebugConfigProvider';
 import { XqyDebugManager, handleDebugSessionCustomEvent } from './XQDebugger/xqyDebugManager';
@@ -49,17 +48,13 @@ export function activate(context: vscode.ExtensionContext): void {
     const mprovider = new ModuleContentProvider();
     const markLogicStatusTree = new MarkLogicServerStatusTreeDataProvider();
     const markLogicDebugStatusTree = new MarkLogicDebugStatusTreeDataProvider();
+    const clientFactory = buildClientFactoryFromWorkspaceConfig(vscode.workspace.getConfiguration());
+    const dbClientContext = clientFactory.newMarklogicRestClient();
 
     vscode.workspace.registerTextDocumentContentProvider(
         ClientResponseProvider.scheme, provider);
     vscode.workspace.registerTextDocumentContentProvider(
         ModuleContentProvider.scheme, mprovider);
-
-    vscode.workspace.onDidChangeConfiguration(event => {
-        if (event.affectsConfiguration('marklogic')) {
-            ConfigurationManager.handleUpdateConfigurationEvent();
-        }
-    });
 
     const editorQueryEvaluator = new EditorQueryEvaluator(context, provider);
     const markLogicUnitTestClient = new MarkLogicUnitTestClient(context);
@@ -98,8 +93,6 @@ export function activate(context: vscode.ExtensionContext): void {
     const validateTdeTemplate = vscode.commands.registerTextEditorCommand(
         'extension.validateTdeTemplate',
         (editor: vscode.TextEditor) => {
-            const clientParams: MlClientParameters = newClientParams(vscode.workspace.getConfiguration());
-            const dbClientContext: ClientContext = new ClientContext(clientParams);
             const tdeText = editor.document.getText();
             markLogicTdeValidateClient.validateTdeTemplate(dbClientContext, tdeText);
         }
@@ -107,8 +100,6 @@ export function activate(context: vscode.ExtensionContext): void {
     const tdeExtractNodes = vscode.commands.registerTextEditorCommand(
         'extension.tdeExtractNodes',
         (editor: vscode.TextEditor) => {
-            const clientParams: MlClientParameters = newClientParams(vscode.workspace.getConfiguration());
-            const dbClientContext: ClientContext = new ClientContext(clientParams);
             const tdeText = editor.document.getText();
             markLogicTdeValidateClient.tdeExtractNodes(dbClientContext, tdeText);
         }
@@ -116,49 +107,30 @@ export function activate(context: vscode.ExtensionContext): void {
 
 
     const connectJsServer = vscode.commands.registerCommand('extension.connectJsServer', () => {
-        const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const dbClientContext: ClientContext = getDbClientWithoutOverrides(cfg, context.globalState);
-        if (dbClientContext) {
-            JsDebugManager.connectToJsDebugServer(dbClientContext).then(() => {
-                markLogicDebugStatusTree.refresh();
-            });
-        }
+        JsDebugManager.connectToJsDebugServer(dbClientContext).then(() => {
+            markLogicDebugStatusTree.refresh();
+        });
     });
     const disconnectJsServer = vscode.commands.registerCommand('extension.disconnectJsServer', () => {
-        const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const dbClientContext: ClientContext = getDbClientWithoutOverrides(cfg, context.globalState);
-        if (dbClientContext) {
-            JsDebugManager.disconnectFromJsDebugServer(dbClientContext).then(() => {
-                markLogicDebugStatusTree.refresh();
-            });
-        }
+        JsDebugManager.disconnectFromJsDebugServer(dbClientContext).then(() => {
+            markLogicDebugStatusTree.refresh();
+        });
     });
     const connectXqyServer = vscode.commands.registerCommand('extension.connectXqyServer', () => {
-        const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const dbClientContext: ClientContext = getDbClientWithoutOverrides(cfg, context.globalState);
-        if (dbClientContext) {
-            XqyDebugManager.connectToXqyDebugServer(dbClientContext).then(() => {
-                markLogicDebugStatusTree.refresh();
-            });
-        }
+        XqyDebugManager.connectToXqyDebugServer(dbClientContext).then(() => {
+            markLogicDebugStatusTree.refresh();
+        });
     });
     const disconnectXqyServer = vscode.commands.registerCommand('extension.disconnectXqyServer', () => {
-        const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const dbClientContext: ClientContext = getDbClientWithoutOverrides(cfg, context.globalState);
-        if (dbClientContext) {
-            XqyDebugManager.disconnectFromXqyDebugServer(dbClientContext).then(() => {
-                markLogicDebugStatusTree.refresh();
-            });
-        }
+        XqyDebugManager.disconnectFromXqyDebugServer(dbClientContext).then(() => {
+            markLogicDebugStatusTree.refresh();
+        });
     });
 
 
     const showModule = vscode.commands.registerCommand('extension.showModule', () => {
-        const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        const dbClientContext: ClientContext = getDbClientWithoutOverrides(cfg, context.globalState);
-        if (dbClientContext) {
-            pickAndShowModule(mprovider, dbClientContext);
-        }
+        const modulesDbRestClientContext = clientFactory.newMarklogicRestClient({ database: clientFactory.modulesDb });
+        pickAndShowModule(mprovider, modulesDbRestClientContext);
     });
 
     handleUnload(context, [
@@ -232,7 +204,7 @@ export function activate(context: vscode.ExtensionContext): void {
     ]);
 
 
-    const mlxprsStatus: MlxprsStatus = new MlxprsStatus(context);
+    const mlxprsStatus: MlxprsStatus = new MlxprsStatus();
     handleUnload(context, [mlxprsStatus.getStatusBarItem(), mlxprsStatus.getCommand()]);
     XqyDebugManager.registerMlxprsStatusBarItem(mlxprsStatus);
     JsDebugManager.registerMlxprsStatusBarItem(mlxprsStatus);
@@ -241,11 +213,18 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.window.registerTreeDataProvider('markLogicServerStatus', markLogicStatusTree);
     vscode.commands.registerCommand('markLogicStatusTree.refreshEntry', () => markLogicStatusTree.refresh());
     vscode.commands.registerCommand('extension.callOpenMarkLogicAssetPage', (url) => markLogicStatusTree.openMarkLogicAssetPage(url));
-    vscode.workspace.onDidChangeConfiguration((event) => markLogicStatusTree.onConfigurationChanged(event));
 
     vscode.window.registerTreeDataProvider('markLogicDebugStatus', markLogicDebugStatusTree);
     vscode.commands.registerCommand('markLogicDebugStatusTree.refreshEntry', () => markLogicDebugStatusTree.refresh());
-    vscode.workspace.onDidChangeConfiguration((event) => markLogicDebugStatusTree.onConfigurationChanged(event));
+
+    vscode.workspace.onDidChangeConfiguration(event => {
+        if (event.affectsConfiguration('marklogic')) {
+            ConfigurationManager.handleUpdateConfigurationEvent();
+            mlxprsStatus.onConfigurationChanged(event);
+            markLogicDebugStatusTree.onConfigurationChanged(event);
+            markLogicStatusTree.onConfigurationChanged(event);
+        }
+    });
 
     const mlxprsWebViewProvider = new MlxprsWebViewProvider(context.extensionUri);
     const mlxprsWebView = vscode.window.registerWebviewViewProvider(MlxprsWebViewProvider.viewType, mlxprsWebViewProvider);

@@ -17,7 +17,7 @@
 import * as vscode from 'vscode';
 
 import { ClientContext } from './marklogicClient';
-import { getDbClientWithoutOverrides } from './vscQueryParameterTools';
+import { buildClientFactoryFromWorkspaceConfig } from './clientFactory';
 
 export class MlxprsStatus {
     private dbClientContext: ClientContext;
@@ -28,16 +28,30 @@ export class MlxprsStatus {
     private managePort: number;
     private manageBasePath: string;
 
-    constructor(context: vscode.ExtensionContext) {
-        const cfg: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration();
-        this.managePort = Number(cfg.get('marklogic.managePort')) || ClientContext.DEFAULT_MANAGE_PORT;
-        this.manageBasePath = String(cfg.get('marklogic.manageBasePath')) || '';
-        this.dbClientContext = getDbClientWithoutOverrides(cfg, context.globalState);
+    constructor() {
+        this.configure();
+
         this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
         this.command = vscode.commands.registerCommand(this.commandId, () => {
             this.handleStatusBarCommand();
         });
         this.statusBarItem.command = this.commandId;
+    }
+
+    onConfigurationChanged(event: vscode.ConfigurationChangeEvent) {
+        if (event.affectsConfiguration('marklogic')) {
+            if (this.dbClientContext.databaseClient) {
+                this.dbClientContext.databaseClient.release();
+            }
+            this.configure();
+        }
+    }
+
+    private configure() {
+        const clientFactory = buildClientFactoryFromWorkspaceConfig(vscode.workspace.getConfiguration());
+        this.dbClientContext = clientFactory.newMarklogicRestClient();
+        this.managePort = clientFactory.managePort;
+        this.manageBasePath = clientFactory.manageBasePath;
     }
 
     getCommand(): vscode.Disposable {
