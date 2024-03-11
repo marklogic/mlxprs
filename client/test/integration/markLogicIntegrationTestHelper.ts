@@ -132,6 +132,13 @@ export class IntegrationTestHelper {
 
     async beforeEverything(): Promise<void> {
         await this.loadTestData();
+        await this.restartMarkLogic();
+        await wait(500);
+        let markLogicIsRunning = false;
+        while (!markLogicIsRunning) {
+            await wait(500);
+            markLogicIsRunning = await this.isMarkLogicRunning();
+        }
     }
 
     async afterEverything(): Promise<void> {
@@ -222,11 +229,8 @@ export class IntegrationTestHelper {
         this.debugServerModules.forEach(async (fsModulePath) => {
             const fname = Path.basename(fsModulePath);
             const module = fs.readFileSync(fsModulePath);
-            const qry = `declareUpdate(); let textNode = new NodeBuilder();
-                    textNode.addText(\`${module}\`);
-                    const options = {collections: '${this.collection}'};
-                    xdmp.documentInsert("/MarkLogic/test/${fname}", textNode.toNode(), options);`;
-            requests.push(sendJSQuery(this.mlClient, qry));
+            const qry = `declareUpdate(); let textNode = new NodeBuilder(); textNode.addText(\`${module}\`); const options = {collections: '${this.collection}'}; xdmp.documentInsert('/MarkLogic/test/${fname}', textNode.toNode(), options);`;
+            requests.push(sendJSQuery(this.mlModulesClient, qry));
         });
         this.taskServerModules.forEach(async (fsModulePath) => {
             const fname = Path.basename(fsModulePath);
@@ -265,7 +269,13 @@ export class IntegrationTestHelper {
     }
 
     async getRid(dbClientContext: ClientContext, qry: string): Promise<string[]> {
-        const newClient: ClientContext = new ClientFactory(dbClientContext.params).newMarklogicManageClient();
+        const overrides: Record<string, any> = {
+            password: dbClientContext.params['pwd'],
+            managePort: this.managePort,
+            manageBasePath: this.manageBasePath
+        };
+        const clientFactory = new ClientFactory({ ...dbClientContext.params, ...overrides });
+        const newClient: ClientContext = clientFactory.newMarklogicManageClient();
         return sendJSQuery(newClient, qry)
             .result(
                 (fulfill: Record<string, never>[]) => {
@@ -279,7 +289,13 @@ export class IntegrationTestHelper {
     }
 
     private async restartMarkLogic(): Promise<string> {
-        const manageClient = new ClientFactory({ ...this.clientDefaults }).newMarklogicTestClient();
+        const overrides: Record<string, any> = {
+            // password: dbClientContext.params['pwd'],
+            managePort: this.managePort,
+            manageBasePath: this.manageBasePath
+        };
+        const clientFactory = new ClientFactory({ ...this.clientDefaults, ...overrides });
+        const manageClient = clientFactory.newMarklogicManageClient();
 
         return new Promise((resolve, reject) => {
             manageClient.databaseClient.internal.sendRequest(
@@ -307,7 +323,13 @@ export class IntegrationTestHelper {
     }
 
     private async isMarkLogicRunning(): Promise<boolean> {
-        const manageClient = new ClientFactory({ ...this.clientDefaults }).newMarklogicTestClient();
+        const overrides: Record<string, any> = {
+            // password: dbClientContext.params['pwd'],
+            managePort: this.managePort,
+            manageBasePath: this.manageBasePath
+        };
+        const clientFactory = new ClientFactory({ ...this.clientDefaults, ...overrides });
+        const manageClient = clientFactory.newMarklogicManageClient();
 
         return new Promise((resolve) => {
             manageClient.databaseClient.internal.sendRequest(
