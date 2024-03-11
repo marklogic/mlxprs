@@ -95,8 +95,10 @@ suite('Testing sjs/xqy boundary in eval/invoke', async () => {
         const config = {
             rid: rid, root: root,
             username: globalConfig.username, password: globalConfig.password,
-            hostname: globalConfig.hostname, database: integrationTestHelper.modulesDatabase, modules: integrationTestHelper.modulesDatabase, authType: 'DIGEST',
-            ssl: globalConfig.ssl, pathToCa: globalConfig.pathToCa, rejectUnauthorized: globalConfig.rejectUnauthorized
+            hostname: globalConfig.hostname, managePort: integrationTestHelper.managePort,
+            database: integrationTestHelper.modulesDatabase, modules: integrationTestHelper.modulesDatabase,
+            authType: 'BASIC', ssl: globalConfig.ssl,
+            pathToCa: globalConfig.pathToCa, rejectUnauthorized: globalConfig.rejectUnauthorized
         };
         const jsDebugClient: DebugClient = integrationTestHelper.jsDebugClient;
         await Promise.all([
@@ -105,9 +107,11 @@ suite('Testing sjs/xqy boundary in eval/invoke', async () => {
             jsDebugClient.attachRequest(config as DebugProtocol.AttachRequestArguments)
         ]);
 
-        await jsDebugClient.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'jsInvoke-1.sjs') }, breakpoints: [{ line: 3 }] });
+        await jsDebugClient.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'jsInvoke-1.sjs') }, breakpoints: [{ line: 19 }] });
         await jsDebugClient.continueRequest({ threadId: 1 });
-        jsDebugClient.assertStoppedLocation('breakpoint', { path: Path.join('/MarkLogic/test', 'jsInvoke-1.sjs'), line: 3 });
-    }).timeout(10000).skip();
+        jsDebugClient.assertStoppedLocation('breakpoint', { path: Path.join('/MarkLogic/test', 'jsInvoke-1.sjs'), line: 19 });
+        await jsDebugClient.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'jsInvoke-1.sjs') }, breakpoints: [] });
+        await jsDebugClient.continueRequest({ threadId: 1 });
+    }).timeout(10000);
 
 });
