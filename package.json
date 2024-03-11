@@ -587,9 +587,9 @@
         ]
     },
     "scripts": {
-        "cleanAll": "rimraf node_modules/ .vscode-test/ dist/ server/dist/ server/node_modules/ server/out/ mlxprs-${version}.vsix",
+        "cleanAll": "rimraf node_modules/ .vscode-test/ dist/ server/dist/ server/node_modules/ server/out/ coverage/ mlxprs-${version}.vsix",
         "installAll": "npm install && cd server && npm install && cd ..",
-        "testAll": "npm run test && npm run testServer",
+        "testAll": "npm run test && npm run testServer && npm run testIntegration",
         "copy-files": "npm run copy-files --prefix server",
         "clean": "rimraf dist out server/dist server/out",
         "vscode:prepublish": "webpack --mode production && webpack --mode production --config ./server/webpack.config.js",
@@ -598,10 +598,13 @@
         "pretest-server": "tsc -p server/tsconfig.json && npm run copy-files",
         "predebug": "npm run clean && npm run copy-files --prefix server && tsc -b server && tsc -b -w .",
         "test": "node dist/test/runTest.js --full-trace",
+        "testIntegration": "node dist/test/runIntegrationTest.js --full-trace",
         "testServer": "npm run pretest-server && node server/dist/test/runTest.js --full-trace",
         "watch": "webpack --mode none --watch & webpack --mode none --watch --config ./server/webpack.config.js",
         "lint": "eslint client/ server/ --ext .ts --ext .js --ext .sjs",
-        "lintFix": "eslint client/ server/ --ext .ts --ext .js --ext .sjs --fix"
+        "lintFix": "eslint client/ server/ --ext .ts --ext .js --ext .sjs --fix",
+        "coverage": "c8 npm run testIntegration",
+        "coverageAll": "c8 npm run test && c8 npm run testServer && c8 npm run testIntegration"
     },
     "dependenciesComments": {
         "webpack": "Something with version 5.80.0 is breaking the integration tests (and other things?).",
@@ -614,11 +617,8 @@
         }
     },
     "devDependencies": {
-        "@types/estree": "1.0.1",
-        "https-proxy-agent": "5.0.1",
-        "js-yaml": "4.1.0",
-        "yargs-parser": "21.1.1",
         "@types/esprima": "4.0.3",
+        "@types/estree": "1.0.1",
         "@types/mocha": "10.0.1",
         "@types/node": "16.11.7",
         "@types/sinon": "10.0.15",
@@ -629,13 +629,18 @@
         "@typescript-eslint/parser": "5.59.11",
         "@vscode/debugadapter-testsupport": "1.61.0",
         "@vscode/debugprotocol": "1.61.0",
-        "@vscode/test-electron": "2.3.3",
+        "@vscode/test-cli": "^0.0.6",
+        "@vscode/test-electron": "2.3.9",
+        "c8": "^9.1.0",
         "eslint": "8.42.0",
+        "https-proxy-agent": "5.0.1",
+        "js-yaml": "4.1.0",
         "mocha": "10.2.0",
         "rimraf": "5.0.1",
         "sinon": "15.1.2",
         "webpack": "5.76.1",
-        "webpack-cli": "5.0.2"
+        "webpack-cli": "5.0.2",
+        "yargs-parser": "21.1.1"
     },
     "dependencies": {
         "@vscode/debugadapter": "1.61.0",
