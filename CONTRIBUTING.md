@@ -52,9 +52,15 @@ cd server
 npm install
 cd ..
 ```
+
 A shorthand script that does all of that for you is
 ```
 npm run installAll
+```
+
+If you want to ensure a clean build, this command clears all transitory files
+```
+npm run cleanAll
 ```
 
 ## Using the Extension from the Project (except the debugger)
@@ -194,18 +200,22 @@ Note that the order of priority for setting the property values in the test code
 
 
 ### Testing from the command line
-Run these two npm scripts from the command line in the root directory of the project to execute the tests. Note that VSCode must not be running while you run the tests.
+Run these three npm scripts from the command line in the root directory of the project to execute the tests. Note that VSCode must not be running while you run the tests.
+
 ```
-npm run installAll
 npm run test
 npm run testServer
-code --extensionDevelopmentPath=<mlxprs-project-dir>/client --extensionTestsPath=<mlxprs-project-dir>/dist/test/integration/index
+npm run testIntegration
 ```
-<mark>The final test (the integration tests), should not be run while VSCode is open.</mark>
 
-To ensure a clean build, you may also run this npm script before running the `installAll` script.
+Alternatively all tests may be run via the single command:
 ```
-npm run cleanAll
+npm run testAll
+```
+
+Additionally, test coverage reports may be generated with this command:
+```
+npm run coverageAll
 ```
 
 ### Proxy testing
@@ -219,6 +229,7 @@ will then forward requests to port 8020 based on the custom mappings.
 ```
 ./gradlew runBlockingReverseProxyServer
 ```
+
 Node Client Test-App Reverse Proxy Mappings
 ```
 "/mlxprs/manage" => port 8059

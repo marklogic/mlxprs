@@ -10,6 +10,7 @@ dist
 .gradle
 gradle-local.properties
 results/
+coverage/
 test-app/.gradle
 test-app/build
 test-app/docker

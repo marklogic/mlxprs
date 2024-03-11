@@ -228,10 +228,12 @@ cts.doc(cts.uris().toArray()[12 + 19])
 
     test('When a debug configuration is requested, but the pathToCa setting points to an unreadable file', async () => {
         ConfigurationManager.setOverride('pathToCa', '/not/an/existing/file');
+        ConfigurationManager.setOverride('authType', 'BASIC');
 
         const response = await (new XqyDebugConfigurationProvider()).resolveDebugConfiguration(undefined, new XqyDebugConfiguration(), null);
         assert.strictEqual(response, undefined, 'the request should return <undefined>');
         ConfigurationManager.setOverride('pathToCa', null);
+        ConfigurationManager.setOverride('authType', null);
     });
 
 });
