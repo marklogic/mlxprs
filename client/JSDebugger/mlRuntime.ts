@@ -18,7 +18,8 @@ import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as ml from 'marklogic';
 
-import { ClientContext, MlClientParameters, newMarklogicClientWithPort } from '../marklogicClient';
+import { ClientFactory } from '../clientFactory';
+import { ClientContext } from '../marklogicClient';
 import { ModuleContentGetter } from '../moduleContentGetter';
 
 const DEFAULT_MANAGE_PORT = 8002;
@@ -84,8 +85,8 @@ export class MLRuntime extends EventEmitter {
     private _rejectUnauthorized = true;
     private dbClientContext: ClientContext;
     private _mlModuleGetter: ModuleContentGetter;
+    private clientFactory: ClientFactory;
     private managePort = null;
-    // TODO - manageBasePath
     private manageBasePath = '';
 
     public getHostString(): string {
@@ -126,24 +127,26 @@ export class MLRuntime extends EventEmitter {
             this._ca = fs.readFileSync(args.pathToCa);
         }
 
-        this.dbClientContext = new ClientContext(
-            new MlClientParameters({
+        this.clientFactory =
+            new ClientFactory({
                 host: this._hostName,
                 port: this._dbgPort,
                 restBasePath: this.manageBasePath,
                 user: this._username,
-                pwd: this._password,
+                password: this._password,
                 contentDb: args.database,
                 ssl: this._ssl,
                 authType: args.authType,
                 apiKey: args.apiKey,
                 accessTokenDuration: args.accessTokenDuration,
+                managePort: args.managePort,
+                manageBasePath: args.manageBasePath,
 
                 modulesDb: args.modules,
                 pathToCa: args.pathToCa ? args.pathToCa : '',
                 rejectUnauthorized: args.rejectUnauthorized
-            })
-        );
+            });
+        this.dbClientContext = this.clientFactory.newMarklogicRestClient();
         this._mlModuleGetter = new ModuleContentGetter(this.dbClientContext);
     }
 
@@ -266,9 +269,7 @@ export class MLRuntime extends EventEmitter {
     private _sendMLdebugRequestPOST(
         module: string, body?: string, requestParameters?: Record<string, unknown>
     ): Promise<string> {
-        const manageClient =
-            newMarklogicClientWithPort(this.dbClientContext, this.managePort, this.manageBasePath);
-
+        const manageClient = this.clientFactory.newMarklogicManageClient();
         const endpoint = `/jsdbg/v1/${module}/${this._rid}`;
         const urlSearchParams = new global.URLSearchParams(requestParameters);
 
@@ -300,9 +301,7 @@ export class MLRuntime extends EventEmitter {
     private _sendMLdebugRequestGET(
         module: string, requestParameters?: Record<string, unknown>
     ): Promise<string> {
-        const manageClient =
-            newMarklogicClientWithPort(this.dbClientContext, this.managePort, this.manageBasePath);
-
+        const manageClient = this.clientFactory.newMarklogicManageClient();
         const endpoint = `/jsdbg/v1/${module}/${this._rid}`;
         const urlSearchParams = new global.URLSearchParams(requestParameters);
 
@@ -327,9 +326,7 @@ export class MLRuntime extends EventEmitter {
     private _sendMLdebugEvalRequest(
         script: string, database: string, txnId: string, modules: string, root: string
     ): Promise<string> {
-        const manageClient =
-            newMarklogicClientWithPort(this.dbClientContext, this.managePort, this.manageBasePath);
-
+        const manageClient = this.clientFactory.newMarklogicManageClient();
         const evalOptions = {};
         if (database) evalOptions['database'] = database;
         if (modules) evalOptions['modules'] = modules;

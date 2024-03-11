@@ -16,7 +16,8 @@
 
 'use strict';
 
-import { ClientContext, sendXQuery, MlClientParameters } from './marklogicClient';
+import { ClientContext, sendXQuery } from './marklogicClient';
+import { ClientFactory } from './clientFactory';
 
 export const listModulesQuery = 'cts:uris()';
 
@@ -24,9 +25,11 @@ export class ModuleContentGetter {
     private dbClientContext: ClientContext;
 
     public constructor(dbClientContext: ClientContext) {
-        const moduleGetterParams: MlClientParameters = dbClientContext.params;
-        moduleGetterParams.contentDb = moduleGetterParams.modulesDb;
-        this.dbClientContext = new ClientContext(moduleGetterParams);
+        const moduleGetterParams: Record<string, any> = dbClientContext.params;
+        moduleGetterParams.password = moduleGetterParams.pwd;
+        this.dbClientContext =
+            new ClientFactory(moduleGetterParams)
+                .newMarklogicModulesClient();
     }
 
     public host(): string {

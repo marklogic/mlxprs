@@ -20,6 +20,7 @@ import * as fs from 'fs';
 import * as ml from 'marklogic';
 
 import { JsDebugManager } from '../../JSDebugger/jsDebugManager';
+import { ClientFactory } from '../../clientFactory';
 import { ClientContext, getFilteredListOfJsAppServers, sendGraphQl } from '../../marklogicClient';
 import { IntegrationTestHelper, wait } from './markLogicIntegrationTestHelper';
 
@@ -30,21 +31,27 @@ suite('Testing \'disconnect\' functionality with varying scenarios', async () =>
     const managePort = integrationTestHelper.managePort;
     const manageBasePath = integrationTestHelper.manageBasePath;
     const attachServerName: string = integrationTestHelper.attachServerName;
+    const overrides: Record<string, any> = {
+        password: dbClientContext.params['pwd'],
+        managePort: managePort,
+        manageBasePath: manageBasePath
+    };
+    const clientFactory = new ClientFactory({ ...dbClientContext.params, ...overrides });
 
     test('When there are no "connected" app-servers initially', async () => {
-        const disconnectedAppServers = await getFilteredListOfJsAppServers(dbClientContext, managePort, manageBasePath, 'false');
+        const disconnectedAppServers = await getFilteredListOfJsAppServers(clientFactory, 'false');
         assert.ok(disconnectedAppServers.length,
             'this will return an unpredictable number, but in any case it should be greater than 0');
-        const connectedAppServers = await getFilteredListOfJsAppServers(dbClientContext, managePort, manageBasePath, 'true');
+        const connectedAppServers = await getFilteredListOfJsAppServers(clientFactory, 'true');
         assert.equal(connectedAppServers.length, 0, 'no app servers should be returned for this list');
 
         await JsDebugManager.connectToNamedJsDebugServer(attachServerName);
         globalThis.integrationTestHelper.attachedToServer = true;
 
-        const updatedDisconnectedAppServers = await getFilteredListOfJsAppServers(dbClientContext, managePort, manageBasePath, 'false');
+        const updatedDisconnectedAppServers = await getFilteredListOfJsAppServers(clientFactory, 'false');
         assert.equal(updatedDisconnectedAppServers.length + 1, disconnectedAppServers.length,
             'This will return 1 fewer app servers than the previous number of disconnected app servers');
-        const updatedConnectedAppServers = await getFilteredListOfJsAppServers(dbClientContext, managePort, manageBasePath, 'true');
+        const updatedConnectedAppServers = await getFilteredListOfJsAppServers(clientFactory, 'true');
         assert.equal(updatedConnectedAppServers.length, 1, 'This will return the single app server that was connected to');
     }).timeout(5000);
 

@@ -51,7 +51,7 @@ suite('Default Documents DB Test Suite', () => {
         assert.strictEqual(mlClient.params.contentDb, null, 'ML client contentDb should be null');
     });
 
-    test('When MlClientParameters is used and the default contentDb is \'\'', async () => {
+    test('When ClientFactory is used and the default contentDb is \'\'', async () => {
         const mlClient =
             new ClientFactory({
                 host: 'host',
@@ -67,7 +67,7 @@ suite('Default Documents DB Test Suite', () => {
         assert.strictEqual(mlClient.params.contentDb, null, 'ML client contentDb should be null');
     });
 
-    test('When MlClientParameters is used and the default contentDb is missing', async () => {
+    test('When ClientFactory is used and the default contentDb is missing', async () => {
         const mlClient =
             new ClientFactory({
                 host: 'host',

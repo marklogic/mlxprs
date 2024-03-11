@@ -16,8 +16,9 @@
 
 import { DebugSessionCustomEvent, QuickPickItem, window } from 'vscode';
 
+import { ClientFactory } from '../clientFactory';
 import { MlxprsErrorReporter } from '../mlxprsErrorReporter';
-import { ClientContext, MlClientParameters, sendXQuery, ServerQueryResponse } from '../marklogicClient';
+import { ClientContext, sendXQuery, ServerQueryResponse } from '../marklogicClient';
 import { MlxprsError } from '../mlxprsErrorBuilder';
 import { MlxprsStatus } from '../mlxprsStatus';
 
@@ -44,8 +45,8 @@ export class XqyDebugManager {
       => map:with('requestStatus', $rstatus)
       )`;
 
-    public static async getAvailableRequests(params: MlClientParameters): Promise<Array<DebugStatusQueryResponse>> {
-        const dbClientContext: ClientContext = new ClientContext(params);
+    public static async getAvailableRequests(clientFactory: ClientFactory): Promise<Array<DebugStatusQueryResponse>> {
+        const dbClientContext: ClientContext = clientFactory.newMarklogicRestClient();
         const resp = await sendXQuery(dbClientContext, this.listStoppedRequests)
             .result(
                 (fulfill: Record<string, any>[]) => {
