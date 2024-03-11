@@ -23,7 +23,7 @@ import {
 
 import { MlxprsErrorReporter } from '../mlxprsErrorReporter';
 import { MlClientParameters } from '../marklogicClient';
-import { buildClientFactoryFromConfigurationManager } from '../clientFactory';
+import { buildClientFactoryFromConfigurationManager } from '../vscodeClientFactory';
 import { MlxprsError } from '../mlxprsErrorBuilder';
 import { XqyDebugManager, DebugStatusQueryResponse } from './xqyDebugManager';
 
@@ -56,8 +56,8 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
         config: XqyDebugConfiguration,
         token?: CancellationToken
     ): Promise<DebugConfiguration> {
-        const clientParams: MlClientParameters =
-            buildClientFactoryFromConfigurationManager().newRestClientParams();
+        const clientFactory = buildClientFactoryFromConfigurationManager();
+        const clientParams: MlClientParameters = clientFactory.newRestClientParams();
         config.clientParams = clientParams;
 
         if (clientParams.pathToCa) {
@@ -78,7 +78,7 @@ export class XqyDebugConfigurationProvider implements DebugConfigurationProvider
         }
 
         if (config.request === 'attach' && !config.rid) {
-            const rid: string = await XqyDebugManager.getAvailableRequests(clientParams)
+            const rid: string = await XqyDebugManager.getAvailableRequests(clientFactory)
                 .then((requests: Array<DebugStatusQueryResponse>) => {
                     if (requests.length) {
                         const qpRequests: QuickPickItem[] = requests.map((request: DebugStatusQueryResponse) => {

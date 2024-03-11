@@ -17,14 +17,14 @@
 'use strict';
 
 import * as esprima from 'esprima';
-import { Memento, WorkspaceConfiguration, window } from 'vscode';
+import { WorkspaceConfiguration } from 'vscode';
 
-import { MlxprsErrorReporter } from './mlxprsErrorReporter';
+import { buildClientFactoryFromWorkspaceConfig } from './vscodeClientFactory';
 import {
-    SJS, XQY, parseXQueryForOverrides, MLSETTINGSFLAG, ClientContext,
-    MlClientParameters, newClientParams, MLDBCLIENT
+    SJS, XQY, parseXQueryForOverrides, MLSETTINGSFLAG, ClientContext, MlClientParameters
 } from './marklogicClient';
 import { MlxprsError } from './mlxprsErrorBuilder';
+import { MlxprsErrorReporter } from './mlxprsErrorReporter';
 
 /**
  * In SJS/XQuery queries, you can override the VS Code mxprs settings in a comment.
@@ -73,34 +73,14 @@ export function parseQueryForOverrides(queryText: string, language: string): Rec
  *
  * @returns a MarklogicClient based on the contents of `cfg`
  */
-export function getDbClient(queryText: string, language: string, cfg: WorkspaceConfiguration, state: Memento): ClientContext {
+export function getDbClient(queryText: string, language: string, cfg: WorkspaceConfiguration): ClientContext {
     const overrides: MlClientParameters = parseQueryForOverrides(queryText, language) as MlClientParameters;
-    // merge VS Code configuration and overrides
-    const clientParams: MlClientParameters = newClientParams(cfg, overrides);
-    // if settings have changed, release and clear the client
-    const cachedClient = state.get(MLDBCLIENT) as ClientContext;
-    if (cachedClient !== null && !cachedClient.hasSameParamsAs(clientParams)) {
-        cachedClient.databaseClient.release();
-        state.update(MLDBCLIENT, null);
-        console.debug('Removed cached instance of MarklogicClient based on change in params');
-    }
-    // if there's no existing client in the globalState, instantiate a new one
-    if (state.get(MLDBCLIENT) === null) {
-        const dbClientContext: ClientContext = new ClientContext(clientParams);
-        try {
-            state.update(MLDBCLIENT, dbClientContext);
-            console.debug(`Created new MarklogicClient: ${state.get(MLDBCLIENT)}`);
-        } catch (e) {
-            console.error('Error: ' + JSON.stringify(e));
-            e.message ? console.error(e.message) : null;
-        }
-    }
-    return state.get(MLDBCLIENT) as ClientContext;
+    return buildClientFactoryFromWorkspaceConfig(cfg, overrides).newMarklogicRestClient();
 }
 
-export function getDbClientWithoutOverrides(cfg: WorkspaceConfiguration, state: Memento): ClientContext {
+export function getDbClientWithoutOverrides(cfg: WorkspaceConfiguration): ClientContext {
     try {
-        return getDbClient('', SJS, cfg, state);
+        return getDbClient('', SJS, cfg);
     } catch (error) {
         const mlxprsError: MlxprsError = {
             reportedMessage: error.message,

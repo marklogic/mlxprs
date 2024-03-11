@@ -18,7 +18,6 @@ import * as assert from 'assert';
 import { after } from 'mocha';
 import { Selection, TextEditor, window, workspace, Uri } from 'vscode';
 
-import { defaultDummyGlobalState } from './dummyGlobalState';
 import {
     testOverrideQueryWithGoodJSON, testOverrideQueryWithBadJSON, testQueryWithoutOverrides,
     testOverrideXQueryWithGoodJSON, testOverrideXQueryWithBadJSON, testXQueryWithoutOverrides,
@@ -112,21 +111,15 @@ suite('Extension Test Suite', () => {
 */
 cts.doc(cts.uris().toArray()[12 + 19])
 `;
-        const gstate = defaultDummyGlobalState();
         const newHost: string = Math.random().toString(36);
 
-        const firstClient: ClientContext = getDbClient(queryWithDocumentsDbOverride, SJS, config, gstate);
+        const firstClient: ClientContext = getDbClient(queryWithDocumentsDbOverride, SJS, config);
         firstClient.params.host = newHost;
 
         // Verify next client is different since firstClient's params were modified
-        const secondClient: ClientContext = getDbClient(queryWithDocumentsDbOverride, SJS, config, gstate);
+        const secondClient: ClientContext = getDbClient(queryWithDocumentsDbOverride, SJS, config);
         assert.notStrictEqual(firstClient, secondClient);
         assert.notDeepStrictEqual(firstClient, secondClient);
-
-        // Verify third client is same as second client since their params are the same
-        const thirdClient = getDbClient(queryWithDocumentsDbOverride, SJS, config, gstate);
-        assert.strictEqual(thirdClient.params, secondClient.params);
-        assert.notStrictEqual(thirdClient.params.host, newHost);
     });
 
     test('override parser should recognize config overrides', () => {
@@ -142,8 +135,7 @@ cts.doc(cts.uris().toArray()[12 + 19])
         const cfgPca = String(config.get('marklogic.pathToCa') || '');
         const queryText: string = testOverrideQueryWithGoodJSON();
         const overrides = parseQueryForOverrides(queryText, SJS);
-        const gstate = defaultDummyGlobalState();
-        const dbClientContext: ClientContext = getDbClient(queryText, SJS, config, gstate);
+        const dbClientContext: ClientContext = getDbClient(queryText, SJS, config);
 
         assert.strictEqual(overrides.host, dbClientContext.params.host);
         // The pwd value in mlClient1.params will always be of type string, so have to cast the expected value

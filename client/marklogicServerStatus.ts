@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 import { ClientContext, PropertiesResponse, ResourceResponse } from './marklogicClient';
-import { buildClientFactoryFromWorkspaceConfig } from './clientFactory';
+import { buildClientFactoryFromWorkspaceConfig } from './vscodeClientFactory';
 
 export class MarkLogicServerStatusTreeDataProvider implements vscode.TreeDataProvider<MarkLogicServerStatus> {
 

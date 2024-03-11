@@ -20,7 +20,7 @@ import path = require('path');
 import { ExtensionContext, TextEditor, workspace } from 'vscode';
 
 import { ClientContext, requestMarkLogicUnitTest } from './marklogicClient';
-import { buildClientFactoryFromWorkspaceConfig } from './clientFactory';
+import { buildClientFactoryFromWorkspaceConfig } from './vscodeClientFactory';
 import { buildMlxprsErrorFromError, MlxprsError } from './mlxprsErrorBuilder';
 import { MlxprsErrorReporter } from './mlxprsErrorReporter';
 import { MlxprsWebViewProvider } from './mlxprsWebViewProvider';

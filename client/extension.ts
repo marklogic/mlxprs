@@ -21,7 +21,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
 
-import { buildClientFactoryFromWorkspaceConfig } from './clientFactory';
+import { buildClientFactoryFromWorkspaceConfig } from './vscodeClientFactory';
 import { ClientResponseProvider } from './clientResponseProvider';
 import { ConfigurationManager } from './configurationManager';
 import { EditorQueryType, EditorQueryEvaluator } from './editorQueryEvaluator';

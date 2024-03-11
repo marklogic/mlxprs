@@ -23,7 +23,7 @@ import {
     WorkspaceEdit, commands, window, workspace, WorkspaceConfiguration
 } from 'vscode';
 
-import { buildClientFactoryFromWorkspaceConfig } from './clientFactory';
+import { buildClientFactoryFromWorkspaceConfig } from './vscodeClientFactory';
 import { ClientResponseProvider, ErrorResultsObject } from './clientResponseProvider';
 import { MlxprsErrorReporter } from './mlxprsErrorReporter';
 import { ClientContext, sendJSQuery, sendGraphQl, sendRows, sendSparql, sendXQuery } from './marklogicClient';
