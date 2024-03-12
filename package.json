@@ -2,7 +2,7 @@
     "name": "mlxprs",
     "displayName": "MLXPRS: MarkLogic Extension for VS Code",
     "description": "Simplifies and automates common development tasks for creating applications on MarkLogic.",
-    "version": "3.9.0-SNAPSHOT",
+    "version": "3.9.0",
     "publisher": "mlxprs",
     "engines": {
         "vscode": "^1.78.0"
@@ -622,7 +622,7 @@
         "@types/mocha": "10.0.6",
         "@types/node": "16.11.7",
         "@types/sinon": "17.0.3",
-        "@types/vscode": "1.87.0",
+        "@types/vscode": "1.78.0",
         "@types/webpack": "5.28.5",
         "@types/xml2js": "0.4.14",
         "@typescript-eslint/eslint-plugin": "7.1.1",
