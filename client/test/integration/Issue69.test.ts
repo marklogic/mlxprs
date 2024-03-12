@@ -28,6 +28,7 @@ suite('Issue 69', async () => {
     const integrationTestHelper: IntegrationTestHelper = globalThis.integrationTestHelper;
 
     test('set breakpoints on two files', async () => {
+        await integrationTestHelper.restartMarkLogicAndWaitUntilItIsAvailableAgain();
         const globalConfig = integrationTestHelper.config;
         await JsDebugManager.connectToNamedJsDebugServer(integrationTestHelper.attachServerName);
         globalThis.integrationTestHelper.attachedToServer = true;
@@ -70,5 +71,5 @@ suite('Issue 69', async () => {
         await jsDebugClient.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'lib1.sjs') }, breakpoints: [] });
         await jsDebugClient.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'lib2.sjs') }, breakpoints: [] });
         await jsDebugClient.continueRequest({ threadId: 1 });
-    }).timeout(10000);
+    }).timeout(15000);
 });

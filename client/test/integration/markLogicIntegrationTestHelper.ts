@@ -132,13 +132,7 @@ export class IntegrationTestHelper {
 
     async beforeEverything(): Promise<void> {
         await this.loadTestData();
-        await this.restartMarkLogic();
-        await wait(500);
-        let markLogicIsRunning = false;
-        while (!markLogicIsRunning) {
-            await wait(500);
-            markLogicIsRunning = await this.isMarkLogicRunning();
-        }
+        await this.restartMarkLogicAndWaitUntilItIsAvailableAgain();
     }
 
     async afterEverything(): Promise<void> {
@@ -205,14 +199,7 @@ export class IntegrationTestHelper {
         // Some tests can leave the MarkLogic server in a state that causes future tests to fail.
         // The only reliable method for resolving this state is to restart the MarkLogic server.
         if (globalThis.integrationTestHelper.restartServer) {
-            await this.restartMarkLogic();
-            globalThis.integrationTestHelper.restartServer = false;
-            await wait(500);
-            let markLogicIsRunning = false;
-            while (!markLogicIsRunning) {
-                await wait(500);
-                markLogicIsRunning = await this.isMarkLogicRunning();
-            }
+            await this.restartMarkLogicAndWaitUntilItIsAvailableAgain();
         }
 
         return new Promise((resolve) => {
@@ -286,6 +273,17 @@ export class IntegrationTestHelper {
                 (err) => {
                     throw err;
                 });
+    }
+
+    async restartMarkLogicAndWaitUntilItIsAvailableAgain() {
+        await this.restartMarkLogic();
+        globalThis.integrationTestHelper.restartServer = false;
+        await wait(500);
+        let markLogicIsRunning = false;
+        while (!markLogicIsRunning) {
+            await wait(500);
+            markLogicIsRunning = await this.isMarkLogicRunning();
+        }
     }
 
     private async restartMarkLogic(): Promise<string> {
