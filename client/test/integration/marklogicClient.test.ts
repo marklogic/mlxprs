@@ -39,6 +39,7 @@ suite('Testing \'disconnect\' functionality with varying scenarios', async () =>
     const clientFactory = new ClientFactory({ ...dbClientContext.params, ...overrides });
 
     test('When there are no "connected" app-servers initially', async () => {
+        await integrationTestHelper.restartMarkLogicAndWaitUntilItIsAvailableAgain();
         const disconnectedAppServers = await getFilteredListOfJsAppServers(clientFactory, 'false');
         assert.ok(disconnectedAppServers.length,
             'this will return an unpredictable number, but in any case it should be greater than 0');
@@ -53,7 +54,7 @@ suite('Testing \'disconnect\' functionality with varying scenarios', async () =>
             'This will return 1 fewer app servers than the previous number of disconnected app servers');
         const updatedConnectedAppServers = await getFilteredListOfJsAppServers(clientFactory, 'true');
         assert.equal(updatedConnectedAppServers.length, 1, 'This will return the single app server that was connected to');
-    }).timeout(5000);
+    }).timeout(15000);
 
 });
 
