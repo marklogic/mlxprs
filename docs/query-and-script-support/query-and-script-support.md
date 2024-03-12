@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Executing Queries & Scripts
-nav_order: 5
+nav_order: 6
 has_children: true
 permalink: /docs/query-and-script-support
 ---
