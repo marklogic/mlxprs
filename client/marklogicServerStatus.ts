@@ -44,6 +44,7 @@ export class MarkLogicServerStatusTreeDataProvider implements vscode.TreeDataPro
         this.getAllPropertiesPromise = null;
         this.adminPort = clientFactory.adminPort;
         this.adminBasePath = clientFactory.adminBasePath;
+        this.refresh();
     }
 
     refresh(): void {
@@ -63,30 +64,32 @@ export class MarkLogicServerStatusTreeDataProvider implements vscode.TreeDataPro
 
     // implements
     async getChildren(element?: MarkLogicServerStatus): Promise<MarkLogicServerStatus[]> {
-        return this.getAllResourcesPromise
-            .then((resourceResponse) => {
-                this.allResources = resourceResponse;
-                if (!this.getAllPropertiesPromise) {
-                    this.getAllPropertiesPromise = this.dbManageClientContext.getAllProperties();
-                }
-                return this.getAllPropertiesPromise;
-            })
-            .then((propertiesResponse) => {
-                this.allProperties = propertiesResponse;
-                if (element) {
-                    if (element.label === 'Server Configuration') {
-                        return this.buildServerEntries();
-                    } else if (element.label === 'Databases') {
-                        return this.buildDatabaseEntries();
-                    } else if (element.label === 'App-Servers') {
-                        return this.buildAppServerEntries();
-                    } else {
-                        return [];
-                    }
-                } else {
-                    return this.buildTopLevelStatusEntries();
-                }
-            });
+        if (element) {
+            if (element.label === 'Server Configuration') {
+                return this.buildServerEntries();
+            } else {
+                return this.getAllResourcesPromise
+                    .then((resourceResponse) => {
+                        this.allResources = resourceResponse;
+                        if (!this.getAllPropertiesPromise) {
+                            this.getAllPropertiesPromise = this.dbManageClientContext.getAllProperties();
+                        }
+                        return this.getAllPropertiesPromise;
+                    })
+                    .then((propertiesResponse) => {
+                        this.allProperties = propertiesResponse;
+                        if (element.label === 'Databases') {
+                            return this.buildDatabaseEntries();
+                        } else if (element.label === 'App-Servers') {
+                            return this.buildAppServerEntries();
+                        } else {
+                            return [];
+                        }
+                    });
+            }
+        } else {
+            return this.buildTopLevelStatusEntries();
+        }
     }
 
     private buildTopLevelStatusEntries(): MarkLogicServerStatus[] {
