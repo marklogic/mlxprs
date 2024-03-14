@@ -15,9 +15,10 @@
  */
 
 import * as ml from 'marklogic';
-import { QuickPickItem, window, workspace } from 'vscode';
+import { QuickPickItem, window, workspace, WorkspaceConfiguration } from 'vscode';
 
-import { ClientContext, MlClientParameters, sendXQuery, ServerQueryResponse } from '../marklogicClient';
+import { buildClientFactoryFromWorkspaceConfig } from '../vscodeClientFactory';
+import { ClientContext, sendXQuery, ServerQueryResponse } from '../marklogicClient';
 import { MlxprsError } from '../mlxprsErrorBuilder';
 import { MlxprsErrorReporter } from '../mlxprsErrorReporter';
 import { MlxprsStatus } from '../mlxprsStatus';
@@ -29,7 +30,7 @@ export class JsDebugManager {
     public static async getAvailableRequests(
         debugServerName: string
     ): Promise<string> {
-        const manageClient = newManageClient();
+        const manageClient = JsDebugManager.newManageClient();
         const endpoint = `/jsdbg/v1/paused-requests/${debugServerName}`;
         return new Promise((resolve, reject) => {
             manageClient.databaseClient.internal.sendRequest(
@@ -103,7 +104,7 @@ export class JsDebugManager {
         let mlxprsError: MlxprsError = null;
 
         choices.forEach(async (choice) => {
-            const manageClient = newManageClient();
+            const manageClient = JsDebugManager.newManageClient();
             const endpoint = `/jsdbg/v1/connected/${choice.label}`;
             const connectedRequest = manageClient.databaseClient.internal.sendRequest(
                 endpoint,
@@ -167,7 +168,7 @@ export class JsDebugManager {
     }
 
     public static async connectToNamedJsDebugServer(servername: string): Promise<void> {
-        const manageClient = newManageClient();
+        const manageClient = JsDebugManager.newManageClient();
         const endpoint = `/jsdbg/v1/connect/${servername}`;
 
         return new Promise((resolve, reject) => {
@@ -197,7 +198,7 @@ export class JsDebugManager {
     }
 
     public static async disconnectFromNamedJsDebugServer(servername: string): Promise<void> {
-        const manageClient = newManageClient();
+        const manageClient = JsDebugManager.newManageClient();
         const endpoint = `/jsdbg/v1/disconnect/${servername}`;
 
         return new Promise((resolve, reject) => {
@@ -227,7 +228,7 @@ export class JsDebugManager {
     }
 
     public static async resolveDatabasetoId(database: string): Promise<string> {
-        const manageClient = newManageClient();
+        const manageClient = JsDebugManager.newManageClient();
 
         return new Promise((resolve, reject) => {
             manageClient.databaseClient.internal.sendRequest(
@@ -258,7 +259,7 @@ export class JsDebugManager {
     }
 
     public static async getRequestInfo(requestId: string, debugServerName: string): Promise<string> {
-        const manageClient = newManageClient();
+        const manageClient = JsDebugManager.newManageClient();
 
         return new Promise((resolve, reject) => {
             manageClient.databaseClient.internal.sendRequest(
@@ -314,56 +315,18 @@ export class JsDebugManager {
                     return null;
                 });
     }
+
+    private static newManageClient(): ClientContext {
+        const cfg: WorkspaceConfiguration = workspace.getConfiguration();
+        const overrides = {
+            pwd: cfg.get('marklogic.password'),
+            contentDb: null,
+            modulesDb: null
+        };
+        return buildClientFactoryFromWorkspaceConfig(cfg, overrides).newMarklogicManageClient();
+    }
 }
 
 function appServerSorter(a: QuickPickItem, b: QuickPickItem): number {
     return (a.label.toUpperCase() > b.label.toUpperCase()) ? 1 : ((b.label.toUpperCase() > a.label.toUpperCase()) ? -1 : 0);
-}
-
-export function newManageClient() {
-    const mlManageClientParameters = newManageConfig();
-    return new ClientContext(mlManageClientParameters);
-}
-
-function newManageConfig() {
-    const cfg = workspace.getConfiguration('marklogic');
-    if (!cfg.get('host')) {
-        const mlxprsError: MlxprsError = {
-            reportedMessage: 'Hostname is not provided',
-            popupMessage: 'Hostname is not provided',
-            stack: ''
-        };
-        window.showInformationMessage(mlxprsError.reportedMessage);
-        throw mlxprsError;
-    }
-    if (!cfg.get('username')) {
-        const mlxprsError: MlxprsError = {
-            reportedMessage: 'Username is not provided',
-            popupMessage: 'Username is not provided',
-            stack: ''
-        };
-        window.showInformationMessage(mlxprsError.reportedMessage);
-        throw mlxprsError;
-    }
-    if (!cfg.get('password')) {
-        const mlxprsError: MlxprsError = {
-            reportedMessage: 'Password is not provided',
-            popupMessage: 'Password is not provided',
-            stack: ''
-        };
-        window.showInformationMessage(mlxprsError.reportedMessage);
-        throw mlxprsError;
-    }
-    return new MlClientParameters({
-        host: cfg.get('host'),
-        port: cfg.get('managePort'),
-        user: cfg.get('username'),
-        pwd: cfg.get('password'),
-        authType: cfg.get('authType'),
-        contentDb: null,
-        modulesDb: null,
-        pathToCa: String(cfg.get('pathToCa') || ''),
-        ssl: Boolean(cfg.get('ssl')),
-        rejectUnauthorized: Boolean(cfg.get('rejectUnauthorized'))
-    });
 }

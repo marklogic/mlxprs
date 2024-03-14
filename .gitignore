@@ -10,7 +10,9 @@ dist
 .gradle
 gradle-local.properties
 results/
+coverage/
 test-app/.gradle
 test-app/build
+test-app/docker
 
 test-app/src/main/ml-modules/root/MarkLogic

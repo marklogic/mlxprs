@@ -1,7 +1,7 @@
 {
     "server-type": "http",
     "server-name": "mlxprsSample",
-    "authentication": "digest",
+    "authentication": "basic",
     "port": 8056,
     "modules-database": "mlxprs-test-modules",
     "content-database": "mlxprs-test-content",

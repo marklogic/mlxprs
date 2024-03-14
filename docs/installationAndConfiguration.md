@@ -6,24 +6,78 @@ nav_order: 2
 
 ### Installation
 
-Install this extension using the VS Code built-in [marketplace](https://marketplace.visualstudio.com/items?itemName=mlxprs.mlxprs). Search “MarkLogic” from the Extension tab of the activity bar. Click “Install” to download and install the extension.
+Install this extension using the VS Code built-in [marketplace](https://marketplace.visualstudio.com/items?itemName=mlxprs.mlxprs).
+Search “MarkLogic” from the Extension tab of the activity bar. Click “Install” to download and install the extension.
 
 
+### Configuration
 
 The MarkLogic extension may be configured in the VS Code Settings. To open the VS Code Settings editor, choose "Settings..." under the "Code" menu, and then choose "Settings". Once the Settings editor is open, type "MarkLogic" into the search bar. You can also change the configuration settings just for the workspace by adding the values to the `settings.json` file in the .vscode directory of your workspace.
 
+##### Direct Connection Configuration Example
 ```json
 {
-  "marklogic.host": "marklogic-instance.geocities.com",
-  "marklogic.port": 8040,
-  "marklogic.managePort": 8002,
-  "marklogic.testPort": 8054,
-  "marklogic.username": "username",
-  "marklogic.password": "****************",
-  "marklogic.documentsDb": "myproject-content",
-  "marklogic.modulesDb": "myproject-modules"
+    "marklogic.host": "localhost",
+    "marklogic.ssl": false,
+    "marklogic.authType": "DIGEST",
+    "marklogic.adminPort": 8001,
+    "marklogic.adminBasePath": "",
+    "marklogic.managePort": 8002,
+    "marklogic.manageBasePath": "",
+    "marklogic.port": 8040,
+    "marklogic.restBasePath": "",
+    "marklogic.testPort": 8041,
+    "marklogic.testBasePath": "",
+    "marklogic.username": "username",
+    "marklogic.password": "****************",
+    "marklogic.documentsDb": "myproject-content",
+    "marklogic.modulesDb": "myproject-modules"
 }
 ```
+
+
+##### Reverse Proxy Connection Configuration Example
+```json
+{
+    "marklogic.host": "proxyServer",
+    "marklogic.ssl": false,
+    "marklogic.authType": "BASIC",
+    "marklogic.port": 8020,
+    "marklogic.restBasePath": "/mlxprs/rest",
+    "marklogic.managePort": 8020,
+    "marklogic.manageBasePath": "/mlxprs/manage",
+    "marklogic.testPort": 8020,
+    "marklogic.testBasePath": "/mlxprs/test",
+    "marklogic.adminPort": 8001,
+    "marklogic.adminBasePath": "",
+    "marklogic.username": "username",
+    "marklogic.password": "****************",
+    "marklogic.documentsDb": "myproject-content",
+    "marklogic.modulesDb": "myproject-modules"
+}
+```
+
+
+##### MarkLogic Cloud Connection Configuration Example
+```json
+{
+    "marklogic.host": "support.test.marklogic.cloud",
+    "marklogic.ssl": true,
+    "marklogic.authType": "CLOUD",
+    "marklogic.apiKey": "XXXXXXXXX",
+    "marklogic.port": 443,
+    "marklogic.restBasePath": "/ml/test/marklogic/myproject",
+    "marklogic.managePort": 443,
+    "marklogic.manageBasePath": "/ml/test/marklogic/manage",
+    "marklogic.testPort": 443,
+    "marklogic.testBasePath": "",
+    "marklogic.adminPort": 443,
+    "marklogic.adminBasePath": "/ml/test/marklogic/0/admin",
+    "marklogic.documentsDb": "myproject-content",
+    "marklogic.modulesDb": "myproject-modules"
+}
+```
+
 **Note: marklogic.documentsDb must be declared in order to attach to remote JavaScript request.**
 
 You can also set `marklogic.authType` to `DIGEST` or `BASIC`. Digest is the default,

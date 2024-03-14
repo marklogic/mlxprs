@@ -22,7 +22,8 @@ import * as vscode from 'vscode';
 import { DebugClient } from '@vscode/debugadapter-testsupport';
 
 import { JsDebugManager } from '../../JSDebugger/jsDebugManager';
-import { ClientContext, MlClientParameters, newMarklogicManageClient, sendJSQuery } from '../../marklogicClient';
+import { ClientContext, sendJSQuery } from '../../marklogicClient';
+import { ClientFactory } from '../../clientFactory';
 
 export class IntegrationTestHelper {
 
@@ -50,8 +51,11 @@ export class IntegrationTestHelper {
 
     private hostname = String(process.env.ML_HOST || 'localhost');
     private port = Number(process.env.ML_PORT || this.configuredServerPort);
-    readonly managePort = Number(process.env.ML_MANAGEPORT || '8002');
-    readonly unitTestPort = Number(process.env.ML_UNITTESTPORT || '8054');
+    readonly restBasePath = process.env.ML_RESTBASEPATH ? String(process.env.ML_RESTBASEPATH) : '';
+    readonly managePort = Number(process.env.ML_MANAGEPORT) || 8059;
+    readonly manageBasePath = process.env.ML_MANAGEBASEPATH ? String(process.env.ML_MANAGEBASEPATH) : '';
+    readonly testPort = Number(process.env.ML_TESTPORT || '8054');
+    readonly testBasePath = process.env.ML_TESTBASEPATH ? String(process.env.ML_TESTBASEPATH) : '';
     private username = String(process.env.ML_USERNAME || 'admin');
     private password = String(process.env.ML_PASSWORD || 'admin');
     private modulesDB = String(process.env.ML_MODULESDB || this.modulesDatabase);
@@ -62,10 +66,12 @@ export class IntegrationTestHelper {
     private clientDefaults = {
         host: this.hostname,
         port: this.port,
+        restBasePath: this.restBasePath,
         managePort: this.managePort,
+        manageBasePath: this.manageBasePath,
         user: this.username,
-        pwd: this.password,
-        authType: 'DIGEST',
+        password: this.password,
+        authType: 'BASIC',
         contentDb: this.documentsDatabase,
         modulesDb: this.modulesDB,
         pathToCa: this.pathToCa,
@@ -89,16 +95,22 @@ export class IntegrationTestHelper {
     readonly mlClientWithBadPort = this.newClientWithDefaultsAndOverrides({
         port: 9999
     });
+    readonly mlModulesClient = this.newClientWithDefaultsAndOverrides({
+        contentDb: 'mlxprs-test-modules'
+    });
 
     // Need to only define the parameters here, and the client in the test
     // Due to the internal global variables in the internal.js file
-    readonly mlUnitTestClientParameters = new MlClientParameters({
+    readonly mlUnitTestClientParameters = new ClientFactory({
         host: this.hostname,
-        port: this.unitTestPort,
-        managePort: 8002,
+        port: null,
+        restBasePath: null,
+        testPort: this.testPort,
+        testBasePath: this.testBasePath,
+        managePort: ClientContext.DEFAULT_MANAGE_PORT,
         user: this.username,
-        pwd: this.password,
-        authType: 'DIGEST',
+        password: this.password,
+        authType: 'BASIC',
         contentDb: 'mlxprs-test-test-content',
         modulesDb: null,
         pathToCa: this.pathToCa,
@@ -120,6 +132,7 @@ export class IntegrationTestHelper {
 
     async beforeEverything(): Promise<void> {
         await this.loadTestData();
+        await this.restartMarkLogicAndWaitUntilItIsAvailableAgain();
     }
 
     async afterEverything(): Promise<void> {
@@ -134,7 +147,7 @@ export class IntegrationTestHelper {
             username: this.username,
             password: this.password,
             hostname: this.hostname,
-            authType: 'DIGEST',
+            authType: 'BASIC',
             managePort: this.managePort,
             ssl: this.ssl,
             pathToCa: this.pathToCa,
@@ -145,11 +158,13 @@ export class IntegrationTestHelper {
             query: fs.readFileSync(this.hwXqyPath).toString(),
             clientParams: {
                 host: this.hostname,
+                port: this.testPort,
                 user: this.username,
+                password: this.password,
                 pwd: this.password,
+                database: 'mlxprs-test-test-content',
                 contentDb: 'mlxprs-test-test-content',
-                authType: 'DIGEST',
-                port: this.unitTestPort,
+                authType: 'BASIC',
                 managePort: this.managePort,
                 ssl: this.ssl,
                 pathToCa: this.pathToCa,
@@ -184,14 +199,7 @@ export class IntegrationTestHelper {
         // Some tests can leave the MarkLogic server in a state that causes future tests to fail.
         // The only reliable method for resolving this state is to restart the MarkLogic server.
         if (globalThis.integrationTestHelper.restartServer) {
-            await this.restartMarkLogic();
-            globalThis.integrationTestHelper.restartServer = false;
-            await wait(500);
-            let markLogicIsRunning = false;
-            while (!markLogicIsRunning) {
-                await wait(500);
-                markLogicIsRunning = await this.isMarkLogicRunning();
-            }
+            await this.restartMarkLogicAndWaitUntilItIsAvailableAgain();
         }
 
         return new Promise((resolve) => {
@@ -208,11 +216,8 @@ export class IntegrationTestHelper {
         this.debugServerModules.forEach(async (fsModulePath) => {
             const fname = Path.basename(fsModulePath);
             const module = fs.readFileSync(fsModulePath);
-            const qry = `declareUpdate(); let textNode = new NodeBuilder();
-                    textNode.addText(\`${module}\`);
-                    const options = {collections: '${this.collection}'};
-                    xdmp.documentInsert("/MarkLogic/test/${fname}", textNode.toNode(), options);`;
-            requests.push(sendJSQuery(this.mlClient, qry));
+            const qry = `declareUpdate(); let textNode = new NodeBuilder(); textNode.addText(\`${module}\`); const options = {collections: '${this.collection}'}; xdmp.documentInsert('/MarkLogic/test/${fname}', textNode.toNode(), options);`;
+            requests.push(sendJSQuery(this.mlModulesClient, qry));
         });
         this.taskServerModules.forEach(async (fsModulePath) => {
             const fname = Path.basename(fsModulePath);
@@ -221,7 +226,7 @@ export class IntegrationTestHelper {
                     textNode.addText(\`${module}\`);
                     const options = {collections: '${this.collection}'};
                     xdmp.documentInsert("Apps/MarkLogic/test/${fname}", textNode.toNode(), options);`;
-            requests.push(sendJSQuery(this.mlClient, qry));
+            requests.push(sendJSQuery(this.mlModulesClient, qry));
         });
         try {
             try {
@@ -251,9 +256,13 @@ export class IntegrationTestHelper {
     }
 
     async getRid(dbClientContext: ClientContext, qry: string): Promise<string[]> {
-        const newParams: MlClientParameters = JSON.parse(JSON.stringify(dbClientContext.params));
-        newParams.port = this.managePort;
-        const newClient = new ClientContext(newParams);
+        const overrides: Record<string, any> = {
+            password: dbClientContext.params['pwd'],
+            managePort: this.managePort,
+            manageBasePath: this.manageBasePath
+        };
+        const clientFactory = new ClientFactory({ ...dbClientContext.params, ...overrides });
+        const newClient: ClientContext = clientFactory.newMarklogicManageClient();
         return sendJSQuery(newClient, qry)
             .result(
                 (fulfill: Record<string, never>[]) => {
@@ -266,8 +275,25 @@ export class IntegrationTestHelper {
                 });
     }
 
+    async restartMarkLogicAndWaitUntilItIsAvailableAgain() {
+        await this.restartMarkLogic();
+        globalThis.integrationTestHelper.restartServer = false;
+        await wait(500);
+        let markLogicIsRunning = false;
+        while (!markLogicIsRunning) {
+            await wait(500);
+            markLogicIsRunning = await this.isMarkLogicRunning();
+        }
+    }
+
     private async restartMarkLogic(): Promise<string> {
-        const manageClient = newMarklogicManageClient(this.mlClient, this.managePort);
+        const overrides: Record<string, any> = {
+            // password: dbClientContext.params['pwd'],
+            managePort: this.managePort,
+            manageBasePath: this.manageBasePath
+        };
+        const clientFactory = new ClientFactory({ ...this.clientDefaults, ...overrides });
+        const manageClient = clientFactory.newMarklogicManageClient();
 
         return new Promise((resolve, reject) => {
             manageClient.databaseClient.internal.sendRequest(
@@ -295,7 +321,13 @@ export class IntegrationTestHelper {
     }
 
     private async isMarkLogicRunning(): Promise<boolean> {
-        const manageClient = newMarklogicManageClient(this.mlClient, this.managePort);
+        const overrides: Record<string, any> = {
+            // password: dbClientContext.params['pwd'],
+            managePort: this.managePort,
+            manageBasePath: this.manageBasePath
+        };
+        const clientFactory = new ClientFactory({ ...this.clientDefaults, ...overrides });
+        const manageClient = clientFactory.newMarklogicManageClient();
 
         return new Promise((resolve) => {
             manageClient.databaseClient.internal.sendRequest(
@@ -313,8 +345,8 @@ export class IntegrationTestHelper {
     }
 
     private newClientWithDefaultsAndOverrides(overrides: object = {}): ClientContext {
-        const newParams = new MlClientParameters({ ...this.clientDefaults, ...overrides });
-        return new ClientContext(newParams);
+        const newParams = new ClientFactory({ ...this.clientDefaults, ...overrides });
+        return newParams.newMarklogicRestClient();
     }
 
 }

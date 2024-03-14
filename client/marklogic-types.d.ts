@@ -31,8 +31,8 @@ declare module 'marklogic' {
     // but there appears to be a bug in the implementation
     // so I removed it from package.json as an option
     export type SparqlResponseFormat = 'application/sparql-results+json' | 'application/sparql-results+xml' | 'text/html' | 'text/csv' |
-                                        'application/n-triples' | 'application/n-quads' | 'application/rdf+json' | 'application/rdf+xml' |
-                                        'text/turtle' | 'text/n3' | 'application/trig' | 'application/json'
+        'application/n-triples' | 'application/n-quads' | 'application/rdf+json' | 'application/rdf+xml' |
+        'text/turtle' | 'text/n3' | 'application/trig' | 'application/json'
     export type SparqlQueryType = 'select' | 'construct' | 'describe' | 'ask' | 'unknown'
 
     interface Graphs {
@@ -95,10 +95,13 @@ declare module 'marklogic' {
     export interface ConnectionParams {
         host: string;
         port: number;
+        basePath?: string;
         user: string;
         password: string;
         database: string;
         authType: string;
+        apiKey: string;
+        accessTokenDuration: number;
         ssl: boolean;
         ca: string;
         rejectUnauthorized: boolean;

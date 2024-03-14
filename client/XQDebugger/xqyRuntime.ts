@@ -19,7 +19,8 @@ import { EventEmitter } from 'events';
 import { ResultProvider } from 'marklogic';
 import { parseString } from 'xml2js';
 
-import { sendXQuery, ClientContext, MlClientParameters } from '../marklogicClient';
+import { ClientFactory } from '../clientFactory';
+import { sendXQuery, ClientContext } from '../marklogicClient';
 import { buildMlxprsErrorFromError, MlxprsError } from '../mlxprsErrorBuilder';
 import { ModuleContentGetter } from '../moduleContentGetter';
 import { InitializeRequestArguments, XqyDebugSession } from './xqyDebug';
@@ -66,7 +67,7 @@ export class XqyRuntime extends EventEmitter {
 
     private dbClientContext: ClientContext;
     private _mlModuleGetter: ModuleContentGetter;
-    private _clientParams: MlClientParameters;
+    private clientFactory: ClientFactory;
     private _rid = '';
     private _timeout = 1;
     private xqyDebugSession: XqyDebugSession;
@@ -107,17 +108,16 @@ export class XqyRuntime extends EventEmitter {
     }
 
     public initialize(args: InitializeRequestArguments): void {
-        this._clientParams = args.clientParams;
-        this.dbClientContext = new ClientContext(this._clientParams);
+        args.clientParams['password'] = args.clientParams['password'] || args.clientParams.pwd;
+        this.clientFactory = new ClientFactory(args.clientParams);
+        this.dbClientContext = this.clientFactory.newMarklogicRestClient();
     }
 
     private sendFreshQuery(query: string, prefix: 'xdmp' | 'dbg' = 'xdmp'): ResultProvider<Record<string, any>> {
-        this.dbClientContext = new ClientContext(this._clientParams);
         return sendXQuery(this.dbClientContext, query, prefix);
     }
 
     public async getModuleContent(modulePath: string): Promise<string> {
-        this.dbClientContext = new ClientContext(this._clientParams);
         this._mlModuleGetter = new ModuleContentGetter(this.dbClientContext);
         return this._mlModuleGetter.provideTextDocumentContent(modulePath);
     }
@@ -380,7 +380,7 @@ export class XqyRuntime extends EventEmitter {
             informativeMessage = error.body.errorResponse.message || JSON.stringify(error);
         } else if (error.message) {
             informativeMessage = error.message || JSON.stringify(error);
-        } else  {
+        } else {
             informativeMessage = JSON.stringify(error);
         }
         const msg = `error (${functionName}): ${informativeMessage}`;

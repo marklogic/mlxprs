@@ -17,12 +17,10 @@
 'use strict';
 
 import path = require('path');
-import {
-    ExtensionContext, TextEditor, WorkspaceConfiguration
-} from 'vscode';
+import { ExtensionContext, TextEditor, workspace } from 'vscode';
 
-import { ClientContext, MlClientParameters, newClientParams, requestMarkLogicUnitTest }
-    from './marklogicClient';
+import { ClientContext, requestMarkLogicUnitTest } from './marklogicClient';
+import { buildClientFactoryFromWorkspaceConfig } from './vscodeClientFactory';
 import { buildMlxprsErrorFromError, MlxprsError } from './mlxprsErrorBuilder';
 import { MlxprsErrorReporter } from './mlxprsErrorReporter';
 import { MlxprsWebViewProvider } from './mlxprsWebViewProvider';
@@ -41,7 +39,7 @@ export class MarkLogicUnitTestClient {
     }
 
     public async runTestModule(
-        cfg: WorkspaceConfiguration, editor: TextEditor
+        editor: TextEditor
     ): Promise<void> {
         const splitString = `test${path.sep}suites${path.sep}`;
         const filePath = editor.document.uri.path;
@@ -52,8 +50,9 @@ export class MarkLogicUnitTestClient {
             const testSuite = testPath.substring(0, lastSlash);
             const testFile = testPath.substring(lastSlash + 1);
 
-            const clientParams: MlClientParameters = newClientParams(cfg);
-            const dbClientContext: ClientContext = new ClientContext(clientParams);
+            const dbClientContext: ClientContext =
+                buildClientFactoryFromWorkspaceConfig(workspace.getConfiguration())
+                    .newMarklogicRestClient();
             requestMarkLogicUnitTest(dbClientContext, testSuite, testFile)
                 .result((testResults: string) => {
                     const testResultsHtml = MlxprsWebViewProvider.convertXmlResponseToHtml(testResults);

@@ -52,9 +52,15 @@ cd server
 npm install
 cd ..
 ```
+
 A shorthand script that does all of that for you is
 ```
 npm run installAll
+```
+
+If you want to ensure a clean build, this command clears all transitory files
+```
+npm run cleanAll
 ```
 
 ## Using the Extension from the Project (except the debugger)
@@ -119,10 +125,38 @@ The project contains three test applications.
 
 ### Integration Testing Setup
 
-JavaScript debugger integration testing requires a running MarkLogic server where you have full admin rights. Ideally, you should use a dedicated MarkLogic instance for this purpose. The tests assume the existence of a "mlxprs-test" application server running on port 8055 using the "mlxprs-test-content" and "mlxprs-test-modules" databases. Those values are set in test-app/gradle.properties and the admin password should be set in test-app/gradle-local.properties. Then you can use the following commands to build and configure the databases and application servers.
+JavaScript debugger integration testing requires a running MarkLogic server where you have full admin rights. Ideally, you should use a dedicated MarkLogic instance for this purpose. The tests assume the existence of a "mlxprs-test" application server running on port 8055 using the "mlxprs-test-content" and "mlxprs-test-modules" databases. Those values are set in test-app/gradle.properties. Assuming you want the test application deployed locally, then in that gradle.properties file, ensure the "Local config" properties are uncommented and that the "Cloud config" properties are commented out.
+```
+# Local config
+mlRestAuthentication=basic
+mlHost=localhost
+mlUsername=admin
+mlPassword=changeme-in-gradle-local.properties
+```
+Additionally, the admin password should be set in test-app/gradle-local.properties. Then you can use the following commands to build and configure the databases and application servers.
 ```
 cd test-app
 ./gradlew mlDeploy
+```
+
+Note that in order to facilitate testing the application with a proxy, the app-servers associated with the
+test-app are set to use basic authentication. That includes a version of the Manage app-server on port 8059.
+
+Once the app is deployed, ensure the workspace VSCode settings in test-app/.vscode/settings.json are set to
+use the non-proxy settings as below, and not the reverse-proxy or cloud settings.
+```
+    // Use these for non-proxy testing
+    "marklogic.host": "localhost",
+    "marklogic.ssl": false,
+    "marklogic.authType": "BASIC",
+    "marklogic.port": 8055,
+    "marklogic.restBasePath": "",
+    "marklogic.managePort": 8059,
+    "marklogic.manageBasePath": "",
+    "marklogic.testPort": 8054,
+    "marklogic.testBasePath": "",
+    "marklogic.adminPort": 8001,
+    "marklogic.adminBasePath": "",
 ```
 
 ### Manual Integration Testing
@@ -166,18 +200,55 @@ Note that the order of priority for setting the property values in the test code
 
 
 ### Testing from the command line
-Run these two npm scripts from the command line in the root directory of the project to execute the tests. Note that VSCode must not be running while you run the tests.
+Run these three npm scripts from the command line in the root directory of the project to execute the tests. Note that VSCode must not be running while you run the tests.
+
 ```
-npm run installAll
 npm run test
 npm run testServer
-code --extensionDevelopmentPath=<mlxprs-project-dir>/client --extensionTestsPath=<mlxprs-project-dir>/dist/test/integration/index
+npm run testIntegration
 ```
-<mark>The final test (the integration tests), should not be run while VSCode is open.</mark>
 
-To ensure a clean build, you may also run this npm script before running the `installAll` script.
+Alternatively all tests may be run via the single command:
 ```
-npm run cleanAll
+npm run testAll
+```
+
+Additionally, test coverage reports may be generated with this command:
+```
+npm run coverageAll
+```
+
+### Proxy testing
+
+For testing the extension with a proxy server, it is recommended that you use the reverse
+proxy server included in the Java Client project for proxy testing. To start that server,
+simply run the following command in the root directory of the Java Client project. That
+command will start the reverse proxy server in blocking mode listening on port 8020. It
+will then forward requests to port 8020 based on the custom mappings.
+
+```
+./gradlew runBlockingReverseProxyServer
+```
+
+Node Client Test-App Reverse Proxy Mappings
+```
+"/mlxprs/manage" => port 8059
+"/mlxprs/rest"   => port 8055
+"/mlxprs/test"   => port 8054
+```
+
+Once the reverse proxy server is running, change the MLXPRS settings for your workspace
+to the following (in .vscode/settings.json):
+```
+    "marklogic.authType": "BASIC",
+    "marklogic.port": 8020,
+    "marklogic.restBasePath": "/mlxprs/rest",
+    "marklogic.managePort": 8020,
+    "marklogic.manageBasePath": "/mlxprs/manage",
+    "marklogic.adminPort": 8001,
+    "marklogic.adminBasePath": "",
+    "marklogic.testPort": 8020,
+    "marklogic.testBasePath": "/mlxprs/test",
 ```
 
 ## Building the artifact
@@ -228,3 +299,10 @@ Please try to develop, build, and test with the most recent stable releases of t
 
 ## Publishing the artifact
 See [Publishing Extensions](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) for more information
+
+## Documentation
+User documents designed to be published with GitHub Pages and are maintained in the /docs directory of the
+project. You must have Ruby installed. Additionally, there seems to be a bug with runing jekyll with Ruby 3.3.
+I have found that I need to run `chruby ruby-3.2.3` before I start the jekyll server. To start the jekyll
+server, cd into the /docs directory and run the command `bundle exec jekyll server`. This will start the
+server and the user documents will be available at http://127.0.0.1:4000/.

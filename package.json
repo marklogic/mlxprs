@@ -2,7 +2,7 @@
     "name": "mlxprs",
     "displayName": "MLXPRS: MarkLogic Extension for VS Code",
     "description": "Simplifies and automates common development tasks for creating applications on MarkLogic.",
-    "version": "3.8.0",
+    "version": "3.9.0",
     "publisher": "mlxprs",
     "engines": {
         "vscode": "^1.78.0"
@@ -43,9 +43,30 @@
                     "title": "MLXPRS",
                     "icon": "images/ProgressMarkLogic_PrimaryLogo_StackedAlternate.png"
                 }
+            ],
+            "activitybar": [
+                {
+                    "id": "marklogic-activity-bar",
+                    "title": "MarkLogic Server Explorer",
+                    "icon": "media/Progress_PrimarySymbol.svg"
+                }
             ]
         },
         "views": {
+            "marklogic-activity-bar": [
+                {
+                    "id": "markLogicServerStatus",
+                    "name": "MarkLogic Server Configuration",
+                    "icon": "media/Progress_PrimarySymbol.svg",
+                    "contextualTitle": "MarkLogic Server Explorer"
+                },
+                {
+                    "id": "markLogicDebugStatus",
+                    "name": "MarkLogic App Server Debug Status",
+                    "icon": "media/Progress_PrimarySymbol.svg",
+                    "contextualTitle": "MarkLogic App Server Debug Status"
+                }
+            ],
             "mlxprsContainer": [
                 {
                     "type": "webview",
@@ -337,32 +358,62 @@
                         "default": 8002,
                         "description": "MarkLogic Manage AppServer port"
                     },
-                    "marklogic.port": {
+                    "marklogic.manageBasePath": {
                         "order": 3,
+                        "type": "string",
+                        "default": "",
+                        "description": "MarkLogic Manage AppServer path when using MarkLogic Cloud or behind a reverse proxy"
+                    },
+                    "marklogic.adminPort": {
+                        "order": 4,
+                        "type": "integer",
+                        "default": 8001,
+                        "description": "MarkLogic Admin AppServer port"
+                    },
+                    "marklogic.adminBasePath": {
+                        "order": 5,
+                        "type": "string",
+                        "default": "",
+                        "description": "MarkLogic Admin AppServer path when using MarkLogic Cloud or behind a reverse proxy"
+                    },
+                    "marklogic.port": {
+                        "order": 6,
                         "type": "integer",
                         "default": 8000,
                         "description": "The port of a REST API app server to connect to"
                     },
+                    "marklogic.restBasePath": {
+                        "order": 7,
+                        "type": "string",
+                        "default": "",
+                        "description": "The REST API app server path when using MarkLogic Cloud or behind a reverse proxy"
+                    },
                     "marklogic.testPort": {
-                        "order": 4,
+                        "order": 8,
                         "type": "integer",
                         "default": 8004,
                         "description": "Optional port for a REST API server that supports running marklogic-unit-test modules"
                     },
+                    "marklogic.testBasePath": {
+                        "order": 9,
+                        "type": "string",
+                        "default": "",
+                        "description": "Optional, REST API server path that supports running marklogic-unit-test modules when using MarkLogic Cloud or behind a reverse proxy"
+                    },
                     "marklogic.documentsDb": {
-                        "order": 5,
+                        "order": 10,
                         "type": "string",
                         "default": "",
                         "description": "database against which to evaluate queries; required for debugging a local script"
                     },
                     "marklogic.modulesDb": {
-                        "order": 6,
+                        "order": 11,
                         "type": "string",
                         "default": "",
                         "description": "modules database used in queries; default modules database for app server will be used if left unspecified"
                     },
                     "marklogic.modulesRoot": {
-                        "order": 7,
+                        "order": 12,
                         "type": "string",
                         "default": "/",
                         "description": "modules root if using filesystem"
@@ -379,7 +430,7 @@
                         "order": 1,
                         "type": "string",
                         "default": "DIGEST",
-                        "description": "only DIGEST or BASIC for now"
+                        "description": "only DIGEST, BASIC, or CLOUD for now"
                     },
                     "marklogic.username": {
                         "order": 2,
@@ -393,20 +444,26 @@
                         "default": "admin",
                         "description": "password for MarkLogic connection"
                     },
-                    "marklogic.pathToCa": {
+                    "marklogic.apiKey": {
                         "order": 4,
+                        "type": "string",
+                        "default": "",
+                        "description": "API Key for a MarkLogic Cloud connection"
+                    },
+                    "marklogic.pathToCa": {
+                        "order": 5,
                         "type": "string",
                         "default": "",
                         "description": "path to certificate authority (e.g. for self-signed certificates)"
                     },
                     "marklogic.ssl": {
-                        "order": 5,
+                        "order": 6,
                         "type": "boolean",
                         "default": false,
                         "description": "whether to use ssl for the http connection"
                     },
                     "marklogic.rejectUnauthorized": {
-                        "order": 6,
+                        "order": 7,
                         "type": "boolean",
                         "default": true,
                         "description": "whether the server's SSL certificate should be verified against the list of supplied certificate authories"
@@ -530,9 +587,9 @@
         ]
     },
     "scripts": {
-        "cleanAll": "rimraf node_modules/ .vscode-test/ dist/ server/dist/ server/node_modules/ server/out/ mlxprs-${version}.vsix",
+        "cleanAll": "rimraf node_modules/ .vscode-test/ dist/ server/dist/ server/node_modules/ server/out/ coverage/ mlxprs-${version}.vsix",
         "installAll": "npm install && cd server && npm install && cd ..",
-        "testAll": "npm run test && npm run testServer",
+        "testAll": "npm run test && npm run testServer && npm run testIntegration",
         "copy-files": "npm run copy-files --prefix server",
         "clean": "rimraf dist out server/dist server/out",
         "vscode:prepublish": "webpack --mode production && webpack --mode production --config ./server/webpack.config.js",
@@ -541,54 +598,59 @@
         "pretest-server": "tsc -p server/tsconfig.json && npm run copy-files",
         "predebug": "npm run clean && npm run copy-files --prefix server && tsc -b server && tsc -b -w .",
         "test": "node dist/test/runTest.js --full-trace",
+        "testIntegration": "node dist/test/runIntegrationTest.js --full-trace",
         "testServer": "npm run pretest-server && node server/dist/test/runTest.js --full-trace",
         "watch": "webpack --mode none --watch & webpack --mode none --watch --config ./server/webpack.config.js",
         "lint": "eslint client/ server/ --ext .ts --ext .js --ext .sjs",
-        "lintFix": "eslint client/ server/ --ext .ts --ext .js --ext .sjs --fix"
+        "lintFix": "eslint client/ server/ --ext .ts --ext .js --ext .sjs --fix",
+        "coverage": "c8 npm run testIntegration",
+        "coverageAll": "c8 npm run test && c8 npm run testServer && c8 npm run testIntegration"
     },
     "dependenciesComments": {
         "webpack": "Something with version 5.80.0 is breaking the integration tests (and other things?).",
         "possiblyUnused": {
             "comment": "I'm not sure about these four packages. Without them, there seem to be problems when you attempt to 'attach' or 'launch'.",
-            "@types/estree": "1.0.1",
-            "https-proxy-agent": "5.0.1",
+            "@types/estree": "1.0.5",
+            "https-proxy-agent": "7.0.4",
             "js-yaml": "4.1.0",
             "yargs-parser": "21.1.1"
         }
     },
     "devDependencies": {
-        "@types/estree": "1.0.1",
-        "https-proxy-agent": "5.0.1",
-        "js-yaml": "4.1.0",
-        "yargs-parser": "21.1.1",
-        "@types/esprima": "4.0.3",
-        "@types/mocha": "10.0.1",
+        "@types/esprima": "4.0.6",
+        "@types/estree": "1.0.5",
+        "@types/mocha": "10.0.6",
         "@types/node": "16.11.7",
-        "@types/sinon": "10.0.15",
+        "@types/sinon": "17.0.3",
         "@types/vscode": "1.78.0",
-        "@types/webpack": "5.28.1",
-        "@types/xml2js": "0.4.11",
-        "@typescript-eslint/eslint-plugin": "5.59.11",
-        "@typescript-eslint/parser": "5.59.11",
-        "@vscode/debugadapter-testsupport": "1.61.0",
-        "@vscode/debugprotocol": "1.61.0",
-        "@vscode/test-electron": "2.3.3",
-        "eslint": "8.42.0",
-        "mocha": "10.2.0",
-        "rimraf": "5.0.1",
-        "sinon": "15.1.2",
+        "@types/webpack": "5.28.5",
+        "@types/xml2js": "0.4.14",
+        "@typescript-eslint/eslint-plugin": "7.1.1",
+        "@typescript-eslint/parser": "7.1.1",
+        "@vscode/debugadapter-testsupport": "1.65.0",
+        "@vscode/debugprotocol": "1.65.0",
+        "@vscode/test-cli": "^0.0.6",
+        "@vscode/test-electron": "2.3.9",
+        "c8": "^9.1.0",
+        "eslint": "8.57.0",
+        "https-proxy-agent": "7.0.4",
+        "js-yaml": "4.1.0",
+        "mocha": "10.3.0",
+        "rimraf": "5.0.5",
+        "sinon": "17.0.1",
         "webpack": "5.76.1",
-        "webpack-cli": "5.0.2"
+        "webpack-cli": "5.1.4",
+        "yargs-parser": "21.1.1"
     },
     "dependencies": {
-        "@vscode/debugadapter": "1.61.0",
+        "@vscode/debugadapter": "1.65.0",
         "await-notify": "1.0.1",
         "esprima": "4.0.1",
-        "fast-xml-parser": "4.2.5",
-        "marklogic": "3.1.0",
+        "fast-xml-parser": "4.3.5",
+        "marklogic": "3.3.1",
         "merge-options": "3.0.4",
-        "ts-loader": "9.4.3",
+        "ts-loader": "9.5.1",
         "vscode-languageclient": "7.0.0",
-        "xml2js": "0.6.0"
+        "xml2js": "0.6.2"
     }
 }

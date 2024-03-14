@@ -17,7 +17,8 @@
 'use strict';
 
 import { Memento } from 'vscode';
-import { ClientContext, MlClientParameters } from '../../marklogicClient';
+import { ClientContext } from '../../marklogicClient';
+import { ClientFactory } from '../../clientFactory';
 
 /**
  *
@@ -36,8 +37,8 @@ export class DummyGlobalState implements Memento {
         });
     }
 
-    constructor(params: MlClientParameters) {
-        this.dummyClient = new ClientContext(params);
+    constructor(dummyClient: ClientContext) {
+        this.dummyClient = dummyClient;
     }
     keys(): readonly string[] {
         throw new Error('Method not implemented.');
@@ -45,11 +46,13 @@ export class DummyGlobalState implements Memento {
 }
 
 export function defaultDummyGlobalState(): DummyGlobalState {
-    return new DummyGlobalState(
-        new MlClientParameters({
-            host: 'nohost', port: 0, user: 'user', pwd: 'pwd',
-            authType: 'BASIC', contentDb: 'DOCS', modulesDb: 'MODS',
-            ssl: true, pathToCa: ''
-        })
-    );
+    const dbClient = new ClientFactory({
+        host: 'nohost', port: 0, user: 'user', password: 'pwd',
+        authType: 'BASIC', contentDb: 'DOCS', modulesDb: 'MODS',
+        ssl: true, pathToCa: ''
+    }).newMarklogicRestClient();
+    dbClient.params.sameAs = function (): boolean {
+        return false;
+    };
+    return new DummyGlobalState(dbClient);
 }

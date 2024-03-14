@@ -16,6 +16,7 @@ _Develop, run, and debug code for MarkLogic in the popular VS Code IDE_
 * View modules (read-only) in the editor
 * Run [marklogic-unit-test module](https://github.com/marklogic-community/marklogic-unit-test)
 * Validate TDE templates and test the templates with node extraction
+* View high-level information about the currently connected MarkLogic server
 
 _JavaScript debugging requires version 2.0.0+ of the MarkLogic extension and [MarkLogic 10.0-4+](https://developer.marklogic.com/products/marklogic-server/10.0)._
 

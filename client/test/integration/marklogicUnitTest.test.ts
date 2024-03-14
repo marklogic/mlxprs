@@ -30,7 +30,7 @@ suite('Testing MarkLogic-Unit-Test functionality', async () => {
     const integrationTestHelper: IntegrationTestHelper = globalThis.integrationTestHelper;
 
     test('When a test is requested that should pass completely', async () => {
-        const mlUnitTestClient: ClientContext = new ClientContext(integrationTestHelper.mlUnitTestClientParameters);
+        const mlUnitTestClient: ClientContext = integrationTestHelper.mlUnitTestClientParameters.newMarklogicTestClient();
         await requestMarkLogicUnitTest(mlUnitTestClient, 'SampleJavaScriptTestSuite', 'sample-jstest.sjs')
             .result((testResults: string) => {
                 const parser = new XMLParser(options);
@@ -44,7 +44,7 @@ suite('Testing MarkLogic-Unit-Test functionality', async () => {
     }).timeout(5000);
 
     test('When a test is requested that does not exist', async () => {
-        const mlUnitTestClient: ClientContext = new ClientContext(integrationTestHelper.mlUnitTestClientParameters);
+        const mlUnitTestClient: ClientContext = integrationTestHelper.mlUnitTestClientParameters.newMarklogicTestClient();
         await requestMarkLogicUnitTest(mlUnitTestClient, 'SampleJavaScriptTestSuite', 'doesNotExist.sjs')
             .result((testResults: string) => {
                 const parser = new XMLParser(options);
@@ -60,7 +60,7 @@ suite('Testing MarkLogic-Unit-Test functionality', async () => {
     }).timeout(5000);
 
     test('When a test is requested that should have a failing test', async () => {
-        const mlUnitTestClient: ClientContext = new ClientContext(integrationTestHelper.mlUnitTestClientParameters);
+        const mlUnitTestClient: ClientContext = integrationTestHelper.mlUnitTestClientParameters.newMarklogicTestClient();
         await requestMarkLogicUnitTest(mlUnitTestClient, 'SampleJavaScriptTestSuite', 'sample-failing-jstest.sjs')
             .result((testResults: string) => {
                 const parser = new XMLParser(options);

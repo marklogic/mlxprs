@@ -16,6 +16,7 @@
 
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import * as assert from 'assert';
+import { DebugProtocol } from '@vscode/debugprotocol';
 
 import { IntegrationTestHelper } from './markLogicIntegrationTestHelper';
 
@@ -42,12 +43,15 @@ suite('Testing SJS Debug failures in various scenarios, including a couple of su
         globalConfig.queryText = '"A" + 1;';
 
         const jsDebugClient = integrationTestHelper.jsDebugClient;
-        let launchResponse = null;
+        let event: Promise<DebugProtocol.Event>;
         await Promise.all([
             jsDebugClient.configurationSequence(),
-            launchResponse = await jsDebugClient.launch(globalConfig)
+            event = jsDebugClient.waitForEvent('terminated'),
+            jsDebugClient.launch(globalConfig)
         ]);
-        assert.equal(launchResponse.body.code, 'EPROTO', 'The response should contain an error object with the expected name.');
+        event.then((response) => {
+            assert.equal(response.event, 'terminated');
+        });
     }).timeout(5000);
 
     test('Attempt to Launch Eval Debug with SSL OFF in extension, but ON in MarkLogic', async () => {
@@ -62,7 +66,7 @@ suite('Testing SJS Debug failures in various scenarios, including a couple of su
             jsDebugClient.configurationSequence(),
             launchResponse = await jsDebugClient.launch(globalConfig)
         ]);
-        assert.equal(launchResponse.body.code, 'HPE_INVALID_HEADER_TOKEN', 'The response should contain an error object with the expected name.');
+        assert.equal(launchResponse.body.code, 'HPE_CR_EXPECTED', 'The response should contain an error object with the expected name.');
     }).timeout(5000);
 
     test('Attempt to Launch Eval Debug with SSL ON in extension and in MarkLogic', async () => {

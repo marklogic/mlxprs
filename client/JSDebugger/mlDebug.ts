@@ -684,9 +684,15 @@ export class MLDebugSession extends LoggingDebugSession {
 
     private _handleError(error: unknown, msg?: string, terminate?: boolean, func?: string): void {
         try {
-            const errAsObject = JSON.parse(JSON.stringify(error));
-            const errResp = errAsObject.errorResponse || errAsObject.message || errAsObject.code;
-            const messageCode: string = errResp.messageCode || errAsObject.message || errAsObject.code;
+            const errorAsStr = error;
+            const errorAsObject = JSON.parse(JSON.stringify(error));
+            let messageCode = '';
+            let errResp;
+            if (errorAsObject) {
+                errResp = errorAsObject.errorResponse || errorAsObject.message || errorAsObject.code || errorAsStr;
+                messageCode = errResp.messageCode || errorAsObject.message || errorAsObject.code || '';
+            }
+
             if (messageCode.includes('JSDBG-REQUESTRECORD') || messageCode.includes('XDMP-NOREQUEST')) {
                 this._runtime.setRunTimeState('shutdown');
                 this.sendEvent(new TerminatedEvent());

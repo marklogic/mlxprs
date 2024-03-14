@@ -18,8 +18,8 @@
 
 import * as fs from 'fs';
 import * as ml from 'marklogic';
-import { WorkspaceConfiguration } from 'vscode';
 
+import { ClientFactory } from './clientFactory';
 import { MlxprsStatus } from './mlxprsStatus';
 
 export const MLDBCLIENT = 'mldbClient';
@@ -33,18 +33,53 @@ export interface ServerQueryResponse {
     port?: number;
 }
 
+export interface ResourceResponse {
+    config: ResourceConfig[];
+}
+
+export interface PropertiesResponse {
+    config: PropertiesConfig[];
+}
+
+interface ResourceConfig {
+    database: Resource[];
+    server: Resource[];
+}
+
+interface Resource {
+    name: string;
+    id: number;
+}
+
+interface PropertiesConfig {
+    server: AppServerProperties[];
+}
+
+interface AppServerProperties {
+    'server-name': string;
+    port: number;
+}
+
 export class MlClientParameters {
     contentDb: string;
     modulesDb: string;
-
     host: string;
     port: number;
+    managePort?: number;
+    adminPort?: number;
+    testPort?: number;
     user: string;
     pwd: string;
     authType: string;
+    apiKey: string;
+    accessTokenDuration: number;
     ssl: boolean;
     pathToCa: string;
     rejectUnauthorized: boolean;
+    manageBasePath?: string;
+    adminBasePath?: string;
+    restBasePath?: string;
+    testBasePath?: string;
     /**
      * note: defaults not applied here. Properties can remain undefined so that
      *       per-query overrides don't clobber the existing config with default values.
@@ -53,24 +88,37 @@ export class MlClientParameters {
     constructor(rawParams: Record<string, any>) {
         this.host = rawParams.host;
         this.port = Number(rawParams.port);
+        this.restBasePath = rawParams.restBasePath || '';
+        this.managePort = Number(rawParams.managePort) || ClientContext.DEFAULT_MANAGE_PORT;
+        this.manageBasePath = rawParams.manageBasePath || '';
+        this.adminPort = Number(rawParams.adminPort) || ClientContext.DEFAULT_ADMIN_PORT;
+        this.adminBasePath = rawParams.adminBasePath || '';
+        this.testPort = Number(rawParams.testPort);
+        this.testBasePath = rawParams.testBasePath || '';
         this.user = rawParams.user;
         this.pwd = rawParams.pwd;
         this.contentDb = rawParams.contentDb || rawParams.documentsDb || '';
         this.modulesDb = rawParams.modulesDb || '';
         this.authType = rawParams.authType;
+        this.apiKey = rawParams.apiKey;
+        this.accessTokenDuration = rawParams.accessTokenDuration;
         this.ssl = Boolean(rawParams.ssl);
         this.pathToCa = rawParams.pathToCa || '';
         this.rejectUnauthorized = Boolean(rawParams.rejectUnauthorized);
 
         // This check was previously done in the MarklogicClient constructor, but doing so causes the sameAs
         // function in this class to not behave properly
-        if (this.authType !== 'DIGEST' && this.authType !== 'BASIC') {
+        if (this.authType !== 'DIGEST' && this.authType !== 'BASIC' && this.authType !== 'CLOUD') {
             this.authType = 'DIGEST';
         }
     }
 
     toString(): string {
-        const paramsArray = [this.host, this.port, this.user, this.pwd.replace(/./g, '*'), this.authType, this.contentDb, this.modulesDb];
+        const paramsArray = [
+            this.host, this.port, this.user, this.pwd.replace(/./g, '*'),
+            this.authType, this.contentDb, this.modulesDb,
+            this.apiKey, this.accessTokenDuration
+        ];
         if (this.ssl) {
             paramsArray.push('ssl');
             if (!this.rejectUnauthorized) paramsArray.push('insecure');
@@ -90,6 +138,8 @@ export class MlClientParameters {
             this.user === other.user &&
             this.pwd === other.pwd &&
             this.authType === other.authType &&
+            this.apiKey === other.apiKey &&
+            this.accessTokenDuration === other.accessTokenDuration &&
             this.ssl === other.ssl &&
             this.pathToCa === other.pathToCa &&
             this.rejectUnauthorized === other.rejectUnauthorized
@@ -99,6 +149,7 @@ export class MlClientParameters {
 
 export class ClientContext {
     public static DEFAULT_MANAGE_PORT = 8002;
+    public static DEFAULT_ADMIN_PORT = 8001;
     params: MlClientParameters;
     ca: string;
 
@@ -118,10 +169,11 @@ export class ClientContext {
             this.params.contentDb = null;
         }
         this.databaseClient = ml.createDatabaseClient({
-            host: this.params.host, port: this.params.port,
+            host: this.params.host, port: this.params.port, basePath: this.params.restBasePath,
             user: this.params.user, password: this.params.pwd,
             database: this.params.contentDb,
             authType: this.params.authType, ssl: this.params.ssl,
+            apiKey: this.params.apiKey, accessTokenDuration: this.params.accessTokenDuration,
             ca: this.ca, rejectUnauthorized: this.params.rejectUnauthorized
         });
     }
@@ -134,9 +186,20 @@ export class ClientContext {
         return this.params.sameAs(newParams);
     }
 
-
-    async getConnectedServers(requestingObject: MlxprsStatus, managePort: number, updateCallback: (connectedServers: string[]) => void): Promise<void> {
-        const connectedJsServers: MlxprsQuickPickItem[] = await getFilteredListOfJsAppServers(this, managePort, 'true');
+    async getConnectedServers(
+        requestingObject: MlxprsStatus | null,
+        managePort: number,
+        manageBasePath: string,
+        updateCallback: (connectedServers: string[]) => void
+    ): Promise<string[]> {
+        const overrides: Record<string, any> = {
+            password: this.params['pwd'],
+            managePort: managePort,
+            manageBasePath: manageBasePath
+        };
+        const clientFactory = new ClientFactory({ ...this.params, ...overrides });
+        const connectedJsServers: MlxprsQuickPickItem[] =
+            await getFilteredListOfJsAppServers(clientFactory, 'true');
         return this.databaseClient.xqueryEval('xquery version "1.0-ml"; dbg:connected()')
             .result(
                 async (items: ml.Item[]) => {
@@ -159,7 +222,10 @@ export class ClientContext {
                     connectedJsServers.forEach((quickPickItem) => {
                         connectedServers.push('JS:' + quickPickItem.label);
                     });
-                    updateCallback.call(requestingObject, connectedServers);
+                    if (updateCallback) {
+                        updateCallback.call(requestingObject, connectedServers);
+                    }
+                    return connectedServers;
                 },
                 (err) => {
                     throw err;
@@ -215,10 +281,40 @@ return $json-servers
             });
     }
 
-    public static buildUrl(hostname: string, endpointPath: string, ssl = true, managePort = ClientContext.DEFAULT_MANAGE_PORT): string {
-        const scheme: string = ssl ? 'https' : 'http';
-        const url = `${scheme}://${hostname}:${managePort}${endpointPath}`;
-        return url;
+    public buildUrlBase(port?: number, basePath?: string): string {
+        const targetPort = port ? port : this.params.port;
+        const targetBasePath = basePath ? basePath : '';
+        const scheme: string = this.params.ssl ? 'https' : 'http';
+        return `${scheme}://${this.params.host}:${targetPort}${targetBasePath}`;
+    }
+
+    async executeGenericGetRequest(url: string): Promise<unknown> {
+        return new Promise((resolve, reject) => {
+            this.databaseClient.internal.sendRequest(
+                url,
+                (requestOptions: ml.RequestOptions) => {
+                    requestOptions.method = 'GET';
+                    requestOptions.headers = {
+                        'Content-type': 'application/json'
+                    };
+                })
+                .result((result: string) => {
+                    resolve(result);
+                })
+                .catch((error) => {
+                    reject(error);
+                });
+        });
+    }
+
+    async getAllProperties(): Promise<PropertiesResponse> {
+        const resourcePropertiesUrl = '/manage/v3?resource-type=database,server&include-properties=true&format=json';
+        return this.executeGenericGetRequest(resourcePropertiesUrl) as Promise<PropertiesResponse>;
+    }
+
+    async getAllResources(): Promise<ResourceResponse> {
+        const resourcesUrl = '/manage/v3?resource-type=database,server&include-properties=false&format=json';
+        return this.executeGenericGetRequest(resourcesUrl) as Promise<ResourceResponse>;
     }
 
 }
@@ -344,11 +440,13 @@ export interface MlxprsQuickPickItem {
 }
 
 export async function getFilteredListOfJsAppServers(
-    dbClientContext: ClientContext, managePort: number, requiredResponse: string
+    clientFactory: ClientFactory,
+    requiredResponse: string
 ): Promise<MlxprsQuickPickItem[]> {
+    const dbClientContext = clientFactory.newMarklogicRestClient();
     const listServersForConnectQuery = dbClientContext.buildListServersForConnectQuery();
     const allPossibleJsServers: MlxprsQuickPickItem[] = await getAppServerListForJs(dbClientContext, listServersForConnectQuery) as MlxprsQuickPickItem[];
-    return await filterJsServerByConnectedStatus(dbClientContext, managePort, allPossibleJsServers, requiredResponse);
+    return await filterJsServerByConnectedStatus(clientFactory, allPossibleJsServers, requiredResponse);
 }
 
 export async function getAppServerListForJs(dbClientContext: ClientContext, serverListQuery: string): Promise<MlxprsQuickPickItem[]> {
@@ -363,13 +461,15 @@ export async function getAppServerListForJs(dbClientContext: ClientContext, serv
 }
 
 export async function filterJsServerByConnectedStatus(
-    dbClientContext: ClientContext, managePort: number, choices: MlxprsQuickPickItem[], requiredResponse: string
+    clientFactory: ClientFactory,
+    choices: MlxprsQuickPickItem[],
+    requiredResponse: string
 ): Promise<MlxprsQuickPickItem[]> {
     const requests = [];
     const filteredChoices: MlxprsQuickPickItem[] = [];
 
     choices.forEach((choice) => {
-        const manageClient =  newMarklogicManageClient(dbClientContext, managePort);
+        const manageClient = clientFactory.newMarklogicManageClient();
         const endpoint = `/jsdbg/v1/connected/${choice.label}`;
         const connectedRequest = manageClient.databaseClient.internal.sendRequest(
             endpoint,
@@ -409,29 +509,4 @@ export function requestMarkLogicUnitTest(
             requestOptions.method = 'GET';
         }
     );
-}
-
-export function newMarklogicManageClient(dbClientContext: ClientContext, managePort: number): ClientContext {
-    const manageClientParams: MlClientParameters = JSON.parse(JSON.stringify(dbClientContext.params));
-    manageClientParams.port = managePort;
-    manageClientParams.contentDb = null;
-    manageClientParams.modulesDb = null;
-    return new ClientContext(manageClientParams);
-}
-
-export function newClientParams(cfg: WorkspaceConfiguration, overrides: object = {}): MlClientParameters {
-    const configParams: Record<string, unknown> = {
-        host: String(cfg.get('marklogic.host')),
-        user: String(cfg.get('marklogic.username')),
-        pwd: String(cfg.get('marklogic.password')),
-        port: Number(cfg.get('marklogic.port')),
-        managePort: Number(cfg.get('marklogic.managePort')),
-        contentDb: String(cfg.get('marklogic.documentsDb')),
-        modulesDb: String(cfg.get('marklogic.modulesDb')),
-        authType: String(cfg.get('marklogic.authType')).toUpperCase(),
-        ssl: Boolean(cfg.get('marklogic.ssl')),
-        pathToCa: String(cfg.get('marklogic.pathToCa') || ''),
-        rejectUnauthorized: Boolean(cfg.get('marklogic.rejectUnauthorized'))
-    };
-    return new MlClientParameters({ ...configParams, ...overrides });
 }

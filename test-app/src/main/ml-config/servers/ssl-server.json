@@ -5,7 +5,7 @@
     "port": 8057,
     "modules-database": "mlxprs-test-modules",
     "content-database": "mlxprs-test-content",
-    "authentication": "digest",
+    "authentication": "basic",
     "error-handler": "/MarkLogic/rest-api/error-handler.xqy",
     "url-rewriter": "/MarkLogic/rest-api/rewriter.xml",
     "rewrite-resolves-globally": true,

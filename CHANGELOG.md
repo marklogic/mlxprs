@@ -1,40 +1,53 @@
+## [3.9.0](https://github.com/marklogic/mlxprs/releases/tag/v3.9.0)
+
+- New MarkLogic icon in the Activity Bar that can be used to open an explorer view with high-level information about the currently connected MarkLogic server.
+- Can use new configuration options to connect to MarkLogic behind a proxy server or in MarkLogic Cloud.
+  * -restBasePath
+  * -manageBasePath
+  * -testBasePath
+  * -adminBasePath
+  * -apiKey
+  * -authType (now accepts "CLOUD")
+- [Improved user guide.](https://marklogic.github.io/mlxprs/)
+
+
 ## [3.8.0](https://github.com/marklogic/mlxprs/releases/tag/v3.8.0)
 
-- Run marklogic-unit-test modules in a MarkLogic server
-- Validate TDE Templates
-- Extract Nodes from data documents using a TDE Template
-- Submit a GraphQL Query to /v1/rows/graphql
-- Various updates to the README
+- Run marklogic-unit-test modules in a MarkLogic server.
+- Validate TDE Templates.
+- Extract Nodes from data documents using a TDE Template.
+- Submit a GraphQL Query to /v1/rows/graphql.
+- Various updates to the README.
 
 
 ## [3.7.0](https://github.com/marklogic/mlxprs/releases/tag/v3.7.0)
 
-- Submit an Optic DSL Query to /v1/rows and get back JSON
-- Submit Optic Query and get back XML or CSV
-- View "Connected" status information in bottom status line
-- Made the UX for attaching to a JS server match attaching to an XQY server, and sorted based on server name
-- Run Highlighted Code in editor windows (rather than the entire window)
-- Display "eval" results in a new tab in the bottom panel (use a setting to revert back to an editor tab)
-- Permit attaching to a remote request even if the current editor tab is not source code
+- Submit an Optic DSL Query to /v1/rows and get back JSON.
+- Submit Optic Query and get back XML or CSV.
+- View "Connected" status information in bottom status line.
+- Made the UX for attaching to a JS server match attaching to an XQY server, and sorted based on server name.
+- Run Highlighted Code in editor windows (rather than the entire window).
+- Display "eval" results in a new tab in the bottom panel (use a setting to revert back to an editor tab).
+- Permit attaching to a remote request even if the current editor tab is not source code.
 
 
 ## [3.6.2](https://github.com/marklogic/mlxprs/releases/tag/v3.6.2)
 
-- Fixed the icon used in the Visual Studio Marketplace 
+- Fixed the icon used in the Visual Studio Marketplace .
 
 ## [3.6.0](https://github.com/marklogic/mlxprs/releases/tag/v3.6.0)
 
-- [#116](https://github.com/marklogic/mlxprs/issues/116) Updated dependencies and fixed all known security vulnerabilities
-- [#119](https://github.com/marklogic/mlxprs/issues/119) Added SJS binding to JavaScript language
-- [#97](https://github.com/marklogic/mlxprs/issues/97) Added a configuration option for the MarkLogic Manage app server port (used for the SJS debug server port)
-- [#117](https://github.com/marklogic/mlxprs/issues/117) Fixed a bug with the first attempt to eval a JavaScript tab
-- [#109](https://github.com/marklogic/mlxprs/issues/109) Prevent the database param from being used in REST calls when the database setting is empty
+- [#116](https://github.com/marklogic/mlxprs/issues/116) Updated dependencies and fixed all known security vulnerabilities.
+- [#119](https://github.com/marklogic/mlxprs/issues/119) Added SJS binding to JavaScript language.
+- [#97](https://github.com/marklogic/mlxprs/issues/97) Added a configuration option for the MarkLogic Manage app server port (used for the SJS debug server port).
+- [#117](https://github.com/marklogic/mlxprs/issues/117) Fixed a bug with the first attempt to eval a JavaScript tab.
+- [#109](https://github.com/marklogic/mlxprs/issues/109) Prevent the database param from being used in REST calls when the database setting is empty.
 
 
 ## [3.5.1](https://github.com/mikrovvelle/mlxprs/tree/v3.5.1)
 
-- Fix [#92](https://github.com/mikrovvelle/mlxprs/issues/92), better error handling with XQuery debug launch failures
-- Added VS Code badges to Readme
+- Fix [#92](https://github.com/mikrovvelle/mlxprs/issues/92), better error handling with XQuery debug launch failures.
+- Added VS Code badges to Readme.
 
 ## [3.5.0](https://github.com/mikrovvelle/mlxprs/tree/v3.5.0)
 
@@ -56,70 +69,70 @@ Addressed off-by-one error in changelog.
 
 ## [3.1.0](https://github.com/mikrovvelle/mlxprs/tree/v3.1.0)
 
-- fixes: #70. SJS debugging now streams modules if they're not available locally
-- other SJS debugging improvements
+- fixes: #70. SJS debugging now streams modules if they're not available locally.
+- other SJS debugging improvements.
 
 ## [3.0.4](https://github.com/mikrovvelle/mlxprs/tree/v3.0.4)
 
-- bugfix: #69
+- bugfix: #69.
 
 ## [3.0.3](https://github.com/mikrovvelle/mlxprs/tree/v3.0.3)
 
-- add "MarkLogic: Show module" command
-- fixes: #68. XQuery debugging now streams modules if they're not available locally
+- add "MarkLogic: Show module" command.
+- fixes: #68. XQuery debugging now streams modules if they're not available locally.
 
 ## [3.0.2](https://github.com/mikrovvelle/mlxprs/tree/v3.0.2)
 
-- bugfix: #67
+- bugfix: #67.
 
 ## [3.0.1](https://github.com/mikrovvelle/mlxprs/tree/v3.0.1)
 
-- fix: #10 - make best effort to format XML and JSON query results
+- fix: #10 - make best effort to format XML and JSON query results.
 
 ## [3.0.0](https://github.com/mikrovvelle/mlxprs/tree/v3.0.0)
 
-- add XQuery debugging
+- add XQuery debugging.
 
 ## [2.0.0](https://github.com/mikrovvelle/mlxprs/tree/v2.0.0)
 
-- add JavaScript debugging
+- add JavaScript debugging.
 
 ## [1.2.2](https://github.com/mikrovvelle/mlxprs/tree/v1.2.2)
 
-- dependency upgrades under the hood
+- dependency upgrades under the hood.
 
 ## [1.2.1](https://github.com/mikrovvelle/mlxprs/tree/v1.2.1)
 
 - fix: #17
-- bugfix: empty results aren't 'pending'
+- bugfix: empty results aren't 'pending'.
 
 ## [1.2.0](https://github.com/mikrovvelle/mlxprs/tree/v1.2.0)
 
-- Added per-query client parameter override capability to XQuery (see README)
+- Added per-query client parameter override capability to XQuery (see README).
 
 ## [1.1.1](https://github.com/mikrovvelle/mlxprs/tree/v1.1.1)
 
-- Security fixes for npm dependencies
+- Security fixes for npm dependencies.
 
 ## [1.1.0](https://github.com/mikrovvelle/mlxprs/tree/v1.1.0)
 
-- Added per-query client parameter override capability SJS (see README)
+- Added per-query client parameter override capability SJS (see README).
 
 ## [1.0.0](https://github.com/mikrovvelle/mlxprs/tree/v1.0.0)
 
-- Working release
+- Working release.
 
 ## [0.7.7](https://github.com/mikrovvelle/mlxprs/tree/v0.7.5)
 
-- Security fixes for npm dependencies
+- Security fixes for npm dependencies.
 
 ## [0.7.5](https://github.com/mikrovvelle/mlxprs/tree/v0.7.5)
 
-- Cosmetic: branding in preparation for 1.0 release
+- Cosmetic: branding in preparation for 1.0 release.
 
 ## [0.7.2](https://github.com/mikrovvelle/mlxprs/tree/v0.7.2)
 
-- Security: update `js-yaml` dependency to fix vulnerability
+- Security: update `js-yaml` dependency to fix vulnerability.
 
 ## [0.7.1](https://github.com/mikrovvelle/mlxprs/tree/v0.7.1)
 
@@ -127,45 +140,45 @@ Addressed off-by-one error in changelog.
 
 ## [0.7.0](https://github.com/mikrovvelle/mlxprs/tree/v0.7.0)
 
-- Added SJS autocompletion based on MarkLogic SJS API
+- Added SJS autocompletion based on MarkLogic SJS API.
 
 ## [0.6.2](https://github.com/mikrovvelle/mlxprs/tree/v0.6.2)
 
-- Successfully built with webpack
+- Successfully built with webpack.
 
 ## 0.6.0 to 0.6.1 (broken)
 
-- Built with webpack
+- Built with webpack.
 
 ## [0.5.0](https://github.com/mikrovvelle/mlxprs/tree/0.5.0)
 
-- Added SSL capabilities to MarkLogic client: `ssl` and `pathToCa` settings
-- Exposed `authType` to marklogic settings (can pretty much leave set to DIGEST)
+- Added SSL capabilities to MarkLogic client: `ssl` and `pathToCa` settings.
+- Exposed `authType` to marklogic settings (can pretty much leave set to DIGEST).
 
 ## [0.4.0](https://github.com/mikrovvelle/mlxprs/tree/0.4.0)
 
-- Added code completion for MarkLogic XQuery API functions
+- Added code completion for MarkLogic XQuery API functions.
 
 ## [0.3.3](https://github.com/mikrovvelle/mlxprs/tree/0.3.3)
 
-- Bugfix: properly handle and display text responses to MarkLogic queries
+- Bugfix: properly handle and display text responses to MarkLogic queries.
 
 ## [0.3.2](https://github.com/mikrovvelle/mlxprs/tree/0.3.2)
 
-- License and copyright
+- License and copyright.
 
 ## [0.3.1](https://github.com/mikrovvelle/mlxprs/tree/0.3.1)
 
-- Handle and display text responses to MarkLogic queries
+- Handle and display text responses to MarkLogic queries.
 
 ## [0.3.0](https://github.com/mikrovvelle/mlxprs/tree/0.3.0)
 
-- Show error details as query results
+- Show error details as query results.
 
 ## [0.2.0](https://github.com/mikrovvelle/mlxprs/tree/0.2.0)
 
-- Give user feedback when empty results are returned from a query
+- Give user feedback when empty results are returned from a query.
 
 ## [0.1.0](https://github.com/mikrovvelle/mlxprs/tree/0.1.0)
 
-- Added XML formatting
+- Added XML formatting.

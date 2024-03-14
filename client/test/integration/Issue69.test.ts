@@ -16,50 +16,60 @@
 
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import * as Path from 'path';
+import { DebugClient } from '@vscode/debugadapter-testsupport';
 import { DebugProtocol } from '@vscode/debugprotocol';
 import * as CP from 'child_process';
 
 import { IntegrationTestHelper, wait } from './markLogicIntegrationTestHelper';
+import { JsDebugManager } from '../../JSDebugger/jsDebugManager';
 
 
 suite('Issue 69', async () => {
     const integrationTestHelper: IntegrationTestHelper = globalThis.integrationTestHelper;
 
     test('set breakpoints on two files', async () => {
-        const mlClient = integrationTestHelper.mlClient;
-        const jsScriptFolder = integrationTestHelper.jsScriptFolder;
+        await integrationTestHelper.restartMarkLogicAndWaitUntilItIsAvailableAgain();
         const globalConfig = integrationTestHelper.config;
+        await JsDebugManager.connectToNamedJsDebugServer(integrationTestHelper.attachServerName);
+        globalThis.integrationTestHelper.attachedToServer = true;
 
-        CP.exec(`curl --anyauth -k --user ${globalConfig.username}:${globalConfig.password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
-                    http${globalConfig.ssl ? 's' : ''}://${globalConfig.hostname}:${integrationTestHelper.serverPortForAttaching}/LATEST/invoke --data-urlencode module=/MarkLogic/test/test.sjs`);
+        const curlCommand = `curl --anyauth -k --user ${globalConfig.username}:${globalConfig.password} -i -X POST -H "Content-type: application/x-www-form-urlencoded" \
+            http${globalConfig.ssl ? 's' : ''}://${globalConfig.hostname}:${integrationTestHelper.serverPortForAttaching}/LATEST/invoke --data-urlencode module=/MarkLogic/test/test.sjs`;
+        CP.exec(curlCommand);
         await wait(1000);
-        const resp = await integrationTestHelper.getRid(mlClient, 'xdmp.serverStatus(xdmp.host(),xdmp.server(this.attachServerName)).toObject()[0].requestStatuses[0].requestId');
+        const serverName = integrationTestHelper.attachServerName;
+        const resp = await integrationTestHelper.getRid(integrationTestHelper.mlClient, `xdmp.serverStatus(xdmp.host(),xdmp.server('${serverName}')).toObject()[0].requestStatuses[0].requestId`);
         const rid = resp[0];
-        const root = Path.join(jsScriptFolder, 'MarkLogic/test');
+        const root = Path.join(integrationTestHelper.jsScriptFolder, 'MarkLogic/test');
         const config = {
             rid: rid, root: root,
             username: globalConfig.username, password: globalConfig.password,
-            hostname: globalConfig.hostname, authType: 'DIGEST',
-            ssl: globalConfig.ssl, pathToCa: globalConfig.pathToCa, rejectUnauthorized: globalConfig.rejectUnauthorized
+            hostname: globalConfig.hostname, managePort: integrationTestHelper.managePort,
+            database: integrationTestHelper.modulesDatabase, modules: integrationTestHelper.modulesDatabase,
+            authType: 'BASIC', ssl: globalConfig.ssl,
+            pathToCa: globalConfig.pathToCa, rejectUnauthorized: globalConfig.rejectUnauthorized
         };
-        const debugClient = integrationTestHelper.jsDebugClient;
+        const jsDebugClient: DebugClient = integrationTestHelper.jsDebugClient;
         await Promise.all([
-            debugClient.initializeRequest(),
-            debugClient.configurationSequence(),
-            debugClient.attachRequest(config as DebugProtocol.AttachRequestArguments)
+            jsDebugClient.initializeRequest(),
+            jsDebugClient.configurationSequence(),
+            jsDebugClient.attachRequest(config as DebugProtocol.AttachRequestArguments)
         ]);
 
-        await debugClient.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'test.sjs') }, breakpoints: [{ line: 3 }] });
-        await debugClient.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'lib1.sjs') }, breakpoints: [{ line: 2 }] });
-        await debugClient.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'lib2.sjs') }, breakpoints: [{ line: 2 }] });
-
-        await debugClient.continueRequest({ threadId: 1 });
-        await debugClient.waitForEvent('stopped');
-        await debugClient.continueRequest({ threadId: 1 });
-        await debugClient.waitForEvent('stopped');
-        await debugClient.continueRequest({ threadId: 1 });
-        await debugClient.waitForEvent('stopped');
-        await debugClient.continueRequest({ threadId: 1 });
-        return debugClient.assertStoppedLocation('breakpoint', { path: Path.join('/MarkLogic/test', 'test.sjs'), line: 3 });
-    }).timeout(10000).skip();
+        await jsDebugClient.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'test.sjs') }, breakpoints: [{ line: 20 }] });
+        await jsDebugClient.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'lib1.sjs') }, breakpoints: [{ line: 18 }] });
+        await jsDebugClient.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'lib2.sjs') }, breakpoints: [{ line: 18 }] });
+        await jsDebugClient.continueRequest({ threadId: 1 });
+        await jsDebugClient.waitForEvent('stopped');
+        await jsDebugClient.continueRequest({ threadId: 1 });
+        await jsDebugClient.waitForEvent('stopped');
+        await jsDebugClient.continueRequest({ threadId: 1 });
+        await jsDebugClient.waitForEvent('stopped');
+        await jsDebugClient.continueRequest({ threadId: 1 });
+        await jsDebugClient.assertStoppedLocation('breakpoint', { path: Path.join('/MarkLogic/test', 'test.sjs'), line: 20 });
+        await jsDebugClient.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'test.sjs') }, breakpoints: [] });
+        await jsDebugClient.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'lib1.sjs') }, breakpoints: [] });
+        await jsDebugClient.setBreakpointsRequest({ source: { path: Path.join('/MarkLogic/test', 'lib2.sjs') }, breakpoints: [] });
+        await jsDebugClient.continueRequest({ threadId: 1 });
+    }).timeout(15000);
 });
