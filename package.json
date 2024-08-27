@@ -646,7 +646,7 @@
         "@vscode/debugadapter": "1.65.0",
         "await-notify": "1.0.1",
         "esprima": "4.0.1",
-        "fast-xml-parser": "4.3.5",
+        "fast-xml-parser": "4.4.1",
         "marklogic": "3.3.1",
         "merge-options": "3.0.4",
         "ts-loader": "9.5.1",
