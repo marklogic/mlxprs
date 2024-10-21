@@ -157,7 +157,7 @@
                 "runtime": "node",
                 "configurationAttributes": {
                     "launch": {
-                        "required": [],
+                        "required": [ ],
                         "properties": {
                             "path": {
                                 "type": "string",
@@ -248,7 +248,7 @@
                         }
                     }
                 ],
-                "variables": {}
+                "variables": { }
             },
             {
                 "type": "xquery-ml",
@@ -649,6 +649,7 @@
         "fast-xml-parser": "4.4.1",
         "marklogic": "3.3.1",
         "merge-options": "3.0.4",
+        "path-to-regexp": "6.3.0",
         "ts-loader": "9.5.1",
         "vscode-languageclient": "7.0.0",
         "xml2js": "0.6.2"

@@ -4,7 +4,7 @@ name: mlxprs
 services:
 
   marklogic:
-    image: "marklogicdb/marklogic-db:11.1.0-centos-1.1.0"
+    image: "progressofficial/marklogic-db:latest"
     platform: linux/amd64
     environment:
       - INSTALL_CONVERTERS=true
