@@ -2,7 +2,7 @@
     "name": "mlxprs",
     "displayName": "MLXPRS: MarkLogic Extension for VS Code",
     "description": "Simplifies and automates common development tasks for creating applications on MarkLogic.",
-    "version": "3.9.0",
+    "version": "3.9.1",
     "publisher": "mlxprs",
     "engines": {
         "vscode": "^1.78.0"
@@ -607,7 +607,8 @@
         "coverageAll": "c8 npm run test && c8 npm run testServer && c8 npm run testIntegration"
     },
     "dependenciesComments": {
-        "webpack": "Something with version 5.80.0 is breaking the integration tests (and other things?).",
+        "webpackProblem": "Something with version 5.95.0 is breaking the integration tests (and other things?).",
+        "webpackFix": "I believe this will require upgrading the @types/node and will not be trivial.",
         "possiblyUnused": {
             "comment": "I'm not sure about these four packages. Without them, there seem to be problems when you attempt to 'attach' or 'launch'.",
             "@types/estree": "1.0.5",
@@ -618,11 +619,11 @@
     },
     "devDependencies": {
         "@types/esprima": "4.0.6",
-        "@types/estree": "1.0.5",
-        "@types/mocha": "10.0.6",
+        "@types/estree": "1.0.6",
+        "@types/mocha": "10.0.9",
         "@types/node": "16.11.7",
         "@types/sinon": "17.0.3",
-        "@types/vscode": "1.78.0",
+        "@types/vscode": "1.94.0",
         "@types/webpack": "5.28.5",
         "@types/xml2js": "0.4.14",
         "@typescript-eslint/eslint-plugin": "7.1.1",
@@ -638,7 +639,7 @@
         "mocha": "10.3.0",
         "rimraf": "5.0.5",
         "sinon": "17.0.1",
-        "webpack": "5.95.0",
+        "webpack": "5.76.1",
         "webpack-cli": "5.1.4",
         "yargs-parser": "21.1.1"
     },
