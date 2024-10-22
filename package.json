@@ -609,6 +609,7 @@
     "dependenciesComments": {
         "webpackProblem": "Something with version 5.95.0 is breaking the integration tests (and other things?).",
         "webpackFix": "I believe this will require upgrading the @types/node and will not be trivial.",
+        "@types/vscode": "This needs to match the value at the top of this file in 'engines.vscode`",
         "possiblyUnused": {
             "comment": "I'm not sure about these four packages. Without them, there seem to be problems when you attempt to 'attach' or 'launch'.",
             "@types/estree": "1.0.5",
@@ -619,11 +620,11 @@
     },
     "devDependencies": {
         "@types/esprima": "4.0.6",
-        "@types/estree": "1.0.6",
-        "@types/mocha": "10.0.9",
+        "@types/estree": "1.0.5",
+        "@types/mocha": "10.0.6",
         "@types/node": "16.11.7",
         "@types/sinon": "17.0.3",
-        "@types/vscode": "1.94.0",
+        "@types/vscode": "1.78.0",
         "@types/webpack": "5.28.5",
         "@types/xml2js": "0.4.14",
         "@typescript-eslint/eslint-plugin": "7.1.1",
