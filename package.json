@@ -157,7 +157,7 @@
                 "runtime": "node",
                 "configurationAttributes": {
                     "launch": {
-                        "required": [ ],
+                        "required": [],
                         "properties": {
                             "path": {
                                 "type": "string",
@@ -248,7 +248,7 @@
                         }
                     }
                 ],
-                "variables": { }
+                "variables": {}
             },
             {
                 "type": "xquery-ml",
@@ -621,7 +621,7 @@
     "devDependencies": {
         "@types/esprima": "4.0.6",
         "@types/estree": "1.0.5",
-        "@types/mocha": "10.0.6",
+        "@types/mocha": "10.0.10",
         "@types/node": "16.11.7",
         "@types/sinon": "17.0.3",
         "@types/vscode": "1.78.0",
@@ -631,29 +631,29 @@
         "@typescript-eslint/parser": "7.1.1",
         "@vscode/debugadapter-testsupport": "1.65.0",
         "@vscode/debugprotocol": "1.65.0",
-        "@vscode/test-cli": "^0.0.6",
+        "@vscode/test-cli": "^0.0.12",
         "@vscode/test-electron": "2.3.9",
         "c8": "^9.1.0",
         "eslint": "8.57.0",
         "https-proxy-agent": "7.0.4",
         "js-yaml": "4.1.0",
-        "mocha": "10.3.0",
+        "mocha": "^10.8.2",
         "rimraf": "5.0.5",
         "sinon": "17.0.1",
-        "webpack": "5.76.1",
-        "webpack-cli": "5.1.4",
+        "webpack": "5.102.1",
+        "webpack-cli": "6.0.1",
         "yargs-parser": "21.1.1"
     },
     "dependencies": {
-        "@vscode/debugadapter": "1.65.0",
+        "@vscode/debugadapter": "1.68.0",
         "await-notify": "1.0.1",
         "esprima": "4.0.1",
-        "fast-xml-parser": "4.4.1",
-        "marklogic": "3.3.1",
+        "fast-xml-parser": "4.5.3",
+        "marklogic": "3.7.1",
         "merge-options": "3.0.4",
         "path-to-regexp": "6.3.0",
-        "ts-loader": "9.5.1",
-        "vscode-languageclient": "7.0.0",
+        "ts-loader": "9.5.4",
+        "vscode-languageclient": "7.1.0-next.5",
         "xml2js": "0.6.2"
     }
 }
