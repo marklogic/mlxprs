@@ -38,7 +38,7 @@ Once you start debugging, a dropdown menu will pop up listing all paused request
 
 **Note: Only requests that are launched after a server is connected/made debug server can be attached.**
 
-![Attach screenshot](/assets/attach_screenshot.png "attach screenshot")
+![Attach screenshot](../assets/attach_screenshot.png "attach screenshot")
 
 Use the optional parameter `rid` to specify a request ID in advance and avoid being prompted for it.
 

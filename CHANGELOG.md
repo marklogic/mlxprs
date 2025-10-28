@@ -1,3 +1,8 @@
+## [3.9.1](https://github.com/marklogic/mlxprs/releases/tag/v3.9.1)
+
+- Addressed a set of dependency updates and vulnerabilities.
+- [Improved user guide.](https://marklogic.github.io/mlxprs/)
+
 ## [3.9.0](https://github.com/marklogic/mlxprs/releases/tag/v3.9.0)
 
 - New MarkLogic icon in the Activity Bar that can be used to open an explorer view with high-level information about the currently connected MarkLogic server.
