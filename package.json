@@ -649,7 +649,7 @@
         "await-notify": "1.0.1",
         "esprima": "4.0.1",
         "fast-xml-parser": "4.5.3",
-        "marklogic": "3.7.1",
+        "marklogic": "4.0.0",
         "merge-options": "3.0.4",
         "path-to-regexp": "6.3.0",
         "ts-loader": "9.5.4",
