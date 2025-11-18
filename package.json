@@ -637,7 +637,7 @@
         "eslint": "8.57.0",
         "https-proxy-agent": "7.0.4",
         "js-yaml": "4.1.0",
-        "mocha": "10.3.0",
+        "mocha": "10.8.2",
         "rimraf": "5.0.5",
         "sinon": "17.0.1",
         "webpack": "5.76.1",
