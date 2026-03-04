@@ -19,7 +19,7 @@
         "os-locale": "6.0.2",
         "vscode-languageserver": "7.0.0",
         "vscode-languageserver-textdocument": "1.0.8",
-        "@vscode/test-electron": "2.3.0"
+        "@vscode/test-electron": "2.5.2"
     },
     "scripts": {
         "copy-files": "copyfiles -ufV etc/*.json dist/etc/",
