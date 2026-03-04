@@ -632,7 +632,7 @@
         "@vscode/debugadapter-testsupport": "1.65.0",
         "@vscode/debugprotocol": "1.65.0",
         "@vscode/test-cli": "^0.0.6",
-        "@vscode/test-electron": "2.3.9",
+        "@vscode/test-electron": "2.5.2",
         "c8": "^9.1.0",
         "eslint": "8.57.0",
         "https-proxy-agent": "7.0.4",
